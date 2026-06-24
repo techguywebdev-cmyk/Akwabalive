@@ -1,25 +1,63 @@
 import Link from 'next/link';
 
-const FOOTER_LINKS = ['About', 'Organizers', 'Cities', 'Privacy', 'Terms'];
+const LINKS = ['About', 'Organizers', 'Cities', 'Privacy', 'Terms'];
 
 export default function Footer() {
   return (
-    <footer className="mt-20 border-t border-border px-6 md:px-11 py-8 flex flex-wrap items-center justify-between gap-4">
-      <div className="font-display text-sm font-extrabold tracking-[4px] uppercase text-ink-2">
-        AK<span className="text-green-light">W</span>AABA
+    <footer
+      style={{
+        marginTop: 80,
+        borderTop: '1px solid rgba(245,236,215,0.07)',
+        padding: '32px clamp(20px,4vw,44px)',
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 16,
+        background: '#0D0B08',
+      }}
+    >
+      <div
+        style={{
+          fontFamily: 'var(--font-syne, sans-serif)',
+          fontSize: 14,
+          fontWeight: 800,
+          letterSpacing: '4px',
+          textTransform: 'uppercase',
+          color: 'rgba(245,236,215,0.4)',
+        }}
+      >
+        AK<span style={{ color: '#C8922A' }}>W</span>AABA
       </div>
-      <nav className="flex gap-6 flex-wrap justify-center">
-        {FOOTER_LINKS.map(label => (
+
+      <nav style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {LINKS.map(l => (
           <Link
-            key={label}
+            key={l}
             href="#"
-            className="font-mono text-[8px] tracking-[1.5px] uppercase text-ink-4 hover:text-ink-3 transition-colors"
+            style={{
+              fontFamily: 'var(--font-dm-mono, monospace)',
+              fontSize: 8,
+              letterSpacing: '1.5px',
+              textTransform: 'uppercase',
+              color: 'rgba(245,236,215,0.18)',
+              textDecoration: 'none',
+              transition: 'color 0.18s',
+            }}
           >
-            {label}
+            {l}
           </Link>
         ))}
       </nav>
-      <span className="font-mono text-[8px] tracking-[1px] text-ink-4">
+
+      <span
+        style={{
+          fontFamily: 'var(--font-dm-mono, monospace)',
+          fontSize: 8,
+          letterSpacing: '1px',
+          color: 'rgba(245,236,215,0.14)',
+        }}
+      >
         © 2025 Akwaaba · Accra, Ghana
       </span>
     </footer>
