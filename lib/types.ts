@@ -26,16 +26,16 @@ export interface GhanaEvent {
   region: string;
   venue: string;
   category: Category;
-  price: number; // 0 = free
-  date: string; // ISO yyyy-mm-dd, start date
-  dateLabel: string; // "Mar 28–30"
-  time: string; // "6:00 PM"
+  price: number;
+  date: string;
+  dateLabel: string;
+  time: string;
   lat: number;
   lng: number;
   image: string;
   hot: boolean;
   recurring: boolean;
-  badge: string; // top-left badge text
+  badge: string;
   attending?: number;
 }
 
