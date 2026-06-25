@@ -405,35 +405,50 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
 
       <div style={{ display: 'flex' }}>
 
-         {/* Sidebar — desktop only */}
-<div className="hidden lg:block" style={{ width: 240, flexShrink: 0, position: 'sticky', top: 'calc(62px + 57px)', alignSelf: 'flex-start', maxHeight: 'calc(100vh - 130px)', overflowY: 'auto', borderRight: `1px solid ${C.bd}`, padding: '20px 16px' }}>
-          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '2.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${C.bd}` }}>By City</p>
-          {CITIES.map(c => <SideRow key={c.value} label={c.label} count={cityCounts[c.value] ?? 0} active={filters.city === c.value} onClick={() => set('city', c.value)} />)}
+         {/* Sidebar — desktop only, completely hidden on mobile */}
+<div style={{
+  display: 'none',
+  width: 240, flexShrink: 0,
+  position: 'sticky', top: 'calc(62px + 57px)',
+  alignSelf: 'flex-start',
+  maxHeight: 'calc(100vh - 130px)',
+  overflowY: 'auto',
+  borderRight: `1px solid ${C.bd}`,
+  padding: '20px 16px',
+}} id="desktop-sidebar">
+  <style>{`
+    @media (min-width: 1024px) {
+      #desktop-sidebar { display: block !important; }
+    }
+  `}</style>
 
-          <div style={{ marginTop: 20 }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '2.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${C.bd}` }}>By Category</p>
-            {CATEGORIES.map(c => <SideRow key={c.value} label={c.label} count={catCounts[c.value] ?? 0} active={filters.category === c.value} onClick={() => set('category', filters.category === c.value ? null : c.value)} />)}
-          </div>
+  <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '2.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${C.bd}` }}>By City</p>
+  {CITIES.map(c => <SideRow key={c.value} label={c.label} count={cityCounts[c.value] ?? 0} active={filters.city === c.value} onClick={() => set('city', c.value)} />)}
 
-          <div style={{ marginTop: 20 }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '2.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${C.bd}` }}>
-              Max Price: {filters.maxPrice >= 500 ? '₵500+' : `₵${filters.maxPrice}`}
-            </p>
-            <input type="range" min={0} max={500} step={25} value={filters.maxPrice}
-              onChange={e => set('maxPrice', Number(e.target.value))}
-              style={{ width: '100%', accentColor: C.gold }} />
-          </div>
+  <div style={{ marginTop: 20 }}>
+    <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '2.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${C.bd}` }}>By Category</p>
+    {CATEGORIES.map(c => <SideRow key={c.value} label={c.label} count={catCounts[c.value] ?? 0} active={filters.category === c.value} onClick={() => set('category', filters.category === c.value ? null : c.value)} />)}
+  </div>
 
-          <div style={{ marginTop: 20, background: 'rgba(200,146,42,0.07)', border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: 14 }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7.5, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 10 }}>Traveller Tips</p>
-            <ul style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3, lineHeight: 1.6, listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <li>Pay with MTN, Vodafone or AirtelTigo MoMo at most venues.</li>
-              <li>Dress codes are common at nightlife events — check each listing.</li>
-              <li>Book 48 hrs ahead for major festivals to guarantee entry.</li>
-              <li>Bolt and taxis are widely available in Accra & Kumasi.</li>
-            </ul>
-          </div>
-        </div>
+  <div style={{ marginTop: 20 }}>
+    <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '2.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${C.bd}` }}>
+      Max Price: {filters.maxPrice >= 500 ? '₵500+' : `₵${filters.maxPrice}`}
+    </p>
+    <input type="range" min={0} max={500} step={25} value={filters.maxPrice}
+      onChange={e => set('maxPrice', Number(e.target.value))}
+      style={{ width: '100%', accentColor: C.gold }} />
+  </div>
+
+  <div style={{ marginTop: 20, background: 'rgba(200,146,42,0.07)', border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: 14 }}>
+    <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7.5, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 10 }}>Traveller Tips</p>
+    <ul style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3, lineHeight: 1.6, listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <li>Pay with MTN, Vodafone or AirtelTigo MoMo at most venues.</li>
+      <li>Dress codes are common at nightlife events — check each listing.</li>
+      <li>Book 48 hrs ahead for major festivals to guarantee entry.</li>
+      <li>Bolt and taxis are widely available in Accra & Kumasi.</li>
+    </ul>
+  </div>
+</div>
 
         {/* Main content */}
         <div style={{ flex: 1, minWidth: 0, paddingBottom: 80 }}>
