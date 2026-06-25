@@ -2,9 +2,9 @@ import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: [
-    './app/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './lib/**/*.{ts,tsx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -24,13 +24,13 @@ const config: Config = {
         gold: {
           DEFAULT: '#C8922A',
           dim: 'rgba(200,146,42,0.15)',
-          bd:  'rgba(200,146,42,0.28)',
+          bd: 'rgba(200,146,42,0.28)',
         },
         forest: {
           DEFAULT: '#1B4332',
-          light:   '#2D6A4F',
+          light: '#2D6A4F',
         },
-        red:    '#CE1126',
+        red: '#CE1126',
         border: 'rgba(245,236,215,0.07)',
         'border-2': 'rgba(245,236,215,0.12)',
       },
