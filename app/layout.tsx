@@ -9,21 +9,18 @@ const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
   display: 'swap',
 });
-
 const syne = Syne({
   subsets: ['latin'],
   weight:  ['400', '500', '600', '700', '800'],
   variable: '--font-syne',
   display: 'swap',
 });
-
 const dmMono = DM_Mono({
   subsets: ['latin'],
   weight:  ['400', '500'],
   variable: '--font-dm-mono',
   display: 'swap',
 });
-
 const inter = Inter({
   subsets: ['latin'],
   weight:  ['300', '400', '500', '600'],
@@ -36,11 +33,14 @@ export const metadata: Metadata = {
   description: "Discover and book Ghana's best events. Pay with MTN MoMo, Vodafone Cash, or AirtelTigo.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
