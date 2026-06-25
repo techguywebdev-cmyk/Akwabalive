@@ -405,8 +405,8 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
 
       <div style={{ display: 'flex' }}>
 
-        {/* Sidebar — desktop only */}
-        <div className="hidden lg:block" style={{ width: 240, flexShrink: 0, position: 'sticky', top: 'calc(62px + 57px)', alignSelf: 'flex-start', maxHeight: 'calc(100vh - 130px)', overflowY: 'auto', borderRight: `1px solid ${C.bd}`, padding: '20px 16px' }}>
+         {/* Sidebar — desktop only */}
+<div className="hidden lg:block" style={{ width: 240, flexShrink: 0, position: 'sticky', top: 'calc(62px + 57px)', alignSelf: 'flex-start', maxHeight: 'calc(100vh - 130px)', overflowY: 'auto', borderRight: `1px solid ${C.bd}`, padding: '20px 16px' }}>
           <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '2.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${C.bd}` }}>By City</p>
           {CITIES.map(c => <SideRow key={c.value} label={c.label} count={cityCounts[c.value] ?? 0} active={filters.city === c.value} onClick={() => set('city', c.value)} />)}
 
