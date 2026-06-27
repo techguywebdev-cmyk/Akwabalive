@@ -1,4 +1,11 @@
-import Image from 'next/image';
+'use client';
+
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import Nav from '@/components/layout/Nav';
+import Footer from '@/components/layout/Footer';
+import HeroSlider from '@/components/home/HeroSlider';
+import { events, cities } from '@/lib/data/events';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
