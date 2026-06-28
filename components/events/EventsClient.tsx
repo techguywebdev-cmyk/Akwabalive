@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { Search, MapPin, X, Grid2X2, List, Filter, Calendar, Clock } from 'lucide-react';
