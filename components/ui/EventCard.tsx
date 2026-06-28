@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Calendar, Clock } from 'lucide-react';
 import clsx from 'clsx';
+import type { GhanaEvent } from '@/lib/types';
 import { formatDistance, cityLabel } from '@/lib/utils';
 
 type Size = 'feature' | 'standard' | 'mini';
