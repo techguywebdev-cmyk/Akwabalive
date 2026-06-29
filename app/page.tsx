@@ -5,7 +5,6 @@ import { ArrowRight } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import HeroSlider from '@/components/home/HeroSlider';
-import EventCard from '@/components/ui/EventCard';
 import CityCard from '@/components/ui/CityCard';
 import { events, cities } from '@/lib/data/events';
 
