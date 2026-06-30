@@ -23,6 +23,7 @@ export default function AuthPage() {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+  const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,22 +59,37 @@ export default function AuthPage() {
         if (signUpError) throw signUpError;
 
         if (data.user) {
-          await supabase.from('profiles').update({
+          const { error: profileError } = await supabase.from('profiles').update({
             username: username.toLowerCase(),
             full_name: fullName,
           }).eq('id', data.user.id);
+
+          if (profileError) {
+            setError('Account created, but we couldn\'t set your username. Please try signing in and updating your profile.');
+            setLoading(false);
+            return;
+          }
         }
 
-        router.push('/');
-        router.refresh();
+        setSuccess(true);
+        setTimeout(() => {
+          router.push('/');
+          router.refresh();
+        }, 1200);
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
-        router.push('/');
-        router.refresh();
+        setSuccess(true);
+        setTimeout(() => {
+          router.push('/');
+          router.refresh();
+        }, 600);
       }
     } catch (err: any) {
-      setError(err.message ?? 'Something went wrong');
+      const msg = typeof err?.message === 'string' && err.message.trim()
+        ? err.message
+        : 'Something went wrong. Please try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -152,17 +168,26 @@ export default function AuthPage() {
             </div>
 
             {error && (
-              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.red, background: 'rgba(206,17,38,0.1)', border: '1px solid rgba(206,17,38,0.25)', borderRadius: 8, padding: '10px 12px' }}>
-                {error}
+              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: '#f87171', background: 'rgba(206,17,38,0.1)', border: '1px solid rgba(206,17,38,0.25)', borderRadius: 8, padding: '10px 12px', lineHeight: 1.5 }}>
+                {String(error)}
+              </p>
+            )}
+            {success && (
+              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: '#4ade80', background: 'rgba(45,106,79,0.12)', border: '1px solid rgba(45,106,79,0.3)', borderRadius: 8, padding: '10px 12px', lineHeight: 1.5 }}>
+                {mode === 'signup' ? 'Account created! Taking you in…' : 'Welcome back! Signing you in…'}
               </p>
             )}
 
             <button
               type="submit"
-              disabled={loading}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: C.gold, color: '#0D0B08', border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, marginTop: 6 }}
+              disabled={loading || success}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: success ? '#2D6A4F' : C.gold, color: success ? '#fff' : '#0D0B08', border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: (loading || success) ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, marginTop: 6, transition: 'background 250ms' }}
             >
-              {loading ? <Loader2 size={14} className="animate-spin" /> : (
+              {success ? (
+                <>Success <ArrowRight size={14} /></>
+              ) : loading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
                 <>{mode === 'signin' ? 'Sign In' : 'Create Account'} <ArrowRight size={14} /></>
               )}
             </button>
@@ -181,4 +206,4 @@ export default function AuthPage() {
       </div>
     </div>
   );
-}
+      }
