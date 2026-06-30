@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Syne, DM_Mono, Inter } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/lib/supabase/AuthProvider';
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -46,7 +47,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${cormorant.variable} ${syne.variable} ${dmMono.variable} ${inter.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
