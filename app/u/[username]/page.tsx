@@ -132,7 +132,7 @@ export default function UserProfilePage() {
     </div>
   );
 
-  const attendedSlugs  = [...new Set(tickets.map(t => t.event_slug))];
+  const attendedSlugs  = Array.from(new Set(tickets.map(t => t.event_slug)));
   const attendedEvents = attendedSlugs.map(s => events.find(e => e.slug === s)).filter(Boolean);
   const dreamMatched   = dreamEvents
     .map(d => ({ dream: d, event: events.find(e => e.slug === d.event_slug) }))
