@@ -136,7 +136,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
 
       <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />
-        Who's going
+        Who&apos;s going
       </p>
 
       {/* Going count + avatars */}
@@ -159,7 +159,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
               padding: '10px 16px', borderRadius: 8, cursor: 'pointer', transition: 'all 200ms',
             }}
           >
-            {isGoing ? <><CheckCircle size={13} /> Going!</> : <><Users size={13} /> I'm Going</>}
+            {isGoing ? <><CheckCircle size={13} /> Going!</> : <><Users size={13} /> I&apos;m Going</>}
           </button>
         </div>
 
