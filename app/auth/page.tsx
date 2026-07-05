@@ -51,26 +51,33 @@ export default function AuthPage() {
           return;
         }
 
+        // Pass username in metadata — trigger will set it directly
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName } },
+          options: {
+            data: {
+              full_name: fullName,
+              username:  username.toLowerCase().trim(),
+            },
+          },
         });
 
         if (signUpError) { setError(signUpError.message); setLoading(false); return; }
         if (!data.user)  { setError('Could not create account. Please try again.'); setLoading(false); return; }
 
-        // Retry upsert up to 5 times — trigger needs a moment to create the row
-        let saved = false;
-        for (let attempt = 0; attempt < 5; attempt++) {
-          await new Promise(r => setTimeout(r, 400 * (attempt + 1)));
+        // Still do a client-side upsert as backup with retries
+        for (let attempt = 0; attempt < 4; attempt++) {
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
           const { error: pe } = await supabase
             .from('profiles')
-            .upsert({ id: data.user.id, username: username.toLowerCase().trim(), full_name: fullName.trim() }, { onConflict: 'id' });
-          if (!pe) { saved = true; break; }
+            .upsert({
+              id:        data.user.id,
+              username:  username.toLowerCase().trim(),
+              full_name: fullName.trim(),
+            }, { onConflict: 'id' });
+          if (!pe) break;
         }
-
-        if (!saved) console.warn('Username could not be saved after retries');
 
         setSuccess(true);
         setTimeout(() => { router.push('/'); router.refresh(); }, 1000);
