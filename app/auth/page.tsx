@@ -14,8 +14,9 @@ const C = {
 };
 
 export default function AuthPage() {
-  const router = useRouter();
+  const router   = useRouter();
   const supabase = createClient();
+
   const [mode,     setMode]     = useState<'signin' | 'signup'>('signin');
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
@@ -38,7 +39,6 @@ export default function AuthPage() {
           return;
         }
 
-        // Check username not taken
         const { data: existing } = await supabase
           .from('profiles')
           .select('username')
@@ -51,67 +51,38 @@ export default function AuthPage() {
           return;
         }
 
-        // Create auth user — trigger creates profile row
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { full_name: fullName } },
         });
 
-        if (signUpError) {
-          setError(signUpError.message);
-          setLoading(false);
-          return;
+        if (signUpError) { setError(signUpError.message); setLoading(false); return; }
+        if (!data.user)  { setError('Could not create account. Please try again.'); setLoading(false); return; }
+
+        // Retry upsert up to 5 times — trigger needs a moment to create the row
+        let saved = false;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          await new Promise(r => setTimeout(r, 400 * (attempt + 1)));
+          const { error: pe } = await supabase
+            .from('profiles')
+            .upsert({ id: data.user.id, username: username.toLowerCase().trim(), full_name: fullName.trim() }, { onConflict: 'id' });
+          if (!pe) { saved = true; break; }
         }
 
-        if (!data.user) {
-          setError('Could not create account. Please try again.');
-          setLoading(false);
-          return;
-        }
-
-        // Wait briefly for trigger to run, then upsert profile with username
-        await new Promise(r => setTimeout(r, 600));
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            username: username.toLowerCase(),
-            full_name: fullName,
-          }, { onConflict: 'id' });
-
-        if (profileError) {
-          // Account created but username not set — not fatal, user can update later
-          console.warn('Profile update failed:', profileError.message);
-        }
+        if (!saved) console.warn('Username could not be saved after retries');
 
         setSuccess(true);
-        setTimeout(() => {
-          router.push('/');
-          router.refresh();
-        }, 1000);
+        setTimeout(() => { router.push('/'); router.refresh(); }, 1000);
 
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email, password,
-        });
-        if (signInError) {
-          setError(signInError.message);
-          setLoading(false);
-          return;
-        }
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) { setError(signInError.message); setLoading(false); return; }
         setSuccess(true);
-        setTimeout(() => {
-          router.push('/');
-          router.refresh();
-        }, 600);
+        setTimeout(() => { router.push('/'); router.refresh(); }, 600);
       }
     } catch (err: any) {
-      let msg = 'Something went wrong. Please try again.';
-      if (typeof err?.message === 'string' && err.message.trim()) msg = err.message;
-      else if (typeof err === 'string') msg = err;
-      setError(msg);
+      setError(typeof err?.message === 'string' ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -132,9 +103,7 @@ export default function AuthPage() {
             {mode === 'signin' ? 'Welcome back' : 'Join Akwaaba'}
           </h1>
           <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, textAlign: 'center', marginBottom: 24 }}>
-            {mode === 'signin'
-              ? 'Sign in to manage your tickets'
-              : 'Create an account to start collecting moments'}
+            {mode === 'signin' ? 'Sign in to manage your tickets' : 'Create an account to start collecting moments'}
           </p>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -142,53 +111,32 @@ export default function AuthPage() {
               <>
                 <div style={{ position: 'relative' }}>
                   <User size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
-                  <input
-                    type="text"
-                    placeholder="Full name"
-                    value={fullName}
-                    onChange={e => setFullName(e.target.value)}
-                    required
-                    style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }}
-                  />
+                  <input type="text" placeholder="Full name" value={fullName}
+                    onChange={e => setFullName(e.target.value)} required
+                    style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
                 </div>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14 }}>@</span>
-                  <input
-                    type="text"
-                    placeholder="username"
-                    value={username}
+                  <input type="text" placeholder="username" value={username}
                     onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    required
-                    minLength={3}
-                    style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 32px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }}
-                  />
+                    required minLength={3}
+                    style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 32px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
                 </div>
               </>
             )}
 
             <div style={{ position: 'relative' }}>
               <Mail size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
-              <input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }}
-              />
+              <input type="email" placeholder="Email address" value={email}
+                onChange={e => setEmail(e.target.value)} required
+                style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
             </div>
 
             <div style={{ position: 'relative' }}>
               <Lock size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={6}
-                style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }}
-              />
+              <input type="password" placeholder="Password" value={password}
+                onChange={e => setPassword(e.target.value)} required minLength={6}
+                style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
             </div>
 
             {error && (
@@ -202,35 +150,19 @@ export default function AuthPage() {
               </p>
             )}
 
-            <button
-              type="submit"
-              disabled={loading || success}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                background: success ? '#2D6A4F' : C.gold,
-                color: success ? '#fff' : '#0D0B08',
-                border: 'none', padding: 14, borderRadius: 8,
-                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase',
-                fontWeight: 700, cursor: (loading || success) ? 'wait' : 'pointer',
-                opacity: loading ? 0.7 : 1, marginTop: 6, transition: 'background 250ms',
-              }}
-            >
-              {success ? (
-                <>Success <ArrowRight size={14} /></>
-              ) : loading ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <>{mode === 'signin' ? 'Sign In' : 'Create Account'} <ArrowRight size={14} /></>
-              )}
+            <button type="submit" disabled={loading || success}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: success ? '#2D6A4F' : C.gold, color: success ? '#fff' : '#0D0B08', border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: (loading || success) ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, marginTop: 6, transition: 'background 250ms' }}>
+              {success ? <>Success <ArrowRight size={14} /></>
+                : loading ? <Loader2 size={14} className="animate-spin" />
+                : <>{mode === 'signin' ? 'Sign In' : 'Create Account'} <ArrowRight size={14} /></>
+              }
             </button>
           </form>
 
           <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, textAlign: 'center', marginTop: 20 }}>
             {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
-            <button
-              onClick={() => { setMode(m => m === 'signin' ? 'signup' : 'signin'); setError(''); setSuccess(false); }}
-              style={{ color: C.gold, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, fontWeight: 600, padding: 0 }}
-            >
+            <button onClick={() => { setMode(m => m === 'signin' ? 'signup' : 'signin'); setError(''); setSuccess(false); }}
+              style={{ color: C.gold, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, fontWeight: 600, padding: 0 }}>
               {mode === 'signin' ? 'Sign up' : 'Sign in'}
             </button>
           </p>
@@ -238,4 +170,4 @@ export default function AuthPage() {
       </div>
     </div>
   );
-                  }
+}
