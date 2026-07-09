@@ -114,6 +114,7 @@ export default function Nav({
                         { label: 'My Profile',  href: `/u/${profile?.username ?? ''}` },
                         { label: 'My Tickets',  href: '/account/tickets' },
                         { label: 'Dream Events', href: '/account/dream-events' },
+                    { label: 'Organizer Dashboard', href: '/organizer/dashboard' },
                       ].map(item => (
                         <Link key={item.label} href={item.href} onClick={() => setMenuOpen(false)} style={{
                           display: 'block', padding: '9px 12px', borderRadius: 6,
