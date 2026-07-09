@@ -113,6 +113,9 @@ export default function Nav({
                       {[
                         { label: 'My Profile',  href: `/u/${profile?.username ?? ''}` },
                         { label: 'My Tickets',  href: '/account/tickets' },
+                    <Link href="/organizer/dashboard" onClick={() => setMobileOpen(false)} style={{ fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 10, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#C8922A', padding: '16px 0', borderBottom: '1px solid rgba(245,236,215,0.07)', textDecoration: 'none', display: 'block' }}>
+  Organizer Dashboard
+</Link>
                         { label: 'Dream Events', href: '/account/dream-events' },
                     { label: 'Organizer Dashboard', href: '/organizer/dashboard' },
                       ].map(item => (
