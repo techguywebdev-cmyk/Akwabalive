@@ -83,14 +83,7 @@ export default function Nav({
           {!isMobile && (
             user ? (
               <div style={{ position: 'relative' }}>
-                <button
-                  onClick={() => setMenuOpen(o => !o)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    background: 'rgba(245,236,215,0.05)', border: '1px solid rgba(245,236,215,0.1)',
-                    borderRadius: 20, padding: '5px 12px 5px 5px', cursor: 'pointer',
-                  }}
-                >
+                <button onClick={() => setMenuOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(245,236,215,0.05)', border: '1px solid rgba(245,236,215,0.1)', borderRadius: 20, padding: '5px 12px 5px 5px', cursor: 'pointer' }}>
                   <div style={{ width: 26, height: 26, borderRadius: '50%', background: '#C8922A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-syne,sans-serif)', fontSize: 11, fontWeight: 700, color: '#0D0B08', overflow: 'hidden' }}>
                     {profile?.avatar_url
                       ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -104,35 +97,19 @@ export default function Nav({
                 {menuOpen && (
                   <>
                     <div onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 1 }} />
-                    <div style={{
-                      position: 'absolute', top: 44, right: 0, zIndex: 2,
-                      background: '#141109', border: '1px solid rgba(245,236,215,0.1)',
-                      borderRadius: 10, padding: 6, minWidth: 180,
-                      boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
-                    }}>
+                    <div style={{ position: 'absolute', top: 44, right: 0, zIndex: 2, background: '#141109', border: '1px solid rgba(245,236,215,0.1)', borderRadius: 10, padding: 6, minWidth: 200, boxShadow: '0 16px 40px rgba(0,0,0,0.5)' }}>
                       {[
-                        { label: 'My Profile',  href: `/u/${profile?.username ?? ''}` },
-                        { label: 'My Tickets',  href: '/account/tickets' },
-                    <Link href="/organizer/dashboard" onClick={() => setMobileOpen(false)} style={{ fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 10, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#C8922A', padding: '16px 0', borderBottom: '1px solid rgba(245,236,215,0.07)', textDecoration: 'none', display: 'block' }}>
-  Organizer Dashboard
-</Link>
-                        { label: 'Dream Events', href: '/account/dream-events' },
-                    { label: 'Organizer Dashboard', href: '/organizer/dashboard' },
+                        { label: 'My Profile',         href: `/u/${profile?.username ?? ''}` },
+                        { label: 'My Tickets',         href: '/account/tickets'              },
+                        { label: 'Dream Events',       href: '/account/dream-events'         },
+                        { label: 'Organizer Dashboard', href: '/organizer/dashboard'         },
                       ].map(item => (
-                        <Link key={item.label} href={item.href} onClick={() => setMenuOpen(false)} style={{
-                          display: 'block', padding: '9px 12px', borderRadius: 6,
-                          fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: 'rgba(245,236,215,0.8)',
-                          textDecoration: 'none',
-                        }}>
+                        <Link key={item.label} href={item.href} onClick={() => setMenuOpen(false)} style={{ display: 'block', padding: '9px 12px', borderRadius: 6, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: item.label === 'Organizer Dashboard' ? '#C8922A' : 'rgba(245,236,215,0.8)', textDecoration: 'none' }}>
                           {item.label}
                         </Link>
                       ))}
                       <div style={{ height: 1, background: 'rgba(245,236,215,0.07)', margin: '4px 0' }} />
-                      <button onClick={() => { signOut(); setMenuOpen(false); }} style={{
-                        display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 6,
-                        fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: '#f87171',
-                        background: 'none', border: 'none', cursor: 'pointer',
-                      }}>
+                      <button onClick={() => { signOut(); setMenuOpen(false); }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', borderRadius: 6, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' }}>
                         Sign out
                       </button>
                     </div>
@@ -140,37 +117,18 @@ export default function Nav({
                 )}
               </div>
             ) : (
-              <Link href="/auth" style={{
-                fontFamily: 'var(--font-dm-mono, monospace)',
-                fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase',
-                color: 'rgba(245,236,215,0.35)', textDecoration: 'none',
-              }}>
+              <Link href="/auth" style={{ fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(245,236,215,0.35)', textDecoration: 'none' }}>
                 Sign in
               </Link>
             )
           )}
-          <button style={{
-            fontFamily: 'var(--font-dm-mono, monospace)',
-            fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase',
-            background: '#C8922A', color: '#0D0B08',
-            border: 'none', padding: '9px 16px', borderRadius: 5,
-            cursor: 'pointer', fontWeight: 700, flexShrink: 0,
-          }}>
+
+          <Link href="/organizer/events/new" style={{ fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', background: '#C8922A', color: '#0D0B08', border: 'none', padding: '9px 16px', borderRadius: 5, cursor: 'pointer', fontWeight: 700, flexShrink: 0, textDecoration: 'none', display: 'inline-block' }}>
             {isMobile ? '+ List' : '+ List Event'}
-          </button>
+          </Link>
 
           {isMobile && (
-            <button
-              onClick={() => setMobileOpen(o => !o)}
-              style={{
-                display: 'flex', flexDirection: 'column',
-                justifyContent: 'center', alignItems: 'center',
-                gap: 5, width: 36, height: 36,
-                background: 'none', border: 'none', cursor: 'pointer', padding: 6,
-                flexShrink: 0,
-              }}
-              aria-label="Menu"
-            >
+            <button onClick={() => setMobileOpen(o => !o)} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 5, width: 36, height: 36, background: 'none', border: 'none', cursor: 'pointer', padding: 6, flexShrink: 0 }} aria-label="Menu">
               <span style={{ display: 'block', width: 20, height: 1.5, background: mobileOpen ? 'transparent' : 'rgba(245,236,215,0.6)', transition: 'all 280ms' }} />
               <span style={{ display: 'block', width: 20, height: 1.5, background: 'rgba(245,236,215,0.6)', transition: 'all 280ms', transform: mobileOpen ? 'rotate(45deg)' : 'none' }} />
               <span style={{ display: 'block', width: 20, height: 1.5, background: mobileOpen ? 'transparent' : 'rgba(245,236,215,0.6)', transition: 'all 280ms' }} />
@@ -180,12 +138,7 @@ export default function Nav({
       </nav>
 
       {mobileOpen && isMobile && (
-        <div style={{
-          position: 'fixed', top: 62, left: 0, right: 0, bottom: 0,
-          background: '#0D0B08', zIndex: 190,
-          padding: '24px 20px', display: 'flex', flexDirection: 'column',
-          overflowY: 'auto',
-        }}>
+        <div style={{ position: 'fixed', top: 62, left: 0, right: 0, bottom: 0, background: '#0D0B08', zIndex: 190, padding: '24px 20px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
           {user && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 0 20px', borderBottom: '1px solid rgba(245,236,215,0.07)', marginBottom: 12 }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#C8922A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-syne,sans-serif)', fontSize: 15, fontWeight: 700, color: '#0D0B08' }}>
@@ -197,23 +150,13 @@ export default function Nav({
               </div>
             </div>
           )}
+
           {LINKS.map(link => (
-            <Link
-              key={link.label}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              style={{
-                fontFamily: 'var(--font-dm-mono, monospace)',
-                fontSize: 10, letterSpacing: '2.5px', textTransform: 'uppercase',
-                color: active === link.label ? '#C8922A' : 'rgba(245,236,215,0.55)',
-                padding: '16px 0',
-                borderBottom: '1px solid rgba(245,236,215,0.07)',
-                textDecoration: 'none', display: 'block',
-              }}
-            >
+            <Link key={link.label} href={link.href} onClick={() => setMobileOpen(false)} style={{ fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 10, letterSpacing: '2.5px', textTransform: 'uppercase', color: active === link.label ? '#C8922A' : 'rgba(245,236,215,0.55)', padding: '16px 0', borderBottom: '1px solid rgba(245,236,215,0.07)', textDecoration: 'none', display: 'block' }}>
               {link.label}
             </Link>
           ))}
+
           {user && (
             <>
               <Link href={`/u/${profile?.username ?? ''}`} onClick={() => setMobileOpen(false)} style={{ fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 10, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(245,236,215,0.55)', padding: '16px 0', borderBottom: '1px solid rgba(245,236,215,0.07)', textDecoration: 'none', display: 'block' }}>
@@ -222,36 +165,31 @@ export default function Nav({
               <Link href="/account/tickets" onClick={() => setMobileOpen(false)} style={{ fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 10, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(245,236,215,0.55)', padding: '16px 0', borderBottom: '1px solid rgba(245,236,215,0.07)', textDecoration: 'none', display: 'block' }}>
                 My Tickets
               </Link>
+              <Link href="/account/dream-events" onClick={() => setMobileOpen(false)} style={{ fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 10, letterSpacing: '2.5px', textTransform: 'uppercase', color: 'rgba(245,236,215,0.55)', padding: '16px 0', borderBottom: '1px solid rgba(245,236,215,0.07)', textDecoration: 'none', display: 'block' }}>
+                Dream Events
+              </Link>
+              <Link href="/organizer/dashboard" onClick={() => setMobileOpen(false)} style={{ fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 10, letterSpacing: '2.5px', textTransform: 'uppercase', color: '#C8922A', padding: '16px 0', borderBottom: '1px solid rgba(245,236,215,0.07)', textDecoration: 'none', display: 'block' }}>
+                Organizer Dashboard
+              </Link>
             </>
           )}
+
           <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {user ? (
-              <button onClick={() => { signOut(); setMobileOpen(false); }} style={{
-                textAlign: 'center', fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase',
-                border: '1px solid rgba(206,17,38,0.25)', color: '#f87171', padding: 14, borderRadius: 6, background: 'none', cursor: 'pointer',
-              }}>
+              <button onClick={() => { signOut(); setMobileOpen(false); }} style={{ textAlign: 'center', fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', border: '1px solid rgba(206,17,38,0.25)', color: '#f87171', padding: 14, borderRadius: 6, background: 'none', cursor: 'pointer' }}>
                 Sign out
               </button>
             ) : (
-              <Link href="/auth" onClick={() => setMobileOpen(false)} style={{
-                textAlign: 'center', fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase',
-                border: '1px solid rgba(245,236,215,0.15)', color: 'rgba(245,236,215,0.55)', padding: 14, borderRadius: 6, textDecoration: 'none',
-              }}>
+              <Link href="/auth" onClick={() => setMobileOpen(false)} style={{ textAlign: 'center', fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', border: '1px solid rgba(245,236,215,0.15)', color: 'rgba(245,236,215,0.55)', padding: 14, borderRadius: 6, textDecoration: 'none', display: 'block' }}>
                 Sign in
               </Link>
             )}
-            <button style={{
-              fontFamily: 'var(--font-dm-mono, monospace)',
-              fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase',
-              background: '#C8922A', color: '#0D0B08',
-              border: 'none', padding: 14, borderRadius: 6,
-              cursor: 'pointer', fontWeight: 700,
-            }}>
+            <Link href="/organizer/events/new" onClick={() => setMobileOpen(false)} style={{ textAlign: 'center', fontFamily: 'var(--font-dm-mono, monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', background: '#C8922A', color: '#0D0B08', padding: 14, borderRadius: 6, fontWeight: 700, textDecoration: 'none', display: 'block' }}>
               + List Event
-            </button>
+            </Link>
           </div>
         </div>
       )}
     </>
   );
-                    }
+}
