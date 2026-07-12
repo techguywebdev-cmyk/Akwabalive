@@ -1,5 +1,4 @@
 'use client';
-
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
