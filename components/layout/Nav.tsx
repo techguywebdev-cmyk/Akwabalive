@@ -8,7 +8,7 @@ const LINKS = [
   { href: '/',       label: 'Discover' },
   { href: '/events', label: 'Events'   },
   { href: '#',       label: 'Live',    live: true },
-  { href: '#',       label: 'Moments' },
+  { href: '/moments', label: 'Moments' },
   { href: '#',       label: 'Cities'  },
 ];
 
