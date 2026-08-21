@@ -14,8 +14,7 @@ export default function PhotoStrip({ photos, onSelect }: PhotoStripProps) {
         display: 'flex',
         gap: 6,
         overflowX: 'auto',
-        paddingBottom: 4,
-        marginBottom: 12,
+        paddingBottom: 2,
         scrollbarWidth: 'none',
       }}
     >
@@ -32,7 +31,8 @@ export default function PhotoStrip({ photos, onSelect }: PhotoStripProps) {
             backgroundImage: `url(${src})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            border: '1px solid rgba(255,255,255,0.15)',
+            border: '1.5px solid rgba(255,255,255,0.4)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.55)',
             cursor: 'pointer',
             padding: 0,
             outline: 'none',
