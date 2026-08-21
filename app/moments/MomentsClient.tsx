@@ -56,7 +56,6 @@ export default function MomentsClient() {
     hideTimer.current = setTimeout(() => setChromeVisible(false), 2800);
   }, []);
 
-  // Show chrome when moment changes, then auto-hide
   useEffect(() => {
     bumpChrome();
     return () => {
@@ -64,14 +63,11 @@ export default function MomentsClient() {
     };
   }, [activeIdx, bumpChrome]);
 
-  // Sync URL when active moment changes
   useEffect(() => {
     if (!moment?.id) return;
-    const url = `/moments?id=${moment.id}`;
-    window.history.replaceState(null, '', url);
+    window.history.replaceState(null, '', `/moments?id=${moment.id}`);
   }, [moment?.id]);
 
-  // Keyboard: arrows
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (showComments || showSearch || lightbox) return;
@@ -248,27 +244,43 @@ export default function MomentsClient() {
         position: 'fixed',
         inset: 0,
         background: '#000',
-        display: 'flex',
-        flexDirection: 'column',
         overflow: 'hidden',
       }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* HEADER — auto-hides after \~2.8s */}
+      {/* FULL-SCREEN VIDEO */}
+      <div style={{ position: 'absolute', inset: 0, background: '#000' }}>
+        {moment && <CustomPlayer youtubeId={moment.youtube_id} title={moment.title} />}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 3,
+            background:
+              'linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 22%, transparent 42%)',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+
+      {/* HEADER — overlays video, slides away with no leftover bar */}
       <div
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
           height: 56,
-          flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 16px',
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%)',
-          borderBottom: 'none',
+          paddingTop: 'env(safe-area-inset-top)',
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)',
           zIndex: 20,
           opacity: chromeVisible ? 1 : 0,
-          transform: chromeVisible ? 'translateY(0)' : 'translateY(-14px)',
+          transform: chromeVisible ? 'translateY(0)' : 'translateY(-100%)',
           transition: 'opacity 280ms ease, transform 280ms ease',
           pointerEvents: chromeVisible ? 'auto' : 'none',
         }}
@@ -283,12 +295,13 @@ export default function MomentsClient() {
             fontSize: 8,
             letterSpacing: '2px',
             textTransform: 'uppercase',
-            color: 'rgba(245,236,215,0.75)',
-            background: 'rgba(255,255,255,0.1)',
-            border: '1px solid rgba(255,255,255,0.12)',
+            color: 'rgba(245,236,215,0.85)',
+            background: 'rgba(0,0,0,0.35)',
+            border: '1px solid rgba(255,255,255,0.14)',
             padding: '7px 14px',
             borderRadius: 20,
             textDecoration: 'none',
+            backdropFilter: 'blur(12px)',
           }}
         >
           <ArrowLeft size={12} /> Back
@@ -302,7 +315,7 @@ export default function MomentsClient() {
             letterSpacing: '3px',
             textTransform: 'uppercase',
             color: '#F5ECD7',
-            textShadow: '0 1px 8px rgba(0,0,0,0.8)',
+            textShadow: '0 1px 10px rgba(0,0,0,0.9)',
           }}
         >
           AK<span style={{ color: C.gold }}>W</span>AABA
@@ -318,9 +331,10 @@ export default function MomentsClient() {
                 textTransform: 'uppercase',
                 padding: '4px 10px',
                 borderRadius: 20,
-                background: 'rgba(200,146,42,0.22)',
+                background: 'rgba(200,146,42,0.25)',
                 color: C.gold,
-                border: '1px solid rgba(200,146,42,0.35)',
+                border: '1px solid rgba(200,146,42,0.4)',
+                backdropFilter: 'blur(8px)',
               }}
             >
               Featured
@@ -334,9 +348,10 @@ export default function MomentsClient() {
               textTransform: 'uppercase',
               padding: '4px 10px',
               borderRadius: 20,
-              background: 'rgba(255,255,255,0.1)',
-              color: 'rgba(245,236,215,0.55)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(0,0,0,0.4)',
+              color: 'rgba(245,236,215,0.65)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              backdropFilter: 'blur(8px)',
             }}
           >
             {activeIdx + 1} / {total}
@@ -344,105 +359,90 @@ export default function MomentsClient() {
         </div>
       </div>
 
-      {/* VIDEO AREA */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#000' }}>
-        {moment && <CustomPlayer youtubeId={moment.youtube_id} title={moment.title} />}
+      {/* RIGHT ACTIONS */}
+      {moment && (
+        <MomentActions
+          liked={liked}
+          likeCount={likeCount}
+          commentCount={comments.length}
+          eventSlug={moment.event_slug}
+          onLike={handleLike}
+          onComments={() => {
+            bumpChrome();
+            setShowComments((v) => !v);
+          }}
+          onSearch={() => {
+            bumpChrome();
+            setShowSearch(true);
+          }}
+          onShare={handleShare}
+        />
+      )}
 
-        {/* Softer gradient — text/photos use their own scrim in MomentInfo */}
+      {/* BOTTOM INFO + PHOTOS */}
+      {moment && (
+        <MomentInfo moment={moment} photos={photos} onPhotoClick={setLightbox} />
+      )}
+
+      {showComments && moment && (
+        <CommentsSheet
+          moment={moment}
+          comments={comments}
+          onClose={() => setShowComments(false)}
+          onSend={handleSend}
+          onGift={(c) => setGiftTarget(c)}
+          user={user}
+          profile={profile}
+        />
+      )}
+
+      {giftTarget && moment && (
+        <GiftModal
+          comment={giftTarget}
+          moment={moment}
+          onClose={() => setGiftTarget(null)}
+          onConfirm={handleGift}
+        />
+      )}
+
+      {showSearch && (
+        <SearchSheet
+          moments={moments}
+          onSelect={setActiveIdx}
+          onClose={() => setShowSearch(false)}
+        />
+      )}
+
+      {lightbox && (
+        <Lightbox
+          photos={photos}
+          current={lightbox}
+          onClose={() => setLightbox(null)}
+          onChange={setLightbox}
+        />
+      )}
+
+      {shareToast && (
         <div
           style={{
             position: 'absolute',
-            inset: 0,
-            zIndex: 3,
-            background:
-              'linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.12) 32%, transparent 55%)',
-            pointerEvents: 'none',
+            bottom: 100,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 50,
+            background: C.glass,
+            border: `1px solid ${C.glassBd}`,
+            borderRadius: 12,
+            padding: '10px 18px',
+            fontFamily: 'var(--font-inter,sans-serif)',
+            fontSize: 13,
+            color: C.cream,
+            backdropFilter: 'blur(16px)',
           }}
-        />
-
-        {moment && (
-          <MomentActions
-            liked={liked}
-            likeCount={likeCount}
-            commentCount={comments.length}
-            eventSlug={moment.event_slug}
-            onLike={handleLike}
-            onComments={() => {
-              bumpChrome();
-              setShowComments((v) => !v);
-            }}
-            onSearch={() => {
-              bumpChrome();
-              setShowSearch(true);
-            }}
-            onShare={handleShare}
-          />
-        )}
-
-        {moment && (
-          <MomentInfo moment={moment} photos={photos} onPhotoClick={setLightbox} />
-        )}
-
-        {showComments && moment && (
-          <CommentsSheet
-            moment={moment}
-            comments={comments}
-            onClose={() => setShowComments(false)}
-            onSend={handleSend}
-            onGift={(c) => setGiftTarget(c)}
-            user={user}
-            profile={profile}
-          />
-        )}
-
-        {giftTarget && moment && (
-          <GiftModal
-            comment={giftTarget}
-            moment={moment}
-            onClose={() => setGiftTarget(null)}
-            onConfirm={handleGift}
-          />
-        )}
-
-        {showSearch && (
-          <SearchSheet
-            moments={moments}
-            onSelect={setActiveIdx}
-            onClose={() => setShowSearch(false)}
-          />
-        )}
-
-        {lightbox && (
-          <Lightbox
-            photos={photos}
-            current={lightbox}
-            onClose={() => setLightbox(null)}
-            onChange={setLightbox}
-          />
-        )}
-
-        {shareToast && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 100,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 50,
-              background: C.glass,
-              border: `1px solid ${C.glassBd}`,
-              borderRadius: 12,
-              padding: '10px 18px',
-              fontFamily: 'var(--font-inter,sans-serif)',
-              fontSize: 13,
-              color: C.cream,
-              backdropFilter: 'blur(16px)',
-            }}
-          >
-            Link copied
-          </div>
-        )}
-      </div>
+        >
+          Link copied
+        </div>
+      )}
     </div>
   );
 }
@@ -601,4 +601,4 @@ function Lightbox({
       </div>
     </div>
   );
-          }
+}
