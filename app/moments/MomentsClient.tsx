@@ -18,7 +18,7 @@ import { useMoments } from '@/hooks/useMoments';
 import { useMomentComments } from '@/hooks/useMomentComments';
 import { useMomentLikes } from '@/hooks/useMomentLikes';
 
-export default function MomentsPage() {
+export default function MomentsClient() {
   const { user, profile } = useAuth();
   const supabase = createClient();
   const router = useRouter();
@@ -44,9 +44,25 @@ export default function MomentsPage() {
   const [giftTarget, setGiftTarget] = useState<Comment | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [shareToast, setShareToast] = useState(false);
+  const [chromeVisible, setChromeVisible] = useState(true);
 
   const touchY = useRef(0);
   const touchX = useRef(0);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const bumpChrome = useCallback(() => {
+    setChromeVisible(true);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setChromeVisible(false), 2800);
+  }, []);
+
+  // Show chrome when moment changes, then auto-hide
+  useEffect(() => {
+    bumpChrome();
+    return () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    };
+  }, [activeIdx, bumpChrome]);
 
   // Sync URL when active moment changes
   useEffect(() => {
@@ -55,7 +71,7 @@ export default function MomentsPage() {
     window.history.replaceState(null, '', url);
   }, [moment?.id]);
 
-  // Keyboard: arrows + space
+  // Keyboard: arrows
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (showComments || showSearch || lightbox) return;
@@ -63,19 +79,21 @@ export default function MomentsPage() {
         e.preventDefault();
         goNext();
         setShowComments(false);
+        bumpChrome();
       } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
         e.preventDefault();
         goPrev();
         setShowComments(false);
+        bumpChrome();
       }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [goNext, goPrev, showComments, showSearch, lightbox]);
+  }, [goNext, goPrev, showComments, showSearch, lightbox, bumpChrome]);
 
   const handleShare = useCallback(async () => {
     if (!moment) return;
-    const url = `${window.location.origin}/moments?id=${moment.id}`;
+    const url = `\( {window.location.origin}/moments?id= \){moment.id}`;
     const data = {
       title: moment.title,
       text: `${moment.title} — ${moment.event_name} on Akwaaba`,
@@ -116,32 +134,30 @@ export default function MomentsPage() {
     [user, send],
   );
 
-  const handleGift = useCallback(
-    async () => {
-      if (!user || !giftTarget || !moment) return;
-      // Create a gifted ticket record (requires tickets table + RLS)
-      const { error } = await supabase.from('tickets').insert({
-        user_id: giftTarget.user_id,
-        event_slug: moment.event_slug ?? 'unknown',
-        event_title: moment.event_name,
-        event_date: moment.year ? `${moment.year}-01-01` : new Date().toISOString().slice(0, 10),
-        event_venue: 'Gifted via Moments',
-        ticket_tier: 'Gift',
-        quantity: 1,
-        total_paid: 0,
-        gifted_by: user.id,
-        gifted_to: giftTarget.user_id,
-        status: 'gifted',
-      });
-      if (error) throw new Error(error.message);
-    },
-    [user, giftTarget, moment, supabase],
-  );
+  const handleGift = useCallback(async () => {
+    if (!user || !giftTarget || !moment) return;
+    const { error } = await supabase.from('tickets').insert({
+      user_id: giftTarget.user_id,
+      event_slug: moment.event_slug ?? 'unknown',
+      event_title: moment.event_name,
+      event_date: moment.year ? `${moment.year}-01-01` : new Date().toISOString().slice(0, 10),
+      event_venue: 'Gifted via Moments',
+      ticket_tier: 'Gift',
+      quantity: 1,
+      total_paid: 0,
+      gifted_by: user.id,
+      gifted_to: giftTarget.user_id,
+      status: 'gifted',
+    });
+    if (error) throw new Error(error.message);
+  }, [user, giftTarget, moment, supabase]);
 
   function handleTouchStart(e: React.TouchEvent) {
     touchY.current = e.touches[0].clientY;
     touchX.current = e.touches[0].clientX;
+    bumpChrome();
   }
+
   function handleTouchEnd(e: React.TouchEvent) {
     if (showComments || showSearch || lightbox) return;
     const dy = touchY.current - e.changedTouches[0].clientY;
@@ -153,6 +169,7 @@ export default function MomentsPage() {
       goPrev();
       setShowComments(false);
     }
+    bumpChrome();
   }
 
   if (loading) {
@@ -223,8 +240,7 @@ export default function MomentsPage() {
     );
   }
 
-  const photos =
-    EVENT_PHOTOS[moment?.event_slug ?? ''] ?? EVENT_PHOTOS.default;
+  const photos = EVENT_PHOTOS[moment?.event_slug ?? ''] ?? EVENT_PHOTOS.default;
 
   return (
     <div
@@ -239,7 +255,7 @@ export default function MomentsPage() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* HEADER */}
+      {/* HEADER — auto-hides after \~2.8s */}
       <div
         style={{
           height: 56,
@@ -247,10 +263,14 @@ export default function MomentsPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 18px',
-          background: 'rgba(0,0,0,0.92)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          padding: '0 16px',
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%)',
+          borderBottom: 'none',
           zIndex: 20,
+          opacity: chromeVisible ? 1 : 0,
+          transform: chromeVisible ? 'translateY(0)' : 'translateY(-14px)',
+          transition: 'opacity 280ms ease, transform 280ms ease',
+          pointerEvents: chromeVisible ? 'auto' : 'none',
         }}
       >
         <Link
@@ -263,9 +283,9 @@ export default function MomentsPage() {
             fontSize: 8,
             letterSpacing: '2px',
             textTransform: 'uppercase',
-            color: 'rgba(245,236,215,0.65)',
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(245,236,215,0.75)',
+            background: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.12)',
             padding: '7px 14px',
             borderRadius: 20,
             textDecoration: 'none',
@@ -273,6 +293,7 @@ export default function MomentsPage() {
         >
           <ArrowLeft size={12} /> Back
         </Link>
+
         <span
           style={{
             fontFamily: 'var(--font-syne,sans-serif)',
@@ -281,10 +302,12 @@ export default function MomentsPage() {
             letterSpacing: '3px',
             textTransform: 'uppercase',
             color: '#F5ECD7',
+            textShadow: '0 1px 8px rgba(0,0,0,0.8)',
           }}
         >
           AK<span style={{ color: C.gold }}>W</span>AABA
         </span>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {moment?.is_featured && (
             <span
@@ -295,9 +318,9 @@ export default function MomentsPage() {
                 textTransform: 'uppercase',
                 padding: '4px 10px',
                 borderRadius: 20,
-                background: 'rgba(200,146,42,0.18)',
+                background: 'rgba(200,146,42,0.22)',
                 color: C.gold,
-                border: '1px solid rgba(200,146,42,0.3)',
+                border: '1px solid rgba(200,146,42,0.35)',
               }}
             >
               Featured
@@ -311,9 +334,9 @@ export default function MomentsPage() {
               textTransform: 'uppercase',
               padding: '4px 10px',
               borderRadius: 20,
-              background: 'rgba(255,255,255,0.07)',
-              color: 'rgba(245,236,215,0.4)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(255,255,255,0.1)',
+              color: 'rgba(245,236,215,0.55)',
+              border: '1px solid rgba(255,255,255,0.1)',
             }}
           >
             {activeIdx + 1} / {total}
@@ -325,13 +348,14 @@ export default function MomentsPage() {
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#000' }}>
         {moment && <CustomPlayer youtubeId={moment.youtube_id} title={moment.title} />}
 
+        {/* Softer gradient — text/photos use their own scrim in MomentInfo */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
             zIndex: 3,
             background:
-              'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.1) 40%, transparent 65%)',
+              'linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.12) 32%, transparent 55%)',
             pointerEvents: 'none',
           }}
         />
@@ -343,8 +367,14 @@ export default function MomentsPage() {
             commentCount={comments.length}
             eventSlug={moment.event_slug}
             onLike={handleLike}
-            onComments={() => setShowComments((v) => !v)}
-            onSearch={() => setShowSearch(true)}
+            onComments={() => {
+              bumpChrome();
+              setShowComments((v) => !v);
+            }}
+            onSearch={() => {
+              bumpChrome();
+              setShowSearch(true);
+            }}
             onShare={handleShare}
           />
         )}
@@ -571,4 +601,4 @@ function Lightbox({
       </div>
     </div>
   );
-}
+          }
