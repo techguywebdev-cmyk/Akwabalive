@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { Ticket } from 'lucide-react';
 import type { Moment } from './types';
 import { C } from './types';
 import PhotoStrip from './PhotoStrip';
@@ -21,7 +19,7 @@ export default function MomentInfo({ moment, photos, onPhotoClick }: MomentInfoP
         left: 0,
         right: 72,
         zIndex: 10,
-        padding: '0 18px 20px',
+        padding: '0 16px 16px',
       }}
     >
       <p
@@ -63,7 +61,7 @@ export default function MomentInfo({ moment, photos, onPhotoClick }: MomentInfoP
           {moment.description}
         </p>
       )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         {moment.year != null && (
           <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3 }}>
             📅 {moment.year}
@@ -92,30 +90,6 @@ export default function MomentInfo({ moment, photos, onPhotoClick }: MomentInfoP
       </div>
 
       <PhotoStrip photos={photos} onSelect={onPhotoClick} />
-
-      {moment.event_slug && (
-        <Link
-          href={`/events/${moment.event_slug}`}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 8,
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            color: '#0D0B08',
-            background: C.gold,
-            padding: '10px 18px',
-            borderRadius: 22,
-            textDecoration: 'none',
-            fontWeight: 700,
-            marginTop: 4,
-          }}
-        >
-          <Ticket size={13} /> Get Tickets
-        </Link>
-      )}
     </div>
   );
 }
