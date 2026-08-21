@@ -12,7 +12,7 @@ interface GlassBtnProps {
   badge?: number;
 }
 
-function GlassBtn({ icon, label, active, onClick, badge }: GlassBtnProps) {
+function ActionBtn({ icon, label, active, onClick, badge }: GlassBtnProps) {
   return (
     <button
       onClick={onClick}
@@ -20,7 +20,7 @@ function GlassBtn({ icon, label, active, onClick, badge }: GlassBtnProps) {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 4,
+        gap: 3,
         background: 'none',
         border: 'none',
         cursor: 'pointer',
@@ -29,18 +29,18 @@ function GlassBtn({ icon, label, active, onClick, badge }: GlassBtnProps) {
     >
       <div
         style={{
-          width: 46,
-          height: 46,
+          width: 44,
+          height: 44,
           borderRadius: '50%',
-          background: C.glass,
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: `1px solid ${active ? 'rgba(200,146,42,0.5)' : C.glassBd}`,
+          background: active ? 'rgba(200,146,42,0.25)' : 'rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: `1px solid ${active ? 'rgba(200,146,42,0.55)' : 'rgba(255,255,255,0.18)'}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
         }}
       >
         {icon}
@@ -48,27 +48,36 @@ function GlassBtn({ icon, label, active, onClick, badge }: GlassBtnProps) {
           <div
             style={{
               position: 'absolute',
-              top: -3,
-              right: -3,
-              minWidth: 17,
-              height: 17,
-              borderRadius: 9,
+              top: -2,
+              right: -2,
+              minWidth: 16,
+              height: 16,
+              borderRadius: 8,
               background: C.red,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontFamily: 'monospace',
-              fontSize: 7,
+              fontSize: 8,
               color: '#fff',
               fontWeight: 700,
               padding: '0 3px',
+              border: '1.5px solid rgba(0,0,0,0.4)',
             }}
           >
             {badge > 99 ? '99+' : badge}
           </div>
         )}
       </div>
-      <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, color: C.c3 }}>
+      <span
+        style={{
+          fontFamily: 'var(--font-inter,sans-serif)',
+          fontSize: 10,
+          fontWeight: 500,
+          color: 'rgba(255,250,240,0.9)',
+          textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+        }}
+      >
         {label}
       </span>
     </button>
@@ -100,40 +109,41 @@ export default function MomentActions({
     <div
       style={{
         position: 'absolute',
-        right: 12,
-        bottom: 160,
-        zIndex: 10,
+        right: 10,
+        bottom: 150,
+        zIndex: 12,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 14,
+        gap: 16,
       }}
     >
-      <GlassBtn
+      <ActionBtn
         icon={
           <Heart
             size={20}
             fill={liked ? C.red : 'none'}
-            style={{ color: liked ? C.red : C.cream }}
+            strokeWidth={liked ? 0 : 1.75}
+            style={{ color: liked ? C.red : '#FFFEF8' }}
           />
         }
         label={formatCount(likeCount)}
         active={liked}
         onClick={onLike}
       />
-      <GlassBtn
-        icon={<MessageCircle size={20} style={{ color: C.cream }} />}
+      <ActionBtn
+        icon={<MessageCircle size={20} strokeWidth={1.75} style={{ color: '#FFFEF8' }} />}
         label={formatCount(commentCount)}
         badge={commentCount}
         onClick={onComments}
       />
-      <GlassBtn
-        icon={<Search size={20} style={{ color: C.cream }} />}
+      <ActionBtn
+        icon={<Search size={20} strokeWidth={1.75} style={{ color: '#FFFEF8' }} />}
         label="Search"
         onClick={onSearch}
       />
-      <GlassBtn
-        icon={<Share2 size={20} style={{ color: C.cream }} />}
+      <ActionBtn
+        icon={<Share2 size={20} strokeWidth={1.75} style={{ color: '#FFFEF8' }} />}
         label="Share"
         onClick={onShare}
       />
@@ -144,27 +154,35 @@ export default function MomentActions({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 4,
+            gap: 3,
             textDecoration: 'none',
           }}
         >
           <div
             style={{
-              width: 46,
-              height: 46,
+              width: 44,
+              height: 44,
               borderRadius: '50%',
-              background: C.glass,
-              backdropFilter: 'blur(20px)',
-              border: `1px solid ${C.glassBd}`,
+              background: 'rgba(200,146,42,0.3)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(200,146,42,0.55)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
             }}
           >
-            <Ticket size={20} style={{ color: C.gold }} />
+            <Ticket size={18} style={{ color: C.gold }} />
           </div>
-          <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, color: C.c3 }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-inter,sans-serif)',
+              fontSize: 10,
+              fontWeight: 500,
+              color: C.gold,
+              textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+            }}
+          >
             Tickets
           </span>
         </Link>
