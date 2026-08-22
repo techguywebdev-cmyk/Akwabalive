@@ -15,12 +15,6 @@ interface CustomPlayerProps {
   onReady?: () => void;
 }
 
-/**
- * Custom YouTube player that hides native chrome.
- * - Dynamic origin (works on localhost + production)
- * - Graceful fallback iframe if API fails
- * - Thumbnail until ready
- */
 export default function CustomPlayer({ youtubeId, title, onReady }: CustomPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
@@ -55,8 +49,11 @@ export default function CustomPlayer({ youtubeId, title, onReady }: CustomPlayer
       try {
         playerRef.current = new window.YT.Player(containerRef.current, {
           videoId: youtubeId,
+          width: '100%',
+          height: '100%',
           playerVars: {
             autoplay: 1,
+            mute: 1,
             controls: 0,
             rel: 0,
             modestbranding: 1,
@@ -64,7 +61,6 @@ export default function CustomPlayer({ youtubeId, title, onReady }: CustomPlayer
             iv_load_policy: 3,
             fs: 0,
             disablekb: 1,
-            showinfo: 0,
             origin,
           },
           events: {
@@ -72,6 +68,7 @@ export default function CustomPlayer({ youtubeId, title, onReady }: CustomPlayer
               if (destroyed) return;
               setReady(true);
               try {
+                e.target.mute();
                 e.target.playVideo();
               } catch {
                 /* autoplay may be blocked */
@@ -110,7 +107,6 @@ export default function CustomPlayer({ youtubeId, title, onReady }: CustomPlayer
         prev?.();
         if (!destroyed) initPlayer();
       };
-      // Fallback if API never loads
       failTimer = setTimeout(() => {
         if (!destroyed && !playerRef.current) setUseFallback(true);
       }, 8000);
@@ -128,45 +124,51 @@ export default function CustomPlayer({ youtubeId, title, onReady }: CustomPlayer
     if (!playerRef.current) return;
     try {
       if (playing) playerRef.current.pauseVideo();
-      else playerRef.current.playVideo();
+      else {
+        try {
+          playerRef.current.unMute();
+        } catch {
+          /* ignore */
+        }
+        playerRef.current.playVideo();
+      }
     } catch {
       /* ignore */
     }
   }
 
+  const coverWrap: React.CSSProperties = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    /* Cover: fill height on portrait, fill width on landscape */
+    width: 'max(100%, 177.78vh)',
+    height: 'max(100%, 56.25vw)',
+  };
+
   if (useFallback) {
     return (
-      <div style={{ position: 'absolute', inset: 0, background: '#000', zIndex: 1 }}>
-        <iframe
-          title={title}
-          src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&playsinline=1&rel=0&modestbranding=1`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{ width: '100%', height: '100%', border: 'none' }}
-        />
+      <div style={{ position: 'absolute', inset: 0, background: '#000', zIndex: 1, overflow: 'hidden' }}>
+        <div style={coverWrap}>
+          <iframe
+            title={title}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&controls=0`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{ width: '100%', height: '100%', border: 'none' }}
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ position: 'absolute', inset: 0, background: '#000', zIndex: 1 }}>
-      {/* Oversized container clips YouTube chrome */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '-52px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 'calc(177.78vh)',
-          minWidth: '100%',
-          height: 'calc(100% + 52px)',
-          overflow: 'hidden',
-        }}
-      >
+    <div style={{ position: 'absolute', inset: 0, background: '#000', zIndex: 1, overflow: 'hidden' }}>
+      <div style={coverWrap}>
         <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
       </div>
 
-      {/* Tap overlay — play/pause, blocks native clicks */}
       <div
         onClick={togglePlay}
         role="button"
@@ -184,41 +186,3 @@ export default function CustomPlayer({ youtubeId, title, onReady }: CustomPlayer
       {!ready && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 7, background: '#000' }}>
           <img
-            src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`}
-            alt={title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
-            }}
-          />
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} />
-        </div>
-      )}
-
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 4,
-          background: '#000',
-          zIndex: 6,
-          pointerEvents: 'none',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 80,
-          background: '#000',
-          zIndex: 6,
-          pointerEvents: 'none',
-        }}
-      />
-    </div>
-  );
-}
