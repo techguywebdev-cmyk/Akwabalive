@@ -1,191 +1,160 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, MessageCircle, Search, Share2, Ticket } from 'lucide-react';
+import { MessageCircle, Ticket, Users, Calendar } from 'lucide-react';
 import { C, formatCount } from './types';
 
-interface GlassBtnProps {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-  onClick?: () => void;
-  badge?: number;
+interface MomentActionsProps {
+  commentCount: number;
+  eventSlug: string | null;
+  year: number | null;
+  /** Optional — pass from parent when you have real data */
+  attendeeCount?: number;
+  onComments: () => void;
 }
 
-function ActionBtn({ icon, label, active, onClick, badge }: GlassBtnProps) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 3,
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        padding: 0,
-      }}
-    >
+function Pill({
+  icon,
+  label,
+  sub,
+  onClick,
+  href,
+  accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  sub?: string;
+  onClick?: () => void;
+  href?: string;
+  accent?: boolean;
+}) {
+  const inner = (
+    <>
       <div
         style={{
-          width: 44,
-          height: 44,
+          width: 42,
+          height: 42,
           borderRadius: '50%',
-          background: active ? 'rgba(200,146,42,0.25)' : 'rgba(0,0,0,0.4)',
+          background: accent ? 'rgba(200,146,42,0.28)' : 'rgba(0,0,0,0.42)',
           backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: `1px solid ${active ? 'rgba(200,146,42,0.55)' : 'rgba(255,255,255,0.18)'}`,
+          border: `1px solid ${accent ? 'rgba(200,146,42,0.55)' : 'rgba(255,255,255,0.16)'}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          position: 'relative',
           boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
         }}
       >
         {icon}
-        {badge !== undefined && badge > 0 && (
+      </div>
+      <div style={{ textAlign: 'center', maxWidth: 64 }}>
+        <div
+          style={{
+            fontFamily: 'var(--font-inter,sans-serif)',
+            fontSize: 11,
+            fontWeight: 600,
+            color: accent ? C.gold : '#FFFEF8',
+            textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+            lineHeight: 1.2,
+          }}
+        >
+          {label}
+        </div>
+        {sub && (
           <div
             style={{
-              position: 'absolute',
-              top: -2,
-              right: -2,
-              minWidth: 16,
-              height: 16,
-              borderRadius: 8,
-              background: C.red,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'monospace',
+              fontFamily: 'var(--font-dm-mono,monospace)',
               fontSize: 8,
-              color: '#fff',
-              fontWeight: 700,
-              padding: '0 3px',
-              border: '1.5px solid rgba(0,0,0,0.4)',
+              color: 'rgba(255,250,240,0.55)',
+              marginTop: 2,
+              letterSpacing: '0.5px',
             }}
           >
-            {badge > 99 ? '99+' : badge}
+            {sub}
           </div>
         )}
       </div>
-      <span
-        style={{
-          fontFamily: 'var(--font-inter,sans-serif)',
-          fontSize: 10,
-          fontWeight: 500,
-          color: 'rgba(255,250,240,0.9)',
-          textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-        }}
-      >
-        {label}
-      </span>
+    </>
+  );
+
+  const wrapStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 4,
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 0,
+    textDecoration: 'none',
+  };
+
+  if (href) {
+    return (
+      <Link href={href} style={wrapStyle}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} style={wrapStyle}>
+      {inner}
     </button>
   );
 }
 
-interface MomentActionsProps {
-  liked: boolean;
-  likeCount: number;
-  commentCount: number;
-  eventSlug: string | null;
-  onLike: () => void;
-  onComments: () => void;
-  onSearch: () => void;
-  onShare: () => void;
-}
-
 export default function MomentActions({
-  liked,
-  likeCount,
   commentCount,
   eventSlug,
-  onLike,
+  year,
+  attendeeCount = 0,
   onComments,
-  onSearch,
-  onShare,
 }: MomentActionsProps) {
   return (
     <div
       style={{
         position: 'absolute',
         right: 10,
-        bottom: 150,
+        bottom: 160,
         zIndex: 12,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 16,
+        gap: 18,
       }}
     >
-      <ActionBtn
-        icon={
-          <Heart
-            size={20}
-            fill={liked ? C.red : 'none'}
-            strokeWidth={liked ? 0 : 1.75}
-            style={{ color: liked ? C.red : '#FFFEF8' }}
-          />
-        }
-        label={formatCount(likeCount)}
-        active={liked}
-        onClick={onLike}
+      {/* Attendees */}
+      <Pill
+        icon={<Users size={18} style={{ color: '#FFFEF8' }} strokeWidth={1.75} />}
+        label={attendeeCount > 0 ? formatCount(attendeeCount) : '—'}
+        sub="Going"
       />
-      <ActionBtn
-        icon={<MessageCircle size={20} strokeWidth={1.75} style={{ color: '#FFFEF8' }} />}
+
+      {/* Year / when */}
+      {year != null && (
+        <Pill
+          icon={<Calendar size={18} style={{ color: '#FFFEF8' }} strokeWidth={1.75} />}
+          label={String(year)}
+          sub="Edition"
+        />
+      )}
+
+      {/* Comments — kept, still useful */}
+      <Pill
+        icon={<MessageCircle size={18} style={{ color: '#FFFEF8' }} strokeWidth={1.75} />}
         label={formatCount(commentCount)}
-        badge={commentCount}
+        sub="Chat"
         onClick={onComments}
       />
-      <ActionBtn
-        icon={<Search size={20} strokeWidth={1.75} style={{ color: '#FFFEF8' }} />}
-        label="Search"
-        onClick={onSearch}
-      />
-      <ActionBtn
-        icon={<Share2 size={20} strokeWidth={1.75} style={{ color: '#FFFEF8' }} />}
-        label="Share"
-        onClick={onShare}
-      />
+
+      {/* Tickets — primary CTA */}
       {eventSlug && (
-        <Link
+        <Pill
+          icon={<Ticket size={18} style={{ color: C.gold }} strokeWidth={1.75} />}
+          label="Tickets"
+          sub="Buy"
           href={`/events/${eventSlug}`}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 3,
-            textDecoration: 'none',
-          }}
-        >
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              background: 'rgba(200,146,42,0.3)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid rgba(200,146,42,0.55)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
-            }}
-          >
-            <Ticket size={18} style={{ color: C.gold }} />
-          </div>
-          <span
-            style={{
-              fontFamily: 'var(--font-inter,sans-serif)',
-              fontSize: 10,
-              fontWeight: 500,
-              color: C.gold,
-              textShadow: '0 1px 4px rgba(0,0,0,0.9)',
-            }}
-          >
-            Tickets
-          </span>
-        </Link>
+          accent
+        />
       )}
     </div>
   );
