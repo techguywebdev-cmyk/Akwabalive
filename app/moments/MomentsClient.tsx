@@ -264,7 +264,7 @@ export default function MomentsClient() {
         />
       </div>
 
-      {/* HEADER — overlays video, slides away with no leftover bar */}
+      {/* HEADER — transparent, cleaned up */}
       <div
         style={{
           position: 'absolute',
@@ -277,7 +277,7 @@ export default function MomentsClient() {
           justifyContent: 'space-between',
           padding: '0 16px',
           paddingTop: 'env(safe-area-inset-top)',
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)',
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%)',
           zIndex: 20,
           opacity: chromeVisible ? 1 : 0,
           transform: chromeVisible ? 'translateY(0)' : 'translateY(-100%)',
@@ -285,27 +285,30 @@ export default function MomentsClient() {
           pointerEvents: chromeVisible ? 'auto' : 'none',
         }}
       >
-        <Link
-          href="/"
+        {/* Hamburger → home / menu */}
+        <button
+          onClick={() => router.push('/')}
+          aria-label="Menu"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 8,
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            color: 'rgba(245,236,215,0.85)',
+            width: 40,
+            height: 40,
+            borderRadius: 12,
             background: 'rgba(0,0,0,0.35)',
             border: '1px solid rgba(255,255,255,0.14)',
-            padding: '7px 14px',
-            borderRadius: 20,
-            textDecoration: 'none',
             backdropFilter: 'blur(12px)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            cursor: 'pointer',
+            padding: 0,
           }}
         >
-          <ArrowLeft size={12} /> Back
-        </Link>
+          <span style={{ width: 16, height: 1.5, background: '#F5ECD7', borderRadius: 1 }} />
+          <span style={{ width: 16, height: 1.5, background: '#F5ECD7', borderRadius: 1 }} />
+          <span style={{ width: 12, height: 1.5, background: '#F5ECD7', borderRadius: 1 }} />
+        </button>
 
         <span
           style={{
@@ -321,42 +324,24 @@ export default function MomentsClient() {
           AK<span style={{ color: C.gold }}>W</span>AABA
         </span>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {moment?.is_featured && (
-            <span
-              style={{
-                fontFamily: 'var(--font-dm-mono,monospace)',
-                fontSize: 7,
-                letterSpacing: '1.5px',
-                textTransform: 'uppercase',
-                padding: '4px 10px',
-                borderRadius: 20,
-                background: 'rgba(200,146,42,0.25)',
-                color: C.gold,
-                border: '1px solid rgba(200,146,42,0.4)',
-                backdropFilter: 'blur(8px)',
-              }}
-            >
-              Featured
-            </span>
-          )}
-          <span
-            style={{
-              fontFamily: 'var(--font-dm-mono,monospace)',
-              fontSize: 7,
-              letterSpacing: '1.5px',
-              textTransform: 'uppercase',
-              padding: '4px 10px',
-              borderRadius: 20,
-              background: 'rgba(0,0,0,0.4)',
-              color: 'rgba(245,236,215,0.65)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              backdropFilter: 'blur(8px)',
-            }}
-          >
-            {activeIdx + 1} / {total}
-          </span>
-        </div>
+        <span
+          style={{
+            fontFamily: 'var(--font-dm-mono,monospace)',
+            fontSize: 7,
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+            padding: '4px 10px',
+            borderRadius: 20,
+            background: 'rgba(0,0,0,0.4)',
+            color: 'rgba(245,236,215,0.65)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            backdropFilter: 'blur(8px)',
+            minWidth: 40,
+            textAlign: 'center',
+          }}
+        >
+          {activeIdx + 1} / {total}
+        </span>
       </div>
 
       {/* RIGHT ACTIONS */}
