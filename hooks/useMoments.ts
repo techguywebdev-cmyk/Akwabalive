@@ -6,6 +6,15 @@ import type { Moment } from '@/components/moments/types';
 
 const PAGE_SIZE = 20;
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export function useMoments(initialMomentId?: string | null) {
   const supabase = createClient();
   const [moments, setMoments] = useState<Moment[]>([]);
@@ -24,29 +33,34 @@ export function useMoments(initialMomentId?: string | null) {
       .range(0, PAGE_SIZE - 1);
 
     if (!error && data) {
-      const list = data as Moment[];
-      setMoments(list);
-      setHasMore(list.length === PAGE_SIZE);
+      let list = data as Moment[];
 
       if (initialMomentId) {
         const idx = list.findIndex((m) => m.id === initialMomentId);
-        if (idx >= 0) setActiveIdx(idx);
-        else {
-          // Moment not in first page — fetch it and prepend
+        if (idx >= 0) {
+          setMoments(list);
+          setActiveIdx(idx);
+        } else {
           const { data: one } = await supabase
             .from('moments')
             .select('*')
             .eq('id', initialMomentId)
             .maybeSingle();
           if (one) {
-            setMoments((prev) => {
-              const exists = prev.some((m) => m.id === one.id);
-              return exists ? prev : [one as Moment, ...prev];
-            });
+            list = [one as Moment, ...list.filter((m) => m.id !== one.id)];
+            setMoments(list);
+            setActiveIdx(0);
+          } else {
+            setMoments(shuffle(list));
             setActiveIdx(0);
           }
         }
+      } else {
+        // Random order each visit so the feed feels fresh
+        setMoments(shuffle(list));
+        setActiveIdx(0);
       }
+      setHasMore(list.length === PAGE_SIZE);
     }
     setLoading(false);
   }, [supabase, initialMomentId]);
@@ -69,7 +83,9 @@ export function useMoments(initialMomentId?: string | null) {
     if (data && data.length) {
       setMoments((prev) => {
         const ids = new Set(prev.map((m) => m.id));
-        const next = (data as Moment[]).filter((m) => !ids.has(m.id));
+        const next = shuffle(
+          (data as Moment[]).filter((m) => !ids.has(m.id)),
+        );
         return [...prev, ...next];
       });
       setHasMore(data.length === PAGE_SIZE);
@@ -82,7 +98,6 @@ export function useMoments(initialMomentId?: string | null) {
   const goNext = useCallback(() => {
     setActiveIdx((i) => {
       const next = Math.min(i + 1, moments.length - 1);
-      // Prefetch more when near end
       if (next >= moments.length - 3) loadMore();
       return next;
     });
@@ -92,9 +107,12 @@ export function useMoments(initialMomentId?: string | null) {
     setActiveIdx((i) => Math.max(i - 1, 0));
   }, []);
 
-  const jumpTo = useCallback((idx: number) => {
-    setActiveIdx(Math.max(0, Math.min(idx, moments.length - 1)));
-  }, [moments.length]);
+  const jumpTo = useCallback(
+    (idx: number) => {
+      setActiveIdx(Math.max(0, Math.min(idx, moments.length - 1)));
+    },
+    [moments.length],
+  );
 
   return {
     moments,
