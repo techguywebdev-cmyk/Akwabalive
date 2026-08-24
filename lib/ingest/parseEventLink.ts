@@ -37,11 +37,11 @@ const CITIES: { key: string; city: string; venueHint?: string }[] = [
 
 function decode(s: string) {
   return s
-    .replace(/&/g, '&')
-    .replace(/"/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/</g, '<')
-    .replace(/>/g, '>')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -51,6 +51,7 @@ function meta(html: string, key: string) {
     new RegExp(`<meta[^>]+property=["']${key}["'][^>]+content=["']([^"']+)["']`, 'i'),
     new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']${key}["']`, 'i'),
     new RegExp(`<meta[^>]+name=["']${key}["'][^>]+content=["']([^"']+)["']`, 'i'),
+    new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']${key}["']`, 'i'),
   ];
   for (const p of patterns) {
     const m = html.match(p);
@@ -81,8 +82,8 @@ function parseDates(text: string): { date: string; dateLabel: string } {
   if (range) {
     const m = MONTHS[range[3].toLowerCase()];
     const d1 = range[1].padStart(2, '0');
-    const iso = `${year}-${String(m).padStart(2, '0')}-${d1}`;
-    const label = `${range[1]}–${range[2]} ${range[3][0].toUpperCase()}${range[3].slice(1, 3)} ${year}`;
+    const iso = `\( {year}- \){String(m).padStart(2, '0')}-${d1}`;
+    const label = `\( {range[1]}– \){range[2]} \( {range[3][0].toUpperCase()} \){range[3].slice(1, 3)} ${year}`;
     return { date: iso, dateLabel: label };
   }
 
@@ -92,8 +93,8 @@ function parseDates(text: string): { date: string; dateLabel: string } {
   if (one) {
     const y = one[3] || String(year);
     const m = MONTHS[one[2].toLowerCase()];
-    const iso = `${y}-${String(m).padStart(2, '0')}-${one[1].padStart(2, '0')}`;
-    const label = `${one[1]} ${one[2][0].toUpperCase()}${one[2].slice(1, 3)} ${y}`;
+    const iso = `\( {y}- \){String(m).padStart(2, '0')}-${one[1].padStart(2, '0')}`;
+    const label = `${one[1]} \( {one[2][0].toUpperCase()} \){one[2].slice(1, 3)} ${y}`;
     return { date: iso, dateLabel: label };
   }
 
@@ -108,6 +109,13 @@ function parseCityVenue(text: string) {
     }
   }
   return { city: 'international', venue: '' };
+}
+
+/** Instagram often hides og:image from bots — media redirect returns the flyer. */
+function instagramFlyerUrl(url: string): string {
+  const m = url.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/i);
+  if (!m?.[1]) return '';
+  return `https://www.instagram.com/p/${m[1]}/media/?size=l`;
 }
 
 export async function parseEventLink(url: string): Promise<ParsedDraft> {
@@ -129,14 +137,31 @@ export async function parseEventLink(url: string): Promise<ParsedDraft> {
 
   const ogTitle = meta(html, 'og:title') || meta(html, 'twitter:title');
   const ogDesc = meta(html, 'og:description') || meta(html, 'twitter:description');
-  const ogImage = meta(html, 'og:image');
+  let ogImage =
+    meta(html, 'og:image') ||
+    meta(html, 'og:image:url') ||
+    meta(html, 'twitter:image') ||
+    meta(html, 'twitter:image:src');
+
+  // Instagram: pull flyer via media endpoint when og:image is missing
+  if (!ogImage && /instagram\.com\/(p|reel|tv)\//i.test(url)) {
+    ogImage = instagramFlyerUrl(url);
+    if (ogImage) {
+      notes.push('Flyer taken from Instagram media — confirm it looks right.');
+    }
+  } else if (!ogImage && /instagram\.com/i.test(url)) {
+    notes.push('No flyer image found — paste an image URL if you have one.');
+  }
+
   const blob = `${ogTitle} ${ogDesc}`;
 
   const { date, dateLabel } = parseDates(blob);
   const { city, venue } = parseCityVenue(blob);
   const source = detectSource(url);
 
-  let title = ogTitle.replace(/\s+on Instagram.*$/i, '').replace(/^.* on Instagram:\s*/i, '');
+  let title = ogTitle
+    .replace(/\s+on Instagram.*$/i, '')
+    .replace(/^.* on Instagram:\s*/i, '');
   title = title.replace(/^["“]|["”]$/g, '').slice(0, 120);
   if (!title) title = 'Untitled event';
 
