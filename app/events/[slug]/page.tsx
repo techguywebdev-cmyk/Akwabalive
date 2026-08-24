@@ -48,8 +48,12 @@ function supabaseToGhanaEvent(ev: any): GhanaEvent {
     image:     ev.image_url ?? 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=900&q=80&auto=format&fit=crop',
     hot:       false,
     recurring: false,
-    badge:     ev.category?.toUpperCase() ?? 'EVENT',
+    badge:     ev.listing_type === 'listed' ? 'LISTED' : (ev.category?.toUpperCase() ?? 'EVENT'),
     attending: 0,
+    listingType: ev.listing_type === 'listed' ? 'listed' : 'hosted',
+    ticketUrl: ev.ticket_url ?? null,
+    ticketSource: ev.ticket_source ?? null,
+    sourceUrl: ev.source_url ?? null,
   };
 }
 
