@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   MapPin, Calendar, Clock, Users, ArrowLeft,
-  Share2, Heart, CheckCircle, Ticket, Star, Loader2,
+  Share2, Heart, CheckCircle, Ticket, Star, Loader2, ExternalLink,
 } from 'lucide-react';
 import type { GhanaEvent } from '@/lib/types';
+import { isListedEvent } from '@/lib/types';
 import { cityLabel } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
@@ -156,10 +157,17 @@ export default function EventDetailClient({ event, related }: { event: GhanaEven
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${inDreamList ? C.goldBd : C.bd}`, background: inDreamList ? C.goldDim : 'transparent', color: inDreamList ? C.gold : C.c3, padding: '11px 14px', borderRadius: 8, cursor: 'pointer', transition: 'all 200ms' }}>
             <Star size={13} fill={inDreamList ? C.gold : 'none'} />
           </button>
+          {isListedEvent(event) && event.ticketUrl ? (
+            <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: C.gold, color: '#0D0B08', border: 'none', padding: '11px 20px', borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
+              <ExternalLink size={14} />Tickets on {event.ticketSource || 'official site'}
+            </a>
+          ) : (
           <button onClick={() => setTicketOpen(true)}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: C.gold, color: '#0D0B08', border: 'none', padding: '11px 20px', borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer' }}>
             <Ticket size={14} />{event.price === 0 ? 'Reserve' : 'Get Tickets'}
           </button>
+          )}
         </div>
       </div>
 
@@ -195,6 +203,15 @@ export default function EventDetailClient({ event, related }: { event: GhanaEven
 
         {/* Ticket options */}
         <div style={{ marginTop: 36 }}>
+          {isListedEvent(event) && (
+            <div style={{ background: C.goldDim, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
+              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, marginBottom: 6 }}>Listed event</p>
+              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c2, lineHeight: 1.55 }}>
+                Tickets are sold by {event.ticketSource || 'the organiser'}, not on Akwaaba. We list it so you can find it — buy only on the official page.
+              </p>
+            </div>
+          )}
+
           <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />Ticket options
           </p>
@@ -219,10 +236,17 @@ export default function EventDetailClient({ event, related }: { event: GhanaEven
             ))}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
+            {isListedEvent(event) && event.ticketUrl ? (
+            <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
+              style={{ flex: 1, background: C.gold, color: '#0D0B08', border: 'none', padding: 15, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
+              <ExternalLink size={14} />Tickets on {event.ticketSource || 'official site'}
+            </a>
+          ) : (
             <button onClick={() => setTicketOpen(true)}
               style={{ flex: 1, background: C.gold, color: '#0D0B08', border: 'none', padding: 15, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <Ticket size={14} />{event.price === 0 ? 'Reserve Free Ticket' : `Get Tickets from \u20B5${event.price.toLocaleString()}`}
             </button>
+          )}
             <button onClick={toggleDreamList} disabled={dreamLoading}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, border: `1px solid ${inDreamList ? C.goldBd : C.bd}`, background: inDreamList ? C.goldDim : 'transparent', color: inDreamList ? C.gold : C.c3, padding: '15px 18px', borderRadius: 8, cursor: 'pointer', transition: 'all 200ms' }}>
               <Star size={16} fill={inDreamList ? C.gold : 'none'} />
@@ -318,7 +342,7 @@ export default function EventDetailClient({ event, related }: { event: GhanaEven
         )}
       </div>
 
-      {ticketOpen && (
+      {ticketOpen && !isListedEvent(event) && (
         <PaystackCheckout
           event={event}
           tiers={tiers}
