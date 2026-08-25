@@ -1,4 +1,5 @@
 import type { GhanaEvent, FilterState } from '@/lib/types';
+import { rankScore } from '@/lib/events/rank';
 
 export function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
@@ -54,14 +55,30 @@ export function filterEvents(
   });
 
   if (filters.sort === 'popular') {
-    list = [...list].sort((a, b) => (b.attending ?? 0) - (a.attending ?? 0));
+    list = [...list].sort((a, b) => {
+      const score = rankScore(b) - rankScore(a);
+      if (score !== 0) return score;
+      return (b.attending ?? 0) - (a.attending ?? 0);
+    });
+  } else if (filters.sort === 'newest') {
+    list = [...list].sort((a, b) => {
+      const ca = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const cb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (cb !== ca) return cb - ca;
+      return rankScore(b) - rankScore(a);
+    });
   } else if (filters.sort === 'nearby' && userLoc) {
     list = [...list].sort((a, b) =>
       haversine(userLoc.lat, userLoc.lng, a.lat, a.lng) -
       haversine(userLoc.lat, userLoc.lng, b.lat, b.lng),
     );
   } else {
-    list = [...list].sort((a, b) => a.date.localeCompare(b.date));
+    // upcoming: featured/hot first, then date
+    list = [...list].sort((a, b) => {
+      const score = rankScore(b) - rankScore(a);
+      if (score !== 0) return score;
+      return (a.date || '').localeCompare(b.date || '');
+    });
   }
 
   return list;

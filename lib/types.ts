@@ -48,6 +48,13 @@ export interface GhanaEvent {
   ticketUrl?: string | null;
   ticketSource?: string | null;
   sourceUrl?: string | null;
+  /** Admin pin for hero / featured rails */
+  isFeatured?: boolean;
+  featuredOrder?: number;
+  /** Announcement / promo video (YouTube URL or direct mp4) */
+  promoVideoUrl?: string | null;
+  /** ISO timestamp for "newest first" ranking */
+  createdAt?: string | null;
 }
 
 export interface CityInfo {
@@ -58,7 +65,8 @@ export interface CityInfo {
   count: number;
 }
 
-export type SortMode = 'upcoming' | 'popular' | 'nearby';
+/** upcoming = date; popular = attending/hot; nearby = distance; newest = createdAt */
+export type SortMode = 'upcoming' | 'popular' | 'nearby' | 'newest';
 
 export interface FilterState {
   city: City | 'all';
