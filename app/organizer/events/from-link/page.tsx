@@ -9,6 +9,8 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
+import LocationFields from '@/components/organizer/LocationFields';
+import { matchPlace } from '@/lib/places';
 
 const C = {
   bg: '#0D0B08', bg2: '#141109', bg3: '#1C1710',
@@ -72,6 +74,9 @@ export default function FromLinkPage() {
   const [ticketSource, setTicketSource] = useState('Instagram');
   const [sourceUrl, setSourceUrl] = useState('');
   const [category, setCategory] = useState('concert');
+  const [area, setArea] = useState('');
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
 
   async function parse() {
     setError('');
@@ -98,6 +103,12 @@ export default function FromLinkPage() {
       setCategory(d.category || 'concert');
       setNotes(d.notes || []);
       setConfidence(d.confidence || 0);
+      const pin = matchPlace(`${d.venue || ''} ${d.city || ''}`, d.city);
+      if (pin) {
+        setArea(pin.area);
+        setLat(pin.lat);
+        setLng(pin.lng);
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -142,6 +153,9 @@ export default function FromLinkPage() {
         ticket_url: ticketUrl.trim(),
         ticket_source: ticketSource.trim(),
         source_url: sourceUrl.trim() || url,
+        area: area.trim() || null,
+        lat: lat ?? null,
+        lng: lng ?? null,
       });
       if (evErr) throw evErr;
       router.push('/organizer/dashboard');
@@ -217,6 +231,14 @@ export default function FromLinkPage() {
             <Field label="Venue *">
               <input value={venue} onChange={e => setVenue(e.target.value)} placeholder="Prince Bandroom, Melbourne" style={inputStyle} />
             </Field>
+            <LocationFields
+              city={city}
+              venue={venue}
+              area={area}
+              lat={lat}
+              lng={lng}
+              onChange={({ area: a, lat: la, lng: ln }) => { setArea(a); setLat(la); setLng(ln); }}
+            />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <Field label="Date *">
                 <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle} />
@@ -256,4 +278,4 @@ export default function FromLinkPage() {
       </div>
     </div>
   );
-}
+        }
