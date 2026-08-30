@@ -11,6 +11,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
+import LocationFields from '@/components/organizer/LocationFields';
 
 const C = {
   bg: '#0D0B08', bg2: '#141109', bg3: '#1C1710',
@@ -81,6 +82,9 @@ export default function EditEventPage() {
   const [endTime,     setEndTime]     = useState('');
   const [imageUrl,    setImageUrl]    = useState('');
   const [status,      setStatus]      = useState('draft');
+  const [area,        setArea]        = useState('');
+  const [lat,         setLat]         = useState<number | null>(null);
+  const [lng,         setLng]         = useState<number | null>(null);
   const [tiers,       setTiers]       = useState<Tier[]>([]);
 
   useEffect(() => {
@@ -109,6 +113,9 @@ export default function EditEventPage() {
     setEndTime(data.end_time ?? '');
     setImageUrl(data.image_url ?? '');
     setStatus(data.status ?? 'draft');
+    setArea(data.area ?? '');
+    setLat(typeof data.lat === 'number' ? data.lat : null);
+    setLng(typeof data.lng === 'number' ? data.lng : null);
     setTiers((data.ticket_tiers ?? []).map((t: any) => ({
       id:          t.id,
       name:        t.name,
@@ -143,7 +150,6 @@ export default function EditEventPage() {
     setSaving(true);
 
     try {
-      // Update event
       const { error: eventError } = await supabase
         .from('events')
         .update({
@@ -158,13 +164,15 @@ export default function EditEventPage() {
           time,
           end_time:    endTime,
           image_url:   imageUrl.trim() || null,
+          area:        area.trim() || null,
+          lat:         lat ?? null,
+          lng:         lng ?? null,
           updated_at:  new Date().toISOString(),
         })
         .eq('id', id);
 
       if (eventError) throw eventError;
 
-      // Delete existing tiers and re-insert
       await supabase.from('ticket_tiers').delete().eq('event_id', id);
 
       const tierRows = tiers
@@ -235,7 +243,6 @@ export default function EditEventPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* Basic Info */}
           <div style={{ background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
             <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Tag size={11} /> Basic Information
@@ -264,9 +271,16 @@ export default function EditEventPage() {
             <Input label="Venue *">
               <input type="text" value={venue} onChange={e => setVenue(e.target.value)} style={inputStyle} />
             </Input>
+            <LocationFields
+              city={city}
+              venue={venue}
+              area={area}
+              lat={lat}
+              lng={lng}
+              onChange={({ area: a, lat: la, lng: ln }) => { setArea(a); setLat(la); setLng(ln); }}
+            />
           </div>
 
-          {/* Date & Time */}
           <div style={{ background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
             <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Calendar size={11} /> Date & Time
@@ -284,7 +298,6 @@ export default function EditEventPage() {
             </Input>
           </div>
 
-          {/* Cover Image */}
           <div style={{ background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
             <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
               <ImageIcon size={11} /> Cover Image
@@ -298,7 +311,6 @@ export default function EditEventPage() {
             )}
           </div>
 
-          {/* Ticket Tiers */}
           <div style={{ background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '24px 20px' }}>
             <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
               <Tag size={11} /> Ticket Tiers
@@ -347,7 +359,6 @@ export default function EditEventPage() {
             </div>
           </div>
 
-          {/* Feedback */}
           {error && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(206,17,38,0.1)', border: '1px solid rgba(206,17,38,0.25)', borderRadius: 8, padding: '12px 14px' }}>
               <AlertCircle size={14} style={{ color: C.red, flexShrink: 0 }} />
@@ -361,7 +372,6 @@ export default function EditEventPage() {
             </div>
           )}
 
-          {/* Save button */}
           <button onClick={handleSave} disabled={saving}
             style={{ width: '100%', background: saving ? C.bg3 : C.gold, color: saving ? C.c3 : '#0D0B08', border: `1px solid ${saving ? C.bd : C.gold}`, padding: 15, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 200ms' }}>
             {saving ? <><Loader2 size={13} className="animate-spin" /> Saving…</> : <><Save size={13} /> Save Changes</>}
@@ -370,4 +380,4 @@ export default function EditEventPage() {
       </div>
     </div>
   );
-}
+      }
