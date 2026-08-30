@@ -170,9 +170,34 @@ function Sheet({ open, onClose, title, children }: {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '8px 20px 16px', borderBottom: `1px solid ${C.bd}`,
         }}>
-          <span style={{ fontFamily: 'var(--font-syne,sans-serif)', fontSize: 17, fontWeight: 700, color: C.cream }}>{title}</span>
-          <button type="button" onClick={onClose} style={{ color: C.c3, background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-            <X size={20} />
+          <span style={{
+            fontFamily: 'var(--font-cormorant,serif)',
+            fontSize: 22,
+            fontWeight: 300,
+            letterSpacing: '-0.3px',
+            color: C.cream,
+          }}>
+            {title}
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: C.cream,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            <X size={16} />
           </button>
         </div>
         {children}
@@ -304,7 +329,6 @@ function EventCard({
     );
   }
 
-  // Grid card — matches home Featured Events layout
   return (
     <div style={{ position: 'relative', width: '100%', minWidth: 0 }}>
       <Link
@@ -356,7 +380,6 @@ function EventCard({
           <h3 style={{
             fontFamily: 'var(--font-cormorant,serif)', fontSize: compact ? 16 : 17, fontWeight: 400, color: C.cream,
             lineHeight: 1.25, marginBottom: 10, letterSpacing: '-0.2px',
-            /* 2 lines max, no harsh cut mid-layout */
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -430,7 +453,6 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
     setLocStatus('idle');
   }, []);
 
-  // Restore last location
   useEffect(() => {
     try {
       const raw = localStorage.getItem('akwaaba_loc');
@@ -452,7 +474,6 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
     } catch { /* ignore */ }
   }, [userLoc, locLabel, radius]);
 
-  // Load dream list slugs
   useEffect(() => {
     if (!user) { setSaved(new Set()); return; }
     supabase
@@ -559,7 +580,6 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
   const visible = withDist.slice(0, page);
   const hasMore = page < withDist.length;
 
-  // Rails (from full catalogue, still respect when filter)
   const railBase = useMemo(
     () => events.filter(e => matchesWhen(e, filters.when ?? 'upcoming')),
     [events, filters.when],
@@ -623,7 +643,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
     if (filters.search) {
       chips.push({
         key: 'search',
-        label: `“${filters.search}”`,
+        label: `"${filters.search}"`,
         clear: () => set('search', ''),
       });
     }
@@ -663,7 +683,6 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
 
   const showRails = !filters.search && filters.city === 'all' && !filters.category && !filters.priceFilter;
 
-  /** Big names / featured — fills the top band under nav */
   const majorEvents = useMemo(() => {
     const scored = events
       .filter(e => matchesWhen(e, filters.when ?? 'upcoming'))
@@ -688,7 +707,6 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
       out.push(e);
       if (out.length >= 10) break;
     }
-    // Fallback: newest featured/hot
     if (out.length < 3) {
       for (const e of events) {
         if (seen.has(e.slug)) continue;
@@ -702,7 +720,6 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
     return out;
   }, [events, filters.when]);
 
-
   return (
     <div style={{ minHeight: '60vh', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -713,7 +730,117 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           .akw-events-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
         }
       ` }} />
-      {/* Major / hot takes — horizontal showcase */}
+      <div style={{
+        position: 'sticky', top: 62, zIndex: 90,
+        background: `${C.bg}F5`, backdropFilter: 'blur(18px)',
+        borderBottom: `1px solid ${C.bd}`,
+        padding: '10px 14px 0',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 1100, margin: '0 auto' }}>
+          <IconBtn active={searchOpen || !!filters.search} onClick={() => setSearchOpen(s => !s)} label="Search">
+            <Search size={16} />
+          </IconBtn>
+          <IconBtn active={locStatus === 'found' || locOpen} onClick={() => setLocOpen(true)} label="Location">
+            <LocateFixed size={16} />
+          </IconBtn>
+          <IconBtn active={filterOpen || activeCount > 0} onClick={() => setFilterOpen(true)} label="Filters" badge={activeCount}>
+            <Filter size={16} />
+          </IconBtn>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{
+              fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1px',
+              color: C.c3, textTransform: 'uppercase',
+            }}>
+              {withDist.length} events
+            </span>
+          </div>
+
+          <IconBtn active={view === 'grid'} onClick={() => setView('grid')} label="Grid">
+            <Grid2X2 size={15} />
+          </IconBtn>
+          <IconBtn active={view === 'list'} onClick={() => setView('list')} label="List">
+            <List size={15} />
+          </IconBtn>
+        </div>
+
+        <div style={{
+          maxWidth: 1100, margin: '10px auto 0',
+          display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10,
+          WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
+        }}>
+          {WHEN_OPTS.map(w => (
+            <Pill key={w.value} active={filters.when === w.value} onClick={() => set('when', w.value)}>
+              {w.label}
+            </Pill>
+          ))}
+        </div>
+
+        {searchOpen && (
+          <div style={{ maxWidth: 1100, margin: '0 auto 10px', position: 'relative' }}>
+            <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
+            <input
+              ref={searchRef}
+              value={filters.search}
+              onChange={e => set('search', e.target.value)}
+              placeholder="Search events, artists, Dansoman, Osu…"
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                padding: '12px 40px 12px 36px', borderRadius: 10,
+                border: `1px solid ${C.goldBd}`, background: C.bg2, color: C.cream,
+                fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, outline: 'none',
+              }}
+            />
+            {filters.search && (
+              <button
+                type="button"
+                onClick={() => set('search', '')}
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: C.c3, cursor: 'pointer' }}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        )}
+
+        {activeChips.length > 0 && (
+          <div style={{
+            maxWidth: 1100, margin: '0 auto',
+            display: 'flex', gap: 8, flexWrap: 'wrap', paddingBottom: 10,
+          }}>
+            {activeChips.map(ch => (
+              <button
+                key={ch.key}
+                type="button"
+                onClick={ch.clear}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '0.5px',
+                  padding: '5px 10px', borderRadius: 999,
+                  border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold,
+                  cursor: 'pointer',
+                }}
+              >
+                {ch.label}
+                <X size={12} />
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={clear}
+              style={{
+                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1px',
+                padding: '5px 10px', borderRadius: 999, border: 'none',
+                background: 'transparent', color: C.c3, cursor: 'pointer', textDecoration: 'underline',
+              }}
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '16px 14px 80px', width: '100%', boxSizing: 'border-box' }}>
       {majorEvents.length > 0 && showRails && (
         <div style={{
           maxWidth: 1100,
@@ -806,120 +933,6 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
         </div>
       )}
 
-      {/* Icon toolbar */}
-      <div style={{
-        position: 'sticky', top: 62, zIndex: 90,
-        background: `${C.bg}F5`, backdropFilter: 'blur(18px)',
-        borderBottom: `1px solid ${C.bd}`,
-        padding: '10px 14px 0',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 1100, margin: '0 auto' }}>
-          <IconBtn active={searchOpen || !!filters.search} onClick={() => setSearchOpen(s => !s)} label="Search">
-            <Search size={16} />
-          </IconBtn>
-          <IconBtn active={locStatus === 'found' || locOpen} onClick={() => setLocOpen(true)} label="Location">
-            <LocateFixed size={16} />
-          </IconBtn>
-          <IconBtn active={filterOpen || activeCount > 0} onClick={() => setFilterOpen(true)} label="Filters" badge={activeCount}>
-            <Filter size={16} />
-          </IconBtn>
-
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{
-              fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1px',
-              color: C.c3, textTransform: 'uppercase',
-            }}>
-              {withDist.length} events
-            </span>
-          </div>
-
-          <IconBtn active={view === 'grid'} onClick={() => setView('grid')} label="Grid">
-            <Grid2X2 size={15} />
-          </IconBtn>
-          <IconBtn active={view === 'list'} onClick={() => setView('list')} label="List">
-            <List size={15} />
-          </IconBtn>
-        </div>
-
-        {/* When chips */}
-        <div style={{
-          maxWidth: 1100, margin: '10px auto 0',
-          display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10,
-          WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
-        }}>
-          {WHEN_OPTS.map(w => (
-            <Pill key={w.value} active={filters.when === w.value} onClick={() => set('when', w.value)}>
-              {w.label}
-            </Pill>
-          ))}
-        </div>
-
-        {searchOpen && (
-          <div style={{ maxWidth: 1100, margin: '0 auto 10px', position: 'relative' }}>
-            <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
-            <input
-              ref={searchRef}
-              value={filters.search}
-              onChange={e => set('search', e.target.value)}
-              placeholder="Search events, artists, Dansoman, Osu…"
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                padding: '12px 40px 12px 36px', borderRadius: 10,
-                border: `1px solid ${C.goldBd}`, background: C.bg2, color: C.cream,
-                fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, outline: 'none',
-              }}
-            />
-            {filters.search && (
-              <button
-                type="button"
-                onClick={() => set('search', '')}
-                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: C.c3, cursor: 'pointer' }}
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Active filter chips */}
-        {activeChips.length > 0 && (
-          <div style={{
-            maxWidth: 1100, margin: '0 auto',
-            display: 'flex', gap: 8, flexWrap: 'wrap', paddingBottom: 10,
-          }}>
-            {activeChips.map(ch => (
-              <button
-                key={ch.key}
-                type="button"
-                onClick={ch.clear}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '0.5px',
-                  padding: '5px 10px', borderRadius: 999,
-                  border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold,
-                  cursor: 'pointer',
-                }}
-              >
-                {ch.label}
-                <X size={12} />
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={clear}
-              style={{
-                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1px',
-                padding: '5px 10px', borderRadius: 999, border: 'none',
-                background: 'transparent', color: C.c3, cursor: 'pointer', textDecoration: 'underline',
-              }}
-            >
-              Clear all
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '16px 14px 80px', width: '100%', boxSizing: 'border-box' }}>
         {showRails && (
           <>
             {userLoc && (
@@ -1018,7 +1031,6 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
         )}
       </div>
 
-      {/* LOCATION */}
       <Sheet open={locOpen} onClose={() => setLocOpen(false)} title="Find events around you">
         <div style={{ padding: '16px 20px 0' }}>
           <button
@@ -1028,11 +1040,12 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
               width: '100%', display: 'flex', alignItems: 'center', gap: 12,
               padding: '14px 16px', borderRadius: 12, cursor: 'pointer',
               border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold,
-              fontFamily: 'var(--font-syne,sans-serif)', fontSize: 15, fontWeight: 600,
+              fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11,
+              letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600,
             }}
           >
-            <Navigation size={18} />
-            {locStatus === 'detecting' ? 'Detecting your location…' : 'Use my current location'}
+            <Navigation size={16} />
+            {locStatus === 'detecting' ? 'Detecting…' : 'Use my current location'}
           </button>
           {locStatus === 'error' && (
             <p style={{ color: C.red, fontSize: 12, marginTop: 8, fontFamily: 'var(--font-inter,sans-serif)' }}>
@@ -1083,8 +1096,25 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
                 }}
               >
                 <span>
-                  <span style={{ display: 'block', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14 }}>{p.label}</span>
-                  <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, color: C.c3 }}>{p.area}</span>
+                  <span style={{
+                    display: 'block',
+                    fontFamily: 'var(--font-cormorant,serif)',
+                    fontSize: 18,
+                    fontWeight: 400,
+                    color: C.cream,
+                    lineHeight: 1.2,
+                  }}>
+                    {p.label}
+                  </span>
+                  <span style={{
+                    fontFamily: 'var(--font-dm-mono,monospace)',
+                    fontSize: 9,
+                    letterSpacing: '1.5px',
+                    textTransform: 'uppercase',
+                    color: C.c3,
+                  }}>
+                    {p.area}
+                  </span>
                 </span>
                 <ChevronRight size={16} style={{ color: C.c3 }} />
               </button>
@@ -1093,7 +1123,6 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
         </div>
       </Sheet>
 
-      {/* FILTERS */}
       <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters">
         <div style={{ padding: '8px 20px 0' }}>
           <p style={{
@@ -1169,4 +1198,4 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
       </Sheet>
     </div>
   );
-}
+          }
