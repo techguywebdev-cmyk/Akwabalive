@@ -339,9 +339,7 @@ function EventCard({
           width: '100%', height: '100%',
         }}
       >
-        {event.hot && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(to right, ${C.gold}, rgba(200,146,42,0.1))`, zIndex: 6 }} />
-        )}
+        {/* no gold top stripe — matches clean home cards */}
         <div style={{ width: '100%', paddingTop: '58%', position: 'relative', overflow: 'hidden', background: C.bg3 }}>
           <div style={{
             position: 'absolute', inset: 0,
@@ -734,7 +732,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
         position: 'sticky', top: 62, zIndex: 90,
         background: `${C.bg}F5`, backdropFilter: 'blur(18px)',
         borderBottom: `1px solid ${C.bd}`,
-        padding: '10px 14px 0',
+        padding: '8px 14px 0',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 1100, margin: '0 auto' }}>
           <IconBtn active={searchOpen || !!filters.search} onClick={() => setSearchOpen(s => !s)} label="Search">
@@ -840,98 +838,92 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
         )}
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '16px 14px 80px', width: '100%', boxSizing: 'border-box' }}>
-      {majorEvents.length > 0 && showRails && (
-        <div style={{
-          maxWidth: 1100,
-          margin: '0 auto',
-          padding: '12px 14px 4px',
-          width: '100%',
-          boxSizing: 'border-box',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div>
-              <p style={{
-                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px',
-                textTransform: 'uppercase', color: C.gold, opacity: 0.8, margin: '0 0 4px',
-              }}>
-                On the radar
-              </p>
-              <h2 style={{
-                fontFamily: 'var(--font-cormorant,serif)', fontSize: 'clamp(22px, 5vw, 28px)',
-                fontWeight: 300, color: C.cream, margin: 0, letterSpacing: '-0.4px',
-              }}>
-                Hot <em style={{ fontStyle: 'italic' }}>takes</em>
-              </h2>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 14px 80px', width: '100%', boxSizing: 'border-box' }}>
+        {majorEvents.length > 0 && showRails && (
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div>
+                <p style={{
+                  fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px',
+                  textTransform: 'uppercase', color: C.gold, opacity: 0.8, margin: '0 0 4px',
+                }}>
+                  On the radar
+                </p>
+                <h2 style={{
+                  fontFamily: 'var(--font-cormorant,serif)', fontSize: 'clamp(22px, 5vw, 28px)',
+                  fontWeight: 300, color: C.cream, margin: 0, letterSpacing: '-0.4px',
+                }}>
+                  Hot <em style={{ fontStyle: 'italic' }}>takes</em>
+                </h2>
+              </div>
+            </div>
+            <div style={{
+              display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8,
+              WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
+              marginLeft: -14, marginRight: -14, paddingLeft: 14, paddingRight: 14,
+            }}>
+              {majorEvents.map(ev => {
+                const city = ev.city
+                  ? ev.city.charAt(0).toUpperCase() + ev.city.slice(1).replace(/-/g, ' ')
+                  : '';
+                return (
+                  <Link
+                    key={`major-${ev.slug}`}
+                    href={`/events/${ev.slug}`}
+                    style={{
+                      flex: '0 0 auto',
+                      width: 'min(260px, 78vw)',
+                      borderRadius: 14,
+                      overflow: 'hidden',
+                      border: `1px solid ${C.bd}`,
+                      background: C.bg2,
+                      textDecoration: 'none',
+                      position: 'relative',
+                      display: 'block',
+                    }}
+                  >
+                    <div style={{ position: 'relative', width: '100%', paddingTop: '62%', background: C.bg3 }}>
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        backgroundImage: `url(${ev.image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        filter: 'brightness(0.78) saturate(0.9)',
+                      }} />
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'linear-gradient(to top, rgba(13,11,8,0.95) 0%, rgba(13,11,8,0.35) 45%, transparent 70%)',
+                      }} />
+                      <span style={{
+                        position: 'absolute', top: 10, left: 10,
+                        fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px',
+                        textTransform: 'uppercase', padding: '4px 8px', borderRadius: 3,
+                        background: 'rgba(200,146,42,0.2)', color: C.gold, border: `1px solid ${C.goldBd}`,
+                      }}>
+                        {ev.badge || 'Major'}
+                      </span>
+                      <div style={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
+                        <p style={{
+                          fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, color: C.c2,
+                          margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {city} · {ev.dateLabel}
+                        </p>
+                        <p style={{
+                          fontFamily: 'var(--font-cormorant,serif)', fontSize: 18, fontWeight: 400,
+                          color: C.cream, lineHeight: 1.2, margin: 0, letterSpacing: '-0.2px',
+                          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                        }}>
+                          {ev.title}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
-          <div style={{
-            display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8,
-            WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
-            marginLeft: -14, marginRight: -14, paddingLeft: 14, paddingRight: 14,
-          }}>
-            {majorEvents.map(ev => {
-              const city = ev.city
-                ? ev.city.charAt(0).toUpperCase() + ev.city.slice(1).replace(/-/g, ' ')
-                : '';
-              return (
-                <Link
-                  key={`major-${ev.slug}`}
-                  href={`/events/${ev.slug}`}
-                  style={{
-                    flex: '0 0 auto',
-                    width: 'min(260px, 78vw)',
-                    borderRadius: 14,
-                    overflow: 'hidden',
-                    border: `1px solid ${C.bd}`,
-                    background: C.bg2,
-                    textDecoration: 'none',
-                    position: 'relative',
-                    display: 'block',
-                  }}
-                >
-                  <div style={{ position: 'relative', width: '100%', paddingTop: '62%', background: C.bg3 }}>
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      backgroundImage: `url(${ev.image})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      filter: 'brightness(0.78) saturate(0.9)',
-                    }} />
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      background: 'linear-gradient(to top, rgba(13,11,8,0.95) 0%, rgba(13,11,8,0.35) 45%, transparent 70%)',
-                    }} />
-                    <span style={{
-                      position: 'absolute', top: 10, left: 10,
-                      fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px',
-                      textTransform: 'uppercase', padding: '4px 8px', borderRadius: 3,
-                      background: 'rgba(200,146,42,0.2)', color: C.gold, border: `1px solid ${C.goldBd}`,
-                    }}>
-                      {ev.badge || 'Major'}
-                    </span>
-                    <div style={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
-                      <p style={{
-                        fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, color: C.c2,
-                        margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {city} · {ev.dateLabel}
-                      </p>
-                      <p style={{
-                        fontFamily: 'var(--font-cormorant,serif)', fontSize: 18, fontWeight: 400,
-                        color: C.cream, lineHeight: 1.2, margin: 0, letterSpacing: '-0.2px',
-                        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                      }}>
-                        {ev.title}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
+        )}
 
         {showRails && (
           <>
@@ -1198,4 +1190,4 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
       </Sheet>
     </div>
   );
-          }
+    }
