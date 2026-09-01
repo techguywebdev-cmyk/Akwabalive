@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import type { GhanaEvent } from '@/lib/types';
 import { isListedEvent } from '@/lib/types';
 import { formatDistance, cityLabel } from '@/lib/utils';
+import { LineupChips } from '@/components/ui/LineupChips';
 
 type Size = 'feature' | 'standard' | 'mini';
 
@@ -97,6 +98,8 @@ export default function EventCard({
         >
           {event.title}
         </h3>
+
+        {size !== 'mini' && <LineupChips event={event} compact max={3} />}
 
         {size !== 'mini' && (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 9.5, color: C.c3, marginBottom: 14 }}>
