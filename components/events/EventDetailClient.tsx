@@ -374,6 +374,49 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           )}
         </div>
 
+        {event.organizerUsername && (
+          <div style={{ marginTop: 28 }}>
+            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />Presented by
+            </p>
+            <Link
+              href={`/organizers/${event.organizerUsername}`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 14px',
+                background: C.bg2,
+                border: `1px solid ${C.bd}`,
+                borderRadius: 12,
+                textDecoration: 'none',
+              }}
+            >
+              <div style={{
+                width: 44, height: 44, borderRadius: '50%', overflow: 'hidden',
+                background: C.bg3, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: C.gold, fontFamily: 'var(--font-cormorant,serif)', fontSize: 18,
+              }}>
+                {event.organizerAvatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={event.organizerAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  (event.organizerName || event.organizerUsername || 'O')[0].toUpperCase()
+                )}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 15, fontWeight: 600, color: C.cream, margin: 0 }}>
+                  {event.organizerName || event.organizerUsername}
+                </p>
+                <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, color: C.c3, margin: '4px 0 0' }}>
+                  @{event.organizerUsername} · View all their events
+                </p>
+              </div>
+            </Link>
+          </div>
+        )}
+
         <LineupSection event={event} />
 
         {/* Going with others */}
