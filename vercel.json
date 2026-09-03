@@ -1,0 +1,6 @@
+{
+  "crons": [{
+    "path": "/api/cron/discover-events",
+    "schedule": "0 */6 * * *"
+  }]
+}
