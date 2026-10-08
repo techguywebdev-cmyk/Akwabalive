@@ -111,6 +111,16 @@ export function supabaseToGhanaEvent(ev: SupabaseEvent): GhanaEvent {
     lineup: Array.isArray(ev.lineup) ? ev.lineup : undefined,
     description: ev.description ?? null,
     organizerId: ev.organizer_id ?? null,
+    tiers: (ev.ticket_tiers ?? [])
+      .map((t) => ({
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        price: Number(t.price) || 0,
+        quantity: Number(t.quantity) || 0,
+        sold: Number(t.sold) || 0,
+      }))
+      .sort((a, b) => a.price - b.price),
   };
 }
 
