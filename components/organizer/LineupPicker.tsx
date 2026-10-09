@@ -1,5 +1,5 @@
 'use client';
-import { C } from '@/lib/theme';
+import { C, G } from '@/lib/theme';
 
 import { majorArtists } from '@/lib/data/artists';
 
@@ -79,7 +79,7 @@ export default function LineupPicker({
             background: !value.enabled ? C.goldDim : 'transparent',
             color: !value.enabled ? C.gold : C.c2,
             fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 9,
+            fontSize: 11,
             letterSpacing: '1px',
             textTransform: 'uppercase',
             cursor: 'pointer',
@@ -98,7 +98,7 @@ export default function LineupPicker({
             background: value.enabled ? C.goldDim : 'transparent',
             color: value.enabled ? C.gold : C.c2,
             fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 9,
+            fontSize: 11,
             letterSpacing: '1px',
             textTransform: 'uppercase',
             cursor: 'pointer',
@@ -157,7 +157,7 @@ export default function LineupPicker({
                   <span
                     style={{
                       fontFamily: 'var(--font-dm-mono,monospace)',
-                      fontSize: 9,
+                      fontSize: 11,
                       letterSpacing: '0.5px',
                     }}
                   >
@@ -173,7 +173,7 @@ export default function LineupPicker({
               style={{
                 display: 'block',
                 fontFamily: 'var(--font-dm-mono,monospace)',
-                fontSize: 8,
+                fontSize: 10,
                 letterSpacing: '1.5px',
                 textTransform: 'uppercase',
                 color: C.c3,
@@ -192,7 +192,7 @@ export default function LineupPicker({
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
-                background: C.bg3,
+                ...G.raised,
                 border: `1px solid ${C.bd}`,
                 borderRadius: 8,
                 padding: '10px 12px',

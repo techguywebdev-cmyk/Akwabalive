@@ -19,6 +19,8 @@ declare global {
 export interface CustomPlayerHandle {
   seekTo: (seconds: number) => void;
   play: () => void;
+  /** Toggle sound (counts as the user gesture that unlocks audio) */
+  toggleMute: () => void;
   getCurrentTime: () => number;
   getDuration: () => number;
 }
@@ -30,6 +32,14 @@ interface CustomPlayerProps {
   onDoubleTap?: () => void;
   onTimeUpdate?: (current: number, duration: number) => void;
   initialSeekSeconds?: number | null;
+  /** Called when the clip finishes. When set, the clip does not loop. */
+  onEnded?: () => void;
+  /** Reports mute state so the page can draw its own sound button */
+  onMuteChange?: (muted: boolean) => void;
+  /** Hide the built-in sound button (the page renders one) */
+  hideMuteButton?: boolean;
+  /** How the 16:9 video fills a tall screen */
+  fit?: 'fill' | 'contain';
 }
 
 /** Survives swipe — after the user unmutes once, later clips keep sound (swipe is a gesture). */
@@ -72,9 +82,15 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
       onDoubleTap,
       onTimeUpdate,
       initialSeekSeconds,
+      onEnded,
+      onMuteChange,
+      hideMuteButton = false,
+      fit = 'fill',
     },
     ref,
   ) {
+    const onEndedRef = useRef(onEnded);
+    onEndedRef.current = onEnded;
     const hostRef = useRef<HTMLDivElement>(null);
     const playerRef = useRef<any>(null);
     const youtubeIdRef = useRef(youtubeId);
@@ -93,15 +109,25 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
 
     const [playing, setPlaying] = useState(false);
     const [muted, setMuted] = useState(true);
+    useEffect(() => { onMuteChange?.(muted); }, [muted, onMuteChange]);
 
-    const coverWrap: React.CSSProperties = {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%) scale(1.28)',
-      width: 'max(100%, 177.78vh)',
-      height: 'max(100%, 56.25vw)',
-    };
+    const coverWrap: React.CSSProperties = fit === 'fill'
+      ? {
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%) scale(1.28)',
+          width: 'max(100%, 177.78vh)',
+          height: 'max(100%, 56.25vw)',
+        }
+      : {
+          position: 'absolute',
+          top: '50%',
+          left: 0,
+          transform: 'translateY(-50%)',
+          width: '100%',
+          aspectRatio: '16 / 9',
+        };
 
     function applySound(p: any) {
       if (!p) return;
@@ -185,6 +211,9 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
         userPausedRef.current = false;
         kickPlay();
       },
+      toggleMute() {
+        toggleMuteInner();
+      },
       getCurrentTime() {
         try {
           return playerRef.current?.getCurrentTime?.() ?? 0;
@@ -238,8 +267,7 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
             disablekb: 1,
             origin,
             start,
-            loop: 1,
-            playlist: youtubeIdRef.current,
+            ...(onEndedRef.current ? {} : { loop: 1, playlist: youtubeIdRef.current }),
           },
           events: {
             onReady: (e: any) => {
@@ -282,7 +310,12 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
               if (state === 1) {
                 userPausedRef.current = false;
               }
-              /* ended → loop */
+              /* ended → hand off to the page, or loop */
+              if (state === 0 && onEndedRef.current) {
+                userPausedRef.current = true;
+                onEndedRef.current();
+                return;
+              }
               if (state === 0) {
                 try {
                   e.target.seekTo(0, true);
@@ -393,6 +426,10 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
 
     function toggleMute(e: React.MouseEvent | React.TouchEvent) {
       e.stopPropagation();
+      toggleMuteInner();
+    }
+
+    function toggleMuteInner() {
       const p = playerRef.current;
       if (!p) return;
       try {
@@ -450,7 +487,7 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
           style={{ position: 'absolute', inset: 0, zIndex: 6, cursor: 'pointer' }}
         />
 
-        <button
+        {!hideMuteButton && <button
           type="button"
           onClick={toggleMute}
           aria-label={muted ? 'Unmute' : 'Mute'}
@@ -474,7 +511,7 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
           }}
         >
           {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-        </button>
+        </button>}
 
         {/* Poster only — no fake play button. Hides as soon as frames are playing. */}
         {!playing && (
@@ -491,7 +528,7 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
             <img
               src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`}
               alt={title}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              style={{ width: '100%', height: '100%', objectFit: fit === 'fill' ? 'cover' : 'contain' }}
               onError={(e) => {
                 (e.target as HTMLImageElement).src =
                   `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;

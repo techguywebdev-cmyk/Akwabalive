@@ -1,10 +1,9 @@
 -- Akwaaba: lock down ticket creation
 -- Run this in the Supabase SQL editor of the Akwaaba project.
 --
--- After this, paid and free tickets can only be created by the server
+-- After this, tickets (paid, free and gifted) can only be created by the server
 -- (/api/payments/verify and /api/payments/webhook use the service role key,
--- which bypasses RLS). Browsers can still read their own tickets and send
--- symbolic "gift" tickets from Moments.
+-- which bypasses RLS). Browsers can still read their own tickets.
 
 -- 1. One ticket per payment reference (stops double-issuing)
 create unique index if not exists tickets_qr_code_unique
@@ -40,15 +39,8 @@ create policy "tickets_select_public_profiles"
     and exists (select 1 from public.profiles p where p.id = user_id and p.is_public)
   );
 
--- Browsers may only insert free gift tickets they send themselves (Moments → Gift)
-create policy "tickets_insert_gift_only"
-  on public.tickets for insert
-  to authenticated
-  with check (
-    gifted_by = auth.uid()
-    and status = 'gifted'
-    and coalesce(total_paid, 0) = 0
-  );
+-- No browser inserts at all: paid tickets, free RSVPs and gifts are all
+-- issued by the server after verification.
 
 -- No browser updates or deletes. Service role (server) is unaffected.
 

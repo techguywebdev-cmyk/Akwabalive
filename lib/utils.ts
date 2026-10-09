@@ -150,3 +150,12 @@ export function filterEvents(
 
   return list;
 }
+
+/** "2026-12-26" → "Sat 26 Dec 2026". Older rows stored a display label already; those pass through. */
+export function formatEventDate(value: string | null | undefined): string {
+  if (!value) return '';
+  if (!/^\d{4}-\d{2}-\d{2}/.test(value)) return value;
+  const d = new Date(`${value.slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}

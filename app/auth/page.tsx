@@ -6,13 +6,8 @@ import Link from 'next/link';
 import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-const C = {
-  bg: '#0D0B08', bg2: '#141109', bg3: '#1C1710',
-  gold: '#C8922A', goldDim: 'rgba(200,146,42,0.14)', goldBd: 'rgba(200,146,42,0.28)',
-  cream: '#F5ECD7', c2: 'rgba(245,236,215,0.55)', c3: 'rgba(245,236,215,0.24)',
-  bd: 'rgba(245,236,215,0.07)', red: '#CE1126',
-};
 
+import { C, G } from '@/lib/theme';
 export default function AuthPage() {
   const router   = useRouter();
   const supabase = createClient();
@@ -96,7 +91,7 @@ export default function AuthPage() {
   }
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div style={{ background: 'transparent', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
 
         <Link href="/" style={{ display: 'flex', justifyContent: 'center', marginBottom: 32, textDecoration: 'none' }}>
@@ -105,7 +100,7 @@ export default function AuthPage() {
           </span>
         </Link>
 
-        <div style={{ background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 16, padding: 28 }}>
+        <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 16, padding: 28 }}>
           <h1 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 28, fontWeight: 400, color: C.cream, textAlign: 'center', marginBottom: 6 }}>
             {mode === 'signin' ? 'Welcome back' : 'Join Akwaaba'}
           </h1>
@@ -120,14 +115,14 @@ export default function AuthPage() {
                   <User size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
                   <input type="text" placeholder="Full name" value={fullName}
                     onChange={e => setFullName(e.target.value)} required
-                    style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
+                    style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
                 </div>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14 }}>@</span>
                   <input type="text" placeholder="username" value={username}
                     onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                     required minLength={3}
-                    style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 32px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
+                    style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 32px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
                 </div>
               </>
             )}
@@ -136,14 +131,14 @@ export default function AuthPage() {
               <Mail size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
               <input type="email" placeholder="Email address" value={email}
                 onChange={e => setEmail(e.target.value)} required
-                style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
+                style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
             </div>
 
             <div style={{ position: 'relative' }}>
               <Lock size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
               <input type="password" placeholder="Password" value={password}
                 onChange={e => setPassword(e.target.value)} required minLength={6}
-                style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
+                style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
             </div>
 
             {error && (
@@ -158,7 +153,7 @@ export default function AuthPage() {
             )}
 
             <button type="submit" disabled={loading || success}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: success ? '#2D6A4F' : C.gold, color: success ? '#fff' : '#0D0B08', border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: (loading || success) ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, marginTop: 6, transition: 'background 250ms' }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: success ? '#2D6A4F' : C.gold, color: success ? '#fff' : '#0D0B08', border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: (loading || success) ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, marginTop: 6, transition: 'background 250ms' }}>
               {success ? <>Success <ArrowRight size={14} /></>
                 : loading ? <Loader2 size={14} className="animate-spin" />
                 : <>{mode === 'signin' ? 'Sign In' : 'Create Account'} <ArrowRight size={14} /></>

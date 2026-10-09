@@ -6,16 +6,10 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import type { GhanaEvent } from '@/lib/types';
 
-const C = {
-  bg: '#0D0B08', bg2: '#141109', bg3: '#1C1710',
-  gold: '#C8922A', goldDim: 'rgba(200,146,42,0.14)', goldBd: 'rgba(200,146,42,0.28)',
-  cream: '#F5ECD7', c2: 'rgba(245,236,215,0.55)', c3: 'rgba(245,236,215,0.24)',
-  c4: 'rgba(245,236,215,0.08)', bd: 'rgba(245,236,215,0.07)', bd2: 'rgba(245,236,215,0.13)',
-  red: '#CE1126', greenL: '#4ade80', greenDim: 'rgba(45,106,79,0.15)', greenBd: 'rgba(45,106,79,0.35)',
-};
 
 import type { CheckoutTier } from '@/components/events/EventDetailClient';
 
+import { C, G, R } from '@/lib/theme';
 interface Props {
   event: GhanaEvent;
   tiers: CheckoutTier[];
@@ -143,8 +137,8 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(13,11,8,0.9)', backdropFilter: 'blur(8px)' }} />
-      <div style={{ position: 'relative', zIndex: 1, background: C.bg2, borderRadius: '20px 20px 0 0', border: `1px solid ${C.bd2}`, borderBottom: 'none', width: '100%', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto', paddingBottom: 48 }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, ...G.scrim }} />
+      <div style={{ position: 'relative', zIndex: 1, ...G.sheet, borderRadius: `${R.sheet}px ${R.sheet}px 0 0`, border: `1px solid ${C.bd2}`, borderBottom: 'none', width: '100%', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto', paddingBottom: 48 }}>
 
         <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 6px' }}>
           <div style={{ width: 44, height: 4, borderRadius: 2, background: C.bd2 }} />
@@ -152,7 +146,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '8px 20px 16px', borderBottom: `1px solid ${C.bd}` }}>
           <div>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.8, marginBottom: 5 }}>
+            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.8, marginBottom: 5 }}>
               {step === 'select' ? '\u2014 Choose ticket' : step === 'pay' ? '\u2014 Payment' : '\u2014 Confirmed'}
             </p>
             <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 21, fontWeight: 400, color: C.cream, lineHeight: 1.15, maxWidth: 280 }}>{event.title}</h3>
@@ -166,8 +160,8 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
         <div style={{ display: 'flex', padding: '12px 20px', borderBottom: `1px solid ${C.bd}` }}>
           {STEPS.map((s, i) => (
             <div key={s} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: i <= ['select','pay','done'].indexOf(step) ? C.gold : C.bg3, border: `1px solid ${i <= ['select','pay','done'].indexOf(step) ? C.gold : C.bd}`, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, fontWeight: 600, color: i <= ['select','pay','done'].indexOf(step) ? '#000' : C.c3 }}>{i + 1}</div>
-              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', color: i <= ['select','pay','done'].indexOf(step) ? C.c2 : C.c3 }}>{s}</span>
+              <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: i <= ['select','pay','done'].indexOf(step) ? C.gold : C.bg3, border: `1px solid ${i <= ['select','pay','done'].indexOf(step) ? C.gold : C.bd}`, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, fontWeight: 600, color: i <= ['select','pay','done'].indexOf(step) ? '#000' : C.c3 }}>{i + 1}</div>
+              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: i <= ['select','pay','done'].indexOf(step) ? C.c2 : C.c3 }}>{s}</span>
               {i < 2 && <div style={{ flex: 1, height: 1, background: C.bd, marginLeft: 6 }} />}
             </div>
           ))}
@@ -176,7 +170,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
         {/* SELECT */}
         {step === 'select' && (
           <div style={{ padding: 20 }}>
-            <div style={{ display: 'flex', gap: 12, padding: '12px 14px', background: C.bg3, borderRadius: 10, marginBottom: 20, border: `1px solid ${C.bd}` }}>
+            <div style={{ display: 'flex', gap: 12, padding: '12px 14px', ...G.raised, borderRadius: 10, marginBottom: 20, border: `1px solid ${C.bd}` }}>
               <div style={{ width: 48, height: 48, borderRadius: 8, flexShrink: 0, backgroundImage: `url(${event.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
               <div>
                 <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.c2, fontWeight: 500, marginBottom: 2 }}>{event.title}</p>
@@ -192,8 +186,8 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                       <span style={{ fontFamily: 'var(--font-syne,sans-serif)', fontSize: 14, fontWeight: 600, color: C.cream }}>{t.name}</span>
-                      {!t.available && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1px', textTransform: 'uppercase', background: 'rgba(206,17,38,0.15)', color: C.red, border: '1px solid rgba(206,17,38,0.25)', padding: '2px 7px', borderRadius: 3 }}>Sold out</span>}
-                      {t.available && t.spots <= 20 && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1px', textTransform: 'uppercase', background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}`, padding: '2px 7px', borderRadius: 3 }}>{t.spots} left</span>}
+                      {!t.available && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', background: 'rgba(206,17,38,0.15)', color: C.red, border: '1px solid rgba(206,17,38,0.25)', padding: '2px 7px', borderRadius: 6 }}>Sold out</span>}
+                      {t.available && t.spots <= 20 && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}`, padding: '2px 7px', borderRadius: 6 }}>{t.spots} left</span>}
                     </div>
                     <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.c3, lineHeight: 1.45 }}>{t.desc}</p>
                   </div>
@@ -209,11 +203,11 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
 
             {tier.price > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderTop: `1px solid ${C.bd}`, marginBottom: 4 }}>
-                <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: C.c2 }}>Quantity</span>
+                <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c2 }}>Quantity</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <button onClick={() => setQty(q => Math.max(1, q-1))} style={{ width: 34, height: 34, borderRadius: '50%', border: `1px solid ${C.bd}`, background: C.bg3, color: C.cream, cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+                  <button onClick={() => setQty(q => Math.max(1, q-1))} style={{ width: 34, height: 34, borderRadius: '50%', border: `1px solid ${C.bd}`, ...G.raised, color: C.cream, cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
                   <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 18, color: C.cream, minWidth: 28, textAlign: 'center' }}>{qty}</span>
-                  <button onClick={() => setQty(q => Math.min(maxQty, q+1))} style={{ width: 34, height: 34, borderRadius: '50%', border: `1px solid ${C.bd}`, background: C.bg3, color: C.cream, cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                  <button onClick={() => setQty(q => Math.min(maxQty, q+1))} style={{ width: 34, height: 34, borderRadius: '50%', border: `1px solid ${C.bd}`, ...G.raised, color: C.cream, cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                 </div>
               </div>
             )}
@@ -226,7 +220,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
                 </div>
               )}
               <button onClick={() => tier.price === 0 ? handleFreeTicket() : setStep('pay')} disabled={loading || !onSale}
-                style={{ width: '100%', background: onSale ? C.gold : C.bg3, color: onSale ? '#0D0B08' : C.c3, border: onSale ? 'none' : `1px solid ${C.bd}`, padding: 16, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: loading ? 'wait' : onSale ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                style={{ width: '100%', background: onSale ? C.gold : C.bg3, color: onSale ? '#0D0B08' : C.c3, border: onSale ? 'none' : `1px solid ${C.bd}`, padding: 16, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: loading ? 'wait' : onSale ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 {loading ? <Loader2 size={14} className="animate-spin" /> : !onSale ? (tier.id ? 'Sold Out' : 'Not on sale yet') : tier.price === 0 ? 'Reserve My Spot \u2192' : 'Continue to Payment \u2192'}
               </button>
               {error && <p role="alert" style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: '#f87171', textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>{error}</p>}
@@ -238,7 +232,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
         {/* PAY */}
         {step === 'pay' && (
           <div style={{ padding: 20 }}>
-            <div style={{ background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
+            <div style={{ ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c2 }}>{tier.name} × {qty}</span>
                 <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 18, color: C.cream }}><span style={{ fontSize: 10, color: C.gold }}>₵</span>{total.toLocaleString()}</span>
@@ -246,19 +240,19 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
               <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3 }}>{event.title} · {event.dateLabel}</p>
             </div>
 
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 10 }}>Your email</p>
+            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 10 }}>Your email</p>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com"
-              style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '12px 14px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none', marginBottom: 20 }} />
+              style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '12px 14px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none', marginBottom: 20 }} />
 
             <button onClick={handlePaystack} disabled={loading || !sdkReady || !email}
-              style={{ width: '100%', background: loading || !email ? C.bg3 : C.gold, color: loading || !email ? C.c3 : '#0D0B08', border: `1px solid ${loading || !email ? C.bd : C.gold}`, padding: 16, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: (loading || !sdkReady || !email) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 14, transition: 'all 200ms' }}>
+              style={{ width: '100%', background: loading || !email ? C.bg3 : C.gold, color: loading || !email ? C.c3 : '#0D0B08', border: `1px solid ${loading || !email ? C.bd : C.gold}`, padding: 16, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: (loading || !sdkReady || !email) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 14, transition: 'all 200ms' }}>
               {loading ? <><Loader2 size={14} className="animate-spin" /> Processing\u2026</> : `Pay \u20B5${total.toLocaleString()} with Paystack`}
             </button>
             {error && <p role="alert" style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: '#f87171', textAlign: 'center', marginBottom: 14, lineHeight: 1.5 }}>{error}</p>}
 
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
               {['MTN MoMo', 'Vodafone Cash', 'AirtelTigo', 'Visa/Mastercard'].map(m => (
-                <span key={m} style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 4, border: `1px solid ${C.bd}`, color: C.c3 }}>{m}</span>
+                <span key={m} style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 8, border: `1px solid ${C.bd}`, color: C.c3 }}>{m}</span>
               ))}
             </div>
 
@@ -267,7 +261,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
               <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3 }}>Secured by Paystack \u00b7 256-bit SSL</span>
             </div>
 
-            <button onClick={() => setStep('select')} style={{ width: '100%', background: 'transparent', color: C.c3, border: `1px solid ${C.bd}`, padding: 12, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer' }}>
+            <button onClick={() => setStep('select')} style={{ width: '100%', background: 'transparent', color: C.c3, border: `1px solid ${C.bd}`, padding: 12, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer' }}>
               ← Back
             </button>
           </div>
@@ -290,17 +284,17 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
                 <div key={i} style={{ background: (i * 7 + i) % 3 === 0 ? '#0D0B08' : 'transparent', borderRadius: 1 }} />
               ))}
             </div>
-            <div style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 10, padding: '14px 16px', marginBottom: 20, textAlign: 'left' }}>
+            <div style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 10, padding: '14px 16px', marginBottom: 20, textAlign: 'left' }}>
               {[{ label: 'Event', value: event.title }, { label: 'Tier', value: tier.name }, { label: 'Date', value: event.dateLabel }, { label: 'Ref', value: ref }].map(row => (
                 <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: `1px solid ${C.bd}` }}>
-                  <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>{row.label}</span>
+                  <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>{row.label}</span>
                   <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.cream, maxWidth: '60%', textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.value}</span>
                 </div>
               ))}
             </div>
             <div style={{ display: 'flex', gap: 10, width: '100%' }}>
-              <button onClick={onClose} style={{ flex: 1, background: C.gold, color: '#0D0B08', border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer' }}>Done</button>
-              <a href="/account/tickets" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', color: C.c2, border: `1px solid ${C.bd}`, padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', textDecoration: 'none' }}>My Tickets</a>
+              <button onClick={onClose} style={{ flex: 1, background: C.gold, color: '#0D0B08', border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer' }}>Done</button>
+              <a href="/account/tickets" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', color: C.c2, border: `1px solid ${C.bd}`, padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', textDecoration: 'none' }}>My Tickets</a>
             </div>
           </div>
         )}

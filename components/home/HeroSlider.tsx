@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Calendar, MapPin, Clock } from 'lucide-react';
+import { C, G, R } from '@/lib/theme';
+
+const mono = 'var(--font-dm-mono, monospace)';
+const sans = 'var(--font-inter, sans-serif)';
 import type { HeroSlide } from '@/lib/events/rank';
 import { extractYoutubeId } from '@/lib/events/rank';
 
@@ -40,12 +44,6 @@ const FLYER_OUTRO_MS = 2800;
 const VIDEO_MAX_MS = 120000;
 /** Never treat ENDED as real if video played less than this */
 const MIN_PLAY_MS = 8000;
-
-const GLOWS = {
-  green: 'radial-gradient(ellipse 65% 75% at 18% 68%, rgba(27,67,50,0.38) 0%, transparent 62%)',
-  gold:  'radial-gradient(ellipse 60% 65% at 22% 62%, rgba(200,146,42,0.2) 0%, transparent 58%)',
-  red:   'radial-gradient(ellipse 55% 60% at 15% 72%, rgba(206,17,38,0.16) 0%, transparent 55%)',
-};
 
 type Phase = 'image' | 'flyer-in' | 'video' | 'flyer-out';
 
@@ -419,24 +417,11 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
               backgroundSize: 'cover',
               backgroundPosition: 'center center',
               backgroundRepeat: 'no-repeat',
-              filter: 'brightness(0.48) saturate(0.82)',
               opacity: active && phase === 'video' && playerVisible ? 0 : 1,
               transition: 'opacity 500ms ease',
             }} />
-            <div style={{
-              position: 'absolute', inset: 0, zIndex: 1,
-              background: 'linear-gradient(to top, #0D0B08 0%, rgba(13,11,8,0.55) 38%, rgba(13,11,8,0.08) 65%, transparent 100%)',
-            }} />
-            <div style={{
-              position: 'absolute', inset: 0, zIndex: 1,
-              background: 'linear-gradient(to right, rgba(13,11,8,0.85) 0%, rgba(13,11,8,0.26) 42%, transparent 70%)',
-            }} />
-            <div style={{
-              position: 'absolute', inset: 0, zIndex: 2,
-              background: GLOWS[s.glow],
-              opacity: active ? 1 : 0,
-              transition: 'opacity 1600ms ease',
-            }} />
+            {/* flat tint — no gradients */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'rgba(13,11,8,0.22)' }} />
           </div>
         );
       })}
@@ -463,11 +448,9 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
               height: '100%',
               transform: 'translate(-50%, -50%) scale(2.2)',
               transformOrigin: 'center center',
-              filter: 'brightness(0.52) saturate(0.88)',
             }}
           />
-          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 96, background: 'linear-gradient(to top, #0D0B08 30%, transparent)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 80, background: 'linear-gradient(to bottom, rgba(13,11,8,0.75), transparent)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(13,11,8,0.22)', pointerEvents: 'none' }} />
         </div>
       )}
 
@@ -488,13 +471,12 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
             width: '100%', height: '100%',
             objectFit: 'cover',
             opacity: playerVisible ? 1 : 0,
-            filter: 'brightness(0.52) saturate(0.88)',
             pointerEvents: 'none',
           }}
         />
       )}
 
-      {/* Side zones — only upper/mid area so CTA is never under them */}
+      {/* Side zones — only upper/mid area so the panel is never under them */}
       <button
         type="button"
         aria-label="Previous slide"
@@ -504,16 +486,8 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
           navPrev();
         }}
         style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 160,
-          width: '26%',
-          zIndex: 8,
-          border: 'none',
-          background: 'transparent',
-          cursor: 'w-resize',
-          padding: 0,
+          position: 'absolute', left: 0, top: 0, bottom: 320, width: '26%', zIndex: 8,
+          border: 'none', background: 'transparent', cursor: 'w-resize', padding: 0,
           WebkitTapHighlightColor: 'transparent',
         }}
       />
@@ -526,51 +500,42 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
           navNext();
         }}
         style={{
-          position: 'absolute',
-          right: 0,
-          top: 0,
-          bottom: 160,
-          width: '26%',
-          zIndex: 8,
-          border: 'none',
-          background: 'transparent',
-          cursor: 'e-resize',
-          padding: 0,
+          position: 'absolute', right: 0, top: 0, bottom: 320, width: '26%', zIndex: 8,
+          border: 'none', background: 'transparent', cursor: 'e-resize', padding: 0,
           WebkitTapHighlightColor: 'transparent',
         }}
       />
 
+      {/* Frosted glass info panel */}
       <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 15,
-        padding: '0 24px 72px',
+        position: 'absolute', zIndex: 15,
+        left: 'clamp(12px, 4vw, 48px)', right: 'clamp(12px, 4vw, 48px)', bottom: 'clamp(16px, 4vw, 48px)',
         pointerEvents: 'none',
       }}>
-        <div style={{ maxWidth: 640, pointerEvents: 'auto' }}>
+        <div style={{
+          maxWidth: 600, pointerEvents: 'auto',
+          ...G.panel, border: `1px solid ${C.bd2}`, borderRadius: R.sheet,
+          padding: 'clamp(18px, 4vw, 28px)',
+        }}>
           <div
             key={`ey-${cur}`}
             style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              fontFamily: 'var(--font-dm-mono, monospace)',
-              fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase',
-              color: '#C8922A', marginBottom: 16,
+              display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 14,
               animation: 'fadeSlideUp 0.55s 0.1s ease both',
             }}
           >
-            <span style={{ display: 'block', width: 24, height: 1, background: '#C8922A', flexShrink: 0 }} />
-            {slide.eyebrow}
+            <span style={{ fontFamily: mono, fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.goldText }}>
+              {slide.eyebrow}
+            </span>
             {slide.live && (
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: 'rgba(206,17,38,0.18)', border: '1px solid rgba(206,17,38,0.38)',
-                color: 'rgba(255,110,110,0.9)',
-                fontFamily: 'var(--font-dm-mono, monospace)',
-                fontSize: 7, letterSpacing: '2px', textTransform: 'uppercase',
-                padding: '3px 9px',
+                background: 'rgba(206,17,38,0.16)', border: '1px solid rgba(206,17,38,0.45)',
+                color: '#FCA5A5', borderRadius: R.chip,
+                fontFamily: mono, fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase',
+                padding: '4px 10px',
               }}>
-                <span style={{
-                  width: 5, height: 5, borderRadius: '50%', background: '#CE1126',
-                  animation: 'blink 1s infinite', flexShrink: 0,
-                }} />
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.red, animation: 'blink 1s infinite', flexShrink: 0 }} />
                 {slide.live}
               </span>
             )}
@@ -580,49 +545,38 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
             key={`t-${cur}`}
             style={{
               fontFamily: 'var(--font-cormorant, serif)',
-              fontSize: 'clamp(48px, 12vw, 100px)',
-              fontWeight: 300, lineHeight: 0.9,
-              letterSpacing: '-2px', color: '#fff',
-              marginBottom: 18,
+              fontSize: 'clamp(40px, 9vw, 76px)',
+              fontWeight: 500, lineHeight: 0.95,
+              letterSpacing: '-1px', color: '#FFFDF6',
+              marginBottom: 16,
               animation: 'fadeSlideUp 0.7s 0.22s ease both',
             }}
           >
-            {slide.titleLine1}<br />
-            <em style={{ fontStyle: 'italic', fontWeight: 300 }}>{slide.titleLine2}</em>
+            {slide.titleLine1}{' '}
+            <em style={{ fontStyle: 'italic', fontWeight: 400, color: C.c2 }}>{slide.titleLine2}</em>
           </h1>
 
           <div
             key={`m-${cur}`}
             style={{
-              display: 'flex', flexWrap: 'wrap', alignItems: 'center',
-              gap: 0, marginBottom: 24,
+              display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 16px',
+              marginBottom: 20,
               animation: 'fadeSlideUp 0.62s 0.36s ease both',
             }}
           >
             {[
-              { icon: '📅', text: slide.date  },
-              { icon: '📍', text: slide.venue },
-              { icon: '🕐', text: slide.time  },
-            ].map(({ icon, text }, i) => (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                fontFamily: 'var(--font-dm-mono, monospace)',
-                fontSize: 10, letterSpacing: '0.5px',
-                color: 'rgba(245,236,215,0.55)',
-                paddingRight: i < 2 ? 14 : 0,
-                marginRight: i < 2 ? 14 : 0,
-                borderRight: i < 2 ? '1px solid rgba(245,236,215,0.1)' : 'none',
-              }}>
-                <span style={{ color: '#C8922A', fontSize: 10 }}>{icon}</span>
-                {i === 1
-                  ? <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>{text}</span>
-                  : <span>{text}</span>
-                }
-              </div>
+              { Icon: Calendar, text: slide.date },
+              { Icon: MapPin, text: slide.venue },
+              { Icon: Clock, text: slide.time },
+            ].filter(m => m.text).map(({ Icon, text }, i) => (
+              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: mono, fontSize: 12, color: C.c2, minWidth: 0 }}>
+                <Icon size={13} style={{ color: C.goldText, flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{text}</span>
+              </span>
             ))}
           </div>
 
-          <div key={`cta-${cur}`} style={{ animation: 'fadeSlideUp 0.6s 0.5s ease both' }}>
+          <div key={`cta-${cur}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', animation: 'fadeSlideUp 0.6s 0.5s ease both' }}>
             <Link
               href={slide.href}
               onClick={(e) => {
@@ -632,58 +586,48 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
                 }
               }}
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 12,
-                fontFamily: 'var(--font-dm-mono, monospace)',
-                fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase',
-                color: '#0D0B08',
-                padding: '14px 28px',
-                background: '#C8922A',
-                borderRadius: 6,
-                textDecoration: 'none',
-                fontWeight: 700,
-                position: 'relative',
-                zIndex: 16,
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+                fontFamily: sans, fontSize: 15, fontWeight: 700,
+                color: C.onAccent, background: C.gold,
+                padding: '14px 22px', borderRadius: R.btn,
+                textDecoration: 'none', position: 'relative', zIndex: 16,
               }}
             >
               {slide.cta}
-              <ArrowRight size={14} />
+              <ArrowRight size={16} />
             </Link>
+
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    armClickSuppress();
+                    goTo(i);
+                  }}
+                  aria-label={`Slide ${i + 1}`}
+                  style={{
+                    position: 'relative', width: 28, height: 24,
+                    cursor: 'pointer', border: 'none', padding: 0, background: 'transparent',
+                  }}
+                >
+                  <span style={{ position: 'absolute', left: 0, right: 0, top: 11, height: 3, borderRadius: 2, overflow: 'hidden', background: i === cur ? 'rgba(245,236,215,0.3)' : 'rgba(245,236,215,0.14)' }}>
+                    <span style={{
+                      position: 'absolute', inset: 0,
+                      background: C.gold,
+                      transformOrigin: 'left center',
+                      transform: `scaleX(${i === cur ? prog / 100 : i < cur ? 1 : 0})`,
+                      transition: i === cur ? 'none' : 'transform 200ms',
+                    }} />
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-
-      <div style={{
-        position: 'absolute', zIndex: 16,
-        bottom: 72, right: 24,
-        display: 'flex', gap: 6, alignItems: 'center',
-      }}>
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              armClickSuppress();
-              goTo(i);
-            }}
-            aria-label={`Slide ${i + 1}`}
-            style={{
-              position: 'relative', width: 28, height: 2,
-              borderRadius: 1, overflow: 'hidden',
-              background: i === cur ? 'rgba(245,236,215,0.3)' : 'rgba(245,236,215,0.12)',
-              cursor: 'pointer', border: 'none', padding: 0,
-            }}
-          >
-            <span style={{
-              position: 'absolute', inset: 0,
-              background: '#C8922A',
-              transformOrigin: 'left center',
-              transform: `scaleX(${i === cur ? prog / 100 : i < cur ? 1 : 0})`,
-              transition: i === cur ? 'none' : 'transform 200ms',
-            }} />
-          </button>
-        ))}
       </div>
     </section>
   );
