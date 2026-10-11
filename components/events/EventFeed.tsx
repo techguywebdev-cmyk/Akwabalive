@@ -2,56 +2,88 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Bookmark, CalendarDays, Clock, ExternalLink, Info, Loader2, MapPin, Navigation, Share2, Ticket } from 'lucide-react';
 import { C, G, R } from '@/lib/theme';
 import type { GhanaEvent } from '@/lib/types';
 import { isListedEvent } from '@/lib/types';
 import { cityLabel, formatDistance } from '@/lib/utils';
 import { daysUntil } from '@/lib/moments/series';
-import { LineupChips } from '@/components/ui/LineupChips';
+import { Icon, type IconName } from '@/components/ui/Icon';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, rgba, setPageAccent, BRAND_GREEN } from '@/lib/events/accent';
 
-const mono = 'var(--font-dm-mono,monospace)';
 const sans = 'var(--font-inter,sans-serif)';
 const serif = 'var(--font-cormorant,serif)';
-const shadowText = '0 2px 18px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.6)';
+const NOISE = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
+/** Action colours — the This-scine rail palette. */
+const ACT = {
+  save: '#7BFF9E',
+  going: '#FF6B8A',
+  map: '#7BC8FF',
+  remind: '#FFD166',
+};
 
 export interface FeedItem { event: GhanaEvent; dist: number | null }
 
-function countdown(date: string): string | null {
+function countdownLabel(date: string): string | null {
   const d = daysUntil(date);
   if (d == null) return null;
-  if (d < 0) return 'Past event';
+  if (d < 0) return 'Past';
   if (d === 0) return 'Today';
   if (d === 1) return 'Tomorrow';
-  if (d <= 30) return `In ${d} days`;
+  if (d <= 30) return `${d} days`;
   return null;
 }
 
-/** Image fit: fill the card when the flyer's shape is close to the screen's, otherwise show it whole. */
-function useFit(src: string, wide: boolean) {
-  const [fit, setFit] = useState<'cover' | 'contain'>('cover');
-  const onLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.currentTarget;
-    const box = img.parentElement?.getBoundingClientRect();
-    if (!box || !img.naturalWidth) return;
-    const ratio = (img.naturalWidth / img.naturalHeight) / (box.width / box.height);
-    setFit(ratio > 0.62 && ratio < 1.6 ? 'cover' : 'contain');
-  }, []);
-  useEffect(() => { setFit('cover'); }, [src, wide]);
-  return { fit, onLoad };
+/* ── Action panel tile (This-scine rail) ─────────────────────────────── */
+function RailTile({
+  label, icon, color, active, filled, onClick, href, external,
+}: {
+  label: string; icon: IconName; color: string; active?: boolean; filled?: boolean;
+  onClick?: () => void; href?: string; external?: boolean;
+}) {
+  const style: React.CSSProperties = {
+    width: 56, padding: '11px 0', borderRadius: 18, boxSizing: 'border-box', cursor: 'pointer', textDecoration: 'none',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+    background: active ? `${color}15` : 'rgba(0,0,0,0.42)',
+    border: `1px solid ${active ? `${color}50` : 'rgba(255,255,255,0.09)'}`,
+    backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+    transition: 'all 0.2s ease',
+  };
+  const inner = (
+    <>
+      <Icon name={icon} size={20} color={active ? color : 'rgba(255,255,255,0.65)'} filled={filled} />
+      <span style={{ fontFamily: sans, fontSize: 9, fontWeight: 700, letterSpacing: 0.2, marginTop: 1, color: active ? color : 'rgba(255,255,255,0.55)', textShadow: '0 1px 6px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+    </>
+  );
+  if (href && external) return <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label} style={style}>{inner}</a>;
+  if (href) return <Link href={href} aria-label={label} style={style}>{inner}</Link>;
+  return <button type="button" onClick={onClick} aria-label={label} aria-pressed={active} style={style}>{inner}</button>;
 }
 
+/* ── Glass chip used in the top row ──────────────────────────────────── */
+function TopChip({ children, border }: { children: React.ReactNode; border?: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: `1px solid ${border ?? 'rgba(255,255,255,0.08)'}`, borderRadius: 20, padding: '5px 12px' }}>
+      {children}
+    </div>
+  );
+}
+
+/* ── Full-height card ────────────────────────────────────────────────── */
 function FeedCard({
-  item, index, total, active, near, wide, saved, saving, onSave, onShare, topInset,
+  item, index, total, active, near, wide, saved, saving, going, onSave, onGoing, onShare, topInset,
 }: {
   item: FeedItem; index: number; total: number; active: boolean; near: boolean; wide: boolean;
-  saved: boolean; saving: boolean; onSave: () => void; onShare: () => void; topInset: number;
+  saved: boolean; saving: boolean; going: boolean;
+  onSave: () => void; onGoing: () => void; onShare: () => void; topInset: number;
 }) {
   const { event, dist } = item;
-  const { fit, onLoad } = useFit(event.image, wide);
-  const accent = categoryAccent(event.category);
-  const [acc, setAcc] = useState<RGB>(accent);
+  const [acc, setAcc] = useState<RGB>(categoryAccent(event.category));
+  const [loaded, setLoaded] = useState(false);
+  const [portrait, setPortrait] = useState(false);
+
   useEffect(() => {
     if (!near) return;
     let live = true;
@@ -59,156 +91,169 @@ function FeedCard({
     return () => { live = false; };
   }, [near, event.image, event.category]);
 
+  const accent = rgba(acc, 1);
+  const hex = `#${acc.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
   const listed = isListedEvent(event) && !!event.ticketUrl;
-  const when = countdown(event.date);
-  const titleSize = `clamp(34px, ${Math.max(6.5, 11 - event.title.length * 0.09)}vw, ${event.title.length > 34 ? 56 : 72}px)`;
+  const when = countdownLabel(event.date);
+  const titleSize = Math.min(wide ? 72 : 50, Math.max(28, (wide ? 80 : 54) - event.title.length * 0.9));
   const maps = event.lat && event.lng
     ? `https://www.google.com/maps/search/?api=1&query=${event.lat},${event.lng}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.venue}, ${cityLabel(event.city)}`)}`;
-  const contain = fit === 'contain';
+  // On wide screens a portrait flyer is shown whole on the right instead of being cropped.
+  const showWhole = wide && portrait;
+  const ticketHref = listed ? event.ticketUrl! : `/events/${event.slug}?tickets=1`;
+  const going_count = (event.attending ?? 0) + (going ? 1 : 0);
 
   return (
     <section
       aria-label={`${event.title}, ${index + 1} of ${total}`}
-      data-index={index}
-      style={{ position: 'relative', height: '100svh', width: '100%', overflow: 'hidden', scrollSnapAlign: 'start', scrollSnapStop: 'always', background: '#0D0B08' }}
+      style={{ position: 'relative', width: '100%', height: '100svh', overflow: 'hidden', background: '#06050A', scrollSnapAlign: 'start', scrollSnapStop: 'always', userSelect: 'none' }}
     >
-      {near ? (
+      {/* Placeholder gradient until the flyer loads */}
+      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(170deg, #0a0806 0%, ${rgba(acc, 0.22)} 50%, ${rgba(acc, 0.5)} 100%)`, opacity: loaded ? 0 : 1, transition: 'opacity 0.6s ease' }} />
+
+      {near && (
         <>
-          {/* Colour-washed blurred copy fills the screen behind the flyer */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={event.image} alt="" aria-hidden style={{ position: 'absolute', inset: -60, width: 'calc(100% + 120px)', height: 'calc(100% + 120px)', objectFit: 'cover', filter: 'blur(42px) saturate(1.35)', opacity: contain ? 0.7 : 0 }} />
-          <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 70% at 0% 0%, ${rgba(acc, 0.32)} 0%, transparent 70%), radial-gradient(120% 70% at 100% 100%, ${rgba(acc, 0.22)} 0%, transparent 70%)` }} />
+          {showWhole && (
+            <div style={{ position: 'absolute', inset: -60, backgroundImage: `url(${event.image})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(44px) saturate(1.3)', opacity: loaded ? 0.6 : 0, transition: 'opacity 0.6s ease' }} />
+          )}
           <div
             style={{
               position: 'absolute',
-              ...(contain && wide ? { top: 80, bottom: 24, left: '44%', right: '3%' } : contain ? { top: topInset + 46, bottom: '36%', left: 12, right: 12 } : { inset: 0 }),
+              ...(showWhole ? { top: 72, bottom: 28, right: '4%', width: '46%' } : { inset: 0 }),
+              backgroundImage: `url(${event.image})`,
+              backgroundSize: showWhole ? 'contain' : 'cover',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: showWhole ? 'center' : 'center top',
+              opacity: loaded ? (active ? 1 : 0.7) : 0,
+              transition: 'opacity 0.6s ease',
             }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={event.image}
-              alt={event.title}
-              onLoad={onLoad}
-              style={{ width: '100%', height: '100%', objectFit: fit, objectPosition: contain ? 'center' : '50% 30%', borderRadius: contain ? 14 : 0, transform: active ? 'scale(1)' : 'scale(1.03)', transition: 'transform 1.2s ease' }}
-            />
-          </div>
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={event.image}
+            alt=""
+            onLoad={(e) => { setLoaded(true); setPortrait(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth * 1.05); }}
+            style={{ position: 'absolute', opacity: 0, width: 1, height: 1, pointerEvents: 'none' }}
+          />
         </>
-      ) : (
-        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(170deg, #0D0B08 0%, ${rgba(accent, 0.25)} 60%, ${rgba(accent, 0.45)} 100%)` }} />
       )}
 
-      {/* Legibility fades */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '28%', background: 'linear-gradient(to bottom, rgba(8,6,4,0.55) 0%, transparent 100%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: wide ? '70%' : '62%', background: 'linear-gradient(to top, rgba(8,6,4,0.96) 0%, rgba(8,6,4,0.82) 30%, rgba(8,6,4,0.3) 65%, transparent 100%)', pointerEvents: 'none' }} />
-      {wide && <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '55%', background: 'linear-gradient(to right, rgba(8,6,4,0.7) 0%, transparent 100%)', pointerEvents: 'none' }} />}
+      {/* Vignette + fades + grain (This-scine card treatment) */}
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 60% 25%, transparent 20%, rgba(0,0,0,0.6) 100%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '75%', background: 'linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.85) 28%, rgba(0,0,0,0.3) 60%, transparent 100%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '25%', background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)', pointerEvents: 'none' }} />
+      {wide && <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '60%', background: 'linear-gradient(to right, rgba(0,0,0,0.75) 0%, transparent 100%)', pointerEvents: 'none' }} />}
+      <div style={{ position: 'absolute', inset: 0, opacity: 0.15, mixBlendMode: 'overlay', pointerEvents: 'none', backgroundImage: NOISE }} />
 
-      {/* Top chips */}
-      <div style={{ position: 'absolute', top: topInset, left: 14, right: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, zIndex: 3 }}>
-        <span style={{ ...G.overlay, border: '1px solid rgba(255,255,255,0.14)', borderRadius: R.chip, padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: mono, fontSize: 11, letterSpacing: '1px', color: 'rgba(245,236,215,0.8)' }}>
-          <span style={{ width: 6, height: 6, borderRadius: 3, background: rgba(acc, 1) }} />
-          {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-        </span>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {event.badge && (
-            <span style={{ ...G.overlay, border: `1px solid ${rgba(acc, 0.45)}`, borderRadius: R.chip, padding: '6px 12px', fontFamily: mono, fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.cream }}>{event.badge}</span>
-          )}
+      {/* Top row: position + countdown / price */}
+      <div style={{ position: 'absolute', top: topInset, left: 0, right: 0, zIndex: 10, padding: '0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: active ? 1 : 0.5, transition: 'opacity 0.4s ease' }}>
+        <TopChip>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: accent, boxShadow: `0 0 6px ${accent}`, animation: when && when !== 'Past' ? 'csPulse 1.6s ease-in-out infinite' : undefined }} />
+          <span style={{ fontFamily: sans, fontSize: 11, fontWeight: 700, letterSpacing: 1, color: 'rgba(255,255,255,0.55)' }}>
+            {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+          </span>
+        </TopChip>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {when && (
-            <span style={{ ...G.overlay, border: `1px solid ${rgba(acc, 0.45)}`, borderRadius: R.chip, padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: sans, fontSize: 12, fontWeight: 700, color: C.cream }}>
-              <CalendarDays size={13} color={rgba(acc, 1)} /> {when}
-            </span>
+            <TopChip border={`${hex}30`}>
+              <Icon name="calendar" size={12} color={accent} />
+              <span style={{ fontFamily: sans, fontSize: 12.5, fontWeight: 800, color: '#fff' }}>{when}</span>
+            </TopChip>
           )}
+          <TopChip border={`${hex}30`}>
+            <Icon name="ticket" size={12} color={accent} />
+            <span style={{ fontFamily: sans, fontSize: 13, fontWeight: 800, color: '#fff' }}>
+              {event.price === 0 ? 'Free' : `₵${event.price.toLocaleString()}`}
+            </span>
+          </TopChip>
         </div>
       </div>
 
-      {/* Info */}
+      {/* Bottom info block */}
       <div
         style={{
-          position: 'absolute', zIndex: 3, left: 0, bottom: 0,
-          right: wide ? 'auto' : 76, width: wide ? 'min(44%, 600px)' : undefined,
-          padding: `0 ${wide ? 40 : 18}px calc(${wide ? 40 : 18}px + env(safe-area-inset-bottom, 0px))`,
-          display: 'flex', flexDirection: 'column', gap: 10,
-          opacity: active ? 1 : 0.55, transform: active ? 'none' : 'translateY(14px)', transition: 'opacity 450ms ease, transform 450ms ease',
+          position: 'absolute', bottom: 0, left: 0, zIndex: 10,
+          right: wide ? undefined : 74, width: wide ? 'min(48%, 640px)' : undefined,
+          padding: `0 ${wide ? 40 : 20}px calc(${wide ? 36 : 14}px + env(safe-area-inset-bottom, 0px))`,
+          opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(18px)', transition: 'all 0.5s ease',
         }}
       >
-        <span style={{ fontFamily: mono, fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: rgba(acc, 1), textShadow: shadowText }}>
-          {event.category} · {event.area ? `${event.area}, ` : ''}{cityLabel(event.city)}
-          {dist != null && ` · ${formatDistance(dist)} away`}
-        </span>
+        {/* Tags */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 9, flexWrap: 'wrap', alignItems: 'center' }}>
+          {[event.category, event.badge].filter(Boolean).map((t) => (
+            <span key={t} style={{ fontFamily: sans, fontSize: 9, letterSpacing: 2.2, color: accent, fontWeight: 700, textTransform: 'uppercase', padding: '3px 8px', border: `1px solid ${hex}38`, borderRadius: 4 }}>{t}</span>
+          ))}
+          {dist != null && (
+            <span style={{ fontFamily: sans, fontSize: 9, letterSpacing: 1, color: 'rgba(255,255,255,0.45)', fontWeight: 600, padding: '3px 8px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4 }}>{formatDistance(dist)} AWAY</span>
+          )}
+        </div>
+
         <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none' }}>
-          <h2 style={{ fontFamily: serif, fontSize: titleSize, fontWeight: 600, lineHeight: 0.98, letterSpacing: '-0.5px', color: '#FFFDF6', textShadow: `0 0 50px ${rgba(acc, 0.25)}, ${shadowText}` }}>
+          <h2 style={{ fontFamily: serif, fontSize: titleSize, fontWeight: 700, color: '#fff', margin: '0 0 7px', lineHeight: 1.02, letterSpacing: -0.5, textShadow: `0 0 50px ${hex}28, 0 4px 26px rgba(0,0,0,0.8)` }}>
             {event.title}
           </h2>
         </Link>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', fontFamily: sans, fontSize: 13, color: 'rgba(245,236,215,0.86)', textShadow: shadowText }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><CalendarDays size={14} color={rgba(acc, 1)} />{event.dateLabel}</span>
-          {event.time && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Clock size={14} color={rgba(acc, 1)} />{event.time}</span>}
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minWidth: 0 }}><MapPin size={14} color={rgba(acc, 1)} />{event.venue}</span>
-        </div>
-        <LineupChips event={event} compact max={4} />
 
-        {/* Ticket bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 10px 10px 16px', marginTop: 4, borderRadius: R.card, ...G.panel, background: `linear-gradient(160deg, ${rgba(acc, 0.20)} 0%, ${rgba(acc, 0.06)} 60%, rgba(255,255,255,0.03) 100%), rgba(16,13,9,0.62)`, border: `1px solid ${rgba(acc, 0.35)}` }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontFamily: mono, fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2 }}>{event.price === 0 ? 'Entry' : 'From'}</p>
-            <p style={{ fontFamily: mono, fontSize: 22, color: event.price === 0 ? '#86EFAC' : C.cream, letterSpacing: '-0.5px' }}>
-              {event.price === 0 ? 'Free' : <><span style={{ fontSize: 13, color: rgba(acc, 1) }}>₵</span>{event.price.toLocaleString()}</>}
-            </p>
-            {!!event.attending && event.attending > 0 && (
-              <p style={{ fontFamily: sans, fontSize: 11, color: C.c3 }}>{event.attending.toLocaleString()} going</p>
-            )}
-          </div>
-          {listed ? (
-            <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={{ height: 48, padding: '0 18px', borderRadius: R.btn, background: C.gold, color: C.onAccent, fontFamily: sans, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
-              <ExternalLink size={16} /> Tickets
-            </a>
-          ) : (
-            <Link href={`/events/${event.slug}?tickets=1`} style={{ height: 48, padding: '0 18px', borderRadius: R.btn, background: C.gold, color: C.onAccent, fontFamily: sans, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
-              <Ticket size={17} /> {event.price === 0 ? 'RSVP' : 'Get tickets'}
-            </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 13, flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: serif, fontSize: 15, fontWeight: 600, color: `${hex}dd` }}>{event.dateLabel}</span>
+          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
+          {event.time && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Icon name="clock" size={11} color="rgba(255,255,255,0.4)" />
+              <span style={{ fontFamily: sans, fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{event.time}</span>
+            </span>
           )}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+            <Icon name="mapPin" size={11} color="rgba(255,255,255,0.4)" />
+            <span style={{ fontFamily: sans, fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{event.venue}{event.area ? `, ${event.area}` : ''} · {cityLabel(event.city)}</span>
+          </span>
         </div>
+
+        {(event.lineup?.length || event.description) && (
+          <p style={{ fontFamily: sans, fontSize: 13.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, margin: '0 0 14px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {event.lineup?.length ? <>With <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{event.lineup.join(', ')}</span>. </> : null}
+            {event.description}
+          </p>
+        )}
+
+        <a
+          href={ticketHref}
+          {...(listed ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 46, padding: '0 18px', borderRadius: 14, background: C.gold, color: C.onAccent, fontFamily: sans, fontSize: 14, fontWeight: 800, textDecoration: 'none' }}
+        >
+          <Icon name="ticket" size={17} strokeWidth={2} />
+          {event.price === 0 ? 'RSVP free' : listed ? `Tickets on ${event.ticketSource || 'official site'}` : 'Get tickets'}
+        </a>
       </div>
 
-      {/* Action rail */}
-      <div style={{ position: 'absolute', zIndex: 4, right: wide ? 28 : 10, bottom: `calc(${wide ? 40 : 128}px + env(safe-area-inset-bottom, 0px))`, display: 'flex', flexDirection: 'column', gap: 8, opacity: active ? 1 : 0, transform: active ? 'none' : 'translateX(24px)', transition: 'all 450ms ease 120ms' }}>
-        {[
-          { key: 'save', label: saved ? 'Saved' : 'Save', on: saved, onClick: onSave, icon: saving ? <Loader2 size={20} className="animate-spin" /> : <Bookmark size={20} fill={saved ? rgba(acc, 1) : 'none'} /> },
-          { key: 'share', label: 'Share', on: false, onClick: onShare, icon: <Share2 size={20} /> },
-          { key: 'map', label: 'Map', on: false, href: maps, icon: <Navigation size={19} /> },
-          { key: 'info', label: 'Details', on: false, link: `/events/${event.slug}`, icon: <Info size={20} /> },
-        ].map((b) => {
-          const style: React.CSSProperties = {
-            width: 58, padding: '10px 0', borderRadius: 18, cursor: 'pointer', textDecoration: 'none',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-            ...G.overlay, border: `1px solid ${b.on ? rgba(acc, 0.6) : 'rgba(255,255,255,0.12)'}`,
-            background: b.on ? rgba(acc, 0.18) : G.overlay.background,
-            color: b.on ? rgba(acc, 1) : C.cream,
-          };
-          const inner = <>{b.icon}<span style={{ fontFamily: sans, fontSize: 10, fontWeight: 700 }}>{b.label}</span></>;
-          if ('href' in b && b.href) return <a key={b.key} href={b.href} target="_blank" rel="noopener noreferrer" aria-label={`${b.label}: ${event.venue}`} style={style}>{inner}</a>;
-          if ('link' in b && b.link) return <Link key={b.key} href={b.link} aria-label={`${b.label}: ${event.title}`} style={style}>{inner}</Link>;
-          return <button key={b.key} type="button" onClick={b.onClick} aria-pressed={b.key === 'save' ? saved : undefined} aria-label={`${b.label}: ${event.title}`} style={style}>{inner}</button>;
-        })}
+      {/* Action panel */}
+      <div style={{ position: 'absolute', right: wide ? 28 : 12, bottom: `calc(${wide ? 36 : 16}px + env(safe-area-inset-bottom, 0px))`, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'center', opacity: active ? 1 : 0, transform: active ? 'translateX(0)' : 'translateX(28px)', transition: 'all 0.45s ease 0.12s' }}>
+        <RailTile label={saving ? '…' : saved ? 'Saved' : 'Save'} icon={saved ? 'check' : 'plus'} color={ACT.save} active={saved} onClick={onSave} />
+        <RailTile label={going_count > 0 ? (going_count >= 1000 ? `${Math.round(going_count / 1000)}K` : String(going_count)) : 'Going'} icon="heart" color={ACT.going} active={going} filled={going} onClick={onGoing} />
+        <RailTile label="Map" icon="mapPin" color={ACT.map} href={maps} external />
+        <RailTile label="Share" icon="share" color={hex} onClick={onShare} />
+        <RailTile label="Details" icon="info" color={hex} href={`/events/${event.slug}`} />
       </div>
     </section>
   );
 }
 
 /**
- * Full-bleed, snap-scrolling events feed (one event per screen).
- * Each event washes the whole page in a colour taken from its flyer.
+ * Full-height, snap-scrolling events feed (one event per screen), modelled on
+ * This-scine's card. Each event washes the whole page in a colour from its flyer.
  */
 export default function EventFeed({
-  items, saved, saveLoading, onToggleSave, topInset, onShowAll,
+  items, saved, saveLoading, onToggleSave, going, onToggleGoing, topInset, onShowAll,
 }: {
   items: FeedItem[];
   saved: Set<string>;
   saveLoading: string | null;
   onToggleSave: (e: GhanaEvent) => void;
-  /** px from the top of the screen that the nav + filter bar cover */
+  going: Set<string>;
+  onToggleGoing: (e: GhanaEvent) => void;
+  /** px from the top of the screen covered by the header + filter row */
   topInset: number;
-  /** Offered when nothing matches */
   onShowAll?: () => void;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
@@ -224,7 +269,6 @@ export default function EventFeed({
     return () => window.removeEventListener('resize', fn);
   }, []);
 
-  // Lock page scroll while the feed is showing
   useEffect(() => {
     if (!hasItems) return;
     const prev = document.body.style.overflow;
@@ -233,7 +277,6 @@ export default function EventFeed({
   }, [hasItems]);
   useEffect(() => () => resetPageAccent(), []);
 
-  // Track the active card
   useEffect(() => {
     const el = scroller.current;
     if (!el) return;
@@ -243,14 +286,12 @@ export default function EventFeed({
     return () => el.removeEventListener('scroll', onScroll);
   }, [hasItems]);
 
-  // Back to the first card when the list changes (filters)
   const listKey = items.map((i) => i.event.slug).join('|');
   useEffect(() => {
     scroller.current?.scrollTo({ top: 0 });
     setActive(0);
   }, [listKey]);
 
-  // Wash the page in the active event's colour
   const current = items[Math.min(active, items.length - 1)]?.event;
   useEffect(() => {
     if (!current) return;
@@ -260,35 +301,36 @@ export default function EventFeed({
     return () => { live = false; };
   }, [current?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keyboard paging
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const el = scroller.current;
       if (!el) return;
-      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'j') { e.preventDefault(); el.scrollBy({ top: el.clientHeight, behavior: 'smooth' }); }
-      if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'k') { e.preventDefault(); el.scrollBy({ top: -el.clientHeight, behavior: 'smooth' }); }
+      if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); el.scrollBy({ top: el.clientHeight, behavior: 'smooth' }); }
+      if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); el.scrollBy({ top: -el.clientHeight, behavior: 'smooth' }); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2200); };
   const share = useCallback(async (e: GhanaEvent) => {
     const url = `${window.location.origin}/events/${e.slug}`;
     try {
       if (navigator.share) { await navigator.share({ title: e.title, text: `${e.title} — ${e.dateLabel} · ${e.venue}`, url }); return; }
-    } catch { /* fall back to copy */ }
-    try { await navigator.clipboard.writeText(url); setToast('Link copied'); setTimeout(() => setToast(''), 2000); } catch { /* ignore */ }
+    } catch (err: any) { if (err?.name === 'AbortError') return; }
+    try { await navigator.clipboard.writeText(url); flash('Link copied'); } catch { flash('Could not share'); }
   }, []);
 
-  if (!items.length) {
+  if (!hasItems) {
     return (
-      <div style={{ minHeight: '62vh', paddingTop: topInset, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: `${topInset}px 24px 24px`, textAlign: 'center' }}>
+      <div style={{ minHeight: '62vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: `${topInset}px 24px 24px`, textAlign: 'center' }}>
+        <Icon name="calendar" size={30} color="rgba(255,255,255,0.35)" />
         <p style={{ fontFamily: serif, fontSize: 30, color: C.cream }}>No events match</p>
         <p style={{ fontFamily: sans, fontSize: 14, color: C.c2 }}>Try another date, city or price.</p>
         {onShowAll && (
-          <button type="button" onClick={onShowAll} style={{ marginTop: 6, height: 46, padding: '0 20px', borderRadius: R.btn, border: 'none', background: C.gold, color: C.onAccent, fontFamily: sans, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={onShowAll} style={{ marginTop: 6, height: 46, padding: '0 20px', borderRadius: 14, border: 'none', background: C.gold, color: C.onAccent, fontFamily: sans, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
             Show all dates
           </button>
         )}
@@ -298,10 +340,11 @@ export default function EventFeed({
 
   return (
     <>
+      <style>{'@keyframes csPulse{0%,100%{opacity:1}50%{opacity:0.35}}'}</style>
       <div
         ref={scroller}
         className="no-scrollbar"
-        style={{ position: 'fixed', inset: 0, zIndex: 40, overflowY: 'auto', overflowX: 'hidden', scrollSnapType: 'y mandatory', overscrollBehavior: 'contain' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 40, overflowY: 'auto', overflowX: 'hidden', scrollSnapType: 'y mandatory', overscrollBehavior: 'contain', background: '#06050A' }}
       >
         {items.map((item, i) => (
           <FeedCard
@@ -314,14 +357,16 @@ export default function EventFeed({
             wide={wide}
             saved={saved.has(item.event.slug)}
             saving={saveLoading === item.event.slug}
+            going={going.has(item.event.slug)}
             onSave={() => onToggleSave(item.event)}
+            onGoing={() => onToggleGoing(item.event)}
             onShare={() => share(item.event)}
             topInset={topInset}
           />
         ))}
       </div>
       {toast && (
-        <div role="status" style={{ position: 'fixed', zIndex: 120, left: '50%', bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))', transform: 'translateX(-50%)', ...G.sheet, border: `1px solid ${C.bd2}`, borderRadius: R.chip, padding: '10px 16px', fontFamily: sans, fontSize: 13, color: C.cream }}>
+        <div role="status" style={{ position: 'fixed', zIndex: 120, left: '50%', top: '52%', transform: 'translateX(-50%)', ...G.sheet, border: `1px solid ${C.bd2}`, borderRadius: R.chip, padding: '9px 16px', fontFamily: sans, fontSize: 12.5, fontWeight: 700, color: '#fff' }}>
           {toast}
         </div>
       )}
