@@ -6,8 +6,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Search, MapPin, X, Grid2X2, List, Filter, Navigation,
-  ChevronRight, LocateFixed, Star, Loader2,
+  ChevronRight, LocateFixed, Star, Loader2, RectangleVertical,
 } from 'lucide-react';
+import EventFeed from '@/components/events/EventFeed';
+import { Icon } from '@/components/ui/Icon';
 import type { GhanaEvent, FilterState, City, Category, WhenFilter, Artist } from '@/lib/types';
 import { filterEvents, haversine, formatDistance, matchesWhen } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -85,19 +87,20 @@ function Pill({ active, onClick, children }: {
   active: boolean; onClick: () => void; children: React.ReactNode;
 }) {
   return (
-    <button type="button" onClick={onClick} style={{
-      fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1.2px', textTransform: 'uppercase',
-      padding: '7px 12px', borderRadius: 999,
-      border: `1px solid ${active ? C.goldBd : C.bd}`,
-      background: active ? C.goldDim : 'transparent',
-      color: active ? C.gold : C.c3,
-      cursor: 'pointer', whiteSpace: 'nowrap',
+    <button type="button" onClick={onClick} aria-pressed={active} style={{
+      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, fontWeight: 700,
+      height: 32, padding: '0 12px', borderRadius: 20, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+      background: active ? 'rgba(var(--accent-rgb), 0.16)' : 'rgba(0,0,0,0.55)',
+      border: `1px solid ${active ? 'rgba(var(--accent-rgb), 0.5)' : 'rgba(255,255,255,0.10)'}`,
+      color: active ? 'rgb(var(--accent-rgb))' : 'rgba(255,255,255,0.72)',
+      backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
     }}>
       {children}
     </button>
   );
 }
 
+/** 38px square glass control (This-scine header button). */
 function IconBtn({
   active, onClick, label, badge, children,
 }: {
@@ -108,25 +111,23 @@ function IconBtn({
       type="button"
       aria-label={label}
       title={label}
+      aria-pressed={active}
       onClick={onClick}
       style={{
-        position: 'relative',
-        width: 40, height: 40, borderRadius: 10,
-        border: `1px solid ${active ? C.goldBd : C.bd}`,
-        background: active ? C.goldDim : C.bg2,
-        color: active ? C.gold : C.c2,
+        position: 'relative', width: 38, height: 38, borderRadius: 12, flexShrink: 0, cursor: 'pointer', padding: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        cursor: 'pointer', flexShrink: 0,
+        background: active ? 'rgba(var(--accent-rgb), 0.16)' : 'rgba(0,0,0,0.55)',
+        border: `1px solid ${active ? 'rgba(var(--accent-rgb), 0.45)' : 'rgba(255,255,255,0.10)'}`,
+        color: active ? 'rgb(var(--accent-rgb))' : 'rgba(255,255,255,0.75)',
+        backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', transition: 'all 0.2s ease',
       }}
     >
       {children}
       {!!badge && badge > 0 && (
         <span style={{
-          position: 'absolute', top: -4, right: -4,
-          minWidth: 16, height: 16, borderRadius: 8,
-          background: C.gold, color: C.bg,
-          fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, fontWeight: 700,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px',
+          position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 8, padding: '0 4px',
+          background: 'rgb(var(--accent-rgb))', color: '#07070F', fontSize: 9, fontWeight: 800, lineHeight: 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #0D0B08',
         }}>
           {badge}
         </span>
@@ -421,7 +422,29 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
 
   const [filters, setFilters] = useState<FilterState>(DEFAULT);
   const [page, setPage] = useState(PAGE_SIZE);
-  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [view, setViewState] = useState<'feed' | 'grid' | 'list'>('feed');
+  const setView = useCallback((v: 'feed' | 'grid' | 'list') => {
+    setViewState(v);
+    try { localStorage.setItem('akw_events_view', v); } catch { /* ignore */ }
+  }, []);
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem('akw_events_view');
+      if (v === 'grid' || v === 'list' || v === 'feed') setViewState(v);
+    } catch { /* ignore */ }
+  }, []);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarBottom, setToolbarBottom] = useState(190);
+  useEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const measure = () => setToolbarBottom(Math.round(el.getBoundingClientRect().bottom));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+  }, [view]);
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [locLabel, setLocLabel] = useState<string | null>(null);
   const [locStatus, setLocStatus] = useState<'idle' | 'detecting' | 'found' | 'error'>('idle');
@@ -509,6 +532,27 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
       setSaveLoading(null);
     }
   }, [user, saved, supabase]);
+
+  const [going, setGoing] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!user) { setGoing(new Set()); return; }
+    supabase
+      .from('event_attendance')
+      .select('event_slug')
+      .eq('user_id', user.id)
+      .eq('status', 'going')
+      .then(({ data }) => setGoing(new Set((data || []).map((r: { event_slug: string }) => r.event_slug))));
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleGoing = useCallback(async (event: GhanaEvent) => {
+    if (!user) { window.location.href = '/auth'; return; }
+    const on = going.has(event.slug);
+    setGoing(prev => { const n = new Set(prev); if (on) n.delete(event.slug); else n.add(event.slug); return n; });
+    const { error } = on
+      ? await supabase.from('event_attendance').delete().eq('user_id', user.id).eq('event_slug', event.slug).eq('status', 'going')
+      : await supabase.from('event_attendance').upsert({ user_id: user.id, event_slug: event.slug, status: 'going', is_public: true }, { onConflict: 'user_id,event_slug' });
+    if (error) setGoing(prev => { const n = new Set(prev); if (on) n.add(event.slug); else n.delete(event.slug); return n; });
+  }, [user, going, supabase]);
 
   const requestLoc = useCallback(() => {
     if (!navigator.geolocation) {
@@ -738,46 +782,47 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           .akw-events-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
         }
       ` }} />
-      <div style={{
-        position: 'sticky',
-        top: 'calc(72px + env(safe-area-inset-top, 0px))',
+      <div ref={toolbarRef} style={{
+        position: view === 'feed' ? 'fixed' : 'sticky',
+        top: 'calc(62px + env(safe-area-inset-top, 0px))',
         zIndex: 90,
-        margin: 'calc(72px + env(safe-area-inset-top, 0px)) 10px 0',
-        ...G.bar,
-        border: `1px solid ${C.bd2}`,
-        borderRadius: R.sheet,
-        padding: '10px 12px 0',
+        ...(view === 'feed'
+          ? { left: 4, right: 4, padding: '0 12px', background: 'transparent' }
+          : { margin: 'calc(66px + env(safe-area-inset-top, 0px)) 10px 0', ...G.bar, border: `1px solid ${C.bd2}`, borderRadius: R.sheet, padding: '10px 12px 0' }),
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: view === 'feed' ? 'none' : 1100, margin: '0 auto' }}>
           <IconBtn active={searchOpen || !!filters.search} onClick={() => setSearchOpen(s => !s)} label="Search">
-            <Search size={16} />
+            <Icon name="search" size={17} />
           </IconBtn>
           <IconBtn active={locStatus === 'found' || locOpen} onClick={() => setLocOpen(true)} label="Location">
-            <LocateFixed size={16} />
+            <Icon name="locate" size={17} />
           </IconBtn>
           <IconBtn active={filterOpen || activeCount > 0} onClick={() => setFilterOpen(true)} label="Filters" badge={activeCount}>
-            <Filter size={16} />
+            <Icon name="sliders" size={17} />
           </IconBtn>
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <span style={{
               fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1px',
-              color: C.c3, textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', textShadow: '0 1px 6px rgba(0,0,0,0.6)',
             }}>
               {withDist.length} events
             </span>
           </div>
 
+          <IconBtn active={view === 'feed'} onClick={() => setView('feed')} label="Full-screen feed">
+            <Icon name="feed" size={17} />
+          </IconBtn>
           <IconBtn active={view === 'grid'} onClick={() => setView('grid')} label="Grid">
-            <Grid2X2 size={15} />
+            <Icon name="grid" size={16} />
           </IconBtn>
           <IconBtn active={view === 'list'} onClick={() => setView('list')} label="List">
-            <List size={15} />
+            <Icon name="list" size={17} />
           </IconBtn>
         </div>
 
         <div style={{
-          maxWidth: 1100, margin: '10px auto 0',
+          maxWidth: view === 'feed' ? 'none' : 1100, margin: '10px auto 0',
           display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10,
           WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
         }}>
@@ -789,7 +834,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
         </div>
 
         {searchOpen && (
-          <div style={{ maxWidth: 1100, margin: '0 auto 10px', position: 'relative' }}>
+          <div style={{ maxWidth: view === 'feed' ? 'none' : 1100, margin: '0 auto 10px', position: 'relative' }}>
             <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
             <input
               ref={searchRef}
@@ -817,7 +862,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
 
         {activeChips.length > 0 && (
           <div style={{
-            maxWidth: 1100, margin: '0 auto',
+            maxWidth: view === 'feed' ? 'none' : 1100, margin: '0 auto',
             display: 'flex', gap: 8, flexWrap: 'wrap', paddingBottom: 10,
           }}>
             {activeChips.map(ch => (
@@ -852,7 +897,20 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
         )}
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 14px 80px', width: '100%', boxSizing: 'border-box' }}>
+      {view === 'feed' && (
+        <EventFeed
+          items={withDist}
+          saved={saved}
+          saveLoading={saveLoading}
+          onToggleSave={toggleSave}
+          going={going}
+          onToggleGoing={toggleGoing}
+          topInset={toolbarBottom + 10}
+          onShowAll={() => set('when', 'all')}
+        />
+      )}
+
+      {view !== 'feed' && <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 14px 80px', width: '100%', boxSizing: 'border-box' }}>
         {/* Major artists — circular rail */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -1107,7 +1165,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
               <EventCard
                 key={event.slug}
                 event={event}
-                view={view}
+                view={view === 'list' ? 'list' : 'grid'}
                 distKm={dist}
                 saved={saved.has(event.slug)}
                 saveLoading={saveLoading === event.slug}
@@ -1133,6 +1191,8 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           </div>
         )}
       </div>
+
+      }
 
       <Sheet open={locOpen} onClose={() => setLocOpen(false)} title="Find events around you">
         <div style={{ padding: '16px 20px 0' }}>
