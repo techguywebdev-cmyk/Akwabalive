@@ -1,11 +1,13 @@
 /**
- * Brand + design tokens — frosted glass, flat.
+ * Brand + design tokens — frosted glass over a colour wash.
  *
  * Rules of the system:
- *  - FLAT: no drop shadows, no glossy/decorative gradients. Solid fills only.
  *  - GLASS: surfaces are translucent and blur what sits behind them
- *    (photos, video, and the flat ambient shapes painted on <body>).
- *  - Hairline borders separate surfaces instead of shadows.
+ *    (photos, video, and the ambient colour wash painted on <body>).
+ *  - WASH: the page background is a soft gradient in the current accent
+ *    (gold/green by default, the event's own colour in the events feed).
+ *  - Flat controls: no drop shadows on buttons or panels; hairline borders instead.
+ *  - Text over photos may sit on a dark fade (scrim) for legibility.
  *
  * Change BRAND_NAME in one place when the product is renamed.
  */

@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Search, MapPin, X, Grid2X2, List, Filter, Navigation,
-  ChevronRight, LocateFixed, Star, Loader2,
+  ChevronRight, LocateFixed, Star, Loader2, RectangleVertical,
 } from 'lucide-react';
+import EventFeed from '@/components/events/EventFeed';
 import type { GhanaEvent, FilterState, City, Category, WhenFilter, Artist } from '@/lib/types';
 import { filterEvents, haversine, formatDistance, matchesWhen } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -421,7 +422,29 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
 
   const [filters, setFilters] = useState<FilterState>(DEFAULT);
   const [page, setPage] = useState(PAGE_SIZE);
-  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [view, setViewState] = useState<'feed' | 'grid' | 'list'>('feed');
+  const setView = useCallback((v: 'feed' | 'grid' | 'list') => {
+    setViewState(v);
+    try { localStorage.setItem('akw_events_view', v); } catch { /* ignore */ }
+  }, []);
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem('akw_events_view');
+      if (v === 'grid' || v === 'list' || v === 'feed') setViewState(v);
+    } catch { /* ignore */ }
+  }, []);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [toolbarBottom, setToolbarBottom] = useState(190);
+  useEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const measure = () => setToolbarBottom(Math.round(el.getBoundingClientRect().bottom));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+  }, [view]);
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [locLabel, setLocLabel] = useState<string | null>(null);
   const [locStatus, setLocStatus] = useState<'idle' | 'detecting' | 'found' | 'error'>('idle');
@@ -738,11 +761,13 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           .akw-events-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
         }
       ` }} />
-      <div style={{
-        position: 'sticky',
+      <div ref={toolbarRef} style={{
+        position: view === 'feed' ? 'fixed' : 'sticky',
         top: 'calc(72px + env(safe-area-inset-top, 0px))',
         zIndex: 90,
-        margin: 'calc(72px + env(safe-area-inset-top, 0px)) 10px 0',
+        ...(view === 'feed'
+          ? { left: 10, right: 10 }
+          : { margin: 'calc(72px + env(safe-area-inset-top, 0px)) 10px 0' }),
         ...G.bar,
         border: `1px solid ${C.bd2}`,
         borderRadius: R.sheet,
@@ -768,6 +793,9 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
             </span>
           </div>
 
+          <IconBtn active={view === 'feed'} onClick={() => setView('feed')} label="Full-screen feed">
+            <RectangleVertical size={15} />
+          </IconBtn>
           <IconBtn active={view === 'grid'} onClick={() => setView('grid')} label="Grid">
             <Grid2X2 size={15} />
           </IconBtn>
@@ -852,7 +880,18 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
         )}
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 14px 80px', width: '100%', boxSizing: 'border-box' }}>
+      {view === 'feed' && (
+        <EventFeed
+          items={withDist}
+          saved={saved}
+          saveLoading={saveLoading}
+          onToggleSave={toggleSave}
+          topInset={toolbarBottom + 12}
+          onShowAll={() => set('when', 'all')}
+        />
+      )}
+
+      {view !== 'feed' && <div style={{ maxWidth: 1100, margin: '0 auto', padding: '10px 14px 80px', width: '100%', boxSizing: 'border-box' }}>
         {/* Major artists — circular rail */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -1107,7 +1146,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
               <EventCard
                 key={event.slug}
                 event={event}
-                view={view}
+                view={view === 'list' ? 'list' : 'grid'}
                 distKm={dist}
                 saved={saved.has(event.slug)}
                 saveLoading={saveLoading === event.slug}
@@ -1133,6 +1172,8 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           </div>
         )}
       </div>
+
+      }
 
       <Sheet open={locOpen} onClose={() => setLocOpen(false)} title="Find events around you">
         <div style={{ padding: '16px 20px 0' }}>
