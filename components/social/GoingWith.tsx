@@ -7,14 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import type { Profile } from '@/lib/supabase/types';
 
-const C = {
-  bg: '#0D0B08', bg2: '#141109', bg3: '#1C1710',
-  gold: '#C8922A', goldDim: 'rgba(200,146,42,0.14)', goldBd: 'rgba(200,146,42,0.28)',
-  cream: '#F5ECD7', c2: 'rgba(245,236,215,0.55)', c3: 'rgba(245,236,215,0.24)',
-  c4: 'rgba(245,236,215,0.08)', bd: 'rgba(245,236,215,0.07)', bd2: 'rgba(245,236,215,0.13)',
-  greenL: '#4ade80', greenDim: 'rgba(45,106,79,0.15)', greenBd: 'rgba(45,106,79,0.35)',
-};
 
+import { C, G } from '@/lib/theme';
 interface GoingWithProps {
   eventSlug: string;
   eventTitle: string;
@@ -129,18 +123,18 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: C.bg2, border: `1px solid ${C.bd2}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.cream, whiteSpace: 'nowrap', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, ...G.sheet, border: `1px solid ${C.bd2}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.cream, whiteSpace: 'nowrap' }}>
           {toast}
         </div>
       )}
 
-      <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />
         Who&apos;s going
       </p>
 
       {/* Going count + avatars */}
-      <div style={{ background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '18px 20px', marginBottom: 12 }}>
+      <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '18px 20px', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: goingProfiles.length > 0 ? 16 : 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Users size={16} style={{ color: C.gold }} />
@@ -152,7 +146,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
             onClick={toggleGoing}
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
-              fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase',
+              fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase',
               border: `1px solid ${isGoing ? C.greenBd : C.goldBd}`,
               background: isGoing ? C.greenDim : C.goldDim,
               color: isGoing ? C.greenL : C.gold,
@@ -177,7 +171,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
               </Link>
             ))}
             {goingCount > 6 && (
-              <div style={{ width: 34, height: 34, borderRadius: '50%', border: `2px solid ${C.bg2}`, background: C.bg3, marginLeft: -10, zIndex: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, color: C.c3 }}>
+              <div style={{ width: 34, height: 34, borderRadius: '50%', border: `2px solid ${C.bg2}`, ...G.raised, marginLeft: -10, zIndex: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, color: C.c3 }}>
                 +{goingCount - 6}
               </div>
             )}
@@ -193,17 +187,17 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
 
       {/* Invite followers */}
       {user && followers.length > 0 && (
-        <div style={{ background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 14, overflow: 'hidden' }}>
+        <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, overflow: 'hidden' }}>
           <button
             onClick={() => setShowInvite(v => !v)}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <UserPlus size={15} style={{ color: C.gold }} />
-              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2 }}>
+              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2 }}>
                 Invite friends · {followers.length} following
               </span>
             </div>
-            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, color: C.c3 }}>
+            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, color: C.c3 }}>
               {showInvite ? '▲' : '▼'}
             </span>
           </button>
@@ -219,12 +213,12 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
                     <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.cream, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {f.full_name ?? f.username}
                     </p>
-                    <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, color: C.c3 }}>@{f.username}</p>
+                    <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, color: C.c3 }}>@{f.username}</p>
                   </div>
                   <button
                     onClick={() => sendInvite(f)}
                     disabled={invited.has(f.id)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7.5, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${invited.has(f.id) ? C.greenBd : C.goldBd}`, background: invited.has(f.id) ? C.greenDim : C.goldDim, color: invited.has(f.id) ? C.greenL : C.gold, padding: '8px 12px', borderRadius: 6, cursor: invited.has(f.id) ? 'default' : 'pointer', transition: 'all 200ms', flexShrink: 0 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${invited.has(f.id) ? C.greenBd : C.goldBd}`, background: invited.has(f.id) ? C.greenDim : C.goldDim, color: invited.has(f.id) ? C.greenL : C.gold, padding: '8px 12px', borderRadius: 6, cursor: invited.has(f.id) ? 'default' : 'pointer', transition: 'all 200ms', flexShrink: 0 }}>
                     {invited.has(f.id) ? <><CheckCircle size={11} /> Invited</> : <><Send size={11} /> Invite</>}
                   </button>
                 </div>

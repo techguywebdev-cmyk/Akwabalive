@@ -5,7 +5,7 @@ import { ArrowLeft, Instagram, ExternalLink, Ticket, Play } from 'lucide-react';
 import type { Artist, GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
 import { isListedEvent } from '@/lib/types';
-import { C, BRAND_NAME } from '@/lib/theme';
+import { C, BRAND_NAME, G } from '@/lib/theme';
 import { cityLabel } from '@/lib/utils';
 import { LineupChips } from '@/components/ui/LineupChips';
 import Nav from '@/components/layout/Nav';
@@ -28,7 +28,7 @@ function TicketCta({ event }: { event: GhanaEvent }) {
           padding: '8px 12px',
           borderRadius: 6,
           fontFamily: 'var(--font-dm-mono,monospace)',
-          fontSize: 8,
+          fontSize: 10,
           letterSpacing: '1.5px',
           textTransform: 'uppercase',
           fontWeight: 700,
@@ -54,7 +54,7 @@ function TicketCta({ event }: { event: GhanaEvent }) {
         padding: '8px 12px',
         borderRadius: 6,
         fontFamily: 'var(--font-dm-mono,monospace)',
-        fontSize: 8,
+        fontSize: 10,
         letterSpacing: '1.5px',
         textTransform: 'uppercase',
         fontWeight: 700,
@@ -87,7 +87,7 @@ export default function ArtistPageClient({
   const past = events.filter((e) => !upcoming.includes(e));
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh' }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <div style={{ paddingTop: 62, maxWidth: 720, margin: '0 auto', paddingLeft: 16, paddingRight: 16, paddingBottom: 80 }}>
         <Link
@@ -99,7 +99,7 @@ export default function ArtistPageClient({
             marginTop: 16,
             marginBottom: 24,
             fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 8,
+            fontSize: 10,
             letterSpacing: '1.5px',
             textTransform: 'uppercase',
             color: C.c3,
@@ -118,7 +118,7 @@ export default function ArtistPageClient({
               borderRadius: '50%',
               overflow: 'hidden',
               border: `2px solid ${C.goldBd}`,
-              background: C.bg3,
+              ...G.raised,
               flexShrink: 0,
             }}
           >
@@ -133,7 +133,7 @@ export default function ArtistPageClient({
             <p
               style={{
                 fontFamily: 'var(--font-dm-mono,monospace)',
-                fontSize: 8,
+                fontSize: 10,
                 letterSpacing: '2px',
                 textTransform: 'uppercase',
                 color: C.gold,
@@ -187,7 +187,7 @@ export default function ArtistPageClient({
               textAlign: 'center',
               border: `1px solid ${C.bd}`,
               borderRadius: 12,
-              background: C.bg2,
+              ...G.panel,
             }}
           >
             <p style={{ color: C.c2, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14 }}>
@@ -200,7 +200,7 @@ export default function ArtistPageClient({
                 marginTop: 16,
                 color: C.gold,
                 fontFamily: 'var(--font-dm-mono,monospace)',
-                fontSize: 9,
+                fontSize: 11,
                 letterSpacing: '1.5px',
                 textTransform: 'uppercase',
                 textDecoration: 'none',
@@ -217,7 +217,7 @@ export default function ArtistPageClient({
               <p
                 style={{
                   fontFamily: 'var(--font-dm-mono,monospace)',
-                  fontSize: 8,
+                  fontSize: 10,
                   letterSpacing: '2px',
                   textTransform: 'uppercase',
                   color: C.gold,
@@ -231,7 +231,7 @@ export default function ArtistPageClient({
                 href={`/moments?artist=${artist.slug}`}
                 style={{
                   fontFamily: 'var(--font-dm-mono,monospace)',
-                  fontSize: 8,
+                  fontSize: 10,
                   letterSpacing: '1px',
                   textTransform: 'uppercase',
                   color: C.c3,
@@ -269,7 +269,7 @@ export default function ArtistPageClient({
                       height: 180,
                       borderRadius: 12,
                       overflow: 'hidden',
-                      background: C.bg3,
+                      ...G.raised,
                       border: `1px solid ${C.bd}`,
                     }}
                   >
@@ -282,21 +282,14 @@ export default function ArtistPageClient({
                     <div
                       style={{
                         position: 'absolute',
-                        inset: 0,
-                        background: 'linear-gradient(to top, rgba(13,11,8,0.92) 0%, transparent 55%)',
-                      }}
-                    />
-                    <div
-                      style={{
-                        position: 'absolute',
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         width: 36,
                         height: 36,
                         borderRadius: '50%',
-                        background: 'rgba(0,0,0,0.55)',
-                        border: `1px solid ${C.goldBd}`,
+                        ...G.overlay,
+                        border: '1px solid rgba(255,255,255,0.18)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -304,7 +297,7 @@ export default function ArtistPageClient({
                     >
                       <Play size={14} fill={C.gold} color={C.gold} />
                     </div>
-                    <div style={{ position: 'absolute', left: 10, right: 10, bottom: 10 }}>
+                    <div style={{ position: 'absolute', left: 8, right: 8, bottom: 8, ...G.panel, border: `1px solid ${C.bd2}`, borderRadius: 12, padding: '8px 10px' }}>
                       <p
                         style={{
                           fontFamily: 'var(--font-inter,sans-serif)',
@@ -324,7 +317,7 @@ export default function ArtistPageClient({
                         <p
                           style={{
                             fontFamily: 'var(--font-dm-mono,monospace)',
-                            fontSize: 8,
+                            fontSize: 10,
                             color: C.c3,
                             margin: '4px 0 0',
                           }}
@@ -345,7 +338,7 @@ export default function ArtistPageClient({
             <p
               style={{
                 fontFamily: 'var(--font-dm-mono,monospace)',
-                fontSize: 8,
+                fontSize: 10,
                 letterSpacing: '2px',
                 textTransform: 'uppercase',
                 color: C.gold,
@@ -368,7 +361,7 @@ export default function ArtistPageClient({
             <p
               style={{
                 fontFamily: 'var(--font-dm-mono,monospace)',
-                fontSize: 8,
+                fontSize: 10,
                 letterSpacing: '2px',
                 textTransform: 'uppercase',
                 color: C.c3,
@@ -398,7 +391,7 @@ function EventRow({ event }: { event: GhanaEvent }) {
         gap: 14,
         alignItems: 'center',
         padding: 12,
-        background: C.bg2,
+        ...G.panel,
         border: `1px solid ${C.bd}`,
         borderRadius: 12,
       }}
@@ -410,7 +403,7 @@ function EventRow({ event }: { event: GhanaEvent }) {
             height: 64,
             borderRadius: 8,
             overflow: 'hidden',
-            background: C.bg3,
+            ...G.raised,
             flexShrink: 0,
           }}
         >
@@ -425,7 +418,7 @@ function EventRow({ event }: { event: GhanaEvent }) {
           <p
             style={{
               fontFamily: 'var(--font-dm-mono,monospace)',
-              fontSize: 8,
+              fontSize: 10,
               color: C.gold,
               letterSpacing: '1px',
               textTransform: 'uppercase',

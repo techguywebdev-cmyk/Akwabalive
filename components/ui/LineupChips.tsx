@@ -70,7 +70,7 @@ export function LineupChips({
               background: C.goldDim,
               color: C.gold,
               fontFamily: 'var(--font-dm-mono,monospace)',
-              fontSize: 8,
+              fontSize: 10,
               letterSpacing: '0.5px',
             }}
           >
@@ -95,7 +95,7 @@ export function LineupChips({
         <span
           style={{
             fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 8,
+            fontSize: 10,
             color: C.c3,
             alignSelf: 'center',
           }}
@@ -120,7 +120,7 @@ export function LineupSection({
       <p
         style={{
           fontFamily: 'var(--font-dm-mono,monospace)',
-          fontSize: 8,
+          fontSize: 10,
           letterSpacing: '2px',
           textTransform: 'uppercase',
           color: C.gold,

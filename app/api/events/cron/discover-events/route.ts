@@ -84,7 +84,7 @@ async function run(req: Request) {
     }
   }
 
-  const unique = [...new Set(candidateUrls)].slice(0, 25);
+  const unique = Array.from(new Set(candidateUrls)).slice(0, 25);
   if (unique.length === 0) {
     return NextResponse.json({
       ok: true,

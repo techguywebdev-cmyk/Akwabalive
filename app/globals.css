@@ -7,11 +7,67 @@ html {
 }
 
 body {
-  background: #0D0B08;
+  background-color: #0D0B08;
   color: #F5ECD7;
   font-family: var(--font-inter), sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+}
+
+/*
+ * Ambient layer: flat, hard-edged shapes in the brand colours, fixed behind
+ * everything. Glass surfaces blur them, which is what makes the frost visible
+ * on pages without photos. Flat by design — no soft glows.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 88% 8%,  rgba(200, 146, 42, 0.24) 0 210px, transparent 211px),
+    radial-gradient(circle at 6% 46%,  rgba(45, 106, 79, 0.30)  0 170px, transparent 171px),
+    radial-gradient(circle at 78% 82%, rgba(206, 17, 38, 0.22)  0 120px, transparent 121px),
+    radial-gradient(circle at 30% 104%, rgba(200, 146, 42, 0.18) 0 190px, transparent 191px),
+    #0D0B08;
+}
+
+/* ── Glass utilities (for className use; inline styles use G from lib/theme) ── */
+.glass {
+  background: rgba(30, 25, 17, 0.52);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid rgba(245, 236, 215, 0.10);
+}
+.glass-raised {
+  background: rgba(245, 236, 215, 0.06);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid rgba(245, 236, 215, 0.10);
+}
+.glass-sheet {
+  background: rgba(20, 17, 12, 0.80);
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
+  backdrop-filter: blur(32px) saturate(160%);
+  border: 1px solid rgba(245, 236, 215, 0.12);
+}
+.glass-overlay {
+  background: rgba(13, 11, 8, 0.40);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+/* Browsers without backdrop-filter get a denser, still-readable fill */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .glass-raised { background: rgba(26, 22, 15, 0.94); }
+  .glass-sheet, .glass-overlay { background: rgba(20, 17, 12, 0.96); }
+}
+
+:focus-visible {
+  outline: 2px solid #E0B25A;
+  outline-offset: 2px;
 }
 
 * {

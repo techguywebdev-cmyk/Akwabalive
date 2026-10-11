@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
-import { C } from '@/lib/theme';
+import { C, G } from '@/lib/theme';
 
 type ReviewEvent = {
   id: string;
@@ -122,7 +122,7 @@ export default function ReviewQueuePage() {
   }
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh' }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <div style={{ paddingTop: 62, maxWidth: 720, margin: '0 auto', padding: '24px 16px 80px' }}>
         <Link
@@ -132,7 +132,7 @@ export default function ReviewQueuePage() {
             alignItems: 'center',
             gap: 6,
             fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 8,
+            fontSize: 10,
             letterSpacing: '1.5px',
             textTransform: 'uppercase',
             color: C.c3,
@@ -146,7 +146,7 @@ export default function ReviewQueuePage() {
         <p
           style={{
             fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 8,
+            fontSize: 10,
             letterSpacing: '2px',
             textTransform: 'uppercase',
             color: C.gold,
@@ -180,11 +180,11 @@ export default function ReviewQueuePage() {
         </p>
 
         <div style={{
-          background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 14,
+          ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14,
           padding: 16, marginBottom: 24,
         }}>
           <p style={{
-            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px',
+            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px',
             textTransform: 'uppercase', color: C.gold, marginBottom: 8,
           }}>
             Auto-discovery feed
@@ -200,7 +200,7 @@ export default function ReviewQueuePage() {
             rows={4}
             placeholder={"https://x.com/...\nhttps://www.eventbrite.com/..."}
             style={{
-              width: '100%', boxSizing: 'border-box', background: C.bg3,
+              width: '100%', boxSizing: 'border-box', ...G.raised,
               border: `1px solid ${C.bd}`, borderRadius: 8, padding: 12,
               color: C.cream, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13,
               marginBottom: 10, resize: 'vertical',
@@ -242,7 +242,7 @@ export default function ReviewQueuePage() {
             style={{
               background: C.gold, color: C.onAccent, border: 'none', borderRadius: 8,
               padding: '12px 16px', fontFamily: 'var(--font-dm-mono,monospace)',
-              fontSize: 9, letterSpacing: '1.5px', textTransform: 'uppercase',
+              fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase',
               fontWeight: 700, cursor: ingesting ? 'wait' : 'pointer',
             }}
           >
@@ -268,7 +268,7 @@ export default function ReviewQueuePage() {
               padding: '10px 14px',
               borderRadius: 8,
               fontFamily: 'var(--font-dm-mono,monospace)',
-              fontSize: 9,
+              fontSize: 11,
               letterSpacing: '1.5px',
               textTransform: 'uppercase',
               fontWeight: 700,
@@ -312,7 +312,7 @@ export default function ReviewQueuePage() {
               textAlign: 'center',
               border: `1px solid ${C.bd}`,
               borderRadius: 12,
-              background: C.bg2,
+              ...G.panel,
               color: C.c2,
               fontSize: 14,
             }}
@@ -326,7 +326,7 @@ export default function ReviewQueuePage() {
             <div
               key={ev.id}
               style={{
-                background: C.bg2,
+                ...G.panel,
                 border: `1px solid ${C.bd}`,
                 borderRadius: 14,
                 overflow: 'hidden',
@@ -339,7 +339,7 @@ export default function ReviewQueuePage() {
                     height: 72,
                     borderRadius: 10,
                     overflow: 'hidden',
-                    background: C.bg3,
+                    ...G.raised,
                     flexShrink: 0,
                   }}
                 >
@@ -356,7 +356,7 @@ export default function ReviewQueuePage() {
                   <p
                     style={{
                       fontFamily: 'var(--font-dm-mono,monospace)',
-                      fontSize: 8,
+                      fontSize: 10,
                       color: C.gold,
                       letterSpacing: '1px',
                       textTransform: 'uppercase',
@@ -451,7 +451,7 @@ export default function ReviewQueuePage() {
                     borderRadius: 8,
                     padding: 12,
                     fontFamily: 'var(--font-dm-mono,monospace)',
-                    fontSize: 9,
+                    fontSize: 11,
                     letterSpacing: '1.5px',
                     textTransform: 'uppercase',
                     fontWeight: 700,
@@ -477,7 +477,7 @@ export default function ReviewQueuePage() {
                     borderRadius: 8,
                     padding: 12,
                     fontFamily: 'var(--font-dm-mono,monospace)',
-                    fontSize: 8,
+                    fontSize: 10,
                     letterSpacing: '1px',
                     textTransform: 'uppercase',
                     cursor: 'pointer',
@@ -501,7 +501,7 @@ export default function ReviewQueuePage() {
                     borderRadius: 8,
                     padding: 12,
                     fontFamily: 'var(--font-dm-mono,monospace)',
-                    fontSize: 8,
+                    fontSize: 10,
                     letterSpacing: '1px',
                     textTransform: 'uppercase',
                     cursor: 'pointer',

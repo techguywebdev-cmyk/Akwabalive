@@ -66,7 +66,7 @@ export default async function EventPage({ params }: { params: { slug: string } }
       .slice(0, 4);
     const seriesMomentId = await findSeriesMoment(staticEvent.title);
     return (
-      <div style={{ background: '#0D0B08', minHeight: '100vh' }}>
+      <div style={{ background: 'transparent', minHeight: '100vh' }}>
         <Nav active="Events" />
         <EventDetailClient event={staticEvent} related={related} seriesMomentId={seriesMomentId} />
         <Footer />
@@ -113,7 +113,7 @@ export default async function EventPage({ params }: { params: { slug: string } }
   const seriesMomentId = await findSeriesMoment(event.title);
 
   return (
-    <div style={{ background: '#0D0B08', minHeight: '100vh' }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <EventDetailClient event={event} related={related} seriesMomentId={seriesMomentId} />
       <Footer />

@@ -1,5 +1,5 @@
 'use client';
-import { C } from '@/lib/theme';
+import { C, G, R } from '@/lib/theme';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -17,7 +17,33 @@ import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import GoingWith from '@/components/social/GoingWith';
 import { LineupSection } from '@/components/ui/LineupChips';
 
-function getTiers(price: number) {
+export interface CheckoutTier {
+  /** ticket_tiers.id — only real (database) tiers can be bought */
+  id?: string;
+  name: string;
+  price: number;
+  desc: string;
+  available: boolean;
+  spots: number;
+}
+
+function getTiers(event: GhanaEvent): CheckoutTier[] {
+  // Real tiers set by the organizer
+  if (event.tiers?.length) {
+    return event.tiers.map((t) => {
+      const spots = Math.max(0, t.quantity - t.sold);
+      return {
+        id: t.id,
+        name: t.name,
+        price: t.price,
+        desc: t.description || (t.price === 0 ? 'Free entry — RSVP required.' : 'Entry ticket.'),
+        available: spots > 0,
+        spots,
+      };
+    });
+  }
+  // Preview tiers for demo / static events (not purchasable)
+  const price = event.price;
   if (price === 0) return [
     { name: 'General Admission', price: 0, desc: 'Free entry \u2014 RSVP required.', available: true, spots: 500 },
   ];
@@ -55,7 +81,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [showPromoVideo, setShowPromoVideo] = useState(false);
   const [wantSound, setWantSound] = useState(false);
 
-  const tiers       = getTiers(event.price);
+  const tiers       = getTiers(event);
   const description = getDescription(event);
 
   useEffect(() => {
@@ -141,22 +167,22 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   }
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', paddingTop: 62 }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
 
       {dreamToast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: C.bg2, border: `1px solid ${C.bd2}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.cream, whiteSpace: 'nowrap', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, ...G.sheet, border: `1px solid ${C.bd2}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.cream, whiteSpace: 'nowrap' }}>
           {dreamToast}
         </div>
       )}
       {ticketSuccess && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: C.greenDim, border: `1px solid ${C.greenBd}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.greenL, whiteSpace: 'nowrap', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, ...G.sheet, background: 'rgba(16,40,26,0.85)', border: `1px solid ${C.greenBd}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.greenL, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
           <CheckCircle size={14} /> Ticket confirmed! Check My Tickets.
         </div>
       )}
 
       {/* HERO — flyer first, then optional HD promo video */}
-      <div style={{ position: 'relative', width: '100%', height: 'min(65vw, 520px)', minHeight: 300, overflow: 'hidden', background: C.bg3 }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${event.image})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.42) saturate(0.75)', opacity: showPromoVideo ? 0 : 1, transition: 'opacity 900ms ease' }} />
+      <div style={{ position: 'relative', width: '100%', height: 'min(110vw, 600px)', minHeight: 440, overflow: 'hidden', background: C.bg3 }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${event.image})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: showPromoVideo ? 0 : 1, transition: 'opacity 900ms ease' }} />
         {/* Promo video: cover frame, no player chrome, audio after first tap */}
         {showPromoVideo && ytId && (
           <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0 }}>
@@ -173,14 +199,10 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                 height: '100%',
                 border: 'none',
                 pointerEvents: 'none',
-                filter: 'brightness(0.55) saturate(0.85)',
                 transform: 'translate(-50%, -50%) scale(2.15)',
                 transformOrigin: 'center center',
               }}
             />
-            {/* Hide any residual YouTube seek / chrome at edges */}
-            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 56, background: 'linear-gradient(to top, rgba(13,11,8,0.95), transparent)', pointerEvents: 'none', zIndex: 2 }} />
-            <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 48, background: 'linear-gradient(to bottom, rgba(13,11,8,0.5), transparent)', pointerEvents: 'none', zIndex: 2 }} />
           </div>
         )}
         {showPromoVideo && isMp4 && event.promoVideoUrl && (
@@ -191,15 +213,13 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             muted={!wantSound}
             loop
             playsInline
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.55) saturate(0.85)', zIndex: 0 }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }}
           />
         )}
-        <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to top, ${C.bg} 0%, rgba(13,11,8,0.3) 55%, transparent 100%)`, zIndex: 1 }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(13,11,8,0.72) 0%, transparent 65%)', zIndex: 1 }} />
-        <Link href="/events" style={{ position: 'absolute', top: 16, left: 16, zIndex: 12, display: 'inline-flex', alignItems: 'center', gap: 7, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(245,236,215,0.65)', background: 'rgba(13,11,8,0.72)', backdropFilter: 'blur(10px)', border: '1px solid rgba(245,236,215,0.1)', padding: '8px 14px', borderRadius: 6, textDecoration: 'none' }}>
-          <ArrowLeft size={12} /> Events
+        <Link href="/events" style={{ position: 'absolute', top: 'calc(76px + env(safe-area-inset-top, 0px))', left: 12, zIndex: 12, display: 'inline-flex', alignItems: 'center', gap: 7, height: 40, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, fontWeight: 600, color: C.cream, ...G.overlay, border: '1px solid rgba(255,255,255,0.16)', padding: '0 14px', borderRadius: R.chip, textDecoration: 'none' }}>
+          <ArrowLeft size={15} /> Events
         </Link>
-        <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 12, display: 'flex', gap: 8 }}>
+        <div style={{ position: 'absolute', top: 'calc(76px + env(safe-area-inset-top, 0px))', right: 12, zIndex: 12, display: 'flex', gap: 8 }}>
           
           {seriesMomentId && (
             <Link
@@ -211,9 +231,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                 height: 40,
                 borderRadius: '50%',
                 border: `1px solid ${C.goldBd}`,
-                background: C.goldDim,
-                backdropFilter: 'blur(10px)',
-                color: C.gold,
+                ...G.overlay,
+                color: C.goldText,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -224,55 +243,55 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             </Link>
           )}
           <button onClick={toggleDreamList} disabled={dreamLoading}
-            style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${inDreamList ? C.goldBd : 'rgba(245,236,215,0.12)'}`, background: inDreamList ? C.goldDim : 'rgba(13,11,8,0.72)', backdropFilter: 'blur(10px)', color: inDreamList ? C.gold : 'rgba(245,236,215,0.55)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 220ms' }}>
+            style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${inDreamList ? C.goldBd : 'rgba(245,236,215,0.12)'}`, ...G.overlay, background: inDreamList ? C.goldDim : G.overlay.background, color: inDreamList ? C.goldText : C.cream, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 220ms' }}>
             {dreamLoading ? <Loader2 size={15} /> : <Star size={17} fill={inDreamList ? C.gold : 'none'} />}
           </button>
           <button onClick={() => setSaved(s => !s)}
-            style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${saved ? 'rgba(206,17,38,0.4)' : 'rgba(245,236,215,0.12)'}`, background: saved ? 'rgba(206,17,38,0.15)' : 'rgba(13,11,8,0.72)', backdropFilter: 'blur(10px)', color: saved ? C.red : 'rgba(245,236,215,0.55)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${saved ? 'rgba(206,17,38,0.4)' : 'rgba(245,236,215,0.12)'}`, ...G.overlay, background: saved ? 'rgba(206,17,38,0.22)' : G.overlay.background, color: saved ? '#FCA5A5' : C.cream, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Heart size={17} fill={saved ? C.red : 'none'} />
           </button>
-          <button style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(245,236,215,0.12)', background: 'rgba(13,11,8,0.72)', backdropFilter: 'blur(10px)', color: 'rgba(245,236,215,0.55)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button aria-label="Share" style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.16)', ...G.overlay, color: C.cream, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Share2 size={17} />
           </button>
         </div>
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '20px 20px 28px', zIndex: 2, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, maxWidth: 720, padding: '18px 18px 20px', zIndex: 2, ...G.panel, border: `1px solid ${C.bd2}`, borderRadius: R.sheet }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 3, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}` }}>{event.badge}</span>
-            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 3, background: C.c4, color: C.c2, border: `1px solid ${C.bd}` }}>{event.category}</span>
-            {event.recurring && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 3, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}` }}>Annual</span>}
+            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 6, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}` }}>{event.badge}</span>
+            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 6, background: C.c4, color: C.c2, border: `1px solid ${C.bd}` }}>{event.category}</span>
+            {event.recurring && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 6, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}` }}>Annual</span>}
           </div>
-          <h1 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 'clamp(30px,7vw,56px)', fontWeight: 300, color: '#fff', lineHeight: 1.0, letterSpacing: '-1.5px', marginBottom: 14 }}>{event.title}</h1>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: 'rgba(245,236,215,0.52)' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Calendar size={11} style={{ color: C.gold }} />{event.dateLabel}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Clock size={11} style={{ color: C.gold }} />{event.time}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><MapPin size={11} style={{ color: C.gold }} />{event.venue}</span>
+          <h1 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 'clamp(32px,7vw,56px)', fontWeight: 500, color: '#FFFDF6', lineHeight: 1.0, letterSpacing: '-0.5px', marginBottom: 12 }}>{event.title}</h1>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c2 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Calendar size={13} style={{ color: C.goldText }} />{event.dateLabel}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Clock size={13} style={{ color: C.goldText }} />{event.time}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><MapPin size={13} style={{ color: C.goldText }} />{event.venue}</span>
           </div>
         </div>
       </div>
 
       {/* STICKY BAR */}
-      <div style={{ position: 'sticky', top: 62, zIndex: 90, background: `${C.bg2}F6`, backdropFilter: 'blur(24px)', borderBottom: `1px solid ${C.bd}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 20px', gap: 12 }}>
+      <div style={{ position: 'sticky', top: 'calc(72px + env(safe-area-inset-top, 0px))', zIndex: 90, margin: '10px 10px 0', ...G.bar, border: `1px solid ${C.bd2}`, borderRadius: R.sheet, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 10px 10px 18px', gap: 12 }}>
         <div>
           <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, color: C.c3, marginBottom: 1 }}>From</p>
           {event.price === 0
             ? <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 17, fontWeight: 700, color: C.greenL }}>FREE</p>
-            : <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 21, color: C.cream, letterSpacing: '-1px' }}><span style={{ fontSize: 11, color: C.gold }}>\u20B5</span>{event.price.toLocaleString()}</p>
+            : <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 21, color: C.cream, letterSpacing: '-1px' }}><span style={{ fontSize: 11, color: C.gold }}>₵</span>{event.price.toLocaleString()}</p>
           }
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={toggleDreamList} disabled={dreamLoading}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${inDreamList ? C.goldBd : C.bd}`, background: inDreamList ? C.goldDim : 'transparent', color: inDreamList ? C.gold : C.c3, padding: '11px 14px', borderRadius: 8, cursor: 'pointer', transition: 'all 200ms' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${inDreamList ? C.goldBd : C.bd}`, background: inDreamList ? C.goldDim : 'transparent', color: inDreamList ? C.gold : C.c3, padding: 0, width: 46, height: 46, justifyContent: 'center', borderRadius: R.btn, cursor: 'pointer', transition: 'all 200ms' }} aria-label="Add to dream events">
             <Star size={13} fill={inDreamList ? C.gold : 'none'} />
           </button>
           {isListedEvent(event) && event.ticketUrl ? (
             <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: C.gold, color: C.onAccent, border: 'none', padding: '11px 20px', borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: C.gold, color: C.onAccent, border: 'none', padding: '0 18px', height: 46, borderRadius: R.btn, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 15, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
               <ExternalLink size={14} />Tickets on {event.ticketSource || 'official site'}
             </a>
           ) : (
           <button onClick={() => setTicketOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: C.gold, color: C.onAccent, border: 'none', padding: '11px 20px', borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer' }}>
-            <Ticket size={14} />{event.price === 0 ? 'Reserve' : 'Get Tickets'}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: C.gold, color: C.onAccent, border: 'none', padding: '0 18px', height: 46, borderRadius: R.btn, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            <Ticket size={14} />{event.price === 0 ? 'Reserve' : 'Get tickets'}
           </button>
           )}
         </div>
@@ -289,8 +308,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             { Icon: MapPin,   label: 'Venue', value: event.venue },
             { Icon: Users,    label: 'City',  value: `${cityLabel(event.city)} \u00b7 ${event.region}` },
           ].map(({ Icon, label, value }) => (
-            <div key={label} style={{ padding: '14px 16px', background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 10 }}>
-              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7.5, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div key={label} style={{ padding: '14px 16px', ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 10 }}>
+              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Icon size={10} style={{ color: C.gold }} />{label}
               </p>
               <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.cream, fontWeight: 500, lineHeight: 1.3 }}>{value}</p>
@@ -300,7 +319,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
         {/* About */}
         <div style={{ marginTop: 36 }}>
-          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />About this event
           </p>
           {paragraphs.map((p, i) => (
@@ -312,14 +331,14 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         <div style={{ marginTop: 36 }}>
           {isListedEvent(event) && (
             <div style={{ background: C.goldDim, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
-              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, marginBottom: 6 }}>Listed event</p>
+              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, marginBottom: 6 }}>Listed event</p>
               <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c2, lineHeight: 1.55 }}>
                 Tickets are sold by {event.ticketSource || 'the organiser'}, not on Akwaaba. We list it so you can find it — buy only on the official page.
               </p>
             </div>
           )}
 
-          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />Ticket options
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
@@ -328,15 +347,15 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
                     <span style={{ fontFamily: 'var(--font-syne,sans-serif)', fontSize: 14, fontWeight: 600, color: C.cream }}>{tier.name}</span>
-                    {!tier.available && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1px', textTransform: 'uppercase', background: 'rgba(206,17,38,0.15)', color: C.red, border: '1px solid rgba(206,17,38,0.25)', padding: '2px 7px', borderRadius: 3 }}>Sold out</span>}
-                    {tier.available && tier.spots <= 20 && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1px', textTransform: 'uppercase', background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}`, padding: '2px 7px', borderRadius: 3 }}>{tier.spots} left</span>}
+                    {!tier.available && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', background: 'rgba(206,17,38,0.15)', color: C.red, border: '1px solid rgba(206,17,38,0.25)', padding: '2px 7px', borderRadius: 6 }}>Sold out</span>}
+                    {tier.available && tier.spots <= 20 && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}`, padding: '2px 7px', borderRadius: 6 }}>{tier.spots} left</span>}
                   </div>
                   <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.c3, lineHeight: 1.45 }}>{tier.desc}</p>
                 </div>
                 <div style={{ flexShrink: 0, marginLeft: 16, textAlign: 'right' }}>
                   {tier.price === 0
                     ? <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, fontWeight: 700, color: C.greenL }}>FREE</span>
-                    : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 17, color: C.cream }}><span style={{ fontSize: 10, color: C.gold }}>\u20B5</span>{tier.price.toLocaleString()}</span>
+                    : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 17, color: C.cream }}><span style={{ fontSize: 10, color: C.gold }}>₵</span>{tier.price.toLocaleString()}</span>
                   }
                 </div>
               </div>
@@ -345,12 +364,12 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           <div style={{ display: 'flex', gap: 10 }}>
             {isListedEvent(event) && event.ticketUrl ? (
             <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
-              style={{ flex: 1, background: C.gold, color: C.onAccent, border: 'none', padding: 15, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
+              style={{ flex: 1, background: C.gold, color: C.onAccent, border: 'none', padding: 15, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
               <ExternalLink size={14} />Tickets on {event.ticketSource || 'official site'}
             </a>
           ) : (
             <button onClick={() => setTicketOpen(true)}
-              style={{ flex: 1, background: C.gold, color: C.onAccent, border: 'none', padding: 15, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              style={{ flex: 1, background: C.gold, color: C.onAccent, border: 'none', padding: 15, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <Ticket size={14} />{event.price === 0 ? 'Reserve Free Ticket' : `Get Tickets from \u20B5${event.price.toLocaleString()}`}
             </button>
           )}
@@ -376,7 +395,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
         {event.organizerUsername && (
           <div style={{ marginTop: 28 }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />Presented by
             </p>
             <Link
@@ -386,7 +405,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                 alignItems: 'center',
                 gap: 12,
                 padding: '12px 14px',
-                background: C.bg2,
+                ...G.panel,
                 border: `1px solid ${C.bd}`,
                 borderRadius: 12,
                 textDecoration: 'none',
@@ -394,7 +413,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             >
               <div style={{
                 width: 44, height: 44, borderRadius: '50%', overflow: 'hidden',
-                background: C.bg3, flexShrink: 0,
+                ...G.raised, flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: C.gold, fontFamily: 'var(--font-cormorant,serif)', fontSize: 18,
               }}>
@@ -409,7 +428,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                 <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 15, fontWeight: 600, color: C.cream, margin: 0 }}>
                   {event.organizerName || event.organizerUsername}
                 </p>
-                <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, color: C.c3, margin: '4px 0 0' }}>
+                <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, color: C.c3, margin: '4px 0 0' }}>
                   @{event.organizerUsername} · View all their events
                 </p>
               </div>
@@ -424,16 +443,16 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
         {/* Venue */}
         <div style={{ marginTop: 36 }}>
-          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />Venue
           </p>
-          <div style={{ padding: '20px', background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 12 }}>
+          <div style={{ padding: '20px', ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 12 }}>
             <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 22, fontWeight: 400, color: C.cream, marginBottom: 6 }}>{event.venue}</h3>
             <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 12 }}>
               <MapPin size={12} style={{ color: C.gold, flexShrink: 0 }} />{cityLabel(event.city)}, Ghana
             </p>
             <a href={`https://maps.google.com/?q=${encodeURIComponent(event.venue + ', Ghana')}`} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 7, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2, textDecoration: 'none' }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 7, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2, textDecoration: 'none' }}>
               <MapPin size={11} />Open in Google Maps
             </a>
           </div>
@@ -441,7 +460,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
         {/* Good to know */}
         <div style={{ marginTop: 36 }}>
-          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />Good to know
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -452,7 +471,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
               event.category === 'nightlife' || event.category === 'concert' ? 'Smart casual or formal attire enforced' : 'All ages welcome unless otherwise stated',
               'Gates open 60 minutes before event start time',
             ].map((tip, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 8 }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 8 }}>
                 <CheckCircle size={14} style={{ color: C.greenL, flexShrink: 0, marginTop: 1 }} />
                 <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c2, lineHeight: 1.55 }}>{tip}</p>
               </div>
@@ -464,17 +483,16 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         {related.length > 0 && (
           <div style={{ marginTop: 44 }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 16 }}>
-              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />More in {cityLabel(event.city)}
               </p>
-              <Link href="/events" style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none' }}>See all</Link>
+              <Link href="/events" style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none' }}>See all</Link>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
               {related.slice(0, 4).map(ev => (
-                <Link key={ev.id} href={`/events/${ev.slug}`} style={{ display: 'block', borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.bd}`, background: C.bg2, textDecoration: 'none' }}>
-                  <div style={{ position: 'relative', paddingTop: '56%', background: C.bg3 }}>
-                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${ev.image})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.68) saturate(0.8)' }} />
-                    <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to top, ${C.bg2} 0%, transparent 55%)` }} />
+                <Link key={ev.id} href={`/events/${ev.slug}`} style={{ display: 'block', borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.bd}`, ...G.panel, textDecoration: 'none' }}>
+                  <div style={{ position: 'relative', paddingTop: '56%', ...G.raised }}>
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${ev.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                   </div>
                   <div style={{ padding: '12px 13px 14px' }}>
                     <h4 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 15, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 5 }}>{ev.title}</h4>
@@ -482,9 +500,9 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: `1px solid ${C.bd}` }}>
                       {ev.price === 0
                         ? <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, fontWeight: 700, color: C.greenL, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Free</span>
-                        : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14, color: C.cream }}><span style={{ fontSize: 9, color: C.gold }}>\u20B5</span>{ev.price}</span>
+                        : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14, color: C.cream }}><span style={{ fontSize: 11, color: C.gold }}>₵</span>{ev.price}</span>
                       }
-                      <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold }}>View \u2192</span>
+                      <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold }}>View \u2192</span>
                     </div>
                   </div>
                 </Link>
