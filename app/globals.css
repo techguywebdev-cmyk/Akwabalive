@@ -15,14 +15,15 @@ body {
 }
 
 /*
- * Ambient colour wash behind every page (as on This-scine): soft gradients in the
- * current accent, so the frosted glass on top has colour to blur. Pages that show
- * a single event (the events feed) swap --accent-rgb to that event's colour.
+ * Thiscene ambient gradient behind every page: the live accent over a near-black
+ * ground (#06060B). The events feed swaps --accent-rgb to the active event's colour.
+ * Alphas follow the design system: 18% / 14% radial, 12% → 7% → 11% linear.
  */
 :root {
-  --accent-rgb: 200, 146, 42;   /* brand gold */
-  --accent2-rgb: 45, 106, 79;   /* brand green */
+  --accent-rgb: 245, 166, 35;   /* Thiscene accent-gold */
+  --accent2-rgb: 245, 166, 35;
 }
+body { background-color: #06060B; }
 body::before {
   content: '';
   position: fixed;
@@ -30,11 +31,11 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(120% 70% at 0% 0%, rgba(var(--accent-rgb), 0.20) 0%, transparent 70%),
-    radial-gradient(120% 70% at 100% 100%, rgba(var(--accent2-rgb), 0.18) 0%, transparent 70%),
-    linear-gradient(165deg, rgba(var(--accent-rgb), 0.10) 0%, rgba(var(--accent-rgb), 0.05) 50%, rgba(var(--accent2-rgb), 0.09) 100%),
-    #0D0B08;
-  transition: background 600ms ease;
+    radial-gradient(120% 70% at 0% 0%, rgba(var(--accent-rgb), 0.18) 0%, transparent 70%),
+    radial-gradient(120% 70% at 100% 100%, rgba(var(--accent2-rgb), 0.14) 0%, transparent 70%),
+    linear-gradient(165deg, rgba(var(--accent-rgb), 0.12) 0%, rgba(var(--accent-rgb), 0.07) 50%, rgba(var(--accent2-rgb), 0.11) 100%),
+    #06060B;
+  transition: background 500ms ease;
 }
 
 /* ── Glass utilities (for className use; inline styles use G from lib/theme) ── */

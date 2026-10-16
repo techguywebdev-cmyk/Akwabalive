@@ -7,23 +7,32 @@
  * 1. Try to read the flyer's dominant colour (small canvas sample).
  * 2. Fall back to a colour per category when the image can't be read (CORS, error).
  */
+import { ACCENTS, hexToRgb } from '@/lib/thiscene';
+
 export type RGB = [number, number, number];
 
-export const BRAND_GOLD: RGB = [200, 146, 42];
-export const BRAND_GREEN: RGB = [45, 106, 79];
+/** Thiscene accent palette as RGB (noir excluded — reserved for black-and-white work). */
+const PALETTE: RGB[] = (['gold', 'indigo', 'teal', 'rose', 'lime', 'violet', 'sky', 'ember', 'emerald'] as const)
+  .map((k) => hexToRgb(ACCENTS[k]));
 
+export const BRAND_GOLD: RGB = hexToRgb(ACCENTS.gold);
+export const BRAND_GREEN: RGB = hexToRgb(ACCENTS.emerald);
+
+/** Category → Thiscene accent, used when a flyer's colour can't be read. */
 const CATEGORY_ACCENT: Record<string, RGB> = {
-  concert: [214, 58, 72],
-  festival: [224, 168, 52],
-  nightlife: [138, 92, 224],
-  culture: [46, 160, 98],
-  food: [232, 122, 44],
-  sports: [58, 138, 230],
-  tech: [36, 176, 190],
-  art: [222, 84, 152],
-  fashion: [204, 112, 170],
-  wellness: [92, 190, 142],
+  concert: hexToRgb(ACCENTS.rose),
+  festival: hexToRgb(ACCENTS.gold),
+  nightlife: hexToRgb(ACCENTS.violet),
+  culture: hexToRgb(ACCENTS.emerald),
+  food: hexToRgb(ACCENTS.ember),
+  sports: hexToRgb(ACCENTS.sky),
+  tech: hexToRgb(ACCENTS.teal),
+  art: hexToRgb(ACCENTS.indigo),
+  fashion: hexToRgb(ACCENTS.rose),
+  wellness: hexToRgb(ACCENTS.lime),
 };
+
+export const toHex = (c: RGB) => `#${c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
 
 export function categoryAccent(category?: string | null): RGB {
   return (category && CATEGORY_ACCENT[category]) || BRAND_GOLD;
@@ -60,10 +69,23 @@ function hslToRgb(h: number, s: number, l: number): RGB {
   return [hue(p, q, h + 1 / 3), hue(p, q, h), hue(p, q, h - 1 / 3)].map((v) => Math.round(v * 255)) as RGB;
 }
 
-/** Vivid, mid-light version of a colour so it reads as a wash on a near-black page. */
+/** Nearest Thiscene accent to a colour, by hue (circular distance). */
+function snapToPalette(rgb: RGB): RGB {
+  const [h] = rgbToHsl(rgb);
+  let best = PALETTE[0];
+  let bestD = Infinity;
+  for (const p of PALETTE) {
+    const [ph] = rgbToHsl(p);
+    const d = Math.min(Math.abs(ph - h), 1 - Math.abs(ph - h));
+    if (d < bestD) { bestD = d; best = p; }
+  }
+  return best;
+}
+
+/** Flyer colour → a Thiscene accent so every event card uses the system's palette. */
 function tune(rgb: RGB): RGB {
   const [h, s, l] = rgbToHsl(rgb);
-  return hslToRgb(h, Math.max(s, 0.55), Math.min(0.6, Math.max(0.45, l)));
+  return snapToPalette(hslToRgb(h, Math.max(s, 0.55), Math.min(0.6, Math.max(0.45, l))));
 }
 
 function sample(url: string): Promise<RGB | null> {

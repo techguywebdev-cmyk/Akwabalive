@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Cormorant_Garamond, Syne, DM_Mono, Inter } from 'next/font/google';
+import { Cormorant_Garamond, Syne, DM_Mono, Inter, Inter_Tight } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/supabase/AuthProvider';
 
@@ -20,6 +20,13 @@ const dmMono = DM_Mono({
   subsets: ['latin'],
   weight:  ['400', '500'],
   variable: '--font-dm-mono',
+  display: 'swap',
+});
+/** Thiscene display face — titles and numerals */
+const interTight = Inter_Tight({
+  subsets: ['latin'],
+  weight:  ['700', '800'],
+  variable: '--font-display',
   display: 'swap',
 });
 const inter = Inter({
@@ -46,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${syne.variable} ${dmMono.variable} ${inter.variable}`}
+      className={`${cormorant.variable} ${syne.variable} ${dmMono.variable} ${inter.variable} ${interTight.variable}`}
     >
       <body>
         <AuthProvider>{children}</AuthProvider>

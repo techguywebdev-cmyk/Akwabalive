@@ -83,17 +83,18 @@ const DEFAULT: FilterState = {
   when: 'upcoming',
 };
 
+/** Thiscene chip: 34px; selected = accent ~20% fill with an inset accent ring. */
 function Pill({ active, onClick, children }: {
   active: boolean; onClick: () => void; children: React.ReactNode;
 }) {
   return (
     <button type="button" onClick={onClick} aria-pressed={active} style={{
-      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, fontWeight: 700,
-      height: 32, padding: '0 12px', borderRadius: 20, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-      background: active ? 'rgba(var(--accent-rgb), 0.16)' : 'rgba(0,0,0,0.55)',
-      border: `1px solid ${active ? 'rgba(var(--accent-rgb), 0.5)' : 'rgba(255,255,255,0.10)'}`,
-      color: active ? 'rgb(var(--accent-rgb))' : 'rgba(255,255,255,0.72)',
-      backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+      fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12.5, fontWeight: 700,
+      height: 34, padding: '0 13px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+      ...(active
+        ? { color: '#fff', background: 'rgba(var(--accent-rgb), 0.2)', border: '1px solid transparent', boxShadow: 'inset 0 0 0 1px rgba(var(--accent-rgb), 0.53)' }
+        : { color: 'rgba(255,255,255,0.8)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.14)' }),
+      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
     }}>
       {children}
     </button>
@@ -870,12 +871,12 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
                 key={ch.key}
                 type="button"
                 onClick={ch.clear}
+                aria-label={`Remove filter: ${ch.label}`}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '0.5px',
-                  padding: '5px 10px', borderRadius: 999,
-                  border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold,
-                  cursor: 'pointer',
+                  display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 12px', borderRadius: 999,
+                  fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12.5, fontWeight: 700, color: '#fff', cursor: 'pointer',
+                  background: 'rgba(var(--accent-rgb), 0.2)', border: '1px solid transparent', boxShadow: 'inset 0 0 0 1px rgba(var(--accent-rgb), 0.53)',
+                  backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
                 }}
               >
                 {ch.label}
@@ -886,9 +887,9 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
               type="button"
               onClick={clear}
               style={{
-                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1px',
-                padding: '5px 10px', borderRadius: 999, border: 'none',
-                background: 'transparent', color: C.c3, cursor: 'pointer', textDecoration: 'underline',
+                fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12.5, fontWeight: 700,
+                height: 34, padding: '0 10px', borderRadius: 999, border: 'none',
+                background: 'transparent', color: 'rgba(255,255,255,0.55)', cursor: 'pointer',
               }}
             >
               Clear all
