@@ -7,13 +7,26 @@ import { isListedEvent } from '@/lib/types';
 import { cityLabel, formatDistance } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { Icon } from '@/components/ui/Icon';
-import GlassPill, { Capsule } from '@/components/thiscene/GlassPill';
 import RsvpSheet from '@/components/thiscene/RsvpSheet';
-import { dateSlot, statusText } from '@/components/thiscene/dates';
-import { T, TYPE, SCRIM, RADIUS, alpha, ambient, cardTitleSize, glass } from '@/lib/thiscene';
+import { statusText } from '@/components/thiscene/dates';
+import { parseDay, shortDay } from '@/lib/dates';
+import { T, TYPE, SCRIM, RADIUS, FONT, alpha, ambient, cardTitleSize, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
 
 export interface FeedItem { event: GhanaEvent; dist: number | null }
+
+/** "Sat 14 Dec" */
+function shortDate(e: GhanaEvent) {
+  const d = parseDay(e.date);
+  return d ? shortDay(d) : e.dateLabel || '';
+}
+
+const railBtn: React.CSSProperties = {
+  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, width: 52, padding: 0,
+  background: 'none', border: 'none', color: T.white, cursor: 'pointer', textDecoration: 'none',
+  filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.45))',
+};
+const railLabel: React.CSSProperties = { fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.78)' };
 
 const fmtCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n));
 
@@ -45,6 +58,16 @@ function EventCard({
   const showWhole = wide && portrait; // portrait flyer on a wide screen: show it whole, don't crop
   const overview = [event.lineup?.length ? `With ${event.lineup.join(', ')}.` : '', event.description || ''].filter(Boolean).join(' ');
   const goingCount = (event.attending ?? 0) + (going ? 1 : 0);
+  const tags = [event.category, statusText(event), event.badge ? event.badge.charAt(0) + event.badge.slice(1).toLowerCase() : '']
+    .filter(Boolean)
+    .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i)
+    .slice(0, 3);
+  const when = [shortDate(event), event.time?.toLowerCase()].filter(Boolean).join(' · ');
+  const primary: React.CSSProperties = {
+    height: 48, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', cursor: 'pointer',
+    color: T.white, background: alpha(a, 0.2), border: `1px solid ${alpha(a, 0.6)}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+    fontFamily: FONT.display, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap',
+  };
   const maps = event.lat && event.lng
     ? `https://www.google.com/maps/search/?api=1&query=${event.lat},${event.lng}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.venue}, ${cityLabel(event.city)}`)}`;
@@ -70,113 +93,135 @@ function EventCard({
           <img
             src={event.image}
             alt=""
+            ref={(el) => {
+              // The flyer can finish loading before React attaches onLoad (cached, or before hydration)
+              if (el && el.complete && el.naturalWidth && !loaded) { setLoaded(true); setPortrait(el.naturalHeight > el.naturalWidth * 1.05); }
+            }}
             onLoad={(e) => { setLoaded(true); setPortrait(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth * 1.05); }}
             style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
           />
         </>
       )}
 
-      {/* Scrims */}
-      <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '25%', background: SCRIM.top, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '75%', background: SCRIM.bottom, pointerEvents: 'none' }} />
-      {wide && <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '60%', background: 'linear-gradient(to right, rgba(0,0,0,0.75), rgba(0,0,0,0))', pointerEvents: 'none' }} />}
+      {/* Scrims: fade into the green-black ground */}
+      <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '22%', background: SCRIM.top, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '72%', background: SCRIM.bottom, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(90% 40% at 0% 100%, rgba(18,72,48,0.5) 0%, rgba(18,72,48,0) 70%)', pointerEvents: 'none' }} />
+      {wide && <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '60%', background: 'linear-gradient(to right, rgba(3,8,6,0.8), rgba(3,8,6,0))', pointerEvents: 'none' }} />}
 
-      {/* 1 · Header row of glass capsules */}
-      <div style={{ position: 'absolute', top: topInset, left: 16, right: 16, display: 'flex', gap: 8, zIndex: 3, opacity: active ? 1 : 0.5, transition: 'opacity 0.4s ease' }}>
-        <Capsule><span style={{ width: 5, height: 5, borderRadius: '50%', background: a }} />{statusText(event)}</Capsule>
-        <Capsule accent={a} accentBorder>{free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</Capsule>
-        {dist != null && <Capsule>{formatDistance(dist)} away</Capsule>}
-      </div>
-
-      {/* 2 · Centre play button — only when there's a promo video */}
+      {/* Centre play button — only when there's a promo video */}
       {event.promoVideoUrl && (
         <Link
           href={`/events/${event.slug}`}
           aria-label={`Watch the ${event.title} promo`}
-          style={{ position: 'absolute', top: '42%', left: wide ? '30%' : '50%', transform: 'translate(-50%, -50%)', zIndex: 3, width: 68, height: 68, borderRadius: '50%', ...glass(true), border: `1.5px solid ${alpha(a, 0.55)}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ position: 'absolute', top: '40%', left: wide ? '30%' : '50%', transform: 'translate(-50%, -50%)', zIndex: 3, width: 68, height: 68, borderRadius: '50%', ...glass(true), display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <Icon name="play" size={22} color="#fff" filled />
+          <Icon name="play" size={24} color="#fff" filled />
         </Link>
       )}
 
-      {/* 3 · Bottom block */}
+      {/* Bottom block: tags in the event colour, title with a soft glow, date, venue, actions */}
       <div
         style={{
-          position: 'absolute', zIndex: 3, left: wide ? 40 : 18, bottom: `calc(${wide ? 36 : 20}px + env(safe-area-inset-bottom, 0px))`,
-          right: wide ? undefined : 66, width: wide ? 'min(46%, 620px)' : undefined,
+          position: 'absolute', zIndex: 3, left: wide ? 40 : 20, bottom: `calc(${wide ? 40 : 108}px + env(safe-area-inset-bottom, 0px))`,
+          right: wide ? undefined : 76, width: wide ? 'min(46%, 620px)' : undefined,
           opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(18px)', transition: 'all 0.5s ease',
         }}
       >
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-          {[event.category, event.badge].filter(Boolean).filter((t, i, arr) => arr.indexOf(t) === i).map((t) => (
-            <span key={t} style={{ ...TYPE.eyebrow, fontSize: 9, color: a, padding: '3px 8px', border: `1px solid ${alpha(a, 0.22)}`, borderRadius: RADIUS.tag }}>{t}</span>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: a }}>
+          {tags.map((t, i) => (
+            <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              {i > 0 && <span aria-hidden style={{ width: 3, height: 3, borderRadius: 2, background: a, opacity: 0.6 }} />}
+              {t}
+            </span>
           ))}
         </div>
 
         <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none' }}>
-          <h2 style={{ ...TYPE.cardTitle, fontSize: cardTitleSize(event.title, wide ? 64 : 50), color: T.white, margin: '0 0 7px', textShadow: `0 0 50px ${alpha(a, 0.16)}` }}>
+          <h2 style={{ fontFamily: FONT.display, fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.035em', fontSize: wide ? Math.max(46, cardTitleSize(event.title, 72)) : cardTitleSize(event.title, 48), color: T.white, margin: '0 0 14px', textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
             {event.title}
           </h2>
         </Link>
 
-        {/* Meta: date in the year's slot, venue in the meta slot */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-          <span style={{ fontFamily: TYPE.stat.fontFamily, fontWeight: 700, fontSize: 13, color: alpha(a, 0.73) }}>{dateSlot(event)}</span>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
-          <span style={{ ...TYPE.meta, color: T.text3 }}>{event.venue}{event.area ? `, ${event.area}` : ''} · {event.time}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: overview ? 12 : 18 }}>
+          <span style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, color: 'rgba(255,255,255,0.92)' }}>{when}</span>
+          <span style={{ fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>
+            {[event.venue + (event.area ? `, ${event.area}` : ''), dist != null ? `${formatDistance(dist)} away` : ''].filter(Boolean).join(' · ')}
+          </span>
         </div>
 
         {overview && (
-          <p style={{ ...TYPE.body, color: T.text2, margin: '0 0 14px', ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>
+          <p style={{ fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.55, color: T.text2, margin: '0 0 16px', ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>
             {overview}
+            {overview.length > 110 && (
+              <>
+                {' '}
+                <button type="button" onClick={() => setMore((m) => !m)} style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: T.mintText, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                  {more ? 'Less' : 'More'}
+                </button>
+              </>
+            )}
           </p>
         )}
-        {overview.length > 110 && (
-          <button type="button" onClick={() => setMore((m) => !m)} style={{ ...TYPE.meta, fontWeight: 700, color: T.text, background: 'none', border: 'none', padding: 0, margin: '-8px 0 14px', cursor: 'pointer' }}>
-            {more ? 'Show less' : 'Read more'}
-          </button>
-        )}
 
-        {/* Pills, side by side */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {free && !listed ? (
-            <GlassPill variant="primary" accent={a} compact={!wide} onClick={() => onRsvp(a)}>
-              <Icon name="ticket" size={17} /> {going ? "You're going" : 'RSVP'}
-            </GlassPill>
+            <button type="button" onClick={() => onRsvp(a)} style={primary}>
+              <span>{going ? "You're going" : 'RSVP'}</span>
+              <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>Free</span>
+            </button>
+          ) : listed ? (
+            <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={primary}>
+              <span>Get tickets</span>
+              <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>{free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</span>
+            </a>
           ) : (
-            <GlassPill variant="primary" accent={a} compact={!wide} href={listed ? event.ticketUrl! : `/events/${event.slug}?tickets=1`} external={listed}>
-              <Icon name="ticket" size={17} /> Get tickets
-            </GlassPill>
+            <Link href={`/events/${event.slug}?tickets=1`} style={primary}>
+              <span>Get tickets</span>
+              <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>GH₵ {event.price.toLocaleString()}</span>
+            </Link>
           )}
-          <GlassPill variant="secondary" compact={!wide} onClick={onRemind}>
-            <Icon name={reminded ? 'check' : 'bell'} size={16} color={reminded ? T.success : '#fff'} />
-            <span style={{ color: reminded ? T.success : undefined }}>{reminded ? 'Saved' : 'Remind me'}</span>
-          </GlassPill>
+          <button
+            type="button"
+            onClick={onRemind}
+            aria-label={reminded ? 'Saved — remove reminder' : 'Remind me'}
+            aria-pressed={reminded}
+            style={{ width: 48, height: 48, borderRadius: 24, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: reminded ? T.mint : T.text, background: reminded ? 'rgba(123,227,168,0.12)' : 'rgba(255,255,255,0.06)', border: `1px solid ${reminded ? 'rgba(123,227,168,0.4)' : 'rgba(255,255,255,0.14)'}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
+          >
+            <Icon name={reminded ? 'check' : 'bell'} size={21} />
+          </button>
         </div>
       </div>
 
-      {/* 4 · Action rail: round glass buttons */}
-      <div style={{ position: 'absolute', zIndex: 4, right: wide ? 28 : 12, bottom: `calc(${wide ? 36 : 150}px + env(safe-area-inset-bottom, 0px))`, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', opacity: active ? 1 : 0, transform: active ? 'translateX(0)' : 'translateX(24px)', transition: 'all 0.45s ease 0.12s' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-          <GlassPill variant="round" accent={a} active={going} label={going ? 'Not going' : "I'm going"} onClick={onGoing}>
-            <Icon name="heart" size={19} filled={going} color={going ? a : '#fff'} />
-          </GlassPill>
-          {goingCount > 0 && <span style={{ ...TYPE.meta, fontSize: 11, color: T.text2 }}>{fmtCount(goingCount)}</span>}
-        </div>
-        <GlassPill variant="round" label="Share" onClick={onShare}><Icon name="share" size={18} color="#fff" /></GlassPill>
-        <GlassPill variant="round" label={`Map: ${event.venue}`} href={maps} external><Icon name="mapPin" size={18} color="#fff" /></GlassPill>
-        <GlassPill variant="round" label="Details" href={`/events/${event.slug}`}><Icon name="info" size={18} color="#fff" /></GlassPill>
+      {/* Action rail: plain icons with small labels, no boxes */}
+      <div style={{ position: 'absolute', zIndex: 4, right: wide ? 28 : 12, bottom: `calc(${wide ? 40 : 250}px + env(safe-area-inset-bottom, 0px))`, display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'center', opacity: active ? 1 : 0, transform: active ? 'translateX(0)' : 'translateX(24px)', transition: 'all 0.45s ease 0.12s' }}>
+        <button type="button" onClick={onGoing} aria-pressed={going} aria-label={going ? 'Not going' : "I'm going"} style={railBtn}>
+          <Icon name="going" size={27} color={going ? a : T.white} strokeWidth={going ? 2 : 1.6} />
+          <span style={railLabel}>{goingCount > 0 ? fmtCount(goingCount) : 'Going'}</span>
+        </button>
+        <button type="button" onClick={onShare} aria-label="Share" style={railBtn}>
+          <Icon name="share" size={27} />
+          <span style={railLabel}>Share</span>
+        </button>
+        <a href={maps} target="_blank" rel="noopener noreferrer" aria-label={`Map: ${event.venue}`} style={railBtn}>
+          <Icon name="mapPin" size={27} />
+          <span style={railLabel}>Map</span>
+        </a>
+        <Link href={`/events/${event.slug}`} aria-label="Details" style={railBtn}>
+          <Icon name="info" size={27} />
+          <span style={railLabel}>Details</span>
+        </Link>
       </div>
     </section>
   );
 }
 
 /**
- * Full-screen events feed on the Thiscene Card. One card per screen, vertical snap;
- * the active card's accent drives the page's ambient gradient.
+ * Full-screen events feed. One card per screen, vertical snap. The page stays
+ * green-black; each card's colour only tints its tags, title glow and main button.
  */
 export default function EventFeed({
-  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll,
+  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel,
 }: {
   items: FeedItem[];
   saved: Set<string>;
@@ -186,6 +231,7 @@ export default function EventFeed({
   onToggleGoing: (e: GhanaEvent) => void | Promise<void>;
   topInset: number;
   onShowAll?: () => void;
+  showAllLabel?: string;
 }) {
   const { user } = useAuth();
   const scroller = useRef<HTMLDivElement>(null);
@@ -258,11 +304,14 @@ export default function EventFeed({
 
   if (!hasItems) {
     return (
-      <div style={{ minHeight: '62vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: `${topInset}px 24px 24px`, textAlign: 'center' }}>
-        <p style={{ ...TYPE.eyebrow, color: 'rgb(var(--accent-rgb))' }}>Nothing on</p>
-        <p style={{ ...TYPE.sheetTitle, color: T.text }}>No events match</p>
-        <p style={{ ...TYPE.body, color: T.text2 }}>Try another date, city or price.</p>
-        {onShowAll && <div style={{ marginTop: 8 }}><GlassPill variant="primary" accent="#F5A623" onClick={onShowAll}>Show all dates</GlassPill></div>}
+      <div style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: `${topInset + 20}px 24px 24px`, textAlign: 'center' }}>
+        <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>Nothing matches yet</p>
+        <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Try another date, city or price.</p>
+        {onShowAll && (
+          <button type="button" onClick={onShowAll} style={{ marginTop: 14, height: 48, padding: '0 22px', borderRadius: 999, border: 'none', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            {showAllLabel ?? 'Show all dates'}
+          </button>
+        )}
       </div>
     );
   }

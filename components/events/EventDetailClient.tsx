@@ -1,12 +1,12 @@
 'use client';
-import { C, G, R } from '@/lib/theme';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import Link from 'next/link';
-import {
-  MapPin, Calendar, Clock, Users, ArrowLeft,
-  Share2, Heart, CheckCircle, Ticket, Star, Loader2, ExternalLink, Play,
-} from 'lucide-react';
+import Nav, { HeaderIconButton } from '@/components/layout/Nav';
+import { Icon } from '@/components/ui/Icon';
+import { T, FONT, alpha } from '@/lib/thiscene';
+import { type RGB, categoryAccent, eventAccent, toHex } from '@/lib/events/accent';
+import { resolveLineupNames } from '@/components/ui/LineupChips';
+import { parseDay, longDay } from '@/lib/dates';
 import type { GhanaEvent } from '@/lib/types';
 import { isListedEvent } from '@/lib/types';
 import { extractYoutubeId } from '@/lib/events/rank';
@@ -15,7 +15,6 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import GoingWith from '@/components/social/GoingWith';
-import { LineupSection } from '@/components/ui/LineupChips';
 
 export interface CheckoutTier {
   /** ticket_tiers.id — only real (database) tiers can be bought */
@@ -42,19 +41,18 @@ function getTiers(event: GhanaEvent): CheckoutTier[] {
       };
     });
   }
-  // Preview tiers for demo / static events (not purchasable)
-  const price = event.price;
-  if (price === 0) return [
-    { name: 'General Admission', price: 0, desc: 'Free entry \u2014 RSVP required.', available: true, spots: 500 },
-  ];
-  return [
-    { name: 'General', price, desc: 'Standard entry. Full access to all areas.', available: true, spots: 200 },
-    { name: 'VIP', price: Math.round(price * 2.2), desc: 'Priority entry, VIP lounge, 2 drinks.', available: true, spots: 48 },
-    { name: 'VVIP', price: Math.round(price * 4.5), desc: 'Front section, private table, open bar, meet & greet.', available: price < 300, spots: 8 },
-  ];
+  // Events without organizer tiers: one ticket at the listed price (preview only, not purchasable)
+  return [{
+    name: event.price === 0 ? 'Free entry' : 'General',
+    price: event.price,
+    desc: event.price === 0 ? 'RSVP to save your spot.' : 'Standard entry.',
+    available: true,
+    spots: 999,
+  }];
 }
 
 function getDescription(event: GhanaEvent): string {
+  if (event.description?.trim()) return event.description.trim();
   const descs: Record<string, string> = {
     festival:  `${event.title} is one of Ghana\u2019s most anticipated events of the year. Bringing together the finest artists, performers, and creatives from across the continent.\n\nDoors open one hour before showtime. Come ready.`,
     concert:   `An unforgettable night of live music at ${event.venue}. ${event.title} delivers the kind of show that stays with you long after the last note fades.\n\nPremium sound, stunning production, and an audience united by music.`,
@@ -72,7 +70,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const { user } = useAuth();
   const supabase = createClient();
 
-  const [saved,          setSaved]          = useState(false);
+  const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
   const [ticketOpen,     setTicketOpen]     = useState(false);
   const [inDreamList,    setInDreamList]    = useState(false);
   const [dreamLoading,   setDreamLoading]   = useState(false);
@@ -80,6 +78,12 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [ticketSuccess,  setTicketSuccess]  = useState(false);
   const [showPromoVideo, setShowPromoVideo] = useState(false);
   const [wantSound, setWantSound] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    eventAccent(event.image, event.category).then((c) => { if (live) setRgb(c); });
+    return () => { live = false; };
+  }, [event.image, event.category]);
 
   const tiers       = getTiers(event);
   const description = getDescription(event);
@@ -149,14 +153,14 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
     if (inDreamList) {
       await supabase.from('dream_events').delete().eq('user_id', user.id).eq('event_slug', event.slug);
       setInDreamList(false);
-      showToast('Removed from Dream List');
+      showToast('Removed from your Dream List');
     } else {
       await supabase.from('dream_events').upsert({
         user_id: user.id, event_slug: event.slug,
         event_title: event.title, event_image: event.image, is_public: true,
       }, { onConflict: 'user_id,event_slug' });
       setInDreamList(true);
-      showToast('Added to Dream List \u2728');
+      showToast('Saved to your Dream List');
     }
     setDreamLoading(false);
   }
@@ -166,350 +170,228 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
     setTimeout(() => setDreamToast(''), 2800);
   }
 
+  const listed = isListedEvent(event) && !!event.ticketUrl;
+  const free = event.price === 0;
+  const a = toHex(rgb);
+  const lineup = resolveLineupNames(event);
+  const parsed = parseDay(event.date);
+  const eventDate = parsed ?? new Date(0);
+  const validDate = !!parsed;
+  const longDate = parsed ? longDay(parsed) : event.dateLabel;
+  const daysAway = validDate ? Math.round((eventDate.getTime() - new Date(new Date().toDateString()).getTime()) / 86400000) : null;
+  const countdown = daysAway == null ? '' : daysAway < 0 ? 'Past event' : daysAway === 0 ? 'Today' : daysAway === 1 ? 'Tomorrow' : `In ${daysAway} days`;
+  const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.venue}, ${cityLabel(event.city)}, Ghana`)}`;
+  const calendar = validDate
+    ? `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.date.slice(0, 10).replace(/-/g, '')}/${new Date(eventDate.getTime() + 86400000).toISOString().slice(0, 10).replace(/-/g, '')}&location=${encodeURIComponent(`${event.venue}, Ghana`)}`
+    : null;
+
+  async function share() {
+    const url = `${window.location.origin}/events/${event.slug}`;
+    try {
+      if (navigator.share) { await navigator.share({ title: event.title, url }); return; }
+      await navigator.clipboard.writeText(url);
+      showToast('Link copied');
+    } catch { /* cancelled */ }
+  }
+
+  const eyebrow: CSSProperties = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 6px' };
+  const infoRow: CSSProperties = { display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0', borderTop: `1px solid ${T.hairline}` };
+  const primary: CSSProperties = {
+    height: 52, padding: '0 28px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+    color: T.white, background: alpha(a, 0.22), border: `1px solid ${alpha(a, 0.6)}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+    fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
+  };
+
   return (
-    <div style={{ background: 'transparent', minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
+      <Nav
+        active="Events"
+        back="/events"
+        tabs={false}
+        actions={
+          <>
+            {seriesMomentId && <HeaderIconButton label="Watch the last edition" icon="moments" href={`/moments?id=${seriesMomentId}&from=${encodeURIComponent(`/events/${event.slug}`)}`} />}
+            <HeaderIconButton label={inDreamList ? 'Saved — remove' : 'Save'} icon="heart" onClick={toggleDreamList} active={inDreamList} pressed={inDreamList} />
+            <HeaderIconButton label="Share" icon="share" onClick={share} />
+          </>
+        }
+      />
 
-      {dreamToast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, ...G.sheet, border: `1px solid ${C.bd2}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.cream, whiteSpace: 'nowrap' }}>
-          {dreamToast}
+      {(dreamToast || ticketSuccess) && (
+        <div role="status" style={{ position: 'fixed', top: 'calc(80px + env(safe-area-inset-top, 0px))', left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: 'rgba(5,18,11,0.92)', border: '1px solid rgba(123,227,168,0.35)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 999, padding: '10px 18px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {ticketSuccess ? <><Icon name="check" size={16} /> Ticket confirmed — it&apos;s in My tickets</> : dreamToast}
         </div>
       )}
-      {ticketSuccess && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, ...G.sheet, background: 'rgba(16,40,26,0.85)', border: `1px solid ${C.greenBd}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.greenL, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <CheckCircle size={14} /> Ticket confirmed! Check My Tickets.
-        </div>
-      )}
 
-      {/* HERO — flyer first, then optional HD promo video */}
-      <div style={{ position: 'relative', width: '100%', height: 'min(110vw, 600px)', minHeight: 440, overflow: 'hidden', background: C.bg3 }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${event.image})`, backgroundSize: 'cover', backgroundPosition: 'center', opacity: showPromoVideo ? 0 : 1, transition: 'opacity 900ms ease' }} />
-        {/* Promo video: cover frame, no player chrome, audio after first tap */}
+      {/* Hero: flyer (or promo video) fading into the green-black ground */}
+      <div style={{ position: 'relative', width: '100%', height: 'min(118vw, 560px)', minHeight: 420, overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${event.image})`, backgroundSize: 'cover', backgroundPosition: 'center top', opacity: showPromoVideo ? 0 : 1, transition: 'opacity 900ms ease' }} />
         {showPromoVideo && ytId && (
-          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', zIndex: 0 }}>
+          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
             <iframe
               key={wantSound ? 'snd' : 'mut'}
               title="Announcement"
               src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${wantSound ? 0 : 1}&controls=0&loop=1&playlist=${ytId}&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&cc_load_policy=0`}
               allow="autoplay; encrypted-media; picture-in-picture"
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                width: '100%',
-                height: '100%',
-                border: 'none',
-                pointerEvents: 'none',
-                transform: 'translate(-50%, -50%) scale(2.15)',
-                transformOrigin: 'center center',
-              }}
+              style={{ position: 'absolute', top: '50%', left: '50%', width: '100%', height: '100%', border: 'none', pointerEvents: 'none', transform: 'translate(-50%, -50%) scale(2.15)' }}
             />
           </div>
         )}
         {showPromoVideo && isMp4 && event.promoVideoUrl && (
-          <video
-            key={wantSound ? 'vs' : 'vm'}
-            src={event.promoVideoUrl}
-            autoPlay
-            muted={!wantSound}
-            loop
-            playsInline
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }}
-          />
+          <video key={wantSound ? 'vs' : 'vm'} src={event.promoVideoUrl} autoPlay muted={!wantSound} loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         )}
-        <Link href="/events" style={{ position: 'absolute', top: 'calc(76px + env(safe-area-inset-top, 0px))', left: 12, zIndex: 12, display: 'inline-flex', alignItems: 'center', gap: 7, height: 40, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, fontWeight: 600, color: C.cream, ...G.overlay, border: '1px solid rgba(255,255,255,0.16)', padding: '0 14px', borderRadius: R.chip, textDecoration: 'none' }}>
-          <ArrowLeft size={15} /> Events
-        </Link>
-        <div style={{ position: 'absolute', top: 'calc(76px + env(safe-area-inset-top, 0px))', right: 12, zIndex: 12, display: 'flex', gap: 8 }}>
-          
-          {seriesMomentId && (
-            <Link
-              href={`/moments?id=${seriesMomentId}&from=${encodeURIComponent(`/events/${event.slug}`)}`}
-              aria-label="Watch last edition"
-              title="Watch last edition"
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                border: `1px solid ${C.goldBd}`,
-                ...G.overlay,
-                color: C.goldText,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textDecoration: 'none',
-              }}
-            >
-              <Play size={16} fill={C.gold} />
-            </Link>
-          )}
-          <button onClick={toggleDreamList} disabled={dreamLoading}
-            style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${inDreamList ? C.goldBd : 'rgba(245,236,215,0.12)'}`, ...G.overlay, background: inDreamList ? C.goldDim : G.overlay.background, color: inDreamList ? C.goldText : C.cream, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 220ms' }}>
-            {dreamLoading ? <Loader2 size={15} /> : <Star size={17} fill={inDreamList ? C.gold : 'none'} />}
-          </button>
-          <button onClick={() => setSaved(s => !s)}
-            style={{ width: 40, height: 40, borderRadius: '50%', border: `1px solid ${saved ? 'rgba(206,17,38,0.4)' : 'rgba(245,236,215,0.12)'}`, ...G.overlay, background: saved ? 'rgba(206,17,38,0.22)' : G.overlay.background, color: saved ? '#FCA5A5' : C.cream, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Heart size={17} fill={saved ? C.red : 'none'} />
-          </button>
-          <button aria-label="Share" style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.16)', ...G.overlay, color: C.cream, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Share2 size={17} />
-          </button>
-        </div>
-        <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, maxWidth: 720, padding: '18px 18px 20px', zIndex: 2, ...G.panel, border: `1px solid ${C.bd2}`, borderRadius: R.sheet }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 6, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}` }}>{event.badge}</span>
-            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 6, background: C.c4, color: C.c2, border: `1px solid ${C.bd}` }}>{event.category}</span>
-            {event.recurring && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 6, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}` }}>Annual</span>}
-          </div>
-          <h1 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 'clamp(32px,7vw,56px)', fontWeight: 500, color: '#FFFDF6', lineHeight: 1.0, letterSpacing: '-0.5px', marginBottom: 12 }}>{event.title}</h1>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c2 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Calendar size={13} style={{ color: C.goldText }} />{event.dateLabel}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Clock size={13} style={{ color: C.goldText }} />{event.time}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><MapPin size={13} style={{ color: C.goldText }} />{event.venue}</span>
-          </div>
-        </div>
+        <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0.5) 0%, rgba(3,8,6,0) 20%, rgba(3,8,6,0) 45%, rgba(4,14,9,0.85) 80%, #030806 100%)' }} />
       </div>
 
-      {/* STICKY BAR */}
-      <div style={{ position: 'sticky', top: 'calc(72px + env(safe-area-inset-top, 0px))', zIndex: 90, margin: '10px 10px 0', ...G.bar, border: `1px solid ${C.bd2}`, borderRadius: R.sheet, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 10px 10px 18px', gap: 12 }}>
-        <div>
-          <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, color: C.c3, marginBottom: 1 }}>From</p>
-          {event.price === 0
-            ? <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 17, fontWeight: 700, color: C.greenL }}>FREE</p>
-            : <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 21, color: C.cream, letterSpacing: '-1px' }}><span style={{ fontSize: 11, color: C.gold }}>₵</span>{event.price.toLocaleString()}</p>
-          }
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={toggleDreamList} disabled={dreamLoading}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${inDreamList ? C.goldBd : C.bd}`, background: inDreamList ? C.goldDim : 'transparent', color: inDreamList ? C.gold : C.c3, padding: 0, width: 46, height: 46, justifyContent: 'center', borderRadius: R.btn, cursor: 'pointer', transition: 'all 200ms' }} aria-label="Add to dream events">
-            <Star size={13} fill={inDreamList ? C.gold : 'none'} />
-          </button>
-          {isListedEvent(event) && event.ticketUrl ? (
-            <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: C.gold, color: C.onAccent, border: 'none', padding: '0 18px', height: 46, borderRadius: R.btn, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 15, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>
-              <ExternalLink size={14} />Tickets on {event.ticketSource || 'official site'}
-            </a>
-          ) : (
-          <button onClick={() => setTicketOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: C.gold, color: C.onAccent, border: 'none', padding: '0 18px', height: 46, borderRadius: R.btn, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            <Ticket size={14} />{event.price === 0 ? 'Reserve' : 'Get tickets'}
-          </button>
-          )}
-        </div>
-      </div>
-
-      {/* BODY */}
-      <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 20px 80px' }}>
-
-        {/* Info grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 24 }}>
-          {[
-            { Icon: Calendar, label: 'Date',  value: event.dateLabel },
-            { Icon: Clock,    label: 'Time',  value: event.time },
-            { Icon: MapPin,   label: 'Venue', value: event.venue },
-            { Icon: Users,    label: 'City',  value: `${cityLabel(event.city)} \u00b7 ${event.region}` },
-          ].map(({ Icon, label, value }) => (
-            <div key={label} style={{ padding: '14px 16px', ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 10 }}>
-              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Icon size={10} style={{ color: C.gold }} />{label}
-              </p>
-              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.cream, fontWeight: 500, lineHeight: 1.3 }}>{value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* About */}
-        <div style={{ marginTop: 36 }}>
-          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />About this event
-          </p>
-          {paragraphs.map((p, i) => (
-            <p key={i} style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 15, color: C.c2, lineHeight: 1.8, fontWeight: 300, marginBottom: i < paragraphs.length - 1 ? 16 : 0 }}>{p}</p>
-          ))}
-        </div>
-
-        {/* Ticket options */}
-        <div style={{ marginTop: 36 }}>
-          {isListedEvent(event) && (
-            <div style={{ background: C.goldDim, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: '14px 16px', marginBottom: 16 }}>
-              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, marginBottom: 6 }}>Listed event</p>
-              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c2, lineHeight: 1.55 }}>
-                Tickets are sold by {event.ticketSource || 'the organiser'}, not on Akwaaba. We list it so you can find it — buy only on the official page.
-              </p>
-            </div>
-          )}
-
-          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />Ticket options
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
-            {tiers.map((tier, i) => (
-              <div key={tier.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: i === 0 ? C.goldDim : C.bg2, border: `1px solid ${i === 0 ? C.goldBd : C.bd}`, borderRadius: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5, flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: 'var(--font-syne,sans-serif)', fontSize: 14, fontWeight: 600, color: C.cream }}>{tier.name}</span>
-                    {!tier.available && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', background: 'rgba(206,17,38,0.15)', color: C.red, border: '1px solid rgba(206,17,38,0.25)', padding: '2px 7px', borderRadius: 6 }}>Sold out</span>}
-                    {tier.available && tier.spots <= 20 && <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}`, padding: '2px 7px', borderRadius: 6 }}>{tier.spots} left</span>}
-                  </div>
-                  <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.c3, lineHeight: 1.45 }}>{tier.desc}</p>
-                </div>
-                <div style={{ flexShrink: 0, marginLeft: 16, textAlign: 'right' }}>
-                  {tier.price === 0
-                    ? <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, fontWeight: 700, color: C.greenL }}>FREE</span>
-                    : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 17, color: C.cream }}><span style={{ fontSize: 10, color: C.gold }}>₵</span>{tier.price.toLocaleString()}</span>
-                  }
-                </div>
-              </div>
+      <main style={{ position: 'relative', maxWidth: 720, margin: '-150px auto 0', padding: '0 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: a }}>
+          {[event.category, event.badge && event.badge.toLowerCase() !== event.category ? event.badge.toLowerCase() : '', event.recurring ? 'annual' : '']
+            .filter(Boolean)
+            .map((t, i) => (
+              <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                {i > 0 && <span aria-hidden style={{ width: 3, height: 3, borderRadius: 2, background: a, opacity: 0.6 }} />}
+                {t}
+              </span>
             ))}
-          </div>
-          <div style={{ display: 'flex', gap: 10 }}>
-            {isListedEvent(event) && event.ticketUrl ? (
-            <a href={event.ticketUrl} target="_blank" rel="noopener noreferrer"
-              style={{ flex: 1, background: C.gold, color: C.onAccent, border: 'none', padding: 15, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
-              <ExternalLink size={14} />Tickets on {event.ticketSource || 'official site'}
-            </a>
-          ) : (
-            <button onClick={() => setTicketOpen(true)}
-              style={{ flex: 1, background: C.gold, color: C.onAccent, border: 'none', padding: 15, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Ticket size={14} />{event.price === 0 ? 'Reserve Free Ticket' : `Get Tickets from \u20B5${event.price.toLocaleString()}`}
-            </button>
-          )}
-            <button onClick={toggleDreamList} disabled={dreamLoading}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, border: `1px solid ${inDreamList ? C.goldBd : C.bd}`, background: inDreamList ? C.goldDim : 'transparent', color: inDreamList ? C.gold : C.c3, padding: '15px 18px', borderRadius: 8, cursor: 'pointer', transition: 'all 200ms' }}>
-              <Star size={16} fill={inDreamList ? C.gold : 'none'} />
-            </button>
-          </div>
-          {!user && (
-            <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.c3, textAlign: 'center', marginTop: 12 }}>
-              <Link href="/auth" style={{ color: C.gold, textDecoration: 'none', fontWeight: 600 }}>Sign in</Link> to add this to your Dream List
-            </p>
-          )}
-          {inDreamList && (
-            <div style={{ marginTop: 12, background: C.goldDim, border: `1px solid ${C.goldBd}`, borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Star size={13} style={{ color: C.gold, flexShrink: 0 }} />
-              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.c2, lineHeight: 1.5 }}>
-                On your Dream List. Friends can gift you a ticket from your profile.
-              </p>
+        </div>
+        <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(38px, 9vw, 64px)', fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.035em', color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
+          {event.title}
+        </h1>
+
+        <div style={{ marginTop: 26 }}>
+          <div style={infoRow}>
+            <Icon name="calendar" size={22} color="rgba(255,255,255,0.7)" />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>{longDate}</p>
+              <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>{[event.time, countdown].filter(Boolean).join(' · ')}</p>
             </div>
-          )}
+            {calendar && daysAway != null && daysAway >= 0 && (
+              <a href={calendar} target="_blank" rel="noopener noreferrer" style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>Add</a>
+            )}
+          </div>
+          <div style={{ ...infoRow, borderBottom: `1px solid ${T.hairline}` }}>
+            <Icon name="mapPin" size={22} color="rgba(255,255,255,0.7)" />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>{event.venue}</p>
+              <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>{[event.area, cityLabel(event.city)].filter(Boolean).join(', ')}</p>
+            </div>
+            <a href={maps} target="_blank" rel="noopener noreferrer" style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>Directions</a>
+          </div>
         </div>
 
-        {event.organizerUsername && (
-          <div style={{ marginTop: 28 }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />Presented by
-            </p>
-            <Link
-              href={`/organizer/${event.organizerUsername}`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '12px 14px',
-                ...G.panel,
-                border: `1px solid ${C.bd}`,
-                borderRadius: 12,
-                textDecoration: 'none',
-              }}
-            >
-              <div style={{
-                width: 44, height: 44, borderRadius: '50%', overflow: 'hidden',
-                ...G.raised, flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: C.gold, fontFamily: 'var(--font-cormorant,serif)', fontSize: 18,
-              }}>
-                {event.organizerAvatar ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={event.organizerAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  (event.organizerName || event.organizerUsername || 'O')[0].toUpperCase()
-                )}
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 15, fontWeight: 600, color: C.cream, margin: 0 }}>
-                  {event.organizerName || event.organizerUsername}
-                </p>
-                <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, color: C.c3, margin: '4px 0 0' }}>
-                  @{event.organizerUsername} · View all their events
-                </p>
-              </div>
-            </Link>
-          </div>
-        )}
-
-        <LineupSection event={event} />
-
-        {/* Going with others */}
+        {/* Who's going */}
         <GoingWith eventSlug={event.slug} eventTitle={event.title} />
 
-        {/* Venue */}
-        <div style={{ marginTop: 36 }}>
-          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />Venue
-          </p>
-          <div style={{ padding: '20px', ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 12 }}>
-            <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 22, fontWeight: 400, color: C.cream, marginBottom: 6 }}>{event.venue}</h3>
-            <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 12 }}>
-              <MapPin size={12} style={{ color: C.gold, flexShrink: 0 }} />{cityLabel(event.city)}, Ghana
+        <section style={{ marginTop: 36 }}>
+          <h2 style={eyebrow}>About</h2>
+          {paragraphs.map((p, i) => (
+            <p key={i} style={{ margin: i ? '14px 0 0' : '4px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.65, color: 'rgba(255,255,255,0.78)' }}>{p}</p>
+          ))}
+        </section>
+
+        {lineup.length > 0 && (
+          <section style={{ marginTop: 34 }}>
+            <h2 style={eyebrow}>Line-up</h2>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {lineup.map((name, i) => (
+                <li key={name} style={{ padding: '12px 0', borderBottom: i === lineup.length - 1 ? 'none' : `1px solid ${T.hairline}`, fontFamily: FONT.display, fontSize: i === 0 ? 22 : 18, fontWeight: i === 0 ? 700 : 600, letterSpacing: '-0.02em', color: i === 0 ? T.white : 'rgba(255,255,255,0.85)' }}>
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <section id="tickets" style={{ marginTop: 34 }}>
+          <h2 style={eyebrow}>Tickets</h2>
+          {listed ? (
+            <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
+              Tickets are sold by {event.ticketSource || 'the organiser'}, not on Akwaaba. We list the event so you can find it — buy only on the official page.
             </p>
-            <a href={`https://maps.google.com/?q=${encodeURIComponent(event.venue + ', Ghana')}`} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '11px', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 7, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2, textDecoration: 'none' }}>
-              <MapPin size={11} />Open in Google Maps
-            </a>
-          </div>
-        </div>
-
-        {/* Good to know */}
-        <div style={{ marginTop: 36 }}>
-          <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />Good to know
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[
-              'QR ticket delivered instantly after payment',
-              'Tickets are non-refundable but transferable up to 24hrs before the event',
-              'Pay with MTN MoMo, Vodafone Cash, AirtelTigo, or Visa/Mastercard',
-              event.category === 'nightlife' || event.category === 'concert' ? 'Smart casual or formal attire enforced' : 'All ages welcome unless otherwise stated',
-              'Gates open 60 minutes before event start time',
-            ].map((tip, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '13px 14px', ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 8 }}>
-                <CheckCircle size={14} style={{ color: C.greenL, flexShrink: 0, marginTop: 1 }} />
-                <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c2, lineHeight: 1.55 }}>{tip}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Related */}
-        {related.length > 0 && (
-          <div style={{ marginTop: 44 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 16 }}>
-              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />More in {cityLabel(event.city)}
+          ) : (
+            <>
+              {tiers.map((tier, i) => (
+                <div key={tier.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 0', borderBottom: i === tiers.length - 1 ? 'none' : `1px solid ${T.hairline}`, color: tier.available ? T.white : 'rgba(255,255,255,0.4)' }}>
+                  <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                    <span style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, textDecoration: tier.available ? 'none' : 'line-through' }}>{tier.name}</span>
+                    <span style={{ fontFamily: FONT.sans, fontSize: 13, color: !tier.available ? 'rgba(255,255,255,0.4)' : tier.spots <= 20 ? a : T.text2 }}>
+                      {!tier.available ? 'Sold out' : tier.spots <= 20 ? `${tier.spots} left` : tier.desc}
+                    </span>
+                  </span>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: tier.price === 0 && tier.available ? T.mintText : undefined }}>
+                    {tier.price === 0 ? 'Free' : `GH₵ ${tier.price.toLocaleString()}`}
+                  </span>
+                </div>
+              ))}
+              <p style={{ margin: '10px 0 0', display: 'flex', alignItems: 'center', gap: 8, fontFamily: FONT.sans, fontSize: 12.5, color: 'rgba(255,255,255,0.5)' }}>
+                <Icon name="lock" size={16} /> Pay with MoMo or card · secured by Paystack · QR ticket sent instantly
               </p>
-              <Link href="/events" style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none' }}>See all</Link>
+            </>
+          )}
+        </section>
+
+        {event.organizerUsername && (
+          <section style={{ marginTop: 34 }}>
+            <h2 style={eyebrow}>Presented by</h2>
+            <Link href={`/organizer/${event.organizerUsername}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', textDecoration: 'none', color: T.white }}>
+              <span style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1F5A3F', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
+                {event.organizerAvatar
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={event.organizerAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : (event.organizerName || event.organizerUsername || 'O')[0].toUpperCase()}
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600 }}>{event.organizerName || event.organizerUsername}</span>
+                <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>@{event.organizerUsername} · all their events</span>
+              </span>
+              <Icon name="open" size={18} color="rgba(255,255,255,0.4)" />
+            </Link>
+          </section>
+        )}
+
+        {related.length > 0 && (
+          <section style={{ marginTop: 40 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
+              <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: T.white }}>More like this</h2>
+              <Link href="/events?view=list" style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>See all</Link>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
-              {related.slice(0, 4).map(ev => (
-                <Link key={ev.id} href={`/events/${ev.slug}`} style={{ display: 'block', borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.bd}`, ...G.panel, textDecoration: 'none' }}>
-                  <div style={{ position: 'relative', paddingTop: '56%', ...G.raised }}>
-                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${ev.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                  </div>
-                  <div style={{ padding: '12px 13px 14px' }}>
-                    <h4 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 15, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 5 }}>{ev.title}</h4>
-                    <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3, marginBottom: 8 }}>{ev.dateLabel}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: `1px solid ${C.bd}` }}>
-                      {ev.price === 0
-                        ? <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, fontWeight: 700, color: C.greenL, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Free</span>
-                        : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14, color: C.cream }}><span style={{ fontSize: 11, color: C.gold }}>₵</span>{ev.price}</span>
-                      }
-                      <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold }}>View \u2192</span>
-                    </div>
-                  </div>
+            <div className="no-scrollbar" style={{ display: 'flex', gap: 14, overflowX: 'auto', marginRight: -20, paddingRight: 20 }}>
+              {related.slice(0, 6).map((ev) => (
+                <Link key={ev.slug} href={`/events/${ev.slug}`} style={{ flex: '0 0 150px', display: 'flex', flexDirection: 'column', gap: 10, textDecoration: 'none', color: T.white }}>
+                  <span style={{ width: 150, height: 188, borderRadius: 16, overflow: 'hidden', background: 'rgba(255,255,255,0.05)' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ev.image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  </span>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{ev.title}</span>
+                  <span style={{ marginTop: -6, fontFamily: FONT.sans, fontSize: 12.5, color: T.text2 }}>{ev.price === 0 ? 'Free' : `GH₵ ${ev.price.toLocaleString()}`}</span>
                 </Link>
               ))}
             </div>
-          </div>
+          </section>
         )}
+      </main>
+
+      {/* Bottom bar: price + the one main action */}
+      <div style={{ position: 'fixed', zIndex: 150, left: 0, right: 0, bottom: 0, padding: '18px 16px calc(18px + env(safe-area-inset-bottom, 0px)) 20px', background: 'linear-gradient(180deg, rgba(3,8,6,0) 0%, rgba(3,8,6,0.92) 32%, #030806 100%)' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.text2 }}>{free ? 'Entry' : 'From'}</span>
+            <span style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: T.white }}>{free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</span>
+          </span>
+          {daysAway != null && daysAway < 0 ? (
+            <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default' }}>Event has ended</span>
+          ) : listed ? (
+            <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={primary}>
+              Tickets on {event.ticketSource || 'official site'} <Icon name="open" size={16} />
+            </a>
+          ) : daysAway != null && daysAway < 0 ? (
+            <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default' }}>Event has ended</span>
+          ) : (
+            <button type="button" onClick={() => setTicketOpen(true)} style={primary}>
+              {free ? 'Reserve a spot' : 'Get tickets'}
+            </button>
+          )}
+        </div>
       </div>
 
       {ticketOpen && !isListedEvent(event) && (

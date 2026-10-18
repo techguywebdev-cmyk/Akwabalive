@@ -2,7 +2,7 @@
 import { C } from '@/lib/theme';
 
 import type { GhanaEvent } from '@/lib/types';
-import { getArtistBySlug, majorArtists } from '@/lib/data/artists';
+import { getArtistBySlug } from '@/lib/data/artists';
 
 /** Resolve display names: prefer lineup, else map artistSlugs to names */
 export function resolveLineupNames(event: Pick<GhanaEvent, 'lineup' | 'artistSlugs'>): string[] {
@@ -54,9 +54,6 @@ export function LineupChips({
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
       {shown.map((name) => {
-        const artist = majorArtists.find(
-          (a) => a.name.toLowerCase() === name.toLowerCase(),
-        );
         return (
           <span
             key={name}
@@ -64,7 +61,7 @@ export function LineupChips({
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              padding: artist ? '4px 10px 4px 4px' : '4px 10px',
+              padding: '5px 12px',
               borderRadius: 999,
               border: `1px solid ${C.goldBd}`,
               background: C.goldDim,
@@ -74,19 +71,6 @@ export function LineupChips({
               letterSpacing: '0.5px',
             }}
           >
-            {artist && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={artist.image}
-                alt=""
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                }}
-              />
-            )}
             {name}
           </span>
         );

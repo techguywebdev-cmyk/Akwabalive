@@ -122,12 +122,10 @@ export default function ArtistPageClient({
               flexShrink: 0,
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={artist.image}
-              alt={artist.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
+            {/* Initials, not a photo: the artist data holds stand-in stock portraits */}
+            <span aria-hidden style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1F5A3F', color: '#D6FBE6', fontFamily: 'var(--font-display, sans-serif)', fontSize: 34, fontWeight: 800 }}>
+              {artist.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+            </span>
           </div>
           <div>
             <p

@@ -1,68 +1,84 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { C, G, R } from '@/lib/theme';
+import { T, FONT } from '@/lib/thiscene';
 import { Icon, PAGE_ICONS, type IconName } from '@/components/ui/Icon';
 
-const LINKS: { href: string; label: string; live?: boolean }[] = [
-  { href: '/', label: 'Discover' },
-  { href: '/events', label: 'Events' },
-  { href: '#', label: 'Live', live: true },
-  { href: '/moments', label: 'Moments' },
-  { href: '#', label: 'Cities' },
+/** Main sections. On phones they live in the bottom tab bar; on desktop, in the header. */
+const SECTIONS: { href: string; label: string; icon: IconName }[] = [
+  { href: '/', label: 'Discover', icon: 'compass' },
+  { href: '/events', label: 'Events', icon: 'calendar' },
+  { href: '/moments', label: 'Moments', icon: 'moments' },
 ];
 
-const sans = 'var(--font-inter,sans-serif)';
-const mono = 'var(--font-dm-mono,monospace)';
-const ACCENT = 'rgb(var(--accent-rgb))';
+const GLASS: React.CSSProperties = {
+  background: 'rgba(3,10,6,0.36)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+};
 
-/** 38px square glass button — This-scine's header control. */
-function HeaderButton({
-  label, icon, href, onClick, active = false, badge, size = 17,
+/**
+ * 44px round icon button used in the header. Pages pass their own (filter, view toggle…)
+ * through Nav's `actions`.
+ */
+export function HeaderIconButton({
+  label, icon, href, onClick, active = false, dot = false, pressed,
 }: {
-  label: string; icon: IconName; href?: string; onClick?: () => void; active?: boolean; badge?: number; size?: number;
+  label: string; icon: IconName; href?: string; onClick?: () => void;
+  /** Mint-tinted when something is switched on (e.g. filters applied) */
+  active?: boolean;
+  /** Small mint dot in the corner */
+  dot?: boolean;
+  pressed?: boolean;
 }) {
   const style: React.CSSProperties = {
-    position: 'relative', width: 38, height: 38, borderRadius: 12, flexShrink: 0, padding: 0, cursor: 'pointer',
+    position: 'relative', width: 44, height: 44, borderRadius: 22, flexShrink: 0, padding: 0, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none',
-    background: active ? 'rgba(var(--accent-rgb), 0.16)' : 'rgba(0,0,0,0.55)',
-    border: `1px solid ${active ? 'rgba(var(--accent-rgb), 0.45)' : 'rgba(255,255,255,0.10)'}`,
-    backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-    color: active ? ACCENT : 'rgba(255,255,255,0.75)', transition: 'all 0.2s ease',
+    color: active ? T.mintText : T.text,
+    ...GLASS,
+    ...(active ? { background: 'rgba(123,227,168,0.12)', border: '1px solid rgba(123,227,168,0.35)' } : {}),
+    transition: 'background 200ms ease, border-color 200ms ease, color 200ms ease',
   };
   const inner = (
     <>
-      <Icon name={icon} size={size} />
-      {!!badge && badge > 0 && (
-        <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 8, padding: '0 4px', background: ACCENT, color: '#07070F', fontSize: 9, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #0D0B08', lineHeight: 1 }}>
-          {badge > 9 ? '9+' : badge}
-        </span>
-      )}
+      <Icon name={icon} size={22} />
+      {dot && <span aria-hidden style={{ position: 'absolute', top: 9, right: 9, width: 7, height: 7, borderRadius: 4, background: T.mint, boxShadow: '0 0 0 2px rgba(3,8,6,0.9)' }} />}
     </>
   );
   if (href) return <Link href={href} aria-label={label} title={label} style={style}>{inner}</Link>;
-  return <button type="button" aria-label={label} title={label} aria-expanded={onClick ? active : undefined} onClick={onClick} style={style}>{inner}</button>;
+  return (
+    <button type="button" aria-label={label} title={label} aria-pressed={pressed} onClick={onClick} style={style}>
+      {inner}
+    </button>
+  );
 }
 
 /**
- * Transparent header (This-scine style): no bar, just a dark fade from the top so
- * controls stay legible over full-bleed imagery. Glass icon buttons on the right,
- * an accent dot that follows the page's current colour next to the wordmark.
+ * Header: no wordmark, no bar. A soft fade from the top keeps icon buttons legible over
+ * full-bleed imagery. Left: menu (or back). Right: the page's own actions, then search
+ * and the profile/sign-in button. Phones also get a floating glass tab bar at the bottom.
  */
 export default function Nav({
-  active,
+  active, actions, back, tabs = true,
 }: {
-  /** kept for older call sites; the header is always transparent now */
+  /** kept for older call sites */
   transparent?: boolean;
-  active?: string;
   variant?: 'default' | 'moments';
   onSearch?: () => void;
+  active?: string;
+  /** Page-specific header buttons (e.g. sort & filter) */
+  actions?: ReactNode;
+  /** Show a back button instead of the menu */
+  back?: string;
+  /** Show the bottom tab bar on phones */
+  tabs?: boolean;
 }) {
   const { user, profile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
 
   useEffect(() => {
     const fn = () => setIsMobile(window.innerWidth < 900);
@@ -78,118 +94,139 @@ export default function Nav({
     return () => window.removeEventListener('keydown', onKey);
   }, [menuOpen]);
 
+  const profileHref = user ? `/u/${profile?.username ?? ''}` : '/auth';
+  const ticketsHref = user ? '/account/tickets' : '/auth';
+
   const accountLinks = user
     ? [
-        { label: 'My profile', href: `/u/${profile?.username ?? ''}` },
+        { label: 'My profile', href: profileHref },
         { label: 'My tickets', href: '/account/tickets' },
         { label: 'Dream events', href: '/account/dream-events' },
         { label: 'Organizer dashboard', href: '/organizer/dashboard' },
       ]
     : [];
 
-  const avatar = (
-    <Link href={`/u/${profile?.username ?? ''}`} aria-label="My profile" style={{ width: 36, height: 36, flexShrink: 0, position: 'relative', textDecoration: 'none' }}>
-      <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden', background: 'rgba(var(--accent-rgb), 0.14)', border: '2px solid rgba(var(--accent-rgb), 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {profile?.avatar_url
-          // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <span style={{ fontFamily: sans, fontSize: 13, fontWeight: 700, color: ACCENT }}>{(profile?.username?.[0] ?? 'U').toUpperCase()}</span>}
-      </span>
+  const avatar = user ? (
+    <Link href={profileHref} aria-label="My profile" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 22, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: '#1F5A3F', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
+      {profile?.avatar_url
+        // eslint-disable-next-line @next/next/no-img-element
+        ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        : (profile?.username?.[0] ?? 'U').toUpperCase()}
     </Link>
+  ) : (
+    <HeaderIconButton label="Sign in" icon="user" href="/auth" />
   );
+
+  const tabItems: { href: string; label: string; icon: IconName; key: string }[] = [
+    ...SECTIONS.map((s) => ({ ...s, key: s.label })),
+    { href: ticketsHref, label: 'My tickets', icon: 'ticket', key: 'Tickets' },
+    { href: profileHref, label: user ? 'My profile' : 'Sign in', icon: 'user', key: 'Profile' },
+  ];
 
   return (
     <>
       <header
         style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
-          padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 26px',
-          background: 'linear-gradient(to bottom, rgba(8,6,4,0.9) 0%, rgba(8,6,4,0.55) 55%, transparent 100%)',
+          padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 28px',
+          background: 'linear-gradient(to bottom, rgba(3,8,6,0.78) 0%, rgba(3,8,6,0.4) 55%, rgba(3,8,6,0) 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
           pointerEvents: 'none',
         }}
       >
-        {/* Wordmark + live accent dot */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', pointerEvents: 'auto', flexShrink: 0 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: ACCENT, boxShadow: `0 0 12px ${ACCENT}`, transition: 'all 0.5s ease' }} />
-          <span style={{ fontFamily: 'var(--font-syne, sans-serif)', fontSize: 16, fontWeight: 800, letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.92)' }}>
-            AK<span style={{ color: C.gold }}>W</span>AABA
-          </span>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
+          {back
+            ? <HeaderIconButton label="Back" icon="arrowLeft" href={back} />
+            : <HeaderIconButton label={menuOpen ? 'Close menu' : 'Menu'} icon={menuOpen ? 'close' : 'menu'} onClick={() => setMenuOpen((o) => !o)} pressed={menuOpen} />}
 
-        {/* Page links with icons (desktop) */}
-        {!isMobile && (
-          <nav aria-label="Main" style={{ display: 'flex', alignItems: 'center', gap: 4, pointerEvents: 'auto' }}>
-            {LINKS.map((l) => {
-              const on = active === l.label;
+          {!isMobile && (
+            <nav aria-label="Main" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
+              {SECTIONS.map((l) => {
+                const on = active === l.label;
+                return (
+                  <Link
+                    key={l.label}
+                    href={l.href}
+                    aria-current={on ? 'page' : undefined}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8, height: 44, padding: '0 14px', borderRadius: 22,
+                      fontFamily: FONT.sans, fontSize: 14, fontWeight: on ? 600 : 500, textDecoration: 'none',
+                      color: on ? T.white : 'rgba(255,255,255,0.62)',
+                    }}
+                  >
+                    <Icon name={l.icon} size={18} color={on ? T.mint : 'currentColor'} />
+                    {l.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
+          {actions ?? <HeaderIconButton label="Search events" icon="search" href="/events?search=1" />}
+          {!isMobile && avatar}
+        </div>
+      </header>
+
+      {/* Bottom tab bar — phones */}
+      {tabs && isMobile && (
+        <>
+          <style>{'@media (max-width: 899px) { body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); } }'}</style>
+          <nav
+            aria-label="Primary"
+            style={{
+              position: 'fixed', zIndex: 190, left: 16, right: 16, bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+              height: 64, borderRadius: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+              background: 'rgba(6,20,13,0.66)', border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(22px) saturate(140%)', WebkitBackdropFilter: 'blur(22px) saturate(140%)',
+            }}
+          >
+            {tabItems.map((t) => {
+              const on = active === t.key || (t.key === 'Profile' && active === 'My profile') || (t.key === 'Tickets' && active === 'My tickets');
               return (
                 <Link
-                  key={l.label}
-                  href={l.href}
+                  key={t.key}
+                  href={t.href}
+                  aria-label={t.label}
                   aria-current={on ? 'page' : undefined}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 7, height: 38, padding: '0 14px', borderRadius: 12,
-                    fontFamily: sans, fontSize: 14, fontWeight: on ? 700 : 500, textDecoration: 'none',
-                    color: on ? '#fff' : 'rgba(255,255,255,0.7)',
-                    ...(on
-                      ? { background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.10)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }
-                      : { border: '1px solid transparent' }),
-                    textShadow: on ? 'none' : '0 1px 6px rgba(0,0,0,0.6)',
-                  }}
+                  style={{ width: 52, height: 52, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, color: on ? T.white : 'rgba(255,255,255,0.45)', textDecoration: 'none' }}
                 >
-                  <Icon name={PAGE_ICONS[l.label]} size={16} color={on ? ACCENT : 'currentColor'} />
-                  {l.label}
-                  {l.live && <span style={{ width: 6, height: 6, borderRadius: 3, background: C.red, animation: 'blink 1.4s ease-in-out infinite' }} />}
+                  <Icon name={t.icon} size={24} />
+                  <span aria-hidden style={{ width: 4, height: 4, borderRadius: 2, background: on ? T.mint : 'transparent' }} />
                 </Link>
               );
             })}
           </nav>
-        )}
+        </>
+      )}
 
-        {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
-          {isMobile && <HeaderButton label="Moments" icon="moments" href="/moments" active={active === 'Moments'} />}
-          {user && <HeaderButton label="My tickets" icon="ticket" href="/account/tickets" />}
-          {user && !isMobile && <HeaderButton label="Dream events" icon="bookmark" href="/account/dream-events" />}
-          {!isMobile && (
-            <Link href="/organizer/events/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 38, padding: '0 14px', borderRadius: 12, background: C.gold, color: C.onAccent, fontFamily: sans, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-              <Icon name="plus" size={15} strokeWidth={2.2} /> List event
-            </Link>
-          )}
-          <HeaderButton label={menuOpen ? 'Close menu' : 'Menu'} icon={menuOpen ? 'close' : 'menu'} onClick={() => setMenuOpen((o) => !o)} active={menuOpen} />
-          {user ? avatar : (
-            <Link href="/auth" style={{ height: 34, padding: '0 12px', borderRadius: 22, background: 'rgba(var(--accent-rgb), 0.12)', border: '1px solid rgba(var(--accent-rgb), 0.4)', color: ACCENT, fontFamily: sans, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              Sign in
-            </Link>
-          )}
-        </div>
-      </header>
-
-      {/* Menu — glass sheet with a page icon per item */}
+      {/* Menu sheet */}
       {menuOpen && (
         <>
-          <button type="button" aria-label="Close menu" onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 198, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', border: 'none', cursor: 'default' }} />
+          <button type="button" aria-label="Close menu" onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 198, background: 'rgba(1,4,3,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', border: 'none', cursor: 'default' }} />
           <div
             role="dialog"
             aria-label="Menu"
             style={{
-              position: 'fixed', zIndex: 199, top: 'calc(64px + env(safe-area-inset-top, 0px))', right: 12, width: 'min(320px, calc(100vw - 24px))',
-              maxHeight: 'calc(100svh - 84px)', overflowY: 'auto',
-              ...G.sheet, border: '1px solid rgba(255,255,255,0.10)', borderRadius: R.card + 2, padding: 8,
+              position: 'fixed', zIndex: 199, top: 'calc(70px + env(safe-area-inset-top, 0px))', left: 12, width: 'min(320px, calc(100vw - 24px))',
+              maxHeight: 'calc(100svh - 90px)', overflowY: 'auto',
+              background: 'linear-gradient(180deg, rgba(14,44,30,0.97) 0%, rgba(5,16,10,0.98) 100%)',
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '8px 8px 12px',
             }}
           >
             {user && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px 12px', borderBottom: `1px solid ${C.bd}`, marginBottom: 6 }}>
-                <span style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(var(--accent-rgb), 0.16)', border: '2px solid rgba(var(--accent-rgb), 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ACCENT, fontFamily: sans, fontWeight: 700 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px 14px', borderBottom: `1px solid ${T.hairline}`, marginBottom: 6 }}>
+                <span style={{ width: 40, height: 40, borderRadius: 20, background: '#1F5A3F', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
                   {(profile?.username?.[0] ?? 'U').toUpperCase()}
                 </span>
                 <div style={{ minWidth: 0 }}>
-                  <p style={{ fontFamily: sans, fontSize: 14, fontWeight: 600, color: C.cream }}>{profile?.full_name}</p>
-                  <p style={{ fontFamily: mono, fontSize: 11, color: C.c3 }}>@{profile?.username}</p>
+                  <p style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.text, margin: 0 }}>{profile?.full_name}</p>
+                  <p style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text2, margin: 0 }}>@{profile?.username}</p>
                 </div>
               </div>
             )}
-            {[...LINKS, ...accountLinks].map((l) => {
+            {[...SECTIONS, ...accountLinks].map((l) => {
               const on = active === l.label;
               return (
                 <Link
@@ -197,30 +234,27 @@ export default function Nav({
                   href={l.href}
                   onClick={() => setMenuOpen(false)}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 12, minHeight: 46, padding: '0 12px', borderRadius: 12,
-                    fontFamily: sans, fontSize: 15, fontWeight: on ? 700 : 500, textDecoration: 'none',
-                    color: on ? '#fff' : 'rgba(255,255,255,0.78)', background: on ? 'rgba(255,255,255,0.06)' : 'transparent',
+                    display: 'flex', alignItems: 'center', gap: 14, minHeight: 48, padding: '0 12px', borderRadius: 14,
+                    fontFamily: FONT.sans, fontSize: 15, fontWeight: on ? 600 : 500, textDecoration: 'none',
+                    color: on ? T.white : 'rgba(255,255,255,0.78)', background: on ? 'rgba(255,255,255,0.05)' : 'transparent',
                   }}
                 >
-                  <span style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'rgba(var(--accent-rgb), 0.16)' : 'rgba(255,255,255,0.05)', color: on ? ACCENT : 'rgba(255,255,255,0.7)' }}>
-                    <Icon name={PAGE_ICONS[l.label] ?? 'dots'} size={17} />
-                  </span>
+                  <Icon name={PAGE_ICONS[l.label] ?? 'dots'} size={20} color={on ? T.mint : 'rgba(255,255,255,0.7)'} />
                   {l.label}
-                  {'live' in l && Boolean(l.live) && <span style={{ width: 6, height: 6, borderRadius: 3, background: C.red, marginLeft: 'auto' }} />}
                 </Link>
               );
             })}
-            <div style={{ display: 'flex', gap: 8, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.bd}` }}>
-              <Link href="/organizer/events/new" onClick={() => setMenuOpen(false)} style={{ flex: 1, height: 46, borderRadius: R.btn, background: C.gold, color: C.onAccent, fontFamily: sans, fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, textDecoration: 'none' }}>
-                <Icon name="plus" size={15} strokeWidth={2.2} /> List event
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 6, paddingTop: 6, borderTop: `1px solid ${T.hairline}` }}>
+              <Link href="/organizer/events/new" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 48, padding: '0 12px', borderRadius: 14, fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>
+                <Icon name="plus" size={20} /> List an event
               </Link>
               {user ? (
-                <button type="button" onClick={() => { signOut(); setMenuOpen(false); }} style={{ flex: 1, height: 46, borderRadius: R.btn, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(206,17,38,0.4)', color: '#FCA5A5', fontFamily: sans, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Icon name="logout" size={16} /> Sign out
+                <button type="button" onClick={() => { signOut(); setMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 48, padding: '0 12px', borderRadius: 14, fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                  <Icon name="logout" size={20} /> Sign out
                 </button>
               ) : (
-                <Link href="/auth" onClick={() => setMenuOpen(false)} style={{ flex: 1, height: 46, borderRadius: R.btn, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: C.cream, fontFamily: sans, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, textDecoration: 'none' }}>
-                  <Icon name="user" size={16} /> Sign in
+                <Link href="/auth" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 48, padding: '0 12px', borderRadius: 14, fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, color: T.text, textDecoration: 'none' }}>
+                  <Icon name="user" size={20} /> Sign in
                 </Link>
               )}
             </div>
