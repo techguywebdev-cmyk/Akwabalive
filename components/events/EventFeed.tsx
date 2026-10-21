@@ -6,7 +6,7 @@ import type { GhanaEvent } from '@/lib/types';
 import { isListedEvent } from '@/lib/types';
 import { cityLabel, formatDistance } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { Icon } from '@/components/ui/Icon';
+import { Icon, CATEGORY_ICONS } from '@/components/ui/Icon';
 import RsvpSheet from '@/components/thiscene/RsvpSheet';
 import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
@@ -41,7 +41,7 @@ function EventCard({
 }) {
   const { event, dist } = item;
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
-  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [portrait, setPortrait] = useState(false);
   const [more, setMore] = useState(false);
 
@@ -62,6 +62,8 @@ function EventCard({
     .filter(Boolean)
     .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i)
     .slice(0, 3);
+  const day = parseDay(event.date);
+  const past = !!day && day.getTime() < new Date(new Date().toDateString()).getTime();
   const when = [shortDate(event), event.time?.toLowerCase()].filter(Boolean).join(' · ');
   const primary: React.CSSProperties = {
     height: 48, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', cursor: 'pointer',
@@ -75,32 +77,28 @@ function EventCard({
   return (
     <section
       aria-label={event.title}
-      style={{ position: 'relative', width: '100%', height: '100svh', overflow: 'hidden', background: ambient(a), color: T.text, scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+      style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: ambient(a), color: T.text, scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
     >
-      {/* Art */}
-      {near && (
-        <>
-          <div
-            style={{
-              position: 'absolute',
-              ...(showWhole ? { top: 76, bottom: 32, right: '4%', width: '46%', borderRadius: RADIUS.card, overflow: 'hidden' } : { inset: 0 }),
-              backgroundImage: `url(${event.image})`, backgroundSize: showWhole ? 'contain' : 'cover',
-              backgroundRepeat: 'no-repeat', backgroundPosition: showWhole ? 'center' : 'center top',
-              opacity: loaded ? (active ? 1 : 0.7) : 0, transition: 'opacity 0.6s ease',
-            }}
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={event.image}
-            alt=""
-            ref={(el) => {
-              // The flyer can finish loading before React attaches onLoad (cached, or before hydration)
-              if (el && el.complete && el.naturalWidth && !loaded) { setLoaded(true); setPortrait(el.naturalHeight > el.naturalWidth * 1.05); }
-            }}
-            onLoad={(e) => { setLoaded(true); setPortrait(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth * 1.05); }}
-            style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
-          />
-        </>
+      {/* Art: the flyer fills the card. A plain <img> so it shows even if it loaded before hydration. */}
+      {near && !failed && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={event.image}
+          alt=""
+          onLoad={(e) => setPortrait(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth * 1.05)}
+          onError={() => setFailed(true)}
+          style={{
+            position: 'absolute',
+            ...(showWhole ? { top: 76, bottom: 32, right: '4%', width: '46%', height: 'auto', maxHeight: 'calc(100% - 108px)', borderRadius: RADIUS.card, objectFit: 'contain' } : { inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }),
+            opacity: active ? 1 : 0.7, transition: 'opacity 0.6s ease',
+          }}
+        />
+      )}
+      {/* No flyer (missing or broken link): a quiet poster in the event's colour */}
+      {(failed || !event.image) && (
+        <div aria-hidden style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(70% 45% at 50% 35%, ${alpha(a, 0.22)} 0%, rgba(3,8,6,0) 70%)` }}>
+          <span style={{ marginTop: '-30%', color: alpha(a, 0.5) }}><Icon name={CATEGORY_ICONS[event.category] ?? 'sparkle'} size={120} strokeWidth={1} /></span>
+        </div>
       )}
 
       {/* Scrims: fade into the green-black ground */}
@@ -123,7 +121,7 @@ function EventCard({
       {/* Bottom block: tags in the event colour, title with a soft glow, date, venue, actions */}
       <div
         style={{
-          position: 'absolute', zIndex: 3, left: wide ? 40 : 20, bottom: `calc(${wide ? 40 : 108}px + env(safe-area-inset-bottom, 0px))`,
+          position: 'absolute', zIndex: 3, left: wide ? 40 : 20, bottom: `calc(${wide ? 40 : 100}px + env(safe-area-inset-bottom, 0px))`,
           right: wide ? undefined : 76, width: wide ? 'min(46%, 620px)' : undefined,
           opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(18px)', transition: 'all 0.5s ease',
         }}
@@ -165,7 +163,12 @@ function EventCard({
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {free && !listed ? (
+          {past ? (
+            <Link href={`/events/${event.slug}`} style={primary}>
+              <span>View event</span>
+              <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>Ended</span>
+            </Link>
+          ) : free && !listed ? (
             <button type="button" onClick={() => onRsvp(a)} style={primary}>
               <span>{going ? "You're going" : 'RSVP'}</span>
               <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>Free</span>
@@ -194,7 +197,7 @@ function EventCard({
       </div>
 
       {/* Action rail: plain icons with small labels, no boxes */}
-      <div style={{ position: 'absolute', zIndex: 4, right: wide ? 28 : 12, bottom: `calc(${wide ? 40 : 250}px + env(safe-area-inset-bottom, 0px))`, display: 'flex', flexDirection: 'column', gap: 18, alignItems: 'center', opacity: active ? 1 : 0, transform: active ? 'translateX(0)' : 'translateX(24px)', transition: 'all 0.45s ease 0.12s' }}>
+      <div style={{ position: 'absolute', zIndex: 4, right: wide ? 28 : 10, bottom: `calc(${wide ? 40 : 100}px + env(safe-area-inset-bottom, 0px))`, display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', opacity: active ? 1 : 0, transform: active ? 'translateX(0)' : 'translateX(24px)', transition: 'all 0.45s ease 0.12s' }}>
         <button type="button" onClick={onGoing} aria-pressed={going} aria-label={going ? 'Not going' : "I'm going"} style={railBtn}>
           <Icon name="going" size={27} color={going ? a : T.white} strokeWidth={going ? 2 : 1.6} />
           <span style={railLabel}>{goingCount > 0 ? fmtCount(goingCount) : 'Going'}</span>

@@ -75,37 +75,47 @@ export default async function HomePage() {
   const hero = [...pool].sort((a, b) => rankScore(b) - rankScore(a))[0];
   const comingUp = pool.filter((e) => e.slug !== hero?.slug).slice(0, 10);
   const popular = [...pool].sort((a, b) => (b.attending ?? 0) - (a.attending ?? 0) || rankScore(b) - rankScore(a)).slice(0, 5);
-  const weekday = new Date().toLocaleDateString('en-GB', { weekday: 'long', timeZone: 'Africa/Accra' });
 
   return (
     <div style={{ minHeight: '100vh', overflowX: 'hidden' }}>
       <Nav active="Discover" />
 
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: 'calc(84px + env(safe-area-inset-top, 0px)) 0 0' }}>
-        <section style={{ padding: '0 20px' }}>
-          <p style={{ ...eyebrow, color: T.mint, margin: '0 0 10px' }}>Ghana · {weekday}</p>
-          <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(38px, 8vw, 64px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', color: T.white }}>
-            {live ? <>What&apos;s on<br />in Ghana</> : <>Recently<br />in Ghana</>}
-          </h1>
+      {/* Full-height flyer: the featured event fills the first screen, the header floats over it */}
+      {hero && (
+        <section aria-label={hero.title} style={{ position: 'relative', height: '100svh', minHeight: 560, maxHeight: 1000, overflow: 'hidden' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={hero.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0.55) 0%, rgba(3,8,6,0) 16%, rgba(3,8,6,0) 42%, rgba(4,16,10,0.88) 72%, #030806 100%)' }} />
+          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(90% 40% at 0% 100%, rgba(18,72,48,0.5) 0%, rgba(18,72,48,0) 70%)' }} />
+          <div style={{ position: 'absolute', left: 20, right: 20, bottom: 'calc(112px + env(safe-area-inset-bottom, 0px))', maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, ...eyebrow }}>
+              <span style={{ color: T.mint }}>{live ? 'Featured' : 'Recently'}</span>
+              <span aria-hidden style={{ width: 3, height: 3, borderRadius: 2, background: accentOf(hero), opacity: 0.6 }} />
+              <span style={{ color: accentOf(hero) }}>{hero.category}</span>
+              <span aria-hidden style={{ width: 3, height: 3, borderRadius: 2, background: accentOf(hero), opacity: 0.6 }} />
+              <span style={{ color: accentOf(hero) }}>{shortDate(hero)}</span>
+            </div>
+            <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(40px, 10vw, 76px)', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.035em', color: T.white, textShadow: `0 0 42px ${alpha(accentOf(hero), 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
+              {hero.title}
+            </h1>
+            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15, color: 'rgba(255,255,255,0.7)' }}>
+              {[hero.venue, city(hero)].filter((v, i, arr) => v && !(i === 1 && arr[0]?.includes(v))).join(', ')}
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <Link href={`/events/${hero.slug}${live ? '?tickets=1' : ''}`} style={{ height: 48, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: T.white, background: alpha(accentOf(hero), 0.2), border: `1px solid ${alpha(accentOf(hero), 0.6)}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>
+                {live ? <>Get tickets <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>{price(hero)}</span></> : 'View event'}
+              </Link>
+              <Link href="/events" style={{ height: 48, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', textDecoration: 'none', color: T.text, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600 }}>
+                All events
+              </Link>
+            </div>
+          </div>
         </section>
+      )}
 
-        {hero && (
-          <Link href={`/events/${hero.slug}`} style={{ display: 'block', position: 'relative', margin: '24px 16px 0', height: 'clamp(380px, 62vh, 560px)', borderRadius: 24, overflow: 'hidden', textDecoration: 'none', color: T.white, background: 'rgba(255,255,255,0.04)' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={hero.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-            <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0) 35%, rgba(3,8,6,0.9) 100%)' }} />
-            <span style={{ position: 'absolute', left: 20, right: 20, bottom: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ ...eyebrow, color: accentOf(hero) }}>{hero.category} · {shortDate(hero)}</span>
-              <span style={{ fontFamily: FONT.display, fontSize: 'clamp(30px, 6vw, 48px)', fontWeight: 800, lineHeight: 0.98, letterSpacing: '-0.03em', textShadow: `0 0 36px ${alpha(accentOf(hero), 0.4)}` }}>
-                {hero.title}
-              </span>
-              <span style={{ fontFamily: FONT.sans, fontSize: 14, color: 'rgba(255,255,255,0.65)' }}>{hero.venue} · {live ? `from ${price(hero)}` : 'Past event'}</span>
-            </span>
-          </Link>
-        )}
-
+      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '8px 0 0' }}>
         {comingUp.length > 0 && (
-          <section style={{ marginTop: 44 }}>
+          <section style={{ marginTop: 12 }}>
             <div style={{ padding: '0 20px' }}>
               <SectionHead title={live ? 'Coming up' : 'Recent events'} href="/events?view=list" />
             </div>

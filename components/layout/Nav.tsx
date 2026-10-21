@@ -79,6 +79,20 @@ export default function Nav({
   const { user, profile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
+  const [tabsHidden, setTabsHidden] = useState(false);
+
+  // Hide the tab bar while scrolling down the page, bring it back on any scroll up
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - last) < 8) return;
+      setTabsHidden(y > last && y > 120);
+      last = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const fn = () => setIsMobile(window.innerWidth < 900);
@@ -169,17 +183,22 @@ export default function Nav({
         </div>
       </header>
 
-      {/* Bottom tab bar — phones */}
+      {/* Bottom tab bar — phones. Slim floating pill over a soft fade; slides away while you scroll down. */}
       {tabs && isMobile && (
         <>
-          <style>{'@media (max-width: 899px) { body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); } }'}</style>
+          <style>{'@media (max-width: 899px) { body { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); } }'}</style>
+          <div aria-hidden style={{ position: 'fixed', zIndex: 189, left: 0, right: 0, bottom: 0, height: 'calc(110px + env(safe-area-inset-bottom, 0px))', background: 'linear-gradient(180deg, rgba(3,8,6,0) 0%, rgba(3,8,6,0.7) 55%, rgba(3,8,6,0.92) 100%)', pointerEvents: 'none', transform: tabsHidden ? 'translateY(100%)' : 'none', transition: 'transform 320ms cubic-bezier(0.22,1,0.36,1)' }} />
           <nav
             aria-label="Primary"
             style={{
-              position: 'fixed', zIndex: 190, left: 16, right: 16, bottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
-              height: 64, borderRadius: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-around',
-              background: 'rgba(6,20,13,0.66)', border: '1px solid rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(22px) saturate(140%)', WebkitBackdropFilter: 'blur(22px) saturate(140%)',
+              position: 'fixed', zIndex: 190, left: '50%', bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
+              width: 'min(340px, calc(100vw - 48px))', height: 58, borderRadius: 29,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-around', padding: '0 6px',
+              background: 'rgba(8,24,16,0.55)', border: '1px solid rgba(255,255,255,0.07)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
+              backdropFilter: 'blur(26px) saturate(160%)', WebkitBackdropFilter: 'blur(26px) saturate(160%)',
+              transform: `translateX(-50%) translateY(${tabsHidden ? 'calc(100% + 24px)' : '0'})`,
+              transition: 'transform 320ms cubic-bezier(0.22,1,0.36,1)',
             }}
           >
             {tabItems.map((t) => {
@@ -190,10 +209,9 @@ export default function Nav({
                   href={t.href}
                   aria-label={t.label}
                   aria-current={on ? 'page' : undefined}
-                  style={{ width: 52, height: 52, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5, color: on ? T.white : 'rgba(255,255,255,0.45)', textDecoration: 'none' }}
+                  style={{ position: 'relative', width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 24, color: on ? T.mint : 'rgba(255,255,255,0.42)', background: on ? 'rgba(123,227,168,0.1)' : 'transparent', textDecoration: 'none', transition: 'background 200ms ease, color 200ms ease' }}
                 >
-                  <Icon name={t.icon} size={24} />
-                  <span aria-hidden style={{ width: 4, height: 4, borderRadius: 2, background: on ? T.mint : 'transparent' }} />
+                  <Icon name={t.icon} size={22} />
                 </Link>
               );
             })}
