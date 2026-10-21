@@ -13,7 +13,7 @@ import { alpha } from '@/lib/thiscene';
  * Fills its positioned parent. `area` is the box the poster may use (CSS insets).
  */
 export default function FlyerCanvas({
-  src, area, accent = '#7BE3A8', category, dim = false, radius = 18, align = 'center',
+  src, area, accent = '#7BE3A8', category, dim = false, radius = 18, align = 'center', bleed = false,
 }: {
   src?: string | null;
   area: { top: number | string; bottom: number | string; left: number | string; right: number | string };
@@ -24,6 +24,8 @@ export default function FlyerCanvas({
   radius?: number;
   /** Where the poster sits vertically inside the area */
   align?: 'center' | 'start' | 'end';
+  /** Edge to edge from the top of the screen, melting into the canvas at the bottom (phones) */
+  bleed?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   const fill: CSSProperties = { position: 'absolute', inset: 0, pointerEvents: 'none' };
@@ -59,8 +61,15 @@ export default function FlyerCanvas({
           alt=""
           onError={() => setFailed(true)}
           style={{
-            display: 'block', maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain',
-            borderRadius: radius, boxShadow: '0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)',
+            display: 'block', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain',
+            ...(bleed
+              ? {
+                  // As wide as the screen allows, as tall as the room allows; never cropped
+                  width: '100%', height: 'auto',
+                  WebkitMaskImage: 'linear-gradient(to bottom, #000 0%, #000 95%, transparent 100%)',
+                  maskImage: 'linear-gradient(to bottom, #000 0%, #000 95%, transparent 100%)',
+                }
+              : { width: 'auto', height: 'auto', borderRadius: radius, boxShadow: '0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)' }),
             opacity: dim ? 0.7 : 1, transition: 'opacity 0.5s ease',
           }}
         />

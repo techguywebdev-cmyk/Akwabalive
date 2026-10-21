@@ -86,8 +86,9 @@ function EventCard({
           category={event.category}
           dim={!active}
           area={wide
-            ? { top: topInset + 16, bottom: 40, right: '5%', left: '52%' }
-            : { top: topInset + 6, bottom: blockH + bottom + 18, left: 20, right: 20 }}
+            ? { top: topInset + 16, bottom: 40, right: '10%', left: '50%' }
+            : { top: 0, bottom: blockH + bottom + 12, left: 0, right: 0 }}
+          bleed={!wide}
         />
       )}
 
@@ -95,7 +96,7 @@ function EventCard({
       <div
         ref={block}
         style={{
-          position: 'absolute', zIndex: 3, left: wide ? 48 : 20, right: wide ? undefined : 20, width: wide ? 'min(44%, 600px)' : undefined,
+          position: 'absolute', zIndex: 3, left: wide ? 48 : 20, right: wide ? undefined : 84, width: wide ? 'min(44%, 600px)' : undefined,
           bottom: `calc(${bottom}px + env(safe-area-inset-bottom, 0px))`,
           display: 'flex', flexDirection: 'column', gap: 12,
           opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'all 0.5s ease',
@@ -136,8 +137,12 @@ function EventCard({
           <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>{where}</span>
         </div>
 
-        <div style={{ marginTop: 6, opacity: active ? 1 : 0, transition: 'opacity 0.4s ease 0.1s' }}>
+      </div>
+
+      {/* Action rail: right edge, beside the details, clear of the tab bar */}
+      <div style={{ position: 'absolute', zIndex: 4, right: wide ? 32 : 10, bottom: `calc(${bottom}px + env(safe-area-inset-bottom, 0px))`, opacity: active ? 1 : 0, transform: active ? 'translateX(0)' : 'translateX(20px)', transition: 'all 0.45s ease 0.1s' }}>
           <ActionBar
+            vertical
             accent={a}
             actions={[
               { key: 'tickets', icon: 'tickets', label: ticketsLabel(event), aria: `Tickets, ${ticketsLabel(event)}`, primary: true, onClick: () => onTickets(a) },
@@ -148,7 +153,6 @@ function EventCard({
             ]}
           />
         </div>
-      </div>
     </section>
   );
 }

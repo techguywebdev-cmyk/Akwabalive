@@ -43,7 +43,8 @@ export default function HomeHero({ event, accent, live }: { event: GhanaEvent; a
         category={event.category}
         area={wide
           ? { top: 96, bottom: 56, right: '6%', left: '54%' }
-          : { top: 'calc(76px + env(safe-area-inset-top, 0px))', bottom: blockH + bottom + 20, left: 20, right: 20 }}
+          : { top: 0, bottom: blockH + bottom + 12, left: 0, right: 0 }}
+        bleed={!wide}
       />
 
       <div

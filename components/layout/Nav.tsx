@@ -143,7 +143,7 @@ export default function Nav({
         style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
           padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 28px',
-          background: 'linear-gradient(to bottom, rgba(3,8,6,0.78) 0%, rgba(3,8,6,0.4) 55%, rgba(3,8,6,0) 100%)',
+          background: 'linear-gradient(to bottom, rgba(3,8,6,0.42) 0%, rgba(3,8,6,0.16) 60%, rgba(3,8,6,0) 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
           pointerEvents: 'none',
         }}

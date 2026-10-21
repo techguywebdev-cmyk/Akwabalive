@@ -211,10 +211,10 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       )}
 
       {/* Hero: flyer (or promo video) fading into the green-black ground */}
-      <div style={{ position: 'relative', width: '100%', height: 'min(128vw, 660px)', minHeight: 440, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', height: 'min(150vw, 760px)', minHeight: 460, overflow: 'hidden' }}>
         {/* The flyer, whole, on its own blurred canvas */}
         <div style={{ position: 'absolute', inset: 0, opacity: showPromoVideo ? 0 : 1, transition: 'opacity 900ms ease' }}>
-          <FlyerCanvas src={event.image} accent={a} category={event.category} area={{ top: 'calc(76px + env(safe-area-inset-top, 0px))', bottom: 28, left: 20, right: 20 }} />
+          <FlyerCanvas src={event.image} accent={a} category={event.category} area={{ top: 0, bottom: 0, left: 0, right: 0 }} bleed />
         </div>
         {showPromoVideo && ytId && (
           <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>

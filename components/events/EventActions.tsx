@@ -27,12 +27,13 @@ export interface Action {
 }
 
 /**
- * A row of round actions with small labels under them, spread evenly:
+ * Round actions with small labels under them — a row (event page) or a column on the
+ * right edge (full-screen feed cards):
  * Tickets (opens the quick ticket view), Going, Save, Share, Directions…
  */
-export function ActionBar({ actions, accent, maxWidth = 400 }: { actions: Action[]; accent: string; maxWidth?: number }) {
+export function ActionBar({ actions, accent, maxWidth = 400, vertical = false }: { actions: Action[]; accent: string; maxWidth?: number; vertical?: boolean }) {
   return (
-    <div role="toolbar" aria-label="Event actions" style={{ display: 'flex', justifyContent: 'space-between', gap: 6, maxWidth }}>
+    <div role="toolbar" aria-label="Event actions" aria-orientation={vertical ? 'vertical' : 'horizontal'} style={vertical ? { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 } : { display: 'flex', justifyContent: 'space-between', gap: 6, maxWidth }}>
       {actions.map((a) => {
         const circle = {
           width: 50, height: 50, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -41,12 +42,12 @@ export function ActionBar({ actions, accent, maxWidth = 400 }: { actions: Action
             ? { background: alpha(accent, 0.24), border: `1px solid ${alpha(accent, 0.65)}`, color: T.white }
             : a.on
               ? { background: alpha(accent, 0.16), border: `1px solid ${alpha(accent, 0.5)}`, color: accent }
-              : { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: T.white }),
+              : { background: 'rgba(3,10,6,0.38)', border: '1px solid rgba(255,255,255,0.12)', color: T.white }),
         } as const;
         const inner = (
           <>
             <span style={circle}><Icon name={a.icon} size={22} strokeWidth={a.on ? 2 : 1.7} /></span>
-            <span style={{ fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 600, color: a.primary ? T.white : 'rgba(255,255,255,0.72)', whiteSpace: 'nowrap', maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.label}</span>
+            <span style={{ fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 600, color: a.primary ? T.white : 'rgba(255,255,255,0.78)', textShadow: '0 1px 6px rgba(0,0,0,0.6)', whiteSpace: 'nowrap', maxWidth: 70, overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.label}</span>
           </>
         );
         const style = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, minWidth: 56, padding: 0, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'none', color: 'inherit' } as const;
