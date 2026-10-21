@@ -7,7 +7,7 @@ import { T, FONT, alpha } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, toHex } from '@/lib/events/accent';
 import { resolveLineupNames } from '@/components/ui/LineupChips';
 import { getTiers } from '@/lib/events/tiers';
-import FlyerCanvas from '@/components/events/FlyerCanvas';
+import { hiRes } from '@/lib/events/image';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { ActionBar, TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
@@ -211,11 +211,14 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       )}
 
       {/* Hero: flyer (or promo video) fading into the green-black ground */}
-      <div style={{ position: 'relative', width: '100%', height: 'min(150vw, 760px)', minHeight: 460, overflow: 'hidden' }}>
-        {/* The flyer, whole, on its own blurred canvas */}
-        <div style={{ position: 'absolute', inset: 0, opacity: showPromoVideo ? 0 : 1, transition: 'opacity 900ms ease' }}>
-          <FlyerCanvas src={event.image} accent={a} category={event.category} area={{ top: 0, bottom: 0, left: 0, right: 0 }} bleed />
-        </div>
+      <div style={{ position: 'relative', width: '100%', maxWidth: 820, margin: '0 auto', minHeight: 320, overflow: 'hidden' }}>
+        {/* The flyer at its own shape, full width, high resolution */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={hiRes(event.image) ?? ''}
+          alt={`${event.title} flyer`}
+          style={{ display: 'block', width: '100%', height: 'auto', maxHeight: '88svh', objectFit: 'cover', objectPosition: 'center top', opacity: showPromoVideo ? 0 : 1, transition: 'opacity 900ms ease' }}
+        />
         {showPromoVideo && ytId && (
           <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
             <iframe
