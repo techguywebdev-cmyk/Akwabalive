@@ -170,6 +170,12 @@ async function issueTicket(
   }
 
   await incrementSold(db, tier.id, quantity);
+  // A ticket holder is going. ignoreDuplicates keeps any choice they already made
+  // (e.g. a private RSVP) instead of overwriting it.
+  const { error: goingErr } = await db
+    .from('event_attendance')
+    .upsert({ user_id: userId, event_slug: ev.slug, status: 'going', is_public: true }, { onConflict: 'user_id,event_slug', ignoreDuplicates: true });
+  if (goingErr) console.error('[payments] could not mark going', goingErr.message);
   return { ok: true, reference, ticketId: inserted.id, alreadyIssued: false };
 }
 

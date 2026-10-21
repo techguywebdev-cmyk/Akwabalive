@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
+import HomeHero from '@/components/home/HomeHero';
 import { Icon, CATEGORY_ICONS } from '@/components/ui/Icon';
 import { events as staticEvents } from '@/lib/data/events';
 import { fetchPublishedEvents, supabaseToGhanaEvent } from '@/lib/supabase/events';
@@ -80,38 +81,8 @@ export default async function HomePage() {
     <div style={{ minHeight: '100vh', overflowX: 'hidden' }}>
       <Nav active="Discover" />
 
-      {/* Full-height flyer: the featured event fills the first screen, the header floats over it */}
-      {hero && (
-        <section aria-label={hero.title} style={{ position: 'relative', height: '100svh', minHeight: 560, maxHeight: 1000, overflow: 'hidden' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={hero.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
-          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0.55) 0%, rgba(3,8,6,0) 16%, rgba(3,8,6,0) 42%, rgba(4,16,10,0.88) 72%, #030806 100%)' }} />
-          <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(90% 40% at 0% 100%, rgba(18,72,48,0.5) 0%, rgba(18,72,48,0) 70%)' }} />
-          <div style={{ position: 'absolute', left: 20, right: 20, bottom: 'calc(112px + env(safe-area-inset-bottom, 0px))', maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, ...eyebrow }}>
-              <span style={{ color: T.mint }}>{live ? 'Featured' : 'Recently'}</span>
-              <span aria-hidden style={{ width: 3, height: 3, borderRadius: 2, background: accentOf(hero), opacity: 0.6 }} />
-              <span style={{ color: accentOf(hero) }}>{hero.category}</span>
-              <span aria-hidden style={{ width: 3, height: 3, borderRadius: 2, background: accentOf(hero), opacity: 0.6 }} />
-              <span style={{ color: accentOf(hero) }}>{shortDate(hero)}</span>
-            </div>
-            <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(40px, 10vw, 76px)', fontWeight: 800, lineHeight: 0.95, letterSpacing: '-0.035em', color: T.white, textShadow: `0 0 42px ${alpha(accentOf(hero), 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
-              {hero.title}
-            </h1>
-            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15, color: 'rgba(255,255,255,0.7)' }}>
-              {[hero.venue, city(hero)].filter((v, i, arr) => v && !(i === 1 && arr[0]?.includes(v))).join(', ')}
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-              <Link href={`/events/${hero.slug}${live ? '?tickets=1' : ''}`} style={{ height: 48, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: T.white, background: alpha(accentOf(hero), 0.2), border: `1px solid ${alpha(accentOf(hero), 0.6)}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>
-                {live ? <>Get tickets <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>{price(hero)}</span></> : 'View event'}
-              </Link>
-              <Link href="/events" style={{ height: 48, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', textDecoration: 'none', color: T.text, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.14)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600 }}>
-                All events
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* Full-height first screen: the featured flyer, shown whole */}
+      {hero && <HomeHero event={hero} accent={accentOf(hero)} live={live} />}
 
       <main style={{ maxWidth: 1120, margin: '0 auto', padding: '8px 0 0' }}>
         {comingUp.length > 0 && (

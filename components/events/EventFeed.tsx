@@ -3,14 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { GhanaEvent } from '@/lib/types';
-import { isListedEvent } from '@/lib/types';
 import { cityLabel, formatDistance } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { Icon, CATEGORY_ICONS } from '@/components/ui/Icon';
 import RsvpSheet from '@/components/thiscene/RsvpSheet';
+import PaystackCheckout from '@/components/payment/PaystackCheckout';
+import FlyerCanvas from '@/components/events/FlyerCanvas';
+import FriendsStrip from '@/components/social/FriendsStrip';
+import { ActionBar, TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
-import { T, TYPE, SCRIM, RADIUS, FONT, alpha, ambient, cardTitleSize, glass } from '@/lib/thiscene';
+import { splitEventTitle, eventBlurb } from '@/lib/events/title';
+import type { CheckoutTier } from '@/lib/events/tiers';
+import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
 
 export interface FeedItem { event: GhanaEvent; dist: number | null }
@@ -21,29 +25,26 @@ function shortDate(e: GhanaEvent) {
   return d ? shortDay(d) : e.dateLabel || '';
 }
 
-const railBtn: React.CSSProperties = {
-  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, width: 52, padding: 0,
-  background: 'none', border: 'none', color: T.white, cursor: 'pointer', textDecoration: 'none',
-  filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.45))',
-};
-const railLabel: React.CSSProperties = { fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.78)' };
-
 const fmtCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n));
 
-/* ── Thiscene Card: one event, full screen ─────────────────────────── */
+export const mapsLink = (e: GhanaEvent) => (e.lat && e.lng
+  ? `https://www.google.com/maps/search/?api=1&query=${e.lat},${e.lng}`
+  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${e.venue}, ${cityLabel(e.city)}`)}`);
+
+/* ── One event, full screen ────────────────────────────────────────── */
 function EventCard({
-  item, active, near, wide, reminded, going, onRemind, onGoing, onShare, onRsvp, topInset,
+  item, active, near, wide, saved, going, onSave, onGoing, onShare, onTickets, topInset,
 }: {
   item: FeedItem; active: boolean; near: boolean; wide: boolean;
-  reminded: boolean; going: boolean;
-  onRemind: () => void; onGoing: () => void; onShare: () => void; onRsvp: (accent: string) => void;
+  saved: boolean; going: boolean;
+  onSave: () => void; onGoing: () => void; onShare: () => void; onTickets: (accent: string) => void;
   topInset: number;
 }) {
   const { event, dist } = item;
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
-  const [failed, setFailed] = useState(false);
-  const [portrait, setPortrait] = useState(false);
   const [more, setMore] = useState(false);
+  const block = useRef<HTMLDivElement>(null);
+  const [blockH, setBlockH] = useState(300);
 
   useEffect(() => {
     if (!near) return;
@@ -52,81 +53,55 @@ function EventCard({
     return () => { live = false; };
   }, [near, event.image, event.category]);
 
+  // The flyer gets whatever room the details leave
+  useEffect(() => {
+    const el = block.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setBlockH(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const a = toHex(rgb);
-  const listed = isListedEvent(event) && !!event.ticketUrl;
-  const free = event.price === 0;
-  const showWhole = wide && portrait; // portrait flyer on a wide screen: show it whole, don't crop
-  const overview = [event.lineup?.length ? `With ${event.lineup.join(', ')}.` : '', event.description || ''].filter(Boolean).join(' ');
+  const { title, subtitle } = splitEventTitle(event.title);
+  const blurb = eventBlurb(event, 220);
   const goingCount = (event.attending ?? 0) + (going ? 1 : 0);
-  const tags = [event.category, statusText(event), event.badge ? event.badge.charAt(0) + event.badge.slice(1).toLowerCase() : '']
+  const tags = [event.category, statusText(event)]
     .filter(Boolean)
-    .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i)
-    .slice(0, 3);
-  const day = parseDay(event.date);
-  const past = !!day && day.getTime() < new Date(new Date().toDateString()).getTime();
+    .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
   const when = [shortDate(event), event.time?.toLowerCase()].filter(Boolean).join(' · ');
-  const primary: React.CSSProperties = {
-    height: 48, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', cursor: 'pointer',
-    color: T.white, background: alpha(a, 0.2), border: `1px solid ${alpha(a, 0.6)}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-    fontFamily: FONT.display, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap',
-  };
-  const maps = event.lat && event.lng
-    ? `https://www.google.com/maps/search/?api=1&query=${event.lat},${event.lng}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.venue}, ${cityLabel(event.city)}`)}`;
+  const where = [event.venue + (event.area ? `, ${event.area}` : ''), dist != null ? `${formatDistance(dist)} away` : ''].filter(Boolean).join(' · ');
+  const bottom = wide ? 40 : 96; // clears the tab bar on phones
+  const titleSize = wide ? 'clamp(44px, 4.6vw, 68px)' : title.length > 22 ? 34 : title.length > 14 ? 40 : 46;
 
   return (
     <section
       aria-label={event.title}
       style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: ambient(a), color: T.text, scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
     >
-      {/* Art: the flyer fills the card. A plain <img> so it shows even if it loaded before hydration. */}
-      {near && !failed && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+      {near && (
+        <FlyerCanvas
           src={event.image}
-          alt=""
-          onLoad={(e) => setPortrait(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth * 1.05)}
-          onError={() => setFailed(true)}
-          style={{
-            position: 'absolute',
-            ...(showWhole ? { top: 76, bottom: 32, right: '4%', width: '46%', height: 'auto', maxHeight: 'calc(100% - 108px)', borderRadius: RADIUS.card, objectFit: 'contain' } : { inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }),
-            opacity: active ? 1 : 0.7, transition: 'opacity 0.6s ease',
-          }}
+          accent={a}
+          category={event.category}
+          dim={!active}
+          area={wide
+            ? { top: topInset + 16, bottom: 40, right: '5%', left: '52%' }
+            : { top: topInset + 6, bottom: blockH + bottom + 18, left: 20, right: 20 }}
         />
       )}
-      {/* No flyer (missing or broken link): a quiet poster in the event's colour */}
-      {(failed || !event.image) && (
-        <div aria-hidden style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `radial-gradient(70% 45% at 50% 35%, ${alpha(a, 0.22)} 0%, rgba(3,8,6,0) 70%)` }}>
-          <span style={{ marginTop: '-30%', color: alpha(a, 0.5) }}><Icon name={CATEGORY_ICONS[event.category] ?? 'sparkle'} size={120} strokeWidth={1} /></span>
-        </div>
-      )}
 
-      {/* Scrims: fade into the green-black ground */}
-      <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '22%', background: SCRIM.top, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '72%', background: SCRIM.bottom, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(90% 40% at 0% 100%, rgba(18,72,48,0.5) 0%, rgba(18,72,48,0) 70%)', pointerEvents: 'none' }} />
-      {wide && <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '60%', background: 'linear-gradient(to right, rgba(3,8,6,0.8), rgba(3,8,6,0))', pointerEvents: 'none' }} />}
-
-      {/* Centre play button — only when there's a promo video */}
-      {event.promoVideoUrl && (
-        <Link
-          href={`/events/${event.slug}`}
-          aria-label={`Watch the ${event.title} promo`}
-          style={{ position: 'absolute', top: '40%', left: wide ? '30%' : '50%', transform: 'translate(-50%, -50%)', zIndex: 3, width: 68, height: 68, borderRadius: '50%', ...glass(true), display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Icon name="play" size={24} color="#fff" filled />
-        </Link>
-      )}
-
-      {/* Bottom block: tags in the event colour, title with a soft glow, date, venue, actions */}
+      {/* Details: tags, short title, subtitle, friends, description, when/where, action bar */}
       <div
+        ref={block}
         style={{
-          position: 'absolute', zIndex: 3, left: wide ? 40 : 20, bottom: `calc(${wide ? 40 : 100}px + env(safe-area-inset-bottom, 0px))`,
-          right: wide ? undefined : 76, width: wide ? 'min(46%, 620px)' : undefined,
-          opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(18px)', transition: 'all 0.5s ease',
+          position: 'absolute', zIndex: 3, left: wide ? 48 : 20, right: wide ? undefined : 20, width: wide ? 'min(44%, 600px)' : undefined,
+          bottom: `calc(${bottom}px + env(safe-area-inset-bottom, 0px))`,
+          display: 'flex', flexDirection: 'column', gap: 12,
+          opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'all 0.5s ease',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 14, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: a }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: a }}>
           {tags.map((t, i) => (
             <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
               {i > 0 && <span aria-hidden style={{ width: 3, height: 3, borderRadius: 2, background: a, opacity: 0.6 }} />}
@@ -135,85 +110,44 @@ function EventCard({
           ))}
         </div>
 
-        <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none' }}>
-          <h2 style={{ fontFamily: FONT.display, fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.035em', fontSize: wide ? Math.max(46, cardTitleSize(event.title, 72)) : cardTitleSize(event.title, 48), color: T.white, margin: '0 0 14px', textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
-            {event.title}
+        <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <h2 style={{ margin: 0, fontFamily: FONT.display, fontWeight: 800, lineHeight: 0.98, letterSpacing: '-0.035em', fontSize: titleSize, color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
+            {title}
           </h2>
+          {subtitle && <span style={{ fontFamily: FONT.display, fontSize: wide ? 20 : 17, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)' }}>{subtitle}</span>}
         </Link>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: overview ? 12 : 18 }}>
-          <span style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, color: 'rgba(255,255,255,0.92)' }}>{when}</span>
-          <span style={{ fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>
-            {[event.venue + (event.area ? `, ${event.area}` : ''), dist != null ? `${formatDistance(dist)} away` : ''].filter(Boolean).join(' · ')}
-          </span>
-        </div>
+        <FriendsStrip slug={event.slug} enabled={near} />
 
-        {overview && (
-          <p style={{ fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.55, color: T.text2, margin: '0 0 16px', ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>
-            {overview}
-            {overview.length > 110 && (
-              <>
-                {' '}
-                <button type="button" onClick={() => setMore((m) => !m)} style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: T.mintText, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-                  {more ? 'Less' : 'More'}
-                </button>
-              </>
-            )}
-          </p>
-        )}
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {past ? (
-            <Link href={`/events/${event.slug}`} style={primary}>
-              <span>View event</span>
-              <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>Ended</span>
-            </Link>
-          ) : free && !listed ? (
-            <button type="button" onClick={() => onRsvp(a)} style={primary}>
-              <span>{going ? "You're going" : 'RSVP'}</span>
-              <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>Free</span>
-            </button>
-          ) : listed ? (
-            <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={primary}>
-              <span>Get tickets</span>
-              <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>{free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</span>
-            </a>
-          ) : (
-            <Link href={`/events/${event.slug}?tickets=1`} style={primary}>
-              <span>Get tickets</span>
-              <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>GH₵ {event.price.toLocaleString()}</span>
-            </Link>
+        <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2, ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>
+          {blurb}
+          {blurb.length > 90 && (
+            <>
+              {' '}
+              <button type="button" onClick={() => setMore((m) => !m)} style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: T.mintText, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                {more ? 'Less' : 'More'}
+              </button>
+            </>
           )}
-          <button
-            type="button"
-            onClick={onRemind}
-            aria-label={reminded ? 'Saved — remove reminder' : 'Remind me'}
-            aria-pressed={reminded}
-            style={{ width: 48, height: 48, borderRadius: 24, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: reminded ? T.mint : T.text, background: reminded ? 'rgba(123,227,168,0.12)' : 'rgba(255,255,255,0.06)', border: `1px solid ${reminded ? 'rgba(123,227,168,0.4)' : 'rgba(255,255,255,0.14)'}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
-          >
-            <Icon name={reminded ? 'check' : 'bell'} size={21} />
-          </button>
-        </div>
-      </div>
+        </p>
 
-      {/* Action rail: plain icons with small labels, no boxes */}
-      <div style={{ position: 'absolute', zIndex: 4, right: wide ? 28 : 10, bottom: `calc(${wide ? 40 : 100}px + env(safe-area-inset-bottom, 0px))`, display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', opacity: active ? 1 : 0, transform: active ? 'translateX(0)' : 'translateX(24px)', transition: 'all 0.45s ease 0.12s' }}>
-        <button type="button" onClick={onGoing} aria-pressed={going} aria-label={going ? 'Not going' : "I'm going"} style={railBtn}>
-          <Icon name="going" size={27} color={going ? a : T.white} strokeWidth={going ? 2 : 1.6} />
-          <span style={railLabel}>{goingCount > 0 ? fmtCount(goingCount) : 'Going'}</span>
-        </button>
-        <button type="button" onClick={onShare} aria-label="Share" style={railBtn}>
-          <Icon name="share" size={27} />
-          <span style={railLabel}>Share</span>
-        </button>
-        <a href={maps} target="_blank" rel="noopener noreferrer" aria-label={`Map: ${event.venue}`} style={railBtn}>
-          <Icon name="mapPin" size={27} />
-          <span style={railLabel}>Map</span>
-        </a>
-        <Link href={`/events/${event.slug}`} aria-label="Details" style={railBtn}>
-          <Icon name="info" size={27} />
-          <span style={railLabel}>Details</span>
-        </Link>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.92)' }}>{when}</span>
+          <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>{where}</span>
+        </div>
+
+        <div style={{ marginTop: 6, opacity: active ? 1 : 0, transition: 'opacity 0.4s ease 0.1s' }}>
+          <ActionBar
+            accent={a}
+            actions={[
+              { key: 'tickets', icon: 'tickets', label: ticketsLabel(event), aria: `Tickets, ${ticketsLabel(event)}`, primary: true, onClick: () => onTickets(a) },
+              { key: 'going', icon: 'goingUser', label: goingCount > 0 ? fmtCount(goingCount) : 'Going', aria: going ? 'Not going' : "I'm going", on: going, onClick: onGoing },
+              { key: 'save', icon: 'saveTag', label: saved ? 'Saved' : 'Save', on: saved, onClick: onSave },
+              { key: 'share', icon: 'share', label: 'Share', onClick: onShare },
+              { key: 'map', icon: 'directions', label: 'Directions', href: mapsLink(event), external: true },
+            ]}
+          />
+        </div>
       </div>
     </section>
   );
@@ -242,6 +176,8 @@ export default function EventFeed({
   const [wide, setWide] = useState(false);
   const [toast, setToast] = useState('');
   const [rsvp, setRsvp] = useState<{ event: GhanaEvent; accent: string } | null>(null);
+  const [tickets, setTickets] = useState<{ event: GhanaEvent; accent: string } | null>(null);
+  const [checkout, setCheckout] = useState<{ event: GhanaEvent; tiers: CheckoutTier[] } | null>(null);
   const hasItems = items.length > 0;
 
   useEffect(() => {
@@ -284,7 +220,7 @@ export default function EventFeed({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (rsvp) return;
+      if (rsvp || tickets || checkout) return;
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const el = scroller.current;
@@ -294,7 +230,7 @@ export default function EventFeed({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [rsvp]);
+  }, [rsvp, tickets, checkout]);
 
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2200); };
   const share = useCallback(async (e: GhanaEvent) => {
@@ -333,16 +269,40 @@ export default function EventFeed({
             active={i === active}
             near={Math.abs(i - active) <= 2}
             wide={wide}
-            reminded={saved.has(item.event.slug)}
+            saved={saved.has(item.event.slug)}
             going={going.has(item.event.slug)}
-            onRemind={() => onToggleSave(item.event)}
+            onSave={() => onToggleSave(item.event)}
             onGoing={() => onToggleGoing(item.event)}
             onShare={() => share(item.event)}
-            onRsvp={(accent) => setRsvp({ event: item.event, accent })}
+            onTickets={(accent) => setTickets({ event: item.event, accent })}
             topInset={topInset}
           />
         ))}
       </div>
+
+      {tickets && (
+        <TicketsSheet
+          event={tickets.event}
+          accent={tickets.accent}
+          onClose={() => setTickets(null)}
+          onBuy={(tiers) => { setCheckout({ event: tickets.event, tiers }); setTickets(null); }}
+          onRsvp={() => { setRsvp(tickets); setTickets(null); }}
+          footer={
+            <Link href={`/events/${tickets.event.slug}`} style={{ display: 'block', textAlign: 'center', marginTop: 14, fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>
+              See the full event page
+            </Link>
+          }
+        />
+      )}
+
+      {checkout && (
+        <PaystackCheckout
+          event={checkout.event}
+          tiers={checkout.tiers}
+          onClose={() => setCheckout(null)}
+          onSuccess={() => { setCheckout(null); flash('Ticket confirmed — it\'s in My tickets'); }}
+        />
+      )}
 
       {rsvp && (
         <RsvpSheet

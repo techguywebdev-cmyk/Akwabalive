@@ -6,6 +6,11 @@ import { Icon } from '@/components/ui/Icon';
 import { T, FONT, alpha } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, toHex } from '@/lib/events/accent';
 import { resolveLineupNames } from '@/components/ui/LineupChips';
+import { getTiers } from '@/lib/events/tiers';
+import FlyerCanvas from '@/components/events/FlyerCanvas';
+import FriendsStrip from '@/components/social/FriendsStrip';
+import { ActionBar, TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
+import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { parseDay, longDay } from '@/lib/dates';
 import type { GhanaEvent } from '@/lib/types';
 import { isListedEvent } from '@/lib/types';
@@ -14,42 +19,8 @@ import { cityLabel } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
-import GoingWith from '@/components/social/GoingWith';
 
-export interface CheckoutTier {
-  /** ticket_tiers.id — only real (database) tiers can be bought */
-  id?: string;
-  name: string;
-  price: number;
-  desc: string;
-  available: boolean;
-  spots: number;
-}
-
-function getTiers(event: GhanaEvent): CheckoutTier[] {
-  // Real tiers set by the organizer
-  if (event.tiers?.length) {
-    return event.tiers.map((t) => {
-      const spots = Math.max(0, t.quantity - t.sold);
-      return {
-        id: t.id,
-        name: t.name,
-        price: t.price,
-        desc: t.description || (t.price === 0 ? 'Free entry — RSVP required.' : 'Entry ticket.'),
-        available: spots > 0,
-        spots,
-      };
-    });
-  }
-  // Events without organizer tiers: one ticket at the listed price (preview only, not purchasable)
-  return [{
-    name: event.price === 0 ? 'Free entry' : 'General',
-    price: event.price,
-    desc: event.price === 0 ? 'RSVP to save your spot.' : 'Standard entry.',
-    available: true,
-    spots: 999,
-  }];
-}
+export type { CheckoutTier } from '@/lib/events/tiers';
 
 function getDescription(event: GhanaEvent): string {
   if (event.description?.trim()) return event.description.trim();
@@ -73,6 +44,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
   const [ticketOpen,     setTicketOpen]     = useState(false);
   const [inDreamList,    setInDreamList]    = useState(false);
+  const [isGoing,        setIsGoing]        = useState(false);
+  const [ticketsOpen,    setTicketsOpen]    = useState(false);
   const [dreamLoading,   setDreamLoading]   = useState(false);
   const [dreamToast,     setDreamToast]     = useState('');
   const [ticketSuccess,  setTicketSuccess]  = useState(false);
@@ -145,6 +118,10 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       .from('dream_events').select('id')
       .eq('user_id', user.id).eq('event_slug', event.slug)
       .maybeSingle().then(({ data }) => setInDreamList(!!data));
+    supabase
+      .from('event_attendance').select('id')
+      .eq('user_id', user.id).eq('event_slug', event.slug).eq('status', 'going')
+      .maybeSingle().then(({ data }) => setIsGoing(!!data));
   }, [user, event.slug]);
 
   async function toggleDreamList() {
@@ -174,6 +151,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const free = event.price === 0;
   const a = toHex(rgb);
   const lineup = resolveLineupNames(event);
+  const short = splitEventTitle(event.title);
   const parsed = parseDay(event.date);
   const eventDate = parsed ?? new Date(0);
   const validDate = !!parsed;
@@ -184,6 +162,17 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const calendar = validDate
     ? `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${event.date.slice(0, 10).replace(/-/g, '')}/${new Date(eventDate.getTime() + 86400000).toISOString().slice(0, 10).replace(/-/g, '')}&location=${encodeURIComponent(`${event.venue}, Ghana`)}`
     : null;
+
+  async function toggleGoing() {
+    if (!user) { window.location.href = '/auth'; return; }
+    const on = isGoing;
+    setIsGoing(!on);
+    const { error } = on
+      ? await supabase.from('event_attendance').delete().eq('user_id', user.id).eq('event_slug', event.slug)
+      : await supabase.from('event_attendance').upsert({ user_id: user.id, event_slug: event.slug, status: 'going', is_public: true }, { onConflict: 'user_id,event_slug' });
+    if (error) setIsGoing(on);
+    else showToast(on ? 'Removed from your plans' : "You're going — friends can see it");
+  }
 
   async function share() {
     const url = `${window.location.origin}/events/${event.slug}`;
@@ -211,8 +200,6 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         actions={
           <>
             {seriesMomentId && <HeaderIconButton label="Watch the last edition" icon="moments" href={`/moments?id=${seriesMomentId}&from=${encodeURIComponent(`/events/${event.slug}`)}`} />}
-            <HeaderIconButton label={inDreamList ? 'Saved — remove' : 'Save'} icon="heart" onClick={toggleDreamList} active={inDreamList} pressed={inDreamList} />
-            <HeaderIconButton label="Share" icon="share" onClick={share} />
           </>
         }
       />
@@ -224,8 +211,11 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       )}
 
       {/* Hero: flyer (or promo video) fading into the green-black ground */}
-      <div style={{ position: 'relative', width: '100%', height: 'min(118vw, 560px)', minHeight: 420, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${event.image})`, backgroundSize: 'cover', backgroundPosition: 'center top', opacity: showPromoVideo ? 0 : 1, transition: 'opacity 900ms ease' }} />
+      <div style={{ position: 'relative', width: '100%', height: 'min(128vw, 660px)', minHeight: 440, overflow: 'hidden' }}>
+        {/* The flyer, whole, on its own blurred canvas */}
+        <div style={{ position: 'absolute', inset: 0, opacity: showPromoVideo ? 0 : 1, transition: 'opacity 900ms ease' }}>
+          <FlyerCanvas src={event.image} accent={a} category={event.category} area={{ top: 'calc(76px + env(safe-area-inset-top, 0px))', bottom: 28, left: 20, right: 20 }} />
+        </div>
         {showPromoVideo && ytId && (
           <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
             <iframe
@@ -240,10 +230,10 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         {showPromoVideo && isMp4 && event.promoVideoUrl && (
           <video key={wantSound ? 'vs' : 'vm'} src={event.promoVideoUrl} autoPlay muted={!wantSound} loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         )}
-        <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0.5) 0%, rgba(3,8,6,0) 20%, rgba(3,8,6,0) 45%, rgba(4,14,9,0.85) 80%, #030806 100%)' }} />
+        <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0.45) 0%, rgba(3,8,6,0) 18%, rgba(3,8,6,0) 85%, #030806 100%)', pointerEvents: 'none' }} />
       </div>
 
-      <main style={{ position: 'relative', maxWidth: 720, margin: '-150px auto 0', padding: '0 20px' }}>
+      <main style={{ position: 'relative', maxWidth: 720, margin: '8px auto 0', padding: '0 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: a }}>
           {[event.category, event.badge && event.badge.toLowerCase() !== event.category ? event.badge.toLowerCase() : '', event.recurring ? 'annual' : '']
             .filter(Boolean)
@@ -254,20 +244,39 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
               </span>
             ))}
         </div>
-        <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(38px, 9vw, 64px)', fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.035em', color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
-          {event.title}
+        <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: short.title.length > 22 ? 'clamp(34px, 8vw, 56px)' : 'clamp(40px, 10vw, 68px)', fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.035em', color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
+          {short.title}
         </h1>
+        {short.subtitle && (
+          <p style={{ margin: '8px 0 0', fontFamily: FONT.display, fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)' }}>{short.subtitle}</p>
+        )}
+        <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{eventBlurb(event, 160)}</p>
 
-        <div style={{ marginTop: 26 }}>
+        <div style={{ marginTop: 24 }}>
+          <ActionBar
+            accent={a}
+            maxWidth={520}
+            actions={[
+              { key: 'tickets', icon: 'tickets', label: ticketsLabel(event), aria: `Tickets, ${ticketsLabel(event)}`, primary: true, onClick: () => setTicketsOpen(true) },
+              { key: 'going', icon: 'goingUser', label: isGoing ? 'Going' : "I'm going", on: isGoing, onClick: toggleGoing },
+              { key: 'save', icon: 'saveTag', label: inDreamList ? 'Saved' : 'Save', on: inDreamList, onClick: toggleDreamList },
+              { key: 'share', icon: 'share', label: 'Share', onClick: share },
+              ...(calendar && daysAway != null && daysAway >= 0
+                ? [{ key: 'cal', icon: 'calendarAdd' as const, label: 'Calendar', href: calendar, external: true }]
+                : [{ key: 'map', icon: 'directions' as const, label: 'Directions', href: maps, external: true }]),
+            ]}
+          />
+        </div>
+
+        <FriendsStrip slug={event.slug} variant="full" />
+
+        <div style={{ marginTop: 28 }}>
           <div style={infoRow}>
             <Icon name="calendar" size={22} color="rgba(255,255,255,0.7)" />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>{longDate}</p>
               <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>{[event.time, countdown].filter(Boolean).join(' · ')}</p>
             </div>
-            {calendar && daysAway != null && daysAway >= 0 && (
-              <a href={calendar} target="_blank" rel="noopener noreferrer" style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>Add</a>
-            )}
           </div>
           <div style={{ ...infoRow, borderBottom: `1px solid ${T.hairline}` }}>
             <Icon name="mapPin" size={22} color="rgba(255,255,255,0.7)" />
@@ -279,8 +288,6 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           </div>
         </div>
 
-        {/* Who's going */}
-        <GoingWith eventSlug={event.slug} eventTitle={event.title} />
 
         <section style={{ marginTop: 36 }}>
           <h2 style={eyebrow}>About</h2>
@@ -387,12 +394,21 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           ) : daysAway != null && daysAway < 0 ? (
             <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default' }}>Event has ended</span>
           ) : (
-            <button type="button" onClick={() => setTicketOpen(true)} style={primary}>
+            <button type="button" onClick={() => setTicketsOpen(true)} style={primary}>
               {free ? 'Reserve a spot' : 'Get tickets'}
             </button>
           )}
         </div>
       </div>
+
+      {ticketsOpen && (
+        <TicketsSheet
+          event={event}
+          accent={a}
+          onClose={() => setTicketsOpen(false)}
+          onBuy={() => { setTicketsOpen(false); setTicketOpen(true); }}
+        />
+      )}
 
       {ticketOpen && !isListedEvent(event) && (
         <PaystackCheckout
