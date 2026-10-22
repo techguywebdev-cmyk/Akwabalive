@@ -9,7 +9,8 @@ import RsvpSheet from '@/components/thiscene/RsvpSheet';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import FlyerCanvas from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
-import { ActionBar, TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
+import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
+import { Icon } from '@/components/ui/Icon';
 import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
@@ -71,7 +72,8 @@ function EventCard({
     .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
   const when = [shortDate(event), event.time?.toLowerCase()].filter(Boolean).join(' · ');
   const where = [event.venue + (event.area ? `, ${event.area}` : ''), dist != null ? `${formatDistance(dist)} away` : ''].filter(Boolean).join(' · ');
-  const bottom = wide ? 40 : 96; // clears the tab bar on phones
+  const bottom = wide ? 40 : 28;
+  const label = ticketsLabel(event);
   const titleSize = wide ? 'clamp(44px, 4.6vw, 68px)' : title.length > 22 ? 34 : title.length > 14 ? 40 : 46;
 
   return (
@@ -92,11 +94,11 @@ function EventCard({
         />
       )}
 
-      {/* Details: tags, short title, subtitle, friends, description, when/where, action bar */}
+      {/* Details: tags, short title, subtitle, friends, description, when/where, one action */}
       <div
         ref={block}
         style={{
-          position: 'absolute', zIndex: 3, left: wide ? 48 : 20, right: wide ? undefined : 84, width: wide ? 'min(44%, 600px)' : undefined,
+          position: 'absolute', zIndex: 3, left: wide ? 48 : 20, right: wide ? undefined : 20, width: wide ? 'min(44%, 600px)' : undefined,
           bottom: `calc(${bottom}px + env(safe-area-inset-bottom, 0px))`,
           display: 'flex', flexDirection: 'column', gap: 12,
           opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'all 0.5s ease',
@@ -137,22 +139,22 @@ function EventCard({
           <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>{where}</span>
         </div>
 
+        {/* One clear action. Going, save, share and directions live on the event page. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 4 }}>
+          <button
+            type="button"
+            onClick={() => onTickets(a)}
+            style={{ height: 48, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', color: T.white, background: alpha(a, 0.22), border: `1px solid ${alpha(a, 0.6)}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', fontFamily: FONT.display, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap' }}
+          >
+            {label === 'Ended' ? 'Ended' : 'Get tickets'}
+            {label !== 'Ended' && <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>{label}</span>}
+          </button>
+          <Link href={`/events/${event.slug}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>
+            Details <Icon name="arrowRight" size={16} />
+          </Link>
+        </div>
       </div>
 
-      {/* Action rail: right edge, beside the details, clear of the tab bar */}
-      <div style={{ position: 'absolute', zIndex: 4, right: wide ? 32 : 10, bottom: `calc(${bottom}px + env(safe-area-inset-bottom, 0px))`, opacity: active ? 1 : 0, transform: active ? 'translateX(0)' : 'translateX(20px)', transition: 'all 0.45s ease 0.1s' }}>
-          <ActionBar
-            vertical
-            accent={a}
-            actions={[
-              { key: 'tickets', icon: 'tickets', label: ticketsLabel(event), aria: `Tickets, ${ticketsLabel(event)}`, primary: true, onClick: () => onTickets(a) },
-              { key: 'going', icon: 'goingUser', label: goingCount > 0 ? fmtCount(goingCount) : 'Going', aria: going ? 'Not going' : "I'm going", on: going, onClick: onGoing },
-              { key: 'save', icon: 'saveTag', label: saved ? 'Saved' : 'Save', on: saved, onClick: onSave },
-              { key: 'share', icon: 'share', label: 'Share', onClick: onShare },
-              { key: 'map', icon: 'directions', label: 'Directions', href: mapsLink(event), external: true },
-            ]}
-          />
-        </div>
     </section>
   );
 }

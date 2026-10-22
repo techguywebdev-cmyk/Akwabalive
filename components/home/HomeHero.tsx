@@ -31,7 +31,7 @@ export default function HomeHero({ event, accent, live }: { event: GhanaEvent; a
   const { title, subtitle } = splitEventTitle(event.title);
   const d = parseDay(event.date);
   const price = event.price === 0 ? 'Free' : `GH₵ ${event.price.toLocaleString()}`;
-  const bottom = wide ? 56 : 104;
+  const bottom = wide ? 56 : 32;
   const eyebrow = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' } as const;
   const dot = <span aria-hidden style={{ width: 3, height: 3, borderRadius: 2, background: accent, opacity: 0.6 }} />;
 

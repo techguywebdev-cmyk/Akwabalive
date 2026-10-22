@@ -62,7 +62,7 @@ export function HeaderIconButton({
  * and the profile/sign-in button. Phones also get a floating glass tab bar at the bottom.
  */
 export default function Nav({
-  active, actions, back, tabs = true,
+  active, actions, back, tabs = false,
 }: {
   /** kept for older call sites */
   transparent?: boolean;
@@ -179,7 +179,7 @@ export default function Nav({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
           {actions ?? <HeaderIconButton label="Search events" icon="search" href="/events?search=1" />}
-          {!isMobile && avatar}
+          {(!isMobile || !actions) && avatar}
         </div>
       </header>
 
