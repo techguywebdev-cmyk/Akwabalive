@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { T, FONT } from '@/lib/thiscene';
 import { Icon, PAGE_ICONS, type IconName } from '@/components/ui/Icon';
+import Wordmark, { BrandGlyph } from '@/components/brand/Wordmark';
 
 /** Main sections. On phones they live in the bottom tab bar; on desktop, in the header. */
 const SECTIONS: { href: string; label: string; icon: IconName }[] = [
@@ -101,12 +102,28 @@ export default function Nav({
     return () => window.removeEventListener('resize', fn);
   }, []);
 
+  // Drawer: mount, then slide in on the next frame; slide out, then unmount
+  const [menuMounted, setMenuMounted] = useState(false);
+  const [menuShown, setMenuShown] = useState(false);
   useEffect(() => {
-    if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    if (menuOpen) {
+      setMenuMounted(true);
+      const raf = requestAnimationFrame(() => requestAnimationFrame(() => setMenuShown(true)));
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+      window.addEventListener('keydown', onKey);
+      return () => { cancelAnimationFrame(raf); document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+    }
+    setMenuShown(false);
+    const t = setTimeout(() => setMenuMounted(false), 420);
+    return () => clearTimeout(t);
   }, [menuOpen]);
+  const stagger = (i: number): React.CSSProperties => ({
+    opacity: menuShown ? 1 : 0,
+    transform: menuShown ? 'translateX(0)' : 'translateX(-16px)',
+    transition: `opacity 360ms ease ${120 + i * 45}ms, transform 420ms cubic-bezier(0.22,1,0.36,1) ${120 + i * 45}ms`,
+  });
 
   const profileHref = user ? `/u/${profile?.username ?? ''}` : '/auth';
   const ticketsHref = user ? '/account/tickets' : '/auth';
@@ -151,7 +168,8 @@ export default function Nav({
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
           {back
             ? <HeaderIconButton label="Back" icon="arrowLeft" href={back} />
-            : <HeaderIconButton label={menuOpen ? 'Close menu' : 'Menu'} icon={menuOpen ? 'close' : 'menu'} onClick={() => setMenuOpen((o) => !o)} pressed={menuOpen} />}
+            : <HeaderIconButton label="Menu" icon="menu" onClick={() => setMenuOpen(true)} />}
+          {!isMobile && <span style={{ marginLeft: 8 }}><Wordmark /></span>}
 
           {!isMobile && (
             <nav aria-label="Main" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
@@ -176,6 +194,14 @@ export default function Nav({
             </nav>
           )}
         </div>
+
+        {isMobile && (
+          <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: 'calc(14px + env(safe-area-inset-top, 0px))', height: 44, display: 'flex', alignItems: 'center', pointerEvents: 'auto' }}>
+            {actions
+              ? <Link href="/" aria-label="Akwaaba home" style={{ display: 'flex' }}><BrandGlyph size={28} /></Link>
+              : <Wordmark />}
+          </div>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
           {actions ?? <HeaderIconButton label="Search events" icon="search" href="/events?search=1" />}
@@ -219,65 +245,96 @@ export default function Nav({
         </>
       )}
 
-      {/* Menu sheet */}
-      {menuOpen && (
-        <>
-          <button type="button" aria-label="Close menu" onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 198, background: 'rgba(1,4,3,0.55)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', border: 'none', cursor: 'default' }} />
-          <div
+      {/* Menu: a full-height drawer that slides in from the left */}
+      {menuMounted && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 400 }}>
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setMenuOpen(false)}
+            style={{ position: 'absolute', inset: 0, border: 'none', cursor: 'default', background: 'rgba(1,4,3,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', opacity: menuShown ? 1 : 0, transition: 'opacity 320ms ease' }}
+          />
+          <nav
             role="dialog"
+            aria-modal="true"
             aria-label="Menu"
             style={{
-              position: 'fixed', zIndex: 199, top: 'calc(70px + env(safe-area-inset-top, 0px))', left: 12, width: 'min(320px, calc(100vw - 24px))',
-              maxHeight: 'calc(100svh - 90px)', overflowY: 'auto',
-              background: 'linear-gradient(180deg, rgba(14,44,30,0.97) 0%, rgba(5,16,10,0.98) 100%)',
-              border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '8px 8px 12px',
+              position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(400px, 88vw)', display: 'flex', flexDirection: 'column',
+              padding: 'calc(14px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))',
+              background: 'radial-gradient(120% 50% at 0% 0%, rgba(20,78,52,0.9) 0%, rgba(6,22,14,0) 70%), linear-gradient(180deg, #071A10 0%, #030806 100%)',
+              borderRight: '1px solid rgba(255,255,255,0.08)', boxShadow: '30px 0 80px rgba(0,0,0,0.5)',
+              transform: menuShown ? 'translateX(0)' : 'translateX(-104%)', transition: 'transform 420ms cubic-bezier(0.22,1,0.36,1)',
+              overflowY: 'auto',
             }}
           >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 44 }}>
+              <Wordmark />
+              <HeaderIconButton label="Close menu" icon="close" onClick={() => setMenuOpen(false)} />
+            </div>
+
             {user && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px 14px', borderBottom: `1px solid ${T.hairline}`, marginBottom: 6 }}>
-                <span style={{ width: 40, height: 40, borderRadius: 20, background: '#1F5A3F', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
-                  {(profile?.username?.[0] ?? 'U').toUpperCase()}
+              <Link href={profileHref} onClick={() => setMenuOpen(false)} style={{ ...stagger(0), display: 'flex', alignItems: 'center', gap: 12, marginTop: 28, textDecoration: 'none' }}>
+                <span style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', background: '#1F5A3F', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
+                  {profile?.avatar_url
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : (profile?.username?.[0] ?? 'U').toUpperCase()}
                 </span>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.text, margin: 0 }}>{profile?.full_name}</p>
-                  <p style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text2, margin: 0 }}>@{profile?.username}</p>
-                </div>
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>{profile?.full_name || profile?.username}</span>
+                  <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>@{profile?.username}</span>
+                </span>
+              </Link>
+            )}
+
+            <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column' }}>
+              {SECTIONS.map((l, i) => {
+                const on = active === l.label;
+                return (
+                  <Link
+                    key={l.label}
+                    href={l.href}
+                    onClick={() => setMenuOpen(false)}
+                    aria-current={on ? 'page' : undefined}
+                    style={{ ...stagger(i + 1), display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', textDecoration: 'none', fontFamily: FONT.display, fontSize: 34, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, color: on ? T.mint : T.white }}
+                  >
+                    {l.label}
+                    {on
+                      ? <span aria-hidden style={{ width: 8, height: 8, borderRadius: 4, background: T.mint, boxShadow: `0 0 12px ${T.mint}` }} />
+                      : <Icon name="arrowRight" size={22} color="rgba(255,255,255,0.35)" />}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {accountLinks.length > 0 && (
+              <div style={{ ...stagger(5), marginTop: 28, paddingTop: 20, borderTop: `1px solid ${T.hairline}` }}>
+                <p style={{ margin: '0 0 6px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Your Akwaaba</p>
+                {accountLinks.map((l) => (
+                  <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 46, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 16, fontWeight: 500, color: active === l.label ? T.mint : 'rgba(255,255,255,0.82)' }}>
+                    <Icon name={PAGE_ICONS[l.label] ?? 'dots'} size={19} color="rgba(255,255,255,0.55)" />
+                    {l.label}
+                  </Link>
+                ))}
               </div>
             )}
-            {[...SECTIONS, ...accountLinks].map((l) => {
-              const on = active === l.label;
-              return (
-                <Link
-                  key={l.label}
-                  href={l.href}
-                  onClick={() => setMenuOpen(false)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 14, minHeight: 48, padding: '0 12px', borderRadius: 14,
-                    fontFamily: FONT.sans, fontSize: 15, fontWeight: on ? 600 : 500, textDecoration: 'none',
-                    color: on ? T.white : 'rgba(255,255,255,0.78)', background: on ? 'rgba(255,255,255,0.05)' : 'transparent',
-                  }}
-                >
-                  <Icon name={PAGE_ICONS[l.label] ?? 'dots'} size={20} color={on ? T.mint : 'rgba(255,255,255,0.7)'} />
-                  {l.label}
-                </Link>
-              );
-            })}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 6, paddingTop: 6, borderTop: `1px solid ${T.hairline}` }}>
-              <Link href="/organizer/events/new" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 48, padding: '0 12px', borderRadius: 14, fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>
-                <Icon name="plus" size={20} /> List an event
+
+            <div style={{ ...stagger(6), marginTop: 'auto', paddingTop: 28, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Link href="/organizer/events/new" onClick={() => setMenuOpen(false)} style={{ height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+                <Icon name="plus" size={18} strokeWidth={2} /> List an event
               </Link>
               {user ? (
-                <button type="button" onClick={() => { signOut(); setMenuOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 48, padding: '0 12px', borderRadius: 14, fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, color: 'rgba(255,255,255,0.6)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-                  <Icon name="logout" size={20} /> Sign out
+                <button type="button" onClick={() => { signOut(); setMenuOpen(false); }} style={{ height: 48, borderRadius: 999, background: 'none', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
+                  Sign out
                 </button>
               ) : (
-                <Link href="/auth" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 48, padding: '0 12px', borderRadius: 14, fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, color: T.text, textDecoration: 'none' }}>
-                  <Icon name="user" size={20} /> Sign in
+                <Link href="/auth" onClick={() => setMenuOpen(false)} style={{ height: 48, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.14)', color: T.white, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
+                  Sign in
                 </Link>
               )}
             </div>
-          </div>
-        </>
+          </nav>
+        </div>
       )}
     </>
   );

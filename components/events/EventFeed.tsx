@@ -10,7 +10,7 @@ import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import FlyerCanvas from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
-import { Icon } from '@/components/ui/Icon';
+import { EventTags, MetaRows, BTN, PriceTag } from '@/components/events/CardParts';
 import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
@@ -100,18 +100,11 @@ function EventCard({
         style={{
           position: 'absolute', zIndex: 3, left: wide ? 48 : 20, right: wide ? undefined : 20, width: wide ? 'min(44%, 600px)' : undefined,
           bottom: `calc(${bottom}px + env(safe-area-inset-bottom, 0px))`,
-          display: 'flex', flexDirection: 'column', gap: 12,
+          display: 'flex', flexDirection: 'column', gap: 14,
           opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'all 0.5s ease',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: a }}>
-          {tags.map((t, i) => (
-            <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-              {i > 0 && <span aria-hidden style={{ width: 3, height: 3, borderRadius: 2, background: a, opacity: 0.6 }} />}
-              {t}
-            </span>
-          ))}
-        </div>
+        <EventTags event={event} accent={a} />
 
         <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
           <h2 style={{ margin: 0, fontFamily: FONT.display, fontWeight: 800, lineHeight: 0.98, letterSpacing: '-0.035em', fontSize: titleSize, color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
@@ -134,24 +127,20 @@ function EventCard({
           )}
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.92)' }}>{when}</span>
-          <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>{where}</span>
-        </div>
+        <MetaRows when={when} where={where} />
 
         {/* One clear action. Going, save, share and directions live on the event page. */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 4 }}>
-          <button
-            type="button"
-            onClick={() => onTickets(a)}
-            style={{ height: 48, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', color: T.white, background: alpha(a, 0.22), border: `1px solid ${alpha(a, 0.6)}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', fontFamily: FONT.display, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap' }}
-          >
-            {label === 'Ended' ? 'Ended' : 'Get tickets'}
-            {label !== 'Ended' && <span style={{ fontWeight: 500, color: 'rgba(255,255,255,0.7)' }}>{label}</span>}
-          </button>
-          <Link href={`/events/${event.slug}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.8)', textDecoration: 'none' }}>
-            Details <Icon name="arrowRight" size={16} />
-          </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+          {label === 'Ended' ? (
+            <Link href={`/events/${event.slug}`} style={{ ...BTN.secondary, flex: wide ? undefined : 1 }}>View event</Link>
+          ) : (
+            <button type="button" onClick={() => onTickets(a)} style={{ ...BTN.primary, flex: wide ? undefined : 1 }}>
+              Get tickets <PriceTag text={label} />
+            </button>
+          )}
+          {label !== 'Ended' && (
+            <Link href={`/events/${event.slug}`} style={BTN.secondary}>Details</Link>
+          )}
         </div>
       </div>
 

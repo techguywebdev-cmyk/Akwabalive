@@ -8,6 +8,7 @@ import { type RGB, categoryAccent, eventAccent, toHex } from '@/lib/events/accen
 import { resolveLineupNames } from '@/components/ui/LineupChips';
 import { getTiers } from '@/lib/events/tiers';
 import { hiRes } from '@/lib/events/image';
+import { EventTags } from '@/components/events/CardParts';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { ActionBar, TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
@@ -187,7 +188,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const infoRow: CSSProperties = { display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0', borderTop: `1px solid ${T.hairline}` };
   const primary: CSSProperties = {
     height: 52, padding: '0 28px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    color: T.white, background: alpha(a, 0.22), border: `1px solid ${alpha(a, 0.6)}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+    color: T.onMint, background: T.mint, border: 'none', boxShadow: '0 8px 24px rgba(123,227,168,0.22)',
     fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
   };
 
@@ -211,7 +212,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       )}
 
       {/* Hero: flyer (or promo video) fading into the green-black ground */}
-      <div style={{ position: 'relative', width: '100%', maxWidth: 820, margin: '0 auto', minHeight: 320, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', maxWidth: 820, margin: '0 auto', minHeight: event.image ? undefined : 320, overflow: 'hidden' }}>
         {/* The flyer at its own shape, full width, high resolution */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -237,16 +238,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       </div>
 
       <main style={{ position: 'relative', maxWidth: 720, margin: '8px auto 0', padding: '0 20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: a }}>
-          {[event.category, event.badge && event.badge.toLowerCase() !== event.category ? event.badge.toLowerCase() : '', event.recurring ? 'annual' : '']
-            .filter(Boolean)
-            .map((t, i) => (
-              <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                {i > 0 && <span aria-hidden style={{ width: 3, height: 3, borderRadius: 2, background: a, opacity: 0.6 }} />}
-                {t}
-              </span>
-            ))}
-        </div>
+        <EventTags event={event} accent={a} />
         <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: short.title.length > 22 ? 'clamp(34px, 8vw, 56px)' : 'clamp(40px, 10vw, 68px)', fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.035em', color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
           {short.title}
         </h1>
@@ -260,7 +252,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             accent={a}
             maxWidth={520}
             actions={[
-              { key: 'tickets', icon: 'tickets', label: ticketsLabel(event), aria: `Tickets, ${ticketsLabel(event)}`, primary: true, onClick: () => setTicketsOpen(true) },
+              { key: 'tickets', icon: 'tickets', label: ticketsLabel(event), aria: `Tickets, ${ticketsLabel(event)}`, primary: ticketsLabel(event) !== 'Ended', onClick: () => setTicketsOpen(true) },
               { key: 'going', icon: 'goingUser', label: isGoing ? 'Going' : "I'm going", on: isGoing, onClick: toggleGoing },
               { key: 'save', icon: 'saveTag', label: inDreamList ? 'Saved' : 'Save', on: inDreamList, onClick: toggleDreamList },
               { key: 'share', icon: 'share', label: 'Share', onClick: share },
@@ -389,13 +381,13 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             <span style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: T.white }}>{free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</span>
           </span>
           {daysAway != null && daysAway < 0 ? (
-            <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default' }}>Event has ended</span>
+            <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
           ) : listed ? (
             <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={primary}>
               Tickets on {event.ticketSource || 'official site'} <Icon name="open" size={16} />
             </a>
           ) : daysAway != null && daysAway < 0 ? (
-            <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default' }}>Event has ended</span>
+            <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
           ) : (
             <button type="button" onClick={() => setTicketsOpen(true)} style={primary}>
               {free ? 'Reserve a spot' : 'Get tickets'}

@@ -39,7 +39,7 @@ export function ActionBar({ actions, accent, maxWidth = 400, vertical = false }:
           width: 50, height: 50, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center',
           backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', transition: 'background 200ms ease, border-color 200ms ease, color 200ms ease',
           ...(a.primary
-            ? { background: alpha(accent, 0.24), border: `1px solid ${alpha(accent, 0.65)}`, color: T.white }
+            ? { background: T.mint, border: '1px solid transparent', color: T.onMint }
             : a.on
               ? { background: alpha(accent, 0.16), border: `1px solid ${alpha(accent, 0.5)}`, color: accent }
               : { background: 'rgba(3,10,6,0.38)', border: '1px solid rgba(255,255,255,0.12)', color: T.white }),
@@ -103,7 +103,7 @@ export function TicketsSheet({
   const sellable = tiers.some((t) => t.id && t.available);
   const free = tiers.length > 0 && tiers.every((t) => t.price === 0);
 
-  const cta = { flex: 1, height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', color: T.white, background: alpha(accent, 0.24), border: `1px solid ${alpha(accent, 0.65)}` } as const;
+  const cta = { flex: 1, height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', color: T.onMint, background: T.mint, border: 'none' } as const;
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 320, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
