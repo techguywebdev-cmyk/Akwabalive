@@ -164,8 +164,9 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
       ...(city && CITIES.some((c) => c.value === city) ? { city: city as City } : {}),
       ...(when && WHEN_OPTS.some((w) => w.value === when) ? { when: when as FilterState['when'] } : {}),
       ...(text ? { search: text } : {}),
+      ...(q.get('price') === 'free' ? { priceFilter: 'free' as const } : {}),
     }));
-    if (q.get('view') === 'list' || cat || city) setViewState('list');
+    if (q.get('view') === 'list' || cat || city || q.get('price')) setViewState('list');
     if (q.get('search') === '1' || text) setSearchOpen(true);
   }, []);
 
