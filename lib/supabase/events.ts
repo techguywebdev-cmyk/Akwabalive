@@ -47,7 +47,12 @@ export interface SupabaseEvent {
     price: number;
     quantity: number;
     sold: number;
+    kind?: string | null;
+    replay_days?: number | null;
   }[];
+  stream_enabled?: boolean | null;
+  stream_status?: string | null;
+  youtube_live_url?: string | null;
 }
 
 function isSellingFast(tiers: SupabaseEvent['ticket_tiers']): boolean {
@@ -56,10 +61,10 @@ function isSellingFast(tiers: SupabaseEvent['ticket_tiers']): boolean {
 }
 
 export function supabaseToGhanaEvent(ev: SupabaseEvent): GhanaEvent {
-  const minPrice =
-    ev.ticket_tiers?.length > 0
-      ? Math.min(...ev.ticket_tiers.map((t) => t.price))
-      : 0;
+  // "From" price is the cheapest way in to the venue; stream tiers don't count
+  const inPerson = (ev.ticket_tiers ?? []).filter((t) => (t.kind ?? 'in_person') !== 'stream');
+  const priced = inPerson.length ? inPerson : ev.ticket_tiers ?? [];
+  const minPrice = priced.length > 0 ? Math.min(...priced.map((t) => t.price)) : 0;
 
   const sellingFast = isSellingFast(ev.ticket_tiers || []);
   const featured = !!ev.is_featured;
@@ -111,6 +116,9 @@ export function supabaseToGhanaEvent(ev: SupabaseEvent): GhanaEvent {
     lineup: Array.isArray(ev.lineup) ? ev.lineup : undefined,
     description: ev.description ?? null,
     organizerId: ev.organizer_id ?? null,
+    streamEnabled: !!ev.stream_enabled,
+    streamStatus: ev.stream_status === 'live' ? 'live' : ev.stream_status === 'ended' ? 'ended' : 'idle',
+    youtubeLiveUrl: ev.youtube_live_url ?? null,
     tiers: (ev.ticket_tiers ?? [])
       .map((t) => ({
         id: t.id,
@@ -119,6 +127,8 @@ export function supabaseToGhanaEvent(ev: SupabaseEvent): GhanaEvent {
         price: Number(t.price) || 0,
         quantity: Number(t.quantity) || 0,
         sold: Number(t.sold) || 0,
+        kind: (t.kind === 'stream' ? 'stream' : 'in_person') as 'stream' | 'in_person',
+        replayDays: t.replay_days ?? null,
       }))
       .sort((a, b) => a.price - b.price),
   };

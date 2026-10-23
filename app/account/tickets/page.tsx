@@ -31,6 +31,7 @@ function TicketCard({ ticket }: { ticket: TicketType }) {
   const ev = events.find(e => e.slug === ticket.event_slug);
   const isUpcoming = new Date(ticket.event_date) >= new Date();
   const ref = `AKW-${ticket.id.slice(0, 8).toUpperCase()}`;
+  const isStream = (ticket as { kind?: string }).kind === 'stream';
 
   return (
     <div style={{ ...G.panel, border: `1px solid ${isUpcoming ? C.goldBd : C.bd}`, borderRadius: 16, overflow: 'hidden', transition: 'all 200ms' }}>
@@ -55,6 +56,18 @@ function TicketCard({ ticket }: { ticket: TicketType }) {
               </span>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Stream ticket: one tap to the player */}
+      {isStream && (
+        <div style={{ padding: '14px 16px 0', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 26, padding: '0 10px', borderRadius: 999, background: 'rgba(255,77,94,0.16)', color: '#FF8A95', fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, fontWeight: 700 }}>
+            <span style={{ width: 6, height: 6, borderRadius: 3, background: '#FF4D5E' }} /> Stream ticket
+          </span>
+          <Link href={`/events/${ticket.event_slug}/live`} style={{ marginLeft: 'auto', height: 40, padding: '0 18px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', background: '#7BE3A8', color: '#03130B', fontFamily: 'var(--font-display), sans-serif', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+            Watch live
+          </Link>
         </div>
       )}
 
@@ -102,8 +115,8 @@ function TicketCard({ ticket }: { ticket: TicketType }) {
             <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
               {/* QR Code */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <QRCode value={ref} />
-                <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', color: C.c3, textAlign: 'center' }}>Scan at the door</p>
+                {!isStream && <QRCode value={ref} />}
+                {!isStream && <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', color: C.c3, textAlign: 'center' }}>Scan at the door</p>}
               </div>
 
               {/* Ticket details */}

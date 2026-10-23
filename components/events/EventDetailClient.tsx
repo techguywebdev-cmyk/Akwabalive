@@ -6,7 +6,7 @@ import { Icon } from '@/components/ui/Icon';
 import { T, FONT, alpha } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, toHex } from '@/lib/events/accent';
 import { resolveLineupNames } from '@/components/ui/LineupChips';
-import { getTiers } from '@/lib/events/tiers';
+import { getTiers, canWatchOnline } from '@/lib/events/tiers';
 import { hiRes } from '@/lib/events/image';
 import { EventTags } from '@/components/events/CardParts';
 import FriendsStrip from '@/components/social/FriendsStrip';
@@ -47,6 +47,16 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [inDreamList,    setInDreamList]    = useState(false);
   const [isGoing,        setIsGoing]        = useState(false);
   const [ticketsOpen,    setTicketsOpen]    = useState(false);
+  const [streamLive,     setStreamLive]     = useState(event.streamStatus === 'live');
+
+  useEffect(() => {
+    if (!event.streamEnabled) return;
+    let live = true;
+    const check = () => fetch(`/api/stream/status?slug=${encodeURIComponent(event.slug)}`).then((r) => r.json()).then((j) => { if (live) setStreamLive(j.status === 'live'); }).catch(() => {});
+    check();
+    const t = setInterval(check, 30_000);
+    return () => { live = false; clearInterval(t); };
+  }, [event.slug, event.streamEnabled]);
   const [dreamLoading,   setDreamLoading]   = useState(false);
   const [dreamToast,     setDreamToast]     = useState('');
   const [ticketSuccess,  setTicketSuccess]  = useState(false);
@@ -238,6 +248,11 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       </div>
 
       <main style={{ position: 'relative', maxWidth: 720, margin: '8px auto 0', padding: '0 20px' }}>
+        {streamLive && (
+          <Link href={`/events/${event.slug}/live`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 32, padding: '0 14px', marginBottom: 10, borderRadius: 999, background: '#FF4D5E', color: '#fff', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+            <span aria-hidden style={{ width: 7, height: 7, borderRadius: 4, background: '#fff' }} /> Live now · Watch
+          </Link>
+        )}
         <EventTags event={event} accent={a} />
         <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: short.title.length > 22 ? 'clamp(34px, 8vw, 56px)' : 'clamp(40px, 10vw, 68px)', fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.035em', color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
           {short.title}
@@ -253,6 +268,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             maxWidth={520}
             actions={[
               { key: 'tickets', icon: 'tickets', label: ticketsLabel(event), aria: `Tickets, ${ticketsLabel(event)}`, primary: ticketsLabel(event) !== 'Ended', onClick: () => setTicketsOpen(true) },
+              ...(canWatchOnline(event) ? [{ key: 'watch', icon: 'play' as const, label: streamLive ? 'Watch live' : 'Watch', aria: 'Watch the livestream', on: streamLive, href: `/events/${event.slug}/live` }] : []),
               { key: 'going', icon: 'goingUser', label: isGoing ? 'Going' : "I'm going", on: isGoing, onClick: toggleGoing },
               { key: 'save', icon: 'saveTag', label: inDreamList ? 'Saved' : 'Save', on: inDreamList, onClick: toggleDreamList },
               { key: 'share', icon: 'share', label: 'Share', onClick: share },

@@ -97,7 +97,7 @@ async function findTicketByRef(db: SupabaseClient, reference: string) {
 async function loadEventAndTier(db: SupabaseClient, slug: string, tierId: string) {
   const { data: ev } = await db
     .from('events')
-    .select('id, slug, title, date, venue, status, ticket_tiers(id, name, price, quantity, sold)')
+    .select('id, slug, title, date, venue, status, ticket_tiers(id, name, price, quantity, sold, kind, replay_days)')
     .eq('slug', slug)
     .eq('status', 'published')
     .maybeSingle();
@@ -127,6 +127,15 @@ async function incrementSold(db: SupabaseClient, tierId: string, qty: number) {
   return false;
 }
 
+/** Stream tickets with replay: watchable until the end of the event day + N days. */
+function replayUntil(date: string | null, tier: any): string | null {
+  if (tier?.kind !== 'stream' || !tier.replay_days || !date) return null;
+  const d = new Date(`${String(date).slice(0, 10)}T23:59:59Z`);
+  if (Number.isNaN(d.getTime())) return null;
+  d.setUTCDate(d.getUTCDate() + Number(tier.replay_days));
+  return d.toISOString();
+}
+
 async function issueTicket(
   db: SupabaseClient,
   args: {
@@ -151,6 +160,9 @@ async function issueTicket(
       event_date: ev.date, // ISO date — the tickets page filters and builds calendar links from this
       event_venue: ev.venue,
       ticket_tier: tier.name,
+      tier_id: tier.id,
+      kind: tier.kind === 'stream' ? 'stream' : 'in_person',
+      replay_until: replayUntil(ev.date, tier),
       quantity,
       total_paid: totalPaid,
       qr_code: reference,
@@ -170,7 +182,8 @@ async function issueTicket(
   }
 
   await incrementSold(db, tier.id, quantity);
-  // A ticket holder is going. ignoreDuplicates keeps any choice they already made
+  if (tier.kind === 'stream') return { ok: true, reference, ticketId: inserted.id, alreadyIssued: false };
+  // An in-person ticket holder is going. ignoreDuplicates keeps any choice they already made
   // (e.g. a private RSVP) instead of overwriting it.
   const { error: goingErr } = await db
     .from('event_attendance')

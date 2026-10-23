@@ -8,6 +8,13 @@ import { createClient } from '@/lib/supabase/client';
 
 
 import { C, G } from '@/lib/theme';
+/** Where to go after signing in: ?next=/some/path (same-site paths only) */
+function nextPath() {
+  if (typeof window === 'undefined') return '/';
+  const n = new URLSearchParams(window.location.search).get('next') || '/';
+  return n.startsWith('/') && !n.startsWith('//') ? n : '/';
+}
+
 export default function AuthPage() {
   const router   = useRouter();
   const supabase = createClient();
@@ -75,13 +82,13 @@ export default function AuthPage() {
         }
 
         setSuccess(true);
-        setTimeout(() => { router.push('/'); router.refresh(); }, 1000);
+        setTimeout(() => { router.push(nextPath()); router.refresh(); }, 1000);
 
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) { setError(signInError.message); setLoading(false); return; }
         setSuccess(true);
-        setTimeout(() => { router.push('/'); router.refresh(); }, 600);
+        setTimeout(() => { router.push(nextPath()); router.refresh(); }, 600);
       }
     } catch (err: any) {
       setError(typeof err?.message === 'string' ? err.message : 'Something went wrong. Please try again.');

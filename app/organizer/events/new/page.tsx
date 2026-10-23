@@ -1,4 +1,5 @@
 'use client';
+import StreamSettings, { emptyStream, streamTierRows, type StreamValue } from '@/components/organizer/StreamSettings';
 import { C, G } from '@/lib/theme';
 
 import { useState } from 'react';
@@ -66,6 +67,7 @@ export default function CreateEventPage() {
   const [imageUrl,    setImageUrl]    = useState('');
   const [lineupVal,   setLineupVal]   = useState<LineupValue>(emptyLineup());
 
+  const [stream, setStream] = useState<StreamValue>(emptyStream());
   const [tiers, setTiers] = useState<Tier[]>([
     { name: 'General', description: 'Standard entry', price: '', quantity: '100' },
   ]);
@@ -106,6 +108,8 @@ export default function CreateEventPage() {
         end_time: endTime, image_url: imageUrl.trim() || null, status,
         artist_slugs: bill.artist_slugs,
         lineup: bill.lineup,
+        stream_enabled: stream.enabled && stream.tiers.some((t) => t.name.trim()),
+        youtube_live_url: stream.youtubeUrl.trim() || null,
       }).select().single();
 
       if (evErr) throw evErr;
@@ -114,8 +118,9 @@ export default function CreateEventPage() {
         event_id: ev.id, name: t.name.trim(),
         description: t.description.trim(),
         price: parseFloat(t.price) || 0,
-        quantity: parseInt(t.quantity) || 100, sold: 0,
+        quantity: parseInt(t.quantity) || 100, sold: 0, kind: 'in_person',
       }));
+      tierRows.push(...(streamTierRows(ev.id, stream) as any[]));
       if (tierRows.length > 0) {
         const { error: tErr } = await supabase.from('ticket_tiers').insert(tierRows);
         if (tErr) throw tErr;
@@ -278,6 +283,8 @@ export default function CreateEventPage() {
                 </div>
               </div>
             ))}
+
+            <StreamSettings value={stream} onChange={setStream} />
 
             {tiers.length < 4 && (
               <button onClick={addTier}

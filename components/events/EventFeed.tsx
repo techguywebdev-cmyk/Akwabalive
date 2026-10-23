@@ -14,7 +14,7 @@ import { EventTags, MetaRows, BTN, PriceTag } from '@/components/events/CardPart
 import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
-import type { CheckoutTier } from '@/lib/events/tiers';
+import { canWatchOnline, type CheckoutTier } from '@/lib/events/tiers';
 import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
 
@@ -138,7 +138,11 @@ function EventCard({
               Get tickets <PriceTag text={label} />
             </button>
           )}
-          {label !== 'Ended' && (
+          {canWatchOnline(event) && label !== 'Ended' ? (
+            <Link href={`/events/${event.slug}/live`} style={BTN.secondary}>
+              <span aria-hidden style={{ width: 7, height: 7, borderRadius: 4, background: '#FF4D5E' }} /> {event.streamStatus === 'live' ? 'Watch live' : 'Stream'}
+            </Link>
+          ) : label !== 'Ended' && (
             <Link href={`/events/${event.slug}`} style={BTN.secondary}>Details</Link>
           )}
         </div>
