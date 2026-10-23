@@ -78,7 +78,7 @@ export default function LineupPicker({
             border: `1px solid ${!value.enabled ? C.goldBd : C.bd}`,
             background: !value.enabled ? C.goldDim : 'transparent',
             color: !value.enabled ? C.gold : C.c2,
-            fontFamily: 'var(--font-dm-mono,monospace)',
+            fontFamily: 'var(--font-inter), sans-serif',
             fontSize: 11,
             letterSpacing: '1px',
             textTransform: 'uppercase',
@@ -97,7 +97,7 @@ export default function LineupPicker({
             border: `1px solid ${value.enabled ? C.goldBd : C.bd}`,
             background: value.enabled ? C.goldDim : 'transparent',
             color: value.enabled ? C.gold : C.c2,
-            fontFamily: 'var(--font-dm-mono,monospace)',
+            fontFamily: 'var(--font-inter), sans-serif',
             fontSize: 11,
             letterSpacing: '1px',
             textTransform: 'uppercase',
@@ -156,7 +156,7 @@ export default function LineupPicker({
                   />
                   <span
                     style={{
-                      fontFamily: 'var(--font-dm-mono,monospace)',
+                      fontFamily: 'var(--font-inter), sans-serif',
                       fontSize: 11,
                       letterSpacing: '0.5px',
                     }}
@@ -172,7 +172,7 @@ export default function LineupPicker({
             <label
               style={{
                 display: 'block',
-                fontFamily: 'var(--font-dm-mono,monospace)',
+                fontFamily: 'var(--font-inter), sans-serif',
                 fontSize: 10,
                 letterSpacing: '1.5px',
                 textTransform: 'uppercase',

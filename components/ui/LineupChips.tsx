@@ -66,7 +66,7 @@ export function LineupChips({
               border: `1px solid ${C.goldBd}`,
               background: C.goldDim,
               color: C.gold,
-              fontFamily: 'var(--font-dm-mono,monospace)',
+              fontFamily: 'var(--font-inter), sans-serif',
               fontSize: 10,
               letterSpacing: '0.5px',
             }}
@@ -78,7 +78,7 @@ export function LineupChips({
       {more > 0 && (
         <span
           style={{
-            fontFamily: 'var(--font-dm-mono,monospace)',
+            fontFamily: 'var(--font-inter), sans-serif',
             fontSize: 10,
             color: C.c3,
             alignSelf: 'center',
@@ -103,7 +103,7 @@ export function LineupSection({
     <div style={{ marginTop: 36 }}>
       <p
         style={{
-          fontFamily: 'var(--font-dm-mono,monospace)',
+          fontFamily: 'var(--font-inter), sans-serif',
           fontSize: 10,
           letterSpacing: '2px',
           textTransform: 'uppercase',

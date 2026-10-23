@@ -24,11 +24,11 @@ export default function CityCard({ city }: { city: CityInfo }) {
       >
         <span
           className="transition-colors duration-200 group-hover:text-[#E0B25A]"
-          style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 22, fontWeight: 500, color: C.cream }}
+          style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 22, fontWeight: 500, color: C.cream }}
         >
           {city.name}
         </span>
-        <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2, whiteSpace: 'nowrap' }}>
+        <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2, whiteSpace: 'nowrap' }}>
           {city.count} events
         </span>
       </div>

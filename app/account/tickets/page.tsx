@@ -43,14 +43,14 @@ function TicketCard({ ticket }: { ticket: TicketType }) {
       {ev && (
         <div style={{ position: 'relative', height: 120, backgroundImage: `url(${ev.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
           <div style={{ position: 'absolute', top: 12, left: 14, display: 'flex', gap: 6 }}>
-            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 9px', borderRadius: 6, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}` }}>
+            <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 9px', borderRadius: 6, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}` }}>
               {ticket.ticket_tier}
             </span>
-            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 9px', borderRadius: 6, background: isUpcoming ? C.greenDim : C.c4, color: isUpcoming ? C.greenL : C.c3, border: `1px solid ${isUpcoming ? C.greenBd : C.bd}` }}>
+            <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 9px', borderRadius: 6, background: isUpcoming ? C.greenDim : C.c4, color: isUpcoming ? C.greenL : C.c3, border: `1px solid ${isUpcoming ? C.greenBd : C.bd}` }}>
               {isUpcoming ? '● Upcoming' : '✓ Attended'}
             </span>
             {ticket.gifted_by && (
-              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 9px', borderRadius: 6, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}` }}>
+              <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 9px', borderRadius: 6, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}` }}>
                 🎁 Gifted
               </span>
             )}
@@ -59,7 +59,7 @@ function TicketCard({ ticket }: { ticket: TicketType }) {
       )}
 
       <div style={{ padding: '16px 18px' }}>
-        <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 20, fontWeight: 400, color: C.cream, lineHeight: 1.15, marginBottom: 10 }}>
+        <h3 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 20, fontWeight: 400, color: C.cream, lineHeight: 1.15, marginBottom: 10 }}>
           {ticket.event_title}
         </h3>
 
@@ -79,15 +79,15 @@ function TicketCard({ ticket }: { ticket: TicketType }) {
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: `1px solid ${C.bd}`, marginBottom: expanded ? 16 : 0 }}>
           <div>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 2 }}>Total paid</p>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 18, color: ticket.total_paid === 0 ? C.greenL : C.cream, letterSpacing: '-0.5px' }}>
+            <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 2 }}>Total paid</p>
+            <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 18, color: ticket.total_paid === 0 ? C.greenL : C.cream, letterSpacing: '-0.5px' }}>
               {ticket.total_paid === 0 ? 'FREE' : `₵${ticket.total_paid.toLocaleString()}`}
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               onClick={() => setExpanded(e => !e)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, background: 'transparent', color: C.c2, padding: '9px 14px', borderRadius: 7, cursor: 'pointer', transition: 'all 180ms' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, background: 'transparent', color: C.c2, padding: '9px 14px', borderRadius: 7, cursor: 'pointer', transition: 'all 180ms' }}
             >
               <QrCode size={13} />
               {expanded ? 'Hide' : 'Show QR'}
@@ -103,7 +103,7 @@ function TicketCard({ ticket }: { ticket: TicketType }) {
               {/* QR Code */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                 <QRCode value={ref} />
-                <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', color: C.c3, textAlign: 'center' }}>Scan at the door</p>
+                <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', color: C.c3, textAlign: 'center' }}>Scan at the door</p>
               </div>
 
               {/* Ticket details */}
@@ -116,18 +116,18 @@ function TicketCard({ ticket }: { ticket: TicketType }) {
                     { label: 'Status', value: ticket.status        },
                   ].map(row => (
                     <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: `1px solid ${C.bd}` }}>
-                      <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>{row.label}</span>
+                      <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>{row.label}</span>
                       <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: C.cream }}>{row.value}</span>
                     </div>
                   ))}
                 </div>
 
                 <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                  <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, background: 'transparent', color: C.c2, padding: '9px', borderRadius: 6, cursor: 'pointer' }}>
+                  <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, background: 'transparent', color: C.c2, padding: '9px', borderRadius: 6, cursor: 'pointer' }}>
                     <Share2 size={11} /> Share
                   </button>
                   {ev && (
-                    <Link href={`/events/${ev.slug}`} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold, padding: '9px', borderRadius: 6, cursor: 'pointer', textDecoration: 'none' }}>
+                    <Link href={`/events/${ev.slug}`} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold, padding: '9px', borderRadius: 6, cursor: 'pointer', textDecoration: 'none' }}>
                       View Event
                     </Link>
                   )}
@@ -141,7 +141,7 @@ function TicketCard({ ticket }: { ticket: TicketType }) {
                 href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&dates=${ticket.event_date.replace(/-/g, '')}/${ticket.event_date.replace(/-/g, '')}&details=${encodeURIComponent(`Ticket ref: ${ref}\nVenue: ${ticket.event_venue}`)}&location=${encodeURIComponent(ticket.event_venue + ', Ghana')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 7, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2, textDecoration: 'none' }}
+                style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 7, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2, textDecoration: 'none' }}
               >
                 <Calendar size={12} /> Add to Google Calendar
               </a>
@@ -186,10 +186,10 @@ export default function MyTicketsPage() {
 
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
-          <Link href={`/u/${profile?.username ?? ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 20 }}>
+          <Link href={`/u/${profile?.username ?? ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 20 }}>
             <ArrowLeft size={12} /> My Profile
           </Link>
-          <h1 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 32, fontWeight: 300, color: C.cream, letterSpacing: '-1px', marginBottom: 6 }}>
+          <h1 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 32, fontWeight: 300, color: C.cream, letterSpacing: '-1px', marginBottom: 6 }}>
             My Tickets
           </h1>
           <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3 }}>
@@ -205,7 +205,7 @@ export default function MyTicketsPage() {
             { key: 'past',     label: `Past (${past.length})`     },
           ] as { key: typeof filter; label: string }[]).map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)}
-              style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '8px 16px', borderRadius: 999, border: `1px solid ${filter === f.key ? C.goldBd : C.bd}`, background: filter === f.key ? C.goldDim : 'transparent', color: filter === f.key ? C.gold : C.c3, cursor: 'pointer', transition: 'all 180ms' }}>
+              style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '8px 16px', borderRadius: 999, border: `1px solid ${filter === f.key ? C.goldBd : C.bd}`, background: filter === f.key ? C.goldDim : 'transparent', color: filter === f.key ? C.gold : C.c3, cursor: 'pointer', transition: 'all 180ms' }}>
               {f.label}
             </button>
           ))}
@@ -214,18 +214,18 @@ export default function MyTicketsPage() {
         {/* Tickets */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
+            <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
           </div>
         ) : shown.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
             <Ticket size={40} style={{ color: C.c3, margin: '0 auto 16px', display: 'block', opacity: 0.4 }} />
-            <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 24, color: C.c2, marginBottom: 8 }}>
+            <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 24, color: C.c2, marginBottom: 8 }}>
               {filter === 'upcoming' ? 'No upcoming events' : filter === 'past' ? 'No past events' : 'No tickets yet'}
             </p>
             <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, marginBottom: 20 }}>
               {filter === 'all' ? 'Buy a ticket to get started' : 'Check a different filter'}
             </p>
-            <Link href="/events" style={{ display: 'inline-block', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '11px 22px', borderRadius: 6, background: C.goldDim }}>
+            <Link href="/events" style={{ display: 'inline-block', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '11px 22px', borderRadius: 6, background: C.goldDim }}>
               Browse Events
             </Link>
           </div>

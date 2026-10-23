@@ -123,12 +123,12 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, ...G.sheet, border: `1px solid ${C.bd2}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.cream, whiteSpace: 'nowrap' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, ...G.sheet, border: `1px solid ${C.bd2}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.cream, whiteSpace: 'nowrap' }}>
           {toast}
         </div>
       )}
 
-      <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />
         Who&apos;s going
       </p>
@@ -138,7 +138,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: goingProfiles.length > 0 ? 16 : 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Users size={16} style={{ color: C.gold }} />
-            <span style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 18, color: C.cream }}>
+            <span style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 18, color: C.cream }}>
               {goingCount === 0 ? 'Be the first to go' : `${goingCount} ${goingCount === 1 ? 'person' : 'people'} going`}
             </span>
           </div>
@@ -146,7 +146,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
             onClick={toggleGoing}
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
-              fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase',
+              fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase',
               border: `1px solid ${isGoing ? C.greenBd : C.goldBd}`,
               background: isGoing ? C.greenDim : C.goldDim,
               color: isGoing ? C.greenL : C.gold,
@@ -163,7 +163,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
             {goingProfiles.slice(0, 6).map((p, i) => (
               <Link key={p.id} href={`/u/${p.username}`}
                 title={`@${p.username}`}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: '50%', border: `2px solid ${C.bg2}`, background: C.gold, marginLeft: i === 0 ? 0 : -10, zIndex: 6 - i, overflow: 'hidden', flexShrink: 0, textDecoration: 'none', fontFamily: 'var(--font-syne,sans-serif)', fontSize: 12, fontWeight: 700, color: '#0D0B08' }}>
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: '50%', border: `2px solid ${C.bg2}`, background: C.gold, marginLeft: i === 0 ? 0 : -10, zIndex: 6 - i, overflow: 'hidden', flexShrink: 0, textDecoration: 'none', fontFamily: 'var(--font-display), sans-serif', fontSize: 12, fontWeight: 700, color: '#0D0B08' }}>
                 {p.avatar_url
                   ? <img src={p.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : (p.username?.[0] ?? 'U').toUpperCase()
@@ -171,7 +171,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
               </Link>
             ))}
             {goingCount > 6 && (
-              <div style={{ width: 34, height: 34, borderRadius: '50%', border: `2px solid ${C.bg2}`, ...G.raised, marginLeft: -10, zIndex: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, color: C.c3 }}>
+              <div style={{ width: 34, height: 34, borderRadius: '50%', border: `2px solid ${C.bg2}`, ...G.raised, marginLeft: -10, zIndex: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, color: C.c3 }}>
                 +{goingCount - 6}
               </div>
             )}
@@ -193,11 +193,11 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <UserPlus size={15} style={{ color: C.gold }} />
-              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2 }}>
+              <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c2 }}>
                 Invite friends · {followers.length} following
               </span>
             </div>
-            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, color: C.c3 }}>
+            <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, color: C.c3 }}>
               {showInvite ? '▲' : '▼'}
             </span>
           </button>
@@ -206,19 +206,19 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
             <div style={{ borderTop: `1px solid ${C.bd}`, padding: '12px 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {followers.map(f => (
                 <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Link href={`/u/${f.username}`} style={{ width: 36, height: 36, borderRadius: '50%', background: C.gold, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-syne,sans-serif)', fontSize: 14, fontWeight: 700, color: '#0D0B08', textDecoration: 'none', overflow: 'hidden' }}>
+                  <Link href={`/u/${f.username}`} style={{ width: 36, height: 36, borderRadius: '50%', background: C.gold, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display), sans-serif', fontSize: 14, fontWeight: 700, color: '#0D0B08', textDecoration: 'none', overflow: 'hidden' }}>
                     {f.avatar_url ? <img src={f.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (f.username?.[0] ?? 'U').toUpperCase()}
                   </Link>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.cream, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {f.full_name ?? f.username}
                     </p>
-                    <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, color: C.c3 }}>@{f.username}</p>
+                    <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, color: C.c3 }}>@{f.username}</p>
                   </div>
                   <button
                     onClick={() => sendInvite(f)}
                     disabled={invited.has(f.id)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${invited.has(f.id) ? C.greenBd : C.goldBd}`, background: invited.has(f.id) ? C.greenDim : C.goldDim, color: invited.has(f.id) ? C.greenL : C.gold, padding: '8px 12px', borderRadius: 6, cursor: invited.has(f.id) ? 'default' : 'pointer', transition: 'all 200ms', flexShrink: 0 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${invited.has(f.id) ? C.greenBd : C.goldBd}`, background: invited.has(f.id) ? C.greenDim : C.goldDim, color: invited.has(f.id) ? C.greenL : C.gold, padding: '8px 12px', borderRadius: 6, cursor: invited.has(f.id) ? 'default' : 'pointer', transition: 'all 200ms', flexShrink: 0 }}>
                     {invited.has(f.id) ? <><CheckCircle size={11} /> Invited</> : <><Send size={11} /> Invite</>}
                   </button>
                 </div>

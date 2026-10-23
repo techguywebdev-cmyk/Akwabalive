@@ -35,9 +35,9 @@ const config: Config = {
         'border-2': 'rgba(245,236,215,0.12)',
       },
       fontFamily: {
-        serif:   ['var(--font-cormorant)', 'serif'],
-        display: ['var(--font-syne)',      'sans-serif'],
-        mono:    ['var(--font-dm-mono)',   'monospace'],
+        serif:   ['var(--font-display)', 'sans-serif'],
+        display: ['var(--font-display)', 'sans-serif'],
+        mono:    ['var(--font-inter)', 'sans-serif'],
         sans:    ['var(--font-inter)',     'sans-serif'],
       },
       borderRadius: {

@@ -110,7 +110,7 @@ export default function UserProfilePage() {
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-        <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
+        <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
       </div>
     </div>
   );
@@ -119,8 +119,8 @@ export default function UserProfilePage() {
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: 16 }}>
-        <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 28, color: C.c2 }}>User not found</p>
-        <Link href="/events" style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '10px 20px', borderRadius: 6 }}>
+        <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 28, color: C.c2 }}>User not found</p>
+        <Link href="/events" style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '10px 20px', borderRadius: 6 }}>
           Browse Events
         </Link>
       </div>
@@ -142,22 +142,22 @@ export default function UserProfilePage() {
         <div style={{ ...G.panel, borderBottom: `1px solid ${C.bd}` }}>
           <div style={{ maxWidth: 680, margin: '0 auto', padding: '32px 20px 0' }}>
 
-            <Link href="/events" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 24 }}>
+            <Link href="/events" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 24 }}>
               <ArrowLeft size={12} /> Back
             </Link>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 72, height: 72, borderRadius: '50%', flexShrink: 0, background: C.gold, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-syne,sans-serif)', fontSize: 28, fontWeight: 700, color: '#0D0B08', overflow: 'hidden', border: `2px solid ${C.goldBd}` }}>
+              <div style={{ width: 72, height: 72, borderRadius: '50%', flexShrink: 0, background: C.gold, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display), sans-serif', fontSize: 28, fontWeight: 700, color: '#0D0B08', overflow: 'hidden', border: `2px solid ${C.goldBd}` }}>
                 {profile.avatar_url
                   ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : (profile.username?.[0] ?? 'U').toUpperCase()
                 }
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h1 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 26, fontWeight: 400, color: C.cream, lineHeight: 1.1, marginBottom: 4 }}>
+                <h1 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 26, fontWeight: 400, color: C.cream, lineHeight: 1.1, marginBottom: 4 }}>
                   {profile.full_name ?? profile.username}
                 </h1>
-                <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', color: C.c3, marginBottom: 8 }}>
+                <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', color: C.c3, marginBottom: 8 }}>
                   @{profile.username}
                 </p>
                 {profile.bio && (
@@ -178,8 +178,8 @@ export default function UserProfilePage() {
                 { label: 'Dreams',    value: dreamMatched.length   },
               ].map((stat, i) => (
                 <div key={stat.label} style={{ flex: 1, textAlign: 'center', borderRight: i < 3 ? `1px solid ${C.bd}` : 'none' }}>
-                  <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 24, fontWeight: 400, color: C.cream, lineHeight: 1, marginBottom: 4 }}>{stat.value}</p>
-                  <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>{stat.label}</p>
+                  <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 24, fontWeight: 400, color: C.cream, lineHeight: 1, marginBottom: 4 }}>{stat.value}</p>
+                  <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -187,22 +187,22 @@ export default function UserProfilePage() {
             {/* Actions */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
               {isOwnProfile ? (
-                <button style={{ flex: 1, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, color: C.c2, padding: 11, borderRadius: 8, background: 'transparent', cursor: 'pointer' }}>
+                <button style={{ flex: 1, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, color: C.c2, padding: 11, borderRadius: 8, background: 'transparent', cursor: 'pointer' }}>
                   Edit Profile
                 </button>
               ) : user ? (
                 <button onClick={toggleFollow} disabled={followLoading}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', border: `1px solid ${isFollowing ? C.bd : C.goldBd}`, background: isFollowing ? 'transparent' : C.goldDim, color: isFollowing ? C.c2 : C.gold, padding: 11, borderRadius: 8, cursor: 'pointer', transition: 'all 200ms' }}>
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', border: `1px solid ${isFollowing ? C.bd : C.goldBd}`, background: isFollowing ? 'transparent' : C.goldDim, color: isFollowing ? C.c2 : C.gold, padding: 11, borderRadius: 8, cursor: 'pointer', transition: 'all 200ms' }}>
                   {isFollowing ? <><UserCheck size={13} /> Following</> : <><UserPlus size={13} /> Follow</>}
                 </button>
               ) : (
-                <Link href="/auth" style={{ flex: 1, textAlign: 'center', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', border: `1px solid ${C.goldBd}`, color: C.gold, padding: 11, borderRadius: 8, textDecoration: 'none', background: C.goldDim, display: 'block' }}>
+                <Link href="/auth" style={{ flex: 1, textAlign: 'center', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', border: `1px solid ${C.goldBd}`, color: C.gold, padding: 11, borderRadius: 8, textDecoration: 'none', background: C.goldDim, display: 'block' }}>
                   Sign in to follow
                 </Link>
               )}
               {!isOwnProfile && dreamMatched.length > 0 && (
                 <button onClick={() => setTab('dream')}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', border: '1px solid rgba(45,106,79,0.35)', background: 'rgba(45,106,79,0.1)', color: C.greenL, padding: '11px 16px', borderRadius: 8, cursor: 'pointer' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', border: '1px solid rgba(45,106,79,0.35)', background: 'rgba(45,106,79,0.1)', color: C.greenL, padding: '11px 16px', borderRadius: 8, cursor: 'pointer' }}>
                   <Heart size={13} /> Gift a ticket
                 </button>
               )}
@@ -216,7 +216,7 @@ export default function UserProfilePage() {
                 { key: 'dream',   label: 'Dream List', icon: '✨' },
               ] as { key: Tab; label: string; icon: string }[]).map(t => (
                 <button key={t.key} onClick={() => setTab(t.key)}
-                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: tab === t.key ? C.gold : C.c3, background: 'none', border: 'none', borderBottom: `2px solid ${tab === t.key ? C.gold : 'transparent'}`, padding: '12px 0', cursor: 'pointer', transition: 'all 180ms' }}>
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: tab === t.key ? C.gold : C.c3, background: 'none', border: 'none', borderBottom: `2px solid ${tab === t.key ? C.gold : 'transparent'}`, padding: '12px 0', cursor: 'pointer', transition: 'all 180ms' }}>
                   {t.label}
                 </button>
               ))}
@@ -231,12 +231,12 @@ export default function UserProfilePage() {
           {tab === 'moments' && (
             attendedEvents.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 0' }}>
-                <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 22, color: C.c3, marginBottom: 8 }}>No moments yet</p>
+                <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 22, color: C.c3, marginBottom: 8 }}>No moments yet</p>
                 <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3 }}>
                   {isOwnProfile ? 'Buy tickets to collect your event moments.' : 'No public events attended yet.'}
                 </p>
                 {isOwnProfile && (
-                  <Link href="/events" style={{ display: 'inline-block', marginTop: 16, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '10px 20px', borderRadius: 6 }}>
+                  <Link href="/events" style={{ display: 'inline-block', marginTop: 16, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '10px 20px', borderRadius: 6 }}>
                     Browse Events
                   </Link>
                 )}
@@ -246,12 +246,12 @@ export default function UserProfilePage() {
                 {attendedEvents.map(ev => ev && (
                   <Link key={ev.id} href={`/events/${ev.slug}`} style={{ display: 'block', borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.bd}`, ...G.panel, textDecoration: 'none' }}>
                     <div style={{ position: 'relative', paddingTop: '60%', backgroundImage: `url(${ev.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                      <span style={{ position: 'absolute', bottom: 8, left: 10, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 7px', borderRadius: 6, background: 'rgba(45,106,79,0.25)', color: C.greenL, border: '1px solid rgba(45,106,79,0.4)' }}>
+                      <span style={{ position: 'absolute', bottom: 8, left: 10, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 7px', borderRadius: 6, background: 'rgba(45,106,79,0.25)', color: C.greenL, border: '1px solid rgba(45,106,79,0.4)' }}>
                         ✓ Attended
                       </span>
                     </div>
                     <div style={{ padding: '10px 12px 12px' }}>
-                      <h4 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 15, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 4 }}>{ev.title}</h4>
+                      <h4 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 15, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 4 }}>{ev.title}</h4>
                       <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3 }}>{ev.dateLabel} · {ev.venue}</p>
                     </div>
                   </Link>
@@ -265,14 +265,14 @@ export default function UserProfilePage() {
             !isOwnProfile && !profile.is_public ? (
               <div style={{ textAlign: 'center', padding: '48px 0' }}>
                 <Lock size={32} style={{ color: C.c3, margin: '0 auto 12px', display: 'block' }} />
-                <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 22, color: C.c3 }}>Private profile</p>
+                <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 22, color: C.c3 }}>Private profile</p>
               </div>
             ) : tickets.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 0' }}>
                 <Ticket size={32} style={{ color: C.c3, margin: '0 auto 12px', display: 'block' }} />
-                <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 22, color: C.c3, marginBottom: 8 }}>No tickets yet</p>
+                <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 22, color: C.c3, marginBottom: 8 }}>No tickets yet</p>
                 {isOwnProfile && (
-                  <Link href="/events" style={{ display: 'inline-block', marginTop: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '10px 20px', borderRadius: 6 }}>
+                  <Link href="/events" style={{ display: 'inline-block', marginTop: 8, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '10px 20px', borderRadius: 6 }}>
                     Find Events
                   </Link>
                 )}
@@ -285,19 +285,19 @@ export default function UserProfilePage() {
                     <div key={ticket.id} style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 12, overflow: 'hidden', display: 'flex' }}>
                       {ev && <div style={{ width: 80, backgroundImage: `url(${ev.image})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />}
                       <div style={{ flex: 1, padding: '14px 16px' }}>
-                        <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold, marginBottom: 4 }}>{ticket.ticket_tier}</p>
-                        <h4 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 16, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 4 }}>{ticket.event_title}</h4>
+                        <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold, marginBottom: 4 }}>{ticket.ticket_tier}</p>
+                        <h4 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 16, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 4 }}>{ticket.event_title}</h4>
                         <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3, marginBottom: 10 }}>{formatEventDate(ticket.event_date)} · {ticket.event_venue}</p>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-                          <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 13, color: ticket.total_paid === 0 ? C.greenL : C.cream }}>
+                          <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 13, color: ticket.total_paid === 0 ? C.greenL : C.cream }}>
                             {ticket.total_paid === 0 ? 'FREE' : `₵${ticket.total_paid}`}
                           </span>
                           {ticket.gifted_by && (
-                            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: C.greenL, background: 'rgba(45,106,79,0.15)', border: '1px solid rgba(45,106,79,0.3)', padding: '3px 8px', borderRadius: 6 }}>
+                            <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: C.greenL, background: 'rgba(45,106,79,0.15)', border: '1px solid rgba(45,106,79,0.3)', padding: '3px 8px', borderRadius: 6 }}>
                               🎁 Gifted
                             </span>
                           )}
-                          <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: ticket.status === 'active' ? C.greenL : C.c3, background: ticket.status === 'active' ? 'rgba(45,106,79,0.15)' : C.c4, border: `1px solid ${ticket.status === 'active' ? 'rgba(45,106,79,0.3)' : C.bd}`, padding: '3px 8px', borderRadius: 6 }}>
+                          <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: ticket.status === 'active' ? C.greenL : C.c3, background: ticket.status === 'active' ? 'rgba(45,106,79,0.15)' : C.c4, border: `1px solid ${ticket.status === 'active' ? 'rgba(45,106,79,0.3)' : C.bd}`, padding: '3px 8px', borderRadius: 6 }}>
                             {ticket.status}
                           </span>
                         </div>
@@ -314,7 +314,7 @@ export default function UserProfilePage() {
             dreamMatched.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 0' }}>
                 <Star size={32} style={{ color: C.c3, margin: '0 auto 12px', display: 'block' }} />
-                <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 22, color: C.c3, marginBottom: 8 }}>
+                <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 22, color: C.c3, marginBottom: 8 }}>
                   {isOwnProfile ? 'Your dream list is empty' : 'No dream events yet'}
                 </p>
                 <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, maxWidth: 280, margin: '0 auto 16px', lineHeight: 1.6 }}>
@@ -323,7 +323,7 @@ export default function UserProfilePage() {
                     : "This user hasn't added any dream events yet."}
                 </p>
                 {isOwnProfile && (
-                  <Link href="/events" style={{ display: 'inline-block', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '10px 20px', borderRadius: 6 }}>
+                  <Link href="/events" style={{ display: 'inline-block', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '10px 20px', borderRadius: 6 }}>
                     Browse Events
                   </Link>
                 )}
@@ -345,22 +345,22 @@ export default function UserProfilePage() {
                       <div style={{ flex: 1, padding: '14px 16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
                           <Star size={11} style={{ color: C.gold }} />
-                          <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold }}>Dream Event</span>
+                          <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold }}>Dream Event</span>
                         </div>
-                        <h4 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 16, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 4 }}>{event.title}</h4>
+                        <h4 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 16, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 4 }}>{event.title}</h4>
                         <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3, marginBottom: 10 }}>{event.dateLabel} · {event.venue}</p>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 13, color: C.cream }}>
+                          <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 13, color: C.cream }}>
                             {event.price === 0
                               ? <span style={{ color: C.greenL, fontSize: 10, letterSpacing: '2px' }}>FREE</span>
                               : `₵${event.price}`}
                           </span>
                           {isOwnProfile ? (
-                            <Link href={`/events/${event.slug}`} style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '6px 12px', borderRadius: 10 }}>
+                            <Link href={`/events/${event.slug}`} style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '6px 12px', borderRadius: 10 }}>
                               View Event
                             </Link>
                           ) : (
-                            <Link href={`/events/${event.slug}`} style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: '#0D0B08', textDecoration: 'none', background: C.gold, padding: '7px 14px', borderRadius: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <Link href={`/events/${event.slug}`} style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: '#0D0B08', textDecoration: 'none', background: C.gold, padding: '7px 14px', borderRadius: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
                               🎁 Gift Ticket
                             </Link>
                           )}

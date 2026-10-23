@@ -38,7 +38,7 @@ interface Tier {
 function Input({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: 'block', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>
+      <label style={{ display: 'block', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>
         {label}
       </label>
       {children}
@@ -199,7 +199,7 @@ export default function EditEventPage() {
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-        <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
+        <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
       </div>
     </div>
   );
@@ -208,8 +208,8 @@ export default function EditEventPage() {
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: 16 }}>
-        <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 24, color: C.c2 }}>Event not found</p>
-        <Link href="/organizer/dashboard" style={{ color: C.gold, textDecoration: 'none', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', border: `1px solid ${C.goldBd}`, padding: '10px 20px', borderRadius: 6 }}>
+        <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 24, color: C.c2 }}>Event not found</p>
+        <Link href="/organizer/dashboard" style={{ color: C.gold, textDecoration: 'none', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', border: `1px solid ${C.goldBd}`, padding: '10px 20px', borderRadius: 6 }}>
           Back to Dashboard
         </Link>
       </div>
@@ -222,14 +222,14 @@ export default function EditEventPage() {
       <div style={{ paddingTop: 62, maxWidth: 680, margin: '0 auto', padding: '80px 20px 80px' }}>
 
         <div style={{ marginBottom: 28 }}>
-          <Link href="/organizer/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 20 }}>
+          <Link href="/organizer/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 20 }}>
             <ArrowLeft size={12} /> Dashboard
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-            <h1 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 28, fontWeight: 300, color: C.cream, letterSpacing: '-0.5px' }}>
+            <h1 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 28, fontWeight: 300, color: C.cream, letterSpacing: '-0.5px' }}>
               Edit Event
             </h1>
-            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '5px 12px', borderRadius: 8, background: status === 'published' ? C.greenDim : C.c4, color: status === 'published' ? C.greenL : C.c3, border: `1px solid ${status === 'published' ? C.greenBd : C.bd}` }}>
+            <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '5px 12px', borderRadius: 8, background: status === 'published' ? C.greenDim : C.c4, color: status === 'published' ? C.greenL : C.c3, border: `1px solid ${status === 'published' ? C.greenBd : C.bd}` }}>
               {status === 'published' ? '● Live' : '○ Draft'}
             </span>
           </div>
@@ -238,7 +238,7 @@ export default function EditEventPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Tag size={11} /> Basic Information
             </p>
             <Input label="Event Title *">
@@ -276,7 +276,7 @@ export default function EditEventPage() {
           </div>
 
           <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
               <Calendar size={11} /> Date & Time
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -293,7 +293,7 @@ export default function EditEventPage() {
           </div>
 
           <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8 }}>
               <ImageIcon size={11} /> Cover Image
             </p>
             <Input label="Image URL">
@@ -306,21 +306,21 @@ export default function EditEventPage() {
           </div>
 
           <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '24px 20px' }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+            <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
               <Tag size={11} /> Ticket Tiers
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {tiers.map((tier, i) => (
                 <div key={i} style={{ ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 10, padding: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                    <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>Tier {i + 1}</span>
+                    <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>Tier {i + 1}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       {tier.sold > 0 && (
-                        <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, color: C.greenL }}>{tier.sold} sold</span>
+                        <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, color: C.greenL }}>{tier.sold} sold</span>
                       )}
                       {tiers.length > 1 && tier.sold === 0 && (
                         <button onClick={() => removeTier(i)}
-                          style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', border: '1px solid rgba(206,17,38,0.2)', background: 'transparent', color: 'rgba(206,17,38,0.6)', padding: '5px 9px', borderRadius: 8, cursor: 'pointer' }}>
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', border: '1px solid rgba(206,17,38,0.2)', background: 'transparent', color: 'rgba(206,17,38,0.6)', padding: '5px 9px', borderRadius: 8, cursor: 'pointer' }}>
                           <Trash2 size={10} /> Remove
                         </button>
                       )}
@@ -346,7 +346,7 @@ export default function EditEventPage() {
               ))}
               {tiers.length < 4 && (
                 <button onClick={addTier}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px dashed ${C.bd}`, background: 'transparent', color: C.c3, padding: '12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', width: '100%' }}>
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px dashed ${C.bd}`, background: 'transparent', color: C.c3, padding: '12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', width: '100%' }}>
                   <Plus size={12} /> Add Tier
                 </button>
               )}
@@ -367,7 +367,7 @@ export default function EditEventPage() {
           )}
 
           <button onClick={handleSave} disabled={saving}
-            style={{ width: '100%', background: saving ? C.bg3 : C.gold, color: saving ? C.c3 : '#0D0B08', border: `1px solid ${saving ? C.bd : C.gold}`, padding: 15, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 200ms' }}>
+            style={{ width: '100%', background: saving ? C.bg3 : C.gold, color: saving ? C.c3 : '#0D0B08', border: `1px solid ${saving ? C.bd : C.gold}`, padding: 15, borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '2.5px', textTransform: 'uppercase', fontWeight: 700, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 200ms' }}>
             {saving ? <><Loader2 size={13} className="animate-spin" /> Saving…</> : <><Save size={13} /> Save Changes</>}
           </button>
         </div>

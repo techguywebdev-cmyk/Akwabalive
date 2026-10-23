@@ -73,7 +73,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
 
   return (
     <div>
-      <label style={{ display: 'block', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>
+      <label style={{ display: 'block', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>
         {label}
       </label>
 
@@ -89,7 +89,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
           {success && (
             <div style={{ position: 'absolute', bottom: 8, left: 8, display: 'flex', alignItems: 'center', gap: 5, background: C.greenDim, border: `1px solid ${C.greenBd}`, borderRadius: 6, padding: '4px 10px' }}>
               <CheckCircle size={11} style={{ color: C.greenL }} />
-              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', color: C.greenL }}>Uploaded</span>
+              <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', color: C.greenL }}>Uploaded</span>
             </div>
           )}
         </div>
@@ -113,7 +113,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
         {uploading ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
             <Loader2 size={24} style={{ color: C.gold, animation: 'spin 0.8s linear infinite' }} />
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold }}>Uploading…</p>
+            <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold }}>Uploading…</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -147,7 +147,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
       {/* URL fallback */}
       <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ flex: 1, height: 1, background: C.bd }} />
-        <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>or paste URL</span>
+        <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>or paste URL</span>
         <div style={{ flex: 1, height: 1, background: C.bd }} />
       </div>
       <input
