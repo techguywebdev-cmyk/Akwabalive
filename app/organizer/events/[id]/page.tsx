@@ -1,4 +1,5 @@
 'use client';
+import StreamSettings, { StreamKeyPanel, emptyStream, streamTierRows, type StreamValue } from '@/components/organizer/StreamSettings';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -80,6 +81,8 @@ export default function EditEventPage() {
   const [lat,         setLat]         = useState<number | null>(null);
   const [lng,         setLng]         = useState<number | null>(null);
   const [tiers,       setTiers]       = useState<Tier[]>([]);
+  const [stream,      setStream]      = useState<StreamValue>({ ...emptyStream(), enabled: false });
+  const [removedIds,  setRemovedIds]  = useState<string[]>([]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -110,7 +113,15 @@ export default function EditEventPage() {
     setArea(data.area ?? '');
     setLat(typeof data.lat === 'number' ? data.lat : null);
     setLng(typeof data.lng === 'number' ? data.lng : null);
-    setTiers((data.ticket_tiers ?? []).map((t: any) => ({
+    const streamRows = (data.ticket_tiers ?? []).filter((t: any) => t.kind === 'stream');
+    setStream({
+      enabled: !!data.stream_enabled,
+      youtubeUrl: data.youtube_live_url ?? '',
+      tiers: streamRows.length
+        ? streamRows.map((t: any) => ({ id: t.id, name: t.name, description: t.description ?? '', price: String(t.price), replayDays: t.replay_days ? String(t.replay_days) : '', sold: t.sold ?? 0 }))
+        : emptyStream().tiers,
+    });
+    setTiers((data.ticket_tiers ?? []).filter((t: any) => t.kind !== 'stream').map((t: any) => ({
       id:          t.id,
       name:        t.name,
       description: t.description ?? '',
@@ -126,6 +137,8 @@ export default function EditEventPage() {
   }
 
   function removeTier(i: number) {
+    const gone = tiers[i];
+    if (gone?.id) setRemovedIds((r) => [...r, gone.id!]);
     setTiers(t => t.filter((_, idx) => idx !== i));
   }
 
@@ -161,29 +174,47 @@ export default function EditEventPage() {
           area:        area.trim() || null,
           lat:         lat ?? null,
           lng:         lng ?? null,
+          stream_enabled: stream.enabled && stream.tiers.some((t) => t.name.trim()),
+          youtube_live_url: stream.youtubeUrl.trim() || null,
           updated_at:  new Date().toISOString(),
         })
         .eq('id', id);
 
       if (eventError) throw eventError;
 
-      await supabase.from('ticket_tiers').delete().eq('event_id', id);
-
-      const tierRows = tiers
+      // Keep tier ids stable (tickets point at them): update existing, insert new,
+      // delete only tiers that were removed and never sold.
+      const inPersonRows = tiers
         .filter(t => t.name.trim())
         .map(t => ({
+          ...(t.id ? { id: t.id } : {}),
           event_id:    id,
           name:        t.name.trim(),
           description: t.description.trim(),
           price:       parseFloat(t.price) || 0,
           quantity:    parseInt(t.quantity) || 50,
           sold:        t.sold,
+          kind:        'in_person',
         }));
+      const streamRows = streamTierRows(id, stream) as any[];
+      const keepStreamIds = new Set(streamRows.map((r) => r.id).filter(Boolean));
+      const droppedStream = stream.tiers.filter((t) => t.id && (!stream.enabled || !keepStreamIds.has(t.id)) && t.sold === 0).map((t) => t.id!);
+      const toDelete = [...removedIds, ...droppedStream];
+      if (toDelete.length) await supabase.from('ticket_tiers').delete().in('id', toDelete).eq('sold', 0);
 
-      if (tierRows.length > 0) {
-        const { error: tierError } = await supabase.from('ticket_tiers').insert(tierRows);
-        if (tierError) throw tierError;
+      const all = [...inPersonRows, ...streamRows];
+      const existing = all.filter((r) => r.id);
+      const fresh = all.filter((r) => !r.id);
+      if (existing.length) {
+        const { error: upErr } = await supabase.from('ticket_tiers').upsert(existing);
+        if (upErr) throw upErr;
       }
+      if (fresh.length) {
+        const { error: insErr } = await supabase.from('ticket_tiers').insert(fresh);
+        if (insErr) throw insErr;
+      }
+      setRemovedIds([]);
+      await loadEvent();
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -352,6 +383,9 @@ export default function EditEventPage() {
               )}
             </div>
           </div>
+
+          <StreamSettings value={stream} onChange={setStream} />
+          {stream.enabled && <StreamKeyPanel eventId={id} />}
 
           {error && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(206,17,38,0.1)', border: '1px solid rgba(206,17,38,0.25)', borderRadius: 8, padding: '12px 14px' }}>

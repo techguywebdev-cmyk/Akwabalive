@@ -32,6 +32,10 @@ export interface EventTicketTier {
   price: number;
   quantity: number;
   sold: number;
+  /** in_person = entry to the venue; stream = watch the livestream */
+  kind?: 'in_person' | 'stream';
+  /** Stream tickets only: days the recording stays watchable after the show (null = live only) */
+  replayDays?: number | null;
 }
 
 export interface GhanaEvent {
@@ -85,6 +89,11 @@ export interface GhanaEvent {
   description?: string | null;
   /** Real ticket tiers (Supabase events only). Needed to sell tickets on Akwaaba. */
   tiers?: EventTicketTier[];
+  /** Livestream (Cloudflare Stream) */
+  streamEnabled?: boolean;
+  streamStatus?: 'idle' | 'live' | 'ended';
+  /** Free stream on YouTube, embedded on the event page */
+  youtubeLiveUrl?: string | null;
 }
 
 export interface CityInfo {

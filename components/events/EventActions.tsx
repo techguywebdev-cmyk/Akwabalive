@@ -66,7 +66,9 @@ export function ActionBar({ actions, accent, maxWidth = 400, vertical = false }:
 export function ticketsLabel(e: GhanaEvent) {
   const d = parseDay(e.date);
   if (d && d.getTime() < new Date(new Date().toDateString()).getTime()) return 'Ended';
-  const tiers = getTiers(e).filter((t) => t.available);
+  const all = getTiers(e).filter((t) => t.available);
+  const inPerson = all.filter((t) => t.kind === 'in_person');
+  const tiers = inPerson.length ? inPerson : all;
   const from = tiers.length ? Math.min(...tiers.map((t) => t.price)) : e.price;
   return from === 0 ? 'Free' : `GH₵ ${from.toLocaleString()}`;
 }
@@ -79,10 +81,12 @@ export function ticketsLabel(e: GhanaEvent) {
  * official site for events sold elsewhere.
  */
 export function TicketsSheet({
-  event, accent, onClose, onBuy, onRsvp, footer,
+  event, accent, onClose, onBuy, onRsvp, footer, initialMode = 'in_person',
 }: {
   event: GhanaEvent;
   accent: string;
+  /** Open on the livestream tiers instead of in-person ones */
+  initialMode?: 'in_person' | 'stream';
   onClose: () => void;
   onBuy: (tiers: CheckoutTier[]) => void;
   onRsvp?: () => void;
@@ -96,12 +100,22 @@ export function TicketsSheet({
     return () => { cancelAnimationFrame(t); window.removeEventListener('keydown', onKey); };
   }, [onClose]);
 
-  const tiers = getTiers(event);
-  const listed = isListedEvent(event) && !!event.ticketUrl;
+  const all = getTiers(event);
+  const hasStream = all.some((t) => t.kind === 'stream');
+  const hasInPerson = all.some((t) => t.kind === 'in_person');
+  const [mode, setMode] = useState<'in_person' | 'stream'>(hasStream && (initialMode === 'stream' || !hasInPerson) ? 'stream' : 'in_person');
+  const streaming = mode === 'stream';
+  const tiers = all.filter((t) => t.kind === mode);
+  const listed = !streaming && isListedEvent(event) && !!event.ticketUrl;
   const d = parseDay(event.date);
   const past = !!d && d.getTime() < new Date(new Date().toDateString()).getTime();
   const sellable = tiers.some((t) => t.id && t.available);
-  const free = tiers.length > 0 && tiers.every((t) => t.price === 0);
+  const free = !streaming && tiers.length > 0 && tiers.every((t) => t.price === 0);
+  const tab = (on: boolean) => ({
+    height: 44, borderRadius: 999, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer',
+    fontFamily: FONT.sans, fontSize: 14.5, fontWeight: 600,
+    ...(on ? { background: '#F1F4F2', color: T.onMint } : { background: 'transparent', color: 'rgba(255,255,255,0.75)' }),
+  } as const);
 
   const cta = { flex: 1, height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', color: T.onMint, background: T.mint, border: 'none' } as const;
 
@@ -134,6 +148,22 @@ export function TicketsSheet({
           </button>
         </div>
 
+        {hasStream && hasInPerson && (
+          <div role="tablist" aria-label="How you'll be there" style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 4, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
+            <button type="button" role="tab" aria-selected={!streaming} onClick={() => setMode('in_person')} style={tab(!streaming)}>
+              <Icon name="tickets" size={17} strokeWidth={1.8} /> Attend
+            </button>
+            <button type="button" role="tab" aria-selected={streaming} onClick={() => setMode('stream')} style={tab(streaming)}>
+              <span aria-hidden style={{ width: 7, height: 7, borderRadius: 4, background: '#FF4D5E' }} /> Watch live
+            </button>
+          </div>
+        )}
+        {streaming && (
+          <p style={{ margin: '14px 0 0', fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.5, color: T.text2 }}>
+            Can’t make it? Watch the whole show live in HD on your phone, laptop or TV. One device at a time.
+          </p>
+        )}
+
         <div style={{ marginTop: 16 }}>
           {listed ? (
             <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
@@ -158,7 +188,7 @@ export function TicketsSheet({
 
         {!listed && !past && (
           <p style={{ margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 8, fontFamily: FONT.sans, fontSize: 12.5, color: 'rgba(255,255,255,0.5)' }}>
-            <Icon name="lock" size={15} /> MoMo or card · secured by Paystack · QR ticket sent instantly
+            <Icon name="lock" size={15} /> {streaming ? 'MoMo or card · your stream unlocks in My tickets' : 'MoMo or card · secured by Paystack · QR ticket sent instantly'}
           </p>
         )}
 
@@ -170,11 +200,16 @@ export function TicketsSheet({
           ) : free && onRsvp ? (
             <button type="button" onClick={onRsvp} style={cta}>Reserve a free spot</button>
           ) : sellable ? (
-            <button type="button" onClick={() => onBuy(tiers)} style={cta}>Choose tickets</button>
+            <button type="button" onClick={() => onBuy(tiers)} style={cta}>{streaming ? 'Buy a stream ticket' : 'Choose tickets'}</button>
           ) : (
             <span style={{ ...cta, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default', fontSize: 14 }}>Not on sale on Akwaaba yet</span>
           )}
         </div>
+        {streaming && (
+          <Link href={`/events/${event.slug}/live`} style={{ display: 'block', textAlign: 'center', marginTop: 14, fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>
+            Already have a stream ticket? Watch now
+          </Link>
+        )}
         {footer}
       </section>
     </div>
