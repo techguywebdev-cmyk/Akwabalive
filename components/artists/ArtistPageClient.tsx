@@ -27,7 +27,7 @@ function TicketCta({ event }: { event: GhanaEvent }) {
           color: C.onAccent,
           padding: '8px 12px',
           borderRadius: 6,
-          fontFamily: 'var(--font-dm-mono,monospace)',
+          fontFamily: 'var(--font-inter), sans-serif',
           fontSize: 10,
           letterSpacing: '1.5px',
           textTransform: 'uppercase',
@@ -53,7 +53,7 @@ function TicketCta({ event }: { event: GhanaEvent }) {
         color: C.onAccent,
         padding: '8px 12px',
         borderRadius: 6,
-        fontFamily: 'var(--font-dm-mono,monospace)',
+        fontFamily: 'var(--font-inter), sans-serif',
         fontSize: 10,
         letterSpacing: '1.5px',
         textTransform: 'uppercase',
@@ -98,7 +98,7 @@ export default function ArtistPageClient({
             gap: 6,
             marginTop: 16,
             marginBottom: 24,
-            fontFamily: 'var(--font-dm-mono,monospace)',
+            fontFamily: 'var(--font-inter), sans-serif',
             fontSize: 10,
             letterSpacing: '1.5px',
             textTransform: 'uppercase',
@@ -122,17 +122,15 @@ export default function ArtistPageClient({
               flexShrink: 0,
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={artist.image}
-              alt={artist.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
+            {/* Initials, not a photo: the artist data holds stand-in stock portraits */}
+            <span aria-hidden style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1F5A3F', color: '#D6FBE6', fontFamily: 'var(--font-display, sans-serif)', fontSize: 34, fontWeight: 800 }}>
+              {artist.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+            </span>
           </div>
           <div>
             <p
               style={{
-                fontFamily: 'var(--font-dm-mono,monospace)',
+                fontFamily: 'var(--font-inter), sans-serif',
                 fontSize: 10,
                 letterSpacing: '2px',
                 textTransform: 'uppercase',
@@ -144,7 +142,7 @@ export default function ArtistPageClient({
             </p>
             <h1
               style={{
-                fontFamily: 'var(--font-cormorant,serif)',
+                fontFamily: 'var(--font-display), sans-serif',
                 fontSize: 36,
                 fontWeight: 400,
                 color: C.cream,
@@ -199,7 +197,7 @@ export default function ArtistPageClient({
                 display: 'inline-block',
                 marginTop: 16,
                 color: C.gold,
-                fontFamily: 'var(--font-dm-mono,monospace)',
+                fontFamily: 'var(--font-inter), sans-serif',
                 fontSize: 11,
                 letterSpacing: '1.5px',
                 textTransform: 'uppercase',
@@ -216,7 +214,7 @@ export default function ArtistPageClient({
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
               <p
                 style={{
-                  fontFamily: 'var(--font-dm-mono,monospace)',
+                  fontFamily: 'var(--font-inter), sans-serif',
                   fontSize: 10,
                   letterSpacing: '2px',
                   textTransform: 'uppercase',
@@ -230,7 +228,7 @@ export default function ArtistPageClient({
               <Link
                 href={`/moments?artist=${artist.slug}`}
                 style={{
-                  fontFamily: 'var(--font-dm-mono,monospace)',
+                  fontFamily: 'var(--font-inter), sans-serif',
                   fontSize: 10,
                   letterSpacing: '1px',
                   textTransform: 'uppercase',
@@ -316,7 +314,7 @@ export default function ArtistPageClient({
                       {m.year && (
                         <p
                           style={{
-                            fontFamily: 'var(--font-dm-mono,monospace)',
+                            fontFamily: 'var(--font-inter), sans-serif',
                             fontSize: 10,
                             color: C.c3,
                             margin: '4px 0 0',
@@ -337,7 +335,7 @@ export default function ArtistPageClient({
           <section style={{ marginBottom: 40 }}>
             <p
               style={{
-                fontFamily: 'var(--font-dm-mono,monospace)',
+                fontFamily: 'var(--font-inter), sans-serif',
                 fontSize: 10,
                 letterSpacing: '2px',
                 textTransform: 'uppercase',
@@ -360,7 +358,7 @@ export default function ArtistPageClient({
           <section>
             <p
               style={{
-                fontFamily: 'var(--font-dm-mono,monospace)',
+                fontFamily: 'var(--font-inter), sans-serif',
                 fontSize: 10,
                 letterSpacing: '2px',
                 textTransform: 'uppercase',
@@ -417,7 +415,7 @@ function EventRow({ event }: { event: GhanaEvent }) {
         <div style={{ minWidth: 0, flex: 1 }}>
           <p
             style={{
-              fontFamily: 'var(--font-dm-mono,monospace)',
+              fontFamily: 'var(--font-inter), sans-serif',
               fontSize: 10,
               color: C.gold,
               letterSpacing: '1px',
@@ -429,7 +427,7 @@ function EventRow({ event }: { event: GhanaEvent }) {
           </p>
           <h3
             style={{
-              fontFamily: 'var(--font-cormorant,serif)',
+              fontFamily: 'var(--font-display), sans-serif',
               fontSize: 18,
               fontWeight: 400,
               color: C.cream,

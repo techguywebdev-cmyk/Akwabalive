@@ -131,7 +131,7 @@ export default function ReviewQueuePage() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
-            fontFamily: 'var(--font-dm-mono,monospace)',
+            fontFamily: 'var(--font-inter), sans-serif',
             fontSize: 10,
             letterSpacing: '1.5px',
             textTransform: 'uppercase',
@@ -145,7 +145,7 @@ export default function ReviewQueuePage() {
 
         <p
           style={{
-            fontFamily: 'var(--font-dm-mono,monospace)',
+            fontFamily: 'var(--font-inter), sans-serif',
             fontSize: 10,
             letterSpacing: '2px',
             textTransform: 'uppercase',
@@ -157,7 +157,7 @@ export default function ReviewQueuePage() {
         </p>
         <h1
           style={{
-            fontFamily: 'var(--font-cormorant,serif)',
+            fontFamily: 'var(--font-display), sans-serif',
             fontSize: 32,
             fontWeight: 400,
             color: C.cream,
@@ -184,7 +184,7 @@ export default function ReviewQueuePage() {
           padding: 16, marginBottom: 24,
         }}>
           <p style={{
-            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px',
+            fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px',
             textTransform: 'uppercase', color: C.gold, marginBottom: 8,
           }}>
             Auto-discovery feed
@@ -241,7 +241,7 @@ export default function ReviewQueuePage() {
             }}
             style={{
               background: C.gold, color: C.onAccent, border: 'none', borderRadius: 8,
-              padding: '12px 16px', fontFamily: 'var(--font-dm-mono,monospace)',
+              padding: '12px 16px', fontFamily: 'var(--font-inter), sans-serif',
               fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase',
               fontWeight: 700, cursor: ingesting ? 'wait' : 'pointer',
             }}
@@ -251,7 +251,7 @@ export default function ReviewQueuePage() {
           {ingestLog && (
             <pre style={{
               marginTop: 12, fontSize: 11, color: C.c2, whiteSpace: 'pre-wrap',
-              fontFamily: 'var(--font-dm-mono,monospace)', lineHeight: 1.5,
+              fontFamily: 'var(--font-inter), sans-serif', lineHeight: 1.5,
             }}>{ingestLog}</pre>
           )}
         </div>
@@ -267,7 +267,7 @@ export default function ReviewQueuePage() {
               color: C.onAccent,
               padding: '10px 14px',
               borderRadius: 8,
-              fontFamily: 'var(--font-dm-mono,monospace)',
+              fontFamily: 'var(--font-inter), sans-serif',
               fontSize: 11,
               letterSpacing: '1.5px',
               textTransform: 'uppercase',
@@ -355,7 +355,7 @@ export default function ReviewQueuePage() {
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <p
                     style={{
-                      fontFamily: 'var(--font-dm-mono,monospace)',
+                      fontFamily: 'var(--font-inter), sans-serif',
                       fontSize: 10,
                       color: C.gold,
                       letterSpacing: '1px',
@@ -367,7 +367,7 @@ export default function ReviewQueuePage() {
                   </p>
                   <h3
                     style={{
-                      fontFamily: 'var(--font-cormorant,serif)',
+                      fontFamily: 'var(--font-display), sans-serif',
                       fontSize: 20,
                       fontWeight: 400,
                       color: C.cream,
@@ -450,7 +450,7 @@ export default function ReviewQueuePage() {
                     border: 'none',
                     borderRadius: 8,
                     padding: 12,
-                    fontFamily: 'var(--font-dm-mono,monospace)',
+                    fontFamily: 'var(--font-inter), sans-serif',
                     fontSize: 11,
                     letterSpacing: '1.5px',
                     textTransform: 'uppercase',
@@ -476,7 +476,7 @@ export default function ReviewQueuePage() {
                     border: `1px solid ${C.bd}`,
                     borderRadius: 8,
                     padding: 12,
-                    fontFamily: 'var(--font-dm-mono,monospace)',
+                    fontFamily: 'var(--font-inter), sans-serif',
                     fontSize: 10,
                     letterSpacing: '1px',
                     textTransform: 'uppercase',
@@ -500,7 +500,7 @@ export default function ReviewQueuePage() {
                     border: '1px solid rgba(206,17,38,0.3)',
                     borderRadius: 8,
                     padding: 12,
-                    fontFamily: 'var(--font-dm-mono,monospace)',
+                    fontFamily: 'var(--font-inter), sans-serif',
                     fontSize: 10,
                     letterSpacing: '1px',
                     textTransform: 'uppercase',

@@ -42,10 +42,10 @@ export default function DreamEventsPage() {
       <div style={{ paddingTop: 62, maxWidth: 680, margin: '0 auto', padding: '80px 20px 80px' }}>
 
         <div style={{ marginBottom: 28 }}>
-          <Link href={`/u/${profile?.username ?? ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 20 }}>
+          <Link href={`/u/${profile?.username ?? ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 20 }}>
             <ArrowLeft size={12} /> My Profile
           </Link>
-          <h1 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 32, fontWeight: 300, color: C.cream, letterSpacing: '-1px', marginBottom: 6 }}>
+          <h1 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 32, fontWeight: 300, color: C.cream, letterSpacing: '-1px', marginBottom: 6 }}>
             Dream List
           </h1>
           <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3 }}>
@@ -55,16 +55,16 @@ export default function DreamEventsPage() {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
+            <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
           </div>
         ) : matched.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
             <Star size={40} style={{ color: C.c3, margin: '0 auto 16px', display: 'block', opacity: 0.4 }} />
-            <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 24, color: C.c2, marginBottom: 8 }}>Your dream list is empty</p>
+            <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 24, color: C.c2, marginBottom: 8 }}>Your dream list is empty</p>
             <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, marginBottom: 20, maxWidth: 280, margin: '0 auto 20px', lineHeight: 1.6 }}>
               Pin events you want to attend. Friends who visit your profile can gift you a ticket from this list.
             </p>
-            <Link href="/events" style={{ display: 'inline-block', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '11px 22px', borderRadius: 6, background: C.goldDim }}>
+            <Link href="/events" style={{ display: 'inline-block', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, textDecoration: 'none', border: `1px solid ${C.goldBd}`, padding: '11px 22px', borderRadius: 6, background: C.goldDim }}>
               Browse Events
             </Link>
           </div>
@@ -76,25 +76,25 @@ export default function DreamEventsPage() {
                 <div style={{ flex: 1, padding: '16px 18px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                     <Star size={11} style={{ color: C.gold }} />
-                    <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold }}>Dream Event</span>
-                    <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 6, background: dream.is_public ? 'rgba(45,106,79,0.15)' : C.c4, color: dream.is_public ? C.greenL : C.c3, border: `1px solid ${dream.is_public ? 'rgba(45,106,79,0.3)' : C.bd}`, marginLeft: 'auto' }}>
+                    <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold }}>Dream Event</span>
+                    <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 6, background: dream.is_public ? 'rgba(45,106,79,0.15)' : C.c4, color: dream.is_public ? C.greenL : C.c3, border: `1px solid ${dream.is_public ? 'rgba(45,106,79,0.3)' : C.bd}`, marginLeft: 'auto' }}>
                       {dream.is_public ? 'Public' : 'Private'}
                     </span>
                   </div>
-                  <h4 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 18, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 4 }}>{event.title}</h4>
+                  <h4 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 18, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 4 }}>{event.title}</h4>
                   <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3, marginBottom: 12 }}>{event.dateLabel} · {event.venue}</p>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 15, color: event.price === 0 ? C.greenL : C.cream }}>
+                    <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 15, color: event.price === 0 ? C.greenL : C.cream }}>
                       {event.price === 0 ? 'Free' : `₵${event.price}`}
                     </span>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         onClick={() => removeDream(event.slug)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid rgba(206,17,38,0.2)', background: 'transparent', color: 'rgba(206,17,38,0.6)', padding: '7px 12px', borderRadius: 6, cursor: 'pointer' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid rgba(206,17,38,0.2)', background: 'transparent', color: 'rgba(206,17,38,0.6)', padding: '7px 12px', borderRadius: 6, cursor: 'pointer' }}>
                         <Trash2 size={11} /> Remove
                       </button>
                       <Link href={`/events/${event.slug}`}
-                        style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold, padding: '7px 12px', borderRadius: 6, textDecoration: 'none' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold, padding: '7px 12px', borderRadius: 6, textDecoration: 'none' }}>
                         View →
                       </Link>
                     </div>

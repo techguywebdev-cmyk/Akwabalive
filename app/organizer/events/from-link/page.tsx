@@ -38,7 +38,7 @@ const inputStyle: React.CSSProperties = {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: 'block', fontFamily: 'var(--font-dm-mono), monospace', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>
+      <label style={{ display: 'block', fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>
         {label}
       </label>
       {children}
@@ -183,10 +183,10 @@ export default function FromLinkPage() {
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <div style={{ paddingTop: 62, maxWidth: 680, margin: '0 auto', padding: '80px 20px 80px' }}>
-        <Link href="/organizer/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono), monospace', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 20 }}>
+        <Link href="/organizer/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 20 }}>
           <ArrowLeft size={12} /> Dashboard
         </Link>
-        <h1 style={{ fontFamily: 'var(--font-cormorant), serif', fontSize: 32, fontWeight: 300, color: C.cream, letterSpacing: '-1px', marginBottom: 8 }}>
+        <h1 style={{ fontFamily: 'var(--font-display), sans-serif, serif', fontSize: 32, fontWeight: 300, color: C.cream, letterSpacing: '-1px', marginBottom: 8 }}>
           Add from link
         </h1>
         <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 14, fontWeight: 300, color: C.c2, lineHeight: 1.6, marginBottom: 28 }}>
@@ -198,7 +198,7 @@ export default function FromLinkPage() {
             <div style={{ display: 'flex', gap: 8 }}>
               <input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://www.instagram.com/p/…" style={{ ...inputStyle, flex: 1 }} />
               <button onClick={parse} disabled={loading || !url}
-                style={{ background: C.gold, color: C.onAccent, border: 'none', padding: '0 18px', borderRadius: 8, fontFamily: 'var(--font-dm-mono), monospace', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+                style={{ background: C.gold, color: C.onAccent, border: 'none', padding: '0 18px', borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
                 {loading ? <Loader2 size={14} /> : <Link2 size={14} />}
                 {loading ? 'Reading…' : 'Read'}
               </button>
@@ -207,7 +207,7 @@ export default function FromLinkPage() {
         </div>
 
         {confidence > 0 && (
-          <p style={{ fontFamily: 'var(--font-dm-mono), monospace', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: confidence > 0.7 ? C.greenL : C.gold, marginBottom: 12 }}>
+          <p style={{ fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: confidence > 0.7 ? C.greenL : C.gold, marginBottom: 12 }}>
             Confidence {Math.round(confidence * 100)}% — review before publishing
           </p>
         )}
@@ -278,13 +278,13 @@ export default function FromLinkPage() {
             )}
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => publish('draft')} disabled={saving} style={{ flex: 1, background: 'transparent', color: C.c2, border: `1px solid ${C.bd}`, padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono), monospace', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer' }}>
+              <button onClick={() => publish('draft')} disabled={saving} style={{ flex: 1, background: 'transparent', color: C.c2, border: `1px solid ${C.bd}`, padding: 14, borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Save draft
               </button>
-              <button onClick={() => publish('pending_review')} disabled={saving} style={{ flex: 1, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}`, padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono), monospace', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer' }}>
+              <button onClick={() => publish('pending_review')} disabled={saving} style={{ flex: 1, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}`, padding: 14, borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer' }}>
                 Save for review
               </button>
-              <button onClick={() => publish('published')} disabled={saving} style={{ flex: 2, background: C.gold, color: C.onAccent, border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono), monospace', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <button onClick={() => publish('published')} disabled={saving} style={{ flex: 2, background: C.gold, color: C.onAccent, border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 {saving ? <Loader2 size={14} /> : <ExternalLink size={14} />}
                 Publish as listed
               </button>

@@ -8,9 +8,9 @@ import type { MomentChapter } from './types';
 import { activeChapterIndex, formatCount, formatTime } from './types';
 import type { CrowdFace } from '@/hooks/useMomentCrowd';
 
-export const mono = 'var(--font-dm-mono, monospace)';
+export const mono = 'var(--font-inter), sans-serif';
 export const sans = 'var(--font-inter, sans-serif)';
-export const serif = 'var(--font-cormorant, serif)';
+export const serif = 'var(--font-display), sans-serif';
 
 const shadowText = '0 1px 3px rgba(0,0,0,0.75), 0 2px 14px rgba(0,0,0,0.45)';
 

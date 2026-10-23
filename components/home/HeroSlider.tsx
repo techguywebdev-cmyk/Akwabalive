@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, Calendar, MapPin, Clock } from 'lucide-react';
 import { C, G, R } from '@/lib/theme';
 
-const mono = 'var(--font-dm-mono, monospace)';
+const mono = 'var(--font-inter), sans-serif';
 const sans = 'var(--font-inter, sans-serif)';
 import type { HeroSlide } from '@/lib/events/rank';
 import { extractYoutubeId } from '@/lib/events/rank';
@@ -544,7 +544,7 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
           <h1
             key={`t-${cur}`}
             style={{
-              fontFamily: 'var(--font-cormorant, serif)',
+              fontFamily: 'var(--font-display), sans-serif',
               fontSize: 'clamp(40px, 9vw, 76px)',
               fontWeight: 500, lineHeight: 0.95,
               letterSpacing: '-1px', color: '#FFFDF6',

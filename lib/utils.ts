@@ -141,10 +141,16 @@ export function filterEvents(
       haversine(userLoc.lat, userLoc.lng, b.lat, b.lng),
     );
   } else {
+    // Soonest first: upcoming events by date, then past ones (most recent first)
+    const today = new Date().toISOString().slice(0, 10);
     list = [...list].sort((a, b) => {
-      const score = rankScore(b) - rankScore(a);
-      if (score !== 0) return score;
-      return (a.date || '').localeCompare(b.date || '');
+      const da = (a.date || '').slice(0, 10);
+      const db = (b.date || '').slice(0, 10);
+      const pa = !da || da < today;
+      const pb = !db || db < today;
+      if (pa !== pb) return pa ? 1 : -1;
+      if (da !== db) return pa ? db.localeCompare(da) : da.localeCompare(db);
+      return rankScore(b) - rankScore(a);
     });
   }
 
