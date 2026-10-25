@@ -102,6 +102,7 @@ export function supabaseToGhanaEvent(ev: SupabaseEvent): GhanaEvent {
     listingType: ev.listing_type === 'listed' ? 'listed' : 'hosted',
     ticketUrl: ev.ticket_url ?? null,
     ticketSource: ev.ticket_source ?? null,
+    priceUnknown: ev.listing_type === 'listed' && !(ev.ticket_tiers?.length),
     sourceUrl: ev.source_url ?? null,
     isFeatured: featured,
     featuredOrder: ev.featured_order ?? 100,

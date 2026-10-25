@@ -312,11 +312,12 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
         <section id="tickets" style={{ marginTop: 34 }}>
           <h2 style={eyebrow}>Tickets</h2>
-          {listed ? (
+          {listed && (
             <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
               Tickets are sold by {event.ticketSource || 'the organiser'}, not on Akwaaba. We list the event so you can find it — buy only on the official page.
             </p>
-          ) : (
+          )}
+          {(!listed || tiers.length > 0) && (
             <>
               {tiers.map((tier, i) => (
                 <div key={tier.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 0', borderBottom: i === tiers.length - 1 ? 'none' : `1px solid ${T.hairline}`, color: tier.available ? T.white : 'rgba(255,255,255,0.4)' }}>
@@ -371,7 +372,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                     <img src={ev.image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                   </span>
                   <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{ev.title}</span>
-                  <span style={{ marginTop: -6, fontFamily: FONT.sans, fontSize: 12.5, color: T.text2 }}>{ev.price === 0 ? 'Free' : `GH₵ ${ev.price.toLocaleString()}`}</span>
+                  <span style={{ marginTop: -6, fontFamily: FONT.sans, fontSize: 12.5, color: T.text2 }}>{ev.priceUnknown ? 'See prices' : ev.price === 0 ? 'Free' : `GH₵ ${ev.price.toLocaleString()}`}</span>
                 </Link>
               ))}
             </div>

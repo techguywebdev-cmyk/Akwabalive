@@ -53,7 +53,7 @@ export function EventTags({ event, accent, lead }: { event: GhanaEvent; accent: 
           {when.text}
         </span>
       )}
-      {event.price === 0 && !when?.past && (
+      {event.price === 0 && !event.priceUnknown && !when?.past && (
         <span style={{ ...chip, background: 'rgba(255,255,255,0.09)', color: T.white }}>Free</span>
       )}
     </div>

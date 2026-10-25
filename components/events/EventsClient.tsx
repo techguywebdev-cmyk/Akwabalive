@@ -54,7 +54,7 @@ function dayHeading(e: GhanaEvent) {
   return label;
 }
 
-const priceText = (e: GhanaEvent) => (e.price === 0 ? 'Free' : `GH₵ ${e.price.toLocaleString()}`);
+const priceText = (e: GhanaEvent) => (e.priceUnknown ? 'Tickets' : e.price === 0 ? 'Free' : `GH₵ ${e.price.toLocaleString()}`);
 
 /** One borderless row in the list view: picture, category in the event's colour, title, time · venue, price. */
 function Row({ event, last }: { event: GhanaEvent; last: boolean }) {
@@ -81,7 +81,7 @@ function Row({ event, last }: { event: GhanaEvent; last: boolean }) {
           {[event.time, event.venue].filter(Boolean).join(' · ')}
         </span>
       </span>
-      <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: event.price === 0 ? T.mintText : 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap' }}>
+      <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: event.price === 0 && !event.priceUnknown ? T.mintText : 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap' }}>
         {priceText(event)}
       </span>
     </Link>
