@@ -68,7 +68,6 @@ export default function FlyerCanvas({
   let fadeFrom = room;
   if (bleed && ratio) {
     const fullH = size.w / ratio; // height when the flyer spans the full width
-    const topPad = typeof area.top === 'number' ? area.top : 0; // header buttons
     if (fullH <= room + 16) {
       // Fits at full width: rest it right on the text (no side gaps, nothing covered)
       poster = { position: 'absolute', left: 0, top: Math.max(0, room - fullH), width: '100%', height: fullH, objectFit: 'cover' };
@@ -78,13 +77,10 @@ export default function FlyerCanvas({
       poster = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 35%' };
       fadeFrom = Math.max(room - 140, size.h * 0.4);
     } else {
-      // Too tall to fit at full width: scale the whole flyer down to the room between the header
-      // and the text, so its bottom (date, venue, contacts) is never hidden. The blurred copy
-      // behind fills the thin strips at the sides.
-      const h = Math.max(160, room - topPad);
-      const w = Math.min(size.w, h * ratio);
-      poster = { position: 'absolute', left: (size.w - w) / 2, top: topPad + (room - topPad - h), width: w, height: h, objectFit: 'contain', borderRadius: w < size.w - 8 ? 14 : 0, boxShadow: '0 18px 50px rgba(0,0,0,0.45)' };
-      fadeFrom = room - 8;
+      // Taller than the room: always full width, never shrunk or cropped at the sides; the
+      // lower part continues under the text behind a dark fade
+      poster = { position: 'absolute', left: 0, top: 0, width: '100%', height: Math.min(fullH, size.h), objectFit: 'cover', objectPosition: 'center top' };
+      fadeFrom = Math.max(room - 60, size.h * 0.45);
     }
   }
 
