@@ -17,7 +17,33 @@ import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import GoingWith from '@/components/social/GoingWith';
 import { LineupSection } from '@/components/ui/LineupChips';
 
-function getTiers(price: number) {
+export interface CheckoutTier {
+  /** ticket_tiers.id — only real (database) tiers can be bought */
+  id?: string;
+  name: string;
+  price: number;
+  desc: string;
+  available: boolean;
+  spots: number;
+}
+
+function getTiers(event: GhanaEvent): CheckoutTier[] {
+  // Real tiers set by the organizer
+  if (event.tiers?.length) {
+    return event.tiers.map((t) => {
+      const spots = Math.max(0, t.quantity - t.sold);
+      return {
+        id: t.id,
+        name: t.name,
+        price: t.price,
+        desc: t.description || (t.price === 0 ? 'Free entry — RSVP required.' : 'Entry ticket.'),
+        available: spots > 0,
+        spots,
+      };
+    });
+  }
+  // Preview tiers for demo / static events (not purchasable)
+  const price = event.price;
   if (price === 0) return [
     { name: 'General Admission', price: 0, desc: 'Free entry \u2014 RSVP required.', available: true, spots: 500 },
   ];
@@ -55,7 +81,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [showPromoVideo, setShowPromoVideo] = useState(false);
   const [wantSound, setWantSound] = useState(false);
 
-  const tiers       = getTiers(event.price);
+  const tiers       = getTiers(event);
   const description = getDescription(event);
 
   useEffect(() => {
@@ -256,7 +282,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, color: C.c3, marginBottom: 1 }}>From</p>
           {event.price === 0
             ? <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 17, fontWeight: 700, color: C.greenL }}>FREE</p>
-            : <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 21, color: C.cream, letterSpacing: '-1px' }}><span style={{ fontSize: 11, color: C.gold }}>\u20B5</span>{event.price.toLocaleString()}</p>
+            : <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 21, color: C.cream, letterSpacing: '-1px' }}><span style={{ fontSize: 11, color: C.gold }}>₵</span>{event.price.toLocaleString()}</p>
           }
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -336,7 +362,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                 <div style={{ flexShrink: 0, marginLeft: 16, textAlign: 'right' }}>
                   {tier.price === 0
                     ? <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, fontWeight: 700, color: C.greenL }}>FREE</span>
-                    : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 17, color: C.cream }}><span style={{ fontSize: 10, color: C.gold }}>\u20B5</span>{tier.price.toLocaleString()}</span>
+                    : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 17, color: C.cream }}><span style={{ fontSize: 10, color: C.gold }}>₵</span>{tier.price.toLocaleString()}</span>
                   }
                 </div>
               </div>
@@ -482,7 +508,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: `1px solid ${C.bd}` }}>
                       {ev.price === 0
                         ? <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, fontWeight: 700, color: C.greenL, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Free</span>
-                        : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14, color: C.cream }}><span style={{ fontSize: 9, color: C.gold }}>\u20B5</span>{ev.price}</span>
+                        : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14, color: C.cream }}><span style={{ fontSize: 9, color: C.gold }}>₵</span>{ev.price}</span>
                       }
                       <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.gold }}>View \u2192</span>
                     </div>

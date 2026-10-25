@@ -24,6 +24,16 @@ export type Category =
 
 export type ListingType = 'hosted' | 'listed';
 
+/** A real ticket tier from the ticket_tiers table */
+export interface EventTicketTier {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  quantity: number;
+  sold: number;
+}
+
 export interface GhanaEvent {
   id: number;
   slug: string;
@@ -73,6 +83,8 @@ export interface GhanaEvent {
   organizerAvatar?: string | null;
   /** Free-text description / caption (also searched for artist names) */
   description?: string | null;
+  /** Real ticket tiers (Supabase events only). Needed to sell tickets on Akwaaba. */
+  tiers?: EventTicketTier[];
 }
 
 export interface CityInfo {
