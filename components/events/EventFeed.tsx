@@ -112,7 +112,8 @@ function EventCard({
   const where = [event.venue + (event.area ? `, ${event.area}` : ''), dist != null ? `${formatDistance(dist)} away` : ''].filter(Boolean).join(' · ');
   const bottom = wide ? 40 : 28;
   const label = ticketsLabel(event);
-  const titleSize = wide ? 'clamp(44px, 4.6vw, 68px)' : title.length > 22 ? 34 : title.length > 14 ? 40 : 46;
+  // Long titles get smaller so the text block stays short and the flyer gets the room
+  const titleSize = wide ? 'clamp(44px, 4.6vw, 68px)' : title.length > 34 ? 28 : title.length > 22 ? 32 : title.length > 14 ? 38 : 44;
 
   return (
     <section
@@ -127,7 +128,7 @@ function EventCard({
           dim={!active}
           area={wide
             ? { top: topInset + 16, bottom: 40, right: '10%', left: '50%' }
-            : { top: 0, bottom: blockH + bottom + 12, left: 0, right: 0 }}
+            : { top: topInset + 4, bottom: blockH + bottom + 12, left: 0, right: 0 }}
           bleed={!wide}
         />
       )}
@@ -142,7 +143,7 @@ function EventCard({
         style={{
           position: 'absolute', zIndex: 3, pointerEvents: 'none', left: wide ? 48 : 20, right: wide ? undefined : 20, width: wide ? 'min(44%, 600px)' : undefined,
           bottom: `calc(${bottom}px + env(safe-area-inset-bottom, 0px))`,
-          display: 'flex', flexDirection: 'column', gap: 14,
+          display: 'flex', flexDirection: 'column', gap: 12,
           opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'all 0.5s ease',
         }}
       >
@@ -151,7 +152,7 @@ function EventCard({
         <EventTags event={event} accent={a} />
 
         <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6, pointerEvents: 'auto' }}>
-          <h2 style={{ margin: 0, fontFamily: FONT.display, fontWeight: 800, lineHeight: 0.98, letterSpacing: '-0.035em', fontSize: titleSize, color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
+          <h2 style={{ margin: 0, fontFamily: FONT.display, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', fontSize: titleSize, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
             {title}
           </h2>
           {subtitle && <span style={{ fontFamily: FONT.display, fontSize: wide ? 20 : 17, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)' }}>{subtitle}</span>}
