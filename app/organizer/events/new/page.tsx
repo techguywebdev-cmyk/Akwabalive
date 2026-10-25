@@ -93,7 +93,7 @@ export default function CreateEventPage() {
   }
 
   async function handlePublish(status: 'draft' | 'published') {
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     setError(''); setSaving(true);
     try {
       const bill = lineupPayload(lineupVal);

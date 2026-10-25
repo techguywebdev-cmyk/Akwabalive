@@ -20,7 +20,7 @@ export default function DreamEventsPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     supabase
       .from('dream_events')
       .select('*')

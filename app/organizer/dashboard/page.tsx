@@ -40,7 +40,7 @@ export default function OrganizerDashboard() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     loadEvents();
   }, [user, authLoading]);
 

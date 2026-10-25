@@ -1,175 +1,207 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState, type CSSProperties, type FormEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import Wordmark from '@/components/brand/Wordmark';
+import { Icon } from '@/components/ui/Icon';
+import { T, FONT, GROUND } from '@/lib/thiscene';
 
+type Mode = 'signin' | 'signup' | 'forgot' | 'reset';
 
-import { C, G } from '@/lib/theme';
-export default function AuthPage() {
-  const router   = useRouter();
+const label: CSSProperties = { display: 'block', margin: '0 0 7px 4px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.text2 };
+const field: CSSProperties = {
+  width: '100%', height: 54, padding: '0 18px', borderRadius: 16, boxSizing: 'border-box',
+  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', outline: 'none',
+  fontFamily: FONT.sans, fontSize: 16, color: T.white,
+};
+
+/** Where to go after signing in: ?next=/path (same site only) */
+function safeNext(raw: string | null) {
+  return raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
+}
+
+function AuthForm() {
+  const router = useRouter();
+  const q = useSearchParams();
   const supabase = createClient();
+  const next = safeNext(q.get('next'));
 
-  const [mode,     setMode]     = useState<'signin' | 'signup'>('signin');
-  const [email,    setEmail]    = useState('');
+  const [mode, setMode] = useState<Mode>(q.get('mode') === 'signup' ? 'signup' : 'signin');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [show, setShow] = useState(false);
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState('');
-  const [success,  setSuccess]  = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
 
-  async function handleSubmit(e: React.FormEvent) {
+  // Coming back from the "reset password" email
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => { if (event === 'PASSWORD_RECOVERY') setMode('reset'); });
+    if (q.get('mode') === 'reset') setMode('reset');
+    return () => data.subscription.unsubscribe();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const go = (m: Mode) => { setMode(m); setError(''); setInfo(''); };
+
+  async function submit(e: FormEvent) {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
+    setError(''); setInfo(''); setBusy(true);
     try {
+      if (mode === 'signin') {
+        const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (err) throw new Error(err.message === 'Invalid login credentials' ? 'That email and password don’t match.' : err.message);
+        router.replace(next); router.refresh();
+        return;
+      }
+
       if (mode === 'signup') {
-        if (!username.trim() || username.length < 3) {
-          setError('Username must be at least 3 characters');
-          setLoading(false);
-          return;
-        }
-
-        const { data: existing } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('username', username.toLowerCase())
-          .maybeSingle();
-
-        if (existing) {
-          setError('That username is already taken');
-          setLoading(false);
-          return;
-        }
-
-        // Pass username in metadata — trigger will set it directly
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              username:  username.toLowerCase().trim(),
-            },
-          },
+        const handle = username.trim().toLowerCase();
+        if (handle.length < 3) throw new Error('Pick a username with at least 3 letters or numbers.');
+        const { data: taken } = await supabase.from('profiles').select('username').eq('username', handle).maybeSingle();
+        if (taken) throw new Error('That username is taken. Try another.');
+        const { data, error: err } = await supabase.auth.signUp({
+          email: email.trim(), password,
+          options: { data: { full_name: fullName.trim(), username: handle }, emailRedirectTo: `${window.location.origin}/auth?next=${encodeURIComponent(next)}` },
         });
-
-        if (signUpError) { setError(signUpError.message); setLoading(false); return; }
-        if (!data.user)  { setError('Could not create account. Please try again.'); setLoading(false); return; }
-
-        // Still do a client-side upsert as backup with retries
-        for (let attempt = 0; attempt < 4; attempt++) {
-          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
-          const { error: pe } = await supabase
-            .from('profiles')
-            .upsert({
-              id:        data.user.id,
-              username:  username.toLowerCase().trim(),
-              full_name: fullName.trim(),
-            }, { onConflict: 'id' });
+        if (err) throw new Error(err.message);
+        if (!data.user) throw new Error('Could not create your account. Please try again.');
+        // Profile row is made by a database trigger; this is a backup
+        for (let i = 0; i < 3; i++) {
+          await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+          const { error: pe } = await supabase.from('profiles').upsert({ id: data.user.id, username: handle, full_name: fullName.trim() }, { onConflict: 'id' });
           if (!pe) break;
         }
+        if (!data.session) { setInfo(`We sent a link to ${email.trim()}. Open it to finish signing up.`); return; }
+        router.replace(next); router.refresh();
+        return;
+      }
 
-        setSuccess(true);
-        setTimeout(() => { router.push('/'); router.refresh(); }, 1000);
+      if (mode === 'forgot') {
+        const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/auth?mode=reset` });
+        if (err) throw new Error(err.message);
+        setInfo(`If ${email.trim()} has an account, a reset link is on its way.`);
+        return;
+      }
 
-      } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) { setError(signInError.message); setLoading(false); return; }
-        setSuccess(true);
-        setTimeout(() => { router.push('/'); router.refresh(); }, 600);
+      if (mode === 'reset') {
+        if (password.length < 6) throw new Error('Use at least 6 characters.');
+        const { error: err } = await supabase.auth.updateUser({ password });
+        if (err) throw new Error(err.message);
+        setInfo('Password updated. Taking you in…');
+        setTimeout(() => { router.replace(next); router.refresh(); }, 900);
       }
     } catch (err: any) {
-      setError(typeof err?.message === 'string' ? err.message : 'Something went wrong. Please try again.');
+      setError(err?.message || 'Something went wrong. Please try again.');
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   }
 
+  const heading = { signin: 'Welcome back', signup: 'Join Akwaaba', forgot: 'Reset your password', reset: 'Set a new password' }[mode];
+  const sub = {
+    signin: 'Your tickets, plans and friends, all in one place.',
+    signup: 'Find every event in Ghana, see who’s going and keep your tickets on your phone.',
+    forgot: 'Enter your email and we’ll send you a link.',
+    reset: 'Choose a new password for your account.',
+  }[mode];
+  const cta = { signin: 'Sign in', signup: 'Create account', forgot: 'Send reset link', reset: 'Save password' }[mode];
+
   return (
-    <div style={{ background: 'transparent', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ width: '100%', maxWidth: 380 }}>
-
-        <Link href="/" style={{ display: 'flex', justifyContent: 'center', marginBottom: 32, textDecoration: 'none' }}>
-          <span style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 20, fontWeight: 800, letterSpacing: '4px', textTransform: 'uppercase', color: C.cream }}>
-            AK<span style={{ color: C.gold }}>W</span>AABA
-          </span>
+    <div style={{ minHeight: '100svh', background: GROUND, display: 'flex', flexDirection: 'column' }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 0' }}>
+        <Link href={next} aria-label="Back" style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(3,10,6,0.38)', border: '1px solid rgba(255,255,255,0.12)', color: T.white }}>
+          <Icon name="arrowLeft" size={22} />
         </Link>
+        <Wordmark />
+        <span style={{ width: 44 }} />
+      </header>
 
-        <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 16, padding: 28 }}>
-          <h1 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 28, fontWeight: 400, color: C.cream, textAlign: 'center', marginBottom: 6 }}>
-            {mode === 'signin' ? 'Welcome back' : 'Join Akwaaba'}
-          </h1>
-          <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, textAlign: 'center', marginBottom: 24 }}>
-            {mode === 'signin' ? 'Sign in to manage your tickets' : 'Create an account to start collecting moments'}
-          </p>
+      <main style={{ flex: 1, width: '100%', maxWidth: 440, margin: '0 auto', padding: '40px 20px calc(32px + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+        <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(34px, 9vw, 44px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', color: T.white }}>{heading}</h1>
+        <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>{sub}</p>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {mode === 'signup' && (
-              <>
+        {(mode === 'signin' || mode === 'signup') && (
+          <div role="tablist" aria-label="Sign in or sign up" style={{ display: 'flex', marginTop: 28, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            {(['signin', 'signup'] as const).map((m) => (
+              <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => go(m)} style={{ flex: 1, height: 42, borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: mode === m ? T.white : 'transparent', color: mode === m ? T.onMint : T.text2, transition: 'background 200ms ease, color 200ms ease' }}>
+                {m === 'signin' ? 'Sign in' : 'Sign up'}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 24 }}>
+          {mode === 'signup' && (
+            <>
+              <div>
+                <label htmlFor="name" style={label}>Your name</label>
+                <input id="name" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Ama Mensah" style={field} />
+              </div>
+              <div>
+                <label htmlFor="username" style={label}>Username</label>
                 <div style={{ position: 'relative' }}>
-                  <User size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
-                  <input type="text" placeholder="Full name" value={fullName}
-                    onChange={e => setFullName(e.target.value)} required
-                    style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
+                  <span style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', fontFamily: FONT.sans, fontSize: 16, color: T.text3 }}>@</span>
+                  <input id="username" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} required minLength={3} maxLength={24} placeholder="amamensah" style={{ ...field, paddingLeft: 36 }} />
                 </div>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3, fontFamily: 'var(--font-inter), sans-serif', fontSize: 14 }}>@</span>
-                  <input type="text" placeholder="username" value={username}
-                    onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    required minLength={3}
-                    style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 32px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
-                </div>
-              </>
-            )}
+              </div>
+            </>
+          )}
 
-            <div style={{ position: 'relative' }}>
-              <Mail size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
-              <input type="email" placeholder="Email address" value={email}
-                onChange={e => setEmail(e.target.value)} required
-                style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
+          {mode !== 'reset' && (
+            <div>
+              <label htmlFor="email" style={label}>Email</label>
+              <input id="email" type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" style={field} />
             </div>
+          )}
 
-            <div style={{ position: 'relative' }}>
-              <Lock size={15} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3 }} />
-              <input type="password" placeholder="Password" value={password}
-                onChange={e => setPassword(e.target.value)} required minLength={6}
-                style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
+          {mode !== 'forgot' && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <label htmlFor="password" style={label}>{mode === 'reset' ? 'New password' : 'Password'}</label>
+                {mode === 'signin' && (
+                  <button type="button" onClick={() => go('forgot')} style={{ marginRight: 4, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.mintText }}>Forgot?</button>
+                )}
+              </div>
+              <div style={{ position: 'relative' }}>
+                <input id="password" type={show ? 'text' : 'password'} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder={mode === 'signin' ? 'Your password' : 'At least 6 characters'} style={{ ...field, paddingRight: 58 }} />
+                <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Hide password' : 'Show password'} style={{ position: 'absolute', right: 6, top: 6, width: 42, height: 42, borderRadius: 12, border: 'none', background: 'transparent', color: T.text2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name={show ? 'eye' : 'lock'} size={19} />
+                </button>
+              </div>
             </div>
+          )}
 
-            {error && (
-              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: '#f87171', background: 'rgba(206,17,38,0.1)', border: '1px solid rgba(206,17,38,0.25)', borderRadius: 8, padding: '10px 12px', lineHeight: 1.5 }}>
-                {error}
-              </p>
-            )}
-            {success && (
-              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: '#4ade80', background: 'rgba(45,106,79,0.12)', border: '1px solid rgba(45,106,79,0.3)', borderRadius: 8, padding: '10px 12px', lineHeight: 1.5 }}>
-                {mode === 'signup' ? 'Account created! Taking you in…' : 'Welcome back! Signing you in…'}
-              </p>
-            )}
+          {error && <p role="alert" style={{ margin: 0, padding: '12px 14px', borderRadius: 14, background: 'rgba(255,138,138,0.1)', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.45, color: T.danger }}>{error}</p>}
+          {info && <p role="status" style={{ margin: 0, padding: '12px 14px', borderRadius: 14, background: 'rgba(123,227,168,0.1)', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.45, color: T.mintText }}>{info}</p>}
 
-            <button type="submit" disabled={loading || success}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: success ? '#2D6A4F' : C.gold, color: success ? '#fff' : '#0D0B08', border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: (loading || success) ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, marginTop: 6, transition: 'background 250ms' }}>
-              {success ? <>Success <ArrowRight size={14} /></>
-                : loading ? <Loader2 size={14} className="animate-spin" />
-                : <>{mode === 'signin' ? 'Sign In' : 'Create Account'} <ArrowRight size={14} /></>
-              }
+          <button type="submit" disabled={busy} style={{ marginTop: 6, height: 54, borderRadius: 999, border: 'none', cursor: busy ? 'wait' : 'pointer', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 16, fontWeight: 700, opacity: busy ? 0.7 : 1, boxShadow: '0 8px 24px rgba(123,227,168,0.22)' }}>
+            {busy ? 'One moment…' : cta}
+          </button>
+
+          {mode === 'signup' && (
+            <p style={{ margin: 0, textAlign: 'center', fontFamily: FONT.sans, fontSize: 12.5, lineHeight: 1.5, color: T.text3 }}>
+              By signing up you agree to Akwaaba’s terms and privacy policy.
+            </p>
+          )}
+          {(mode === 'forgot' || mode === 'reset') && (
+            <button type="button" onClick={() => go('signin')} style={{ background: 'none', border: 'none', padding: 8, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: T.mintText }}>
+              Back to sign in
             </button>
-          </form>
-
-          <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, textAlign: 'center', marginTop: 20 }}>
-            {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
-            <button onClick={() => { setMode(m => m === 'signin' ? 'signup' : 'signin'); setError(''); setSuccess(false); }}
-              style={{ color: C.gold, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, fontWeight: 600, padding: 0 }}>
-              {mode === 'signin' ? 'Sign up' : 'Sign in'}
-            </button>
-          </p>
-        </div>
-      </div>
+          )}
+        </form>
+      </main>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100svh', background: GROUND }} />}>
+      <AuthForm />
+    </Suspense>
   );
 }

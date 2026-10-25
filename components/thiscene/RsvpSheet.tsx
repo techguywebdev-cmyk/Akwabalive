@@ -40,7 +40,7 @@ export default function RsvpSheet({
   const freeTier = event.tiers?.find((t) => t.price === 0 && t.quantity - t.sold > 0);
 
   async function going() {
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     setError('');
     setState('busy');
     try {

@@ -48,7 +48,7 @@ export default function ReviewQueuePage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      window.location.href = '/auth';
+      window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       return;
     }
     load();

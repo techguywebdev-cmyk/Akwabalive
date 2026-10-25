@@ -137,7 +137,7 @@ export default function FromLinkPage() {
   }
 
   async function publish(status: 'draft' | 'published' | 'pending_review') {
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     if (!title || !date || !venue || !ticketUrl) {
       setError('Title, date, venue and official ticket URL are required.');
       return;

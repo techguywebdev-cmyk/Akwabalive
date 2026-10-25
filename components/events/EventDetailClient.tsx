@@ -129,7 +129,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   }, [user, event.slug]);
 
   async function toggleDreamList() {
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     setDreamLoading(true);
     if (inDreamList) {
       await supabase.from('dream_events').delete().eq('user_id', user.id).eq('event_slug', event.slug);
@@ -168,7 +168,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
     : null;
 
   async function toggleGoing() {
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     const on = isGoing;
     setIsGoing(!on);
     const { error } = on
