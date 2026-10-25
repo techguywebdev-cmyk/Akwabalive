@@ -6,6 +6,7 @@ import { events as staticEvents } from '@/lib/data/events';
 import { fetchEventBySlug, supabaseToGhanaEvent } from '@/lib/supabase/events';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const staticEvent = staticEvents.find(e => e.slug === params.slug);

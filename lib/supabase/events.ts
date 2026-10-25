@@ -1,10 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import type { GhanaEvent } from '@/lib/types';
 
+/**
+ * Server reads always go to the database: without no-store, Next/Vercel keep the first
+ * response in the data cache and new events never show up in the feed.
+ */
 function getServerClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) } },
   );
 }
 

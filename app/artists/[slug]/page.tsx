@@ -10,6 +10,7 @@ import type { Moment } from '@/components/moments/types';
 import { momentsForArtist } from '@/lib/moments/matchArtist';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const artist = getArtistBySlug(params.slug);

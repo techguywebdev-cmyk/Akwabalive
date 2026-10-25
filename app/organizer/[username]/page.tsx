@@ -8,6 +8,7 @@ import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 function serverClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
