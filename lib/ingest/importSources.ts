@@ -248,6 +248,9 @@ function tiersFromOffers(offers: any): ImportTier[] {
   return out;
 }
 
+/** Lines near prices that are page furniture, not ticket names */
+const NOT_TIER = /[₵¢,]|GHS|\bfrom\b|tickets?( page)?$|^get |sold out|\d{4}|protection|read more|learn more|see more|show more|similar|dates?\b|\b(am|pm)\b|^every |^free\b|share|follow|organi[sz]er|location|venue|about|description|refund|policy|^\d+$|^[–-]/i;
+
 /** Ticket types from page text: a short name line, then (within 3 lines) a ₵ / GHS price */
 function tiersFromText(text: string): ImportTier[] {
   const lines = text.split('\n');
@@ -262,9 +265,9 @@ function tiersFromText(text: string): ImportTier[] {
     for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
       if (priceRe.test(lines[j])) break;
       const name = lines[j];
-      if (name.length > 1 && name.length <= 40 && !/[₵¢]|GHS|\bfrom\b|ticket(s)?$|^get |sold out|\d{4}/i.test(name)) near.push(name);
+      if (name.length > 1 && name.length <= 40 && !NOT_TIER.test(name)) near.push(name);
     }
-    if (!near.length) continue;
+    if (!near.length || price < 5) continue; // fees like 'Attendee protection ₵1'
     const nm = near.sort((x, y) => x.length - y.length)[0].replace(/\s+/g, ' ');
     if (!out.some((t) => t.name.toLowerCase() === nm.toLowerCase())) out.push({ name: nm.charAt(0).toUpperCase() + nm.slice(1), price });
   }
@@ -324,7 +327,10 @@ export function parseEventPage(url: string, html: string, source: string): Impor
   if (lat != null && lng != null && !cityFromGeo(lat, lng)) return null; // pinned outside Ghana
   const geoCity = cityFromGeo(lat, lng);
   const named = detectCity(venue, address, title) ?? detectCity(description);
-  const place = geoCity ? { city: geoCity, area: named?.city === geoCity ? named.area : null } : named ?? detectCity(text.slice(0, 3000));
+  const ldCountry = String(ld?.location?.address?.addressCountry ?? '').toLowerCase();
+  const saysGhana = !!ego || ldCountry === 'gh' || ldCountry === 'ghana' || /,\s*ghana\b/i.test(`${venue} ${address ?? ''}`);
+  // Only trust the event's own place fields (site menus mention Ghanaian cities on every page)
+  const place = geoCity ? { city: geoCity, area: named?.city === geoCity ? named.area : null } : named ?? (saysGhana ? { city: 'accra', area: null } : null);
   if (!place) return null; // not in Ghana
   if (image && /dyn-image\.allevents|generate-image/i.test(image)) image = ogImage && !/dyn-image|generate-image/i.test(ogImage) ? ogImage : null;
 
