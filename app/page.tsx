@@ -1,21 +1,12 @@
-import Nav from '@/components/layout/Nav';
-import Footer from '@/components/layout/Footer';
-import HomeV2 from '@/components/home/HomeV2';
-import { events as staticEvents } from '@/lib/data/events';
-import { fetchPublishedEvents, supabaseToGhanaEvent } from '@/lib/supabase/events';
+import EventsPage from './events/page';
 
+// The events page is the home page for now (the separate home design is kept in
+// components/home/HomeV2.tsx for later).
 export const dynamic = 'force-dynamic';
 
-export default async function HomePage() {
-  const db = await fetchPublishedEvents();
-  const seen = new Set<string>();
-  const events = [...db.map(supabaseToGhanaEvent), ...staticEvents].filter((e) => (seen.has(e.slug) ? false : (seen.add(e.slug), true)));
+export const metadata = {
+  title: 'Akwaaba — every event in Ghana',
+  description: 'Find and book concerts, festivals, nightlife and more across Accra, Kumasi, Cape Coast, Tamale and the rest of Ghana.',
+};
 
-  return (
-    <div style={{ minHeight: '100vh', overflowX: 'hidden' }}>
-      <Nav active="Discover" />
-      <HomeV2 events={events} />
-      <Footer />
-    </div>
-  );
-}
+export default EventsPage;
