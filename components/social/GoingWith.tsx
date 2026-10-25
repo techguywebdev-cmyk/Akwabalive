@@ -82,7 +82,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
   }
 
   async function toggleGoing() {
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     if (isGoing) {
       await supabase
         .from('event_attendance')

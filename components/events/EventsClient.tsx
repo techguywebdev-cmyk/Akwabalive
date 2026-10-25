@@ -188,7 +188,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleSave = useCallback(async (event: GhanaEvent) => {
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     setSaveLoading(event.slug);
     try {
       if (saved.has(event.slug)) {
@@ -204,7 +204,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
   }, [user, saved, supabase]);
 
   const toggleGoing = useCallback(async (event: GhanaEvent) => {
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     const on = going.has(event.slug);
     setGoing((prev) => { const n = new Set(prev); if (on) n.delete(event.slug); else n.add(event.slug); return n; });
     const { error } = on

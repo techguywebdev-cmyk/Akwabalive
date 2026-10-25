@@ -59,7 +59,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
   /** Tickets are issued by the server only — after it confirms the payment with Paystack. */
   async function confirmOnServer(body: Record<string, unknown>) {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { window.location.href = '/auth'; return null; }
+    if (!session) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return null; }
     // Retry a few times: Paystack can take a moment to mark MoMo payments as successful.
     for (let attempt = 0; attempt < 4; attempt++) {
       const res = await fetch('/api/payments/verify', {
@@ -84,7 +84,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
   }
 
   function handlePaystack() {
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     if (!onSale) { setError('Tickets for this event are not on sale on Akwaaba yet.'); return; }
     if (!sdkReady || !window.PaystackPop) { setError('Payment is still loading — try again in a moment.'); return; }
     if (!email) { setError('Please enter your email.'); return; }
@@ -120,7 +120,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
   }
 
   async function handleFreeTicket() {
-    if (!user) { window.location.href = '/auth'; return; }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     if (!onSale) { setError('RSVPs for this event are not open on Akwaaba yet.'); return; }
     setError('');
     setLoading(true);
