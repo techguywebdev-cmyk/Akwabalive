@@ -68,19 +68,23 @@ export default function FlyerCanvas({
   let fadeFrom = room;
   if (bleed && ratio) {
     const fullH = size.w / ratio; // height when the flyer spans the full width
-    if (fullH >= room) {
-      // Portrait and story flyers: full width from the top, never cropped at the sides;
-      // whatever doesn't fit above the text continues under it, behind a dark fade
-      poster = { position: 'absolute', left: 0, top: 0, width: '100%', height: Math.min(fullH, size.h), objectFit: 'cover', objectPosition: 'center top' };
-      fadeFrom = Math.max(room - 60, size.h * 0.45);
+    const topPad = typeof area.top === 'number' ? area.top : 0; // header buttons
+    if (fullH <= room + 16) {
+      // Fits at full width: rest it right on the text (no side gaps, nothing covered)
+      poster = { position: 'absolute', left: 0, top: Math.max(0, room - fullH), width: '100%', height: fullH, objectFit: 'cover' };
+      fadeFrom = room - 24;
     } else if (fillBox) {
-      // Square / wide in the home hero: fill the screen, like a cover photo
+      // Home hero: fill the screen like a cover photo
       poster = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 35%' };
       fadeFrom = Math.max(room - 140, size.h * 0.4);
     } else {
-      // Square / wide: full width, resting right on the text
-      poster = { position: 'absolute', left: 0, top: room - fullH, width: '100%', height: fullH, objectFit: 'cover' };
-      fadeFrom = room - 40;
+      // Too tall to fit at full width: scale the whole flyer down to the room between the header
+      // and the text, so its bottom (date, venue, contacts) is never hidden. The blurred copy
+      // behind fills the thin strips at the sides.
+      const h = Math.max(160, room - topPad);
+      const w = Math.min(size.w, h * ratio);
+      poster = { position: 'absolute', left: (size.w - w) / 2, top: topPad + (room - topPad - h), width: w, height: h, objectFit: 'contain', borderRadius: w < size.w - 8 ? 14 : 0, boxShadow: '0 18px 50px rgba(0,0,0,0.45)' };
+      fadeFrom = room - 8;
     }
   }
 
