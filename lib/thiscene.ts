@@ -2,26 +2,36 @@
  * Thiscene design system — the basis for Akwaaba's event surfaces.
  * Source: the "Thiscene" Design System artifact (tokens.json + component docs).
  *
- * Core idea: the content colours the room. Every event carries an accent and the
- * whole screen takes it as a soft ambient gradient over a near-black ground.
+ * Oct 2026 rework: a dark green → black ground everywhere. Each event keeps an accent,
+ * but it only tints its tags, title glow and main button. Mint is the app's own accent.
  */
 import type { CSSProperties } from 'react';
 
 export const T = {
-  bg: '#06060B',
+  /** Green-black ground (Oct 2026 rework) */
+  bg: '#030806',
   surface: 'rgba(255,255,255,0.05)',
   surface2: 'rgba(255,255,255,0.025)',
-  glass: 'rgba(0,0,0,0.4)',
-  glassStrong: 'rgba(0,0,0,0.55)',
-  hairline: 'rgba(255,255,255,0.06)',
-  hairlineStrong: 'rgba(255,255,255,0.14)',
+  glass: 'rgba(3,10,6,0.42)',
+  glassStrong: 'rgba(3,10,6,0.62)',
+  hairline: 'rgba(255,255,255,0.07)',
+  hairlineStrong: 'rgba(255,255,255,0.12)',
   text: 'rgba(255,255,255,0.92)',
-  text2: 'rgba(255,255,255,0.55)',
-  text3: 'rgba(255,255,255,0.35)',
+  text2: 'rgba(255,255,255,0.58)',
+  text3: 'rgba(255,255,255,0.4)',
   white: '#ffffff',
-  success: '#7BFF9E',
+  /** The app's own accent: active tab, selected chips, app-level buttons */
+  mint: '#7BE3A8',
+  mintText: '#A8F0C6',
+  onMint: '#03130B',
+  success: '#7BE3A8',
   danger: '#FF8A8A',
 } as const;
+
+/** The base every screen sits on: deep green glows fading into black. */
+export const GROUND =
+  'radial-gradient(120% 55% at 15% 0%, rgba(15,61,42,0.85) 0%, rgba(10,44,30,0.35) 45%, rgba(3,8,6,0) 75%), ' +
+  'radial-gradient(100% 45% at 100% 100%, rgba(9,40,27,0.7) 0%, rgba(3,8,6,0) 70%), #030806';
 
 /** Accent palette (tokens accent-*). Gold is the default. */
 export const ACCENTS = {
@@ -79,14 +89,12 @@ export function hexToRgb(hex: AccentHex): [number, number, number] {
 }
 
 /**
- * The ambient gradient every screen, sheet and popup sits on.
- * `2e` ≈ 18%, `24` ≈ 14%, `1f` ≈ 12%, `12` ≈ 7%, `1c` ≈ 11%.
+ * The background for event sheets and popups: the green-black ground with a faint
+ * touch of the event's colour.
  */
-export function ambient(accent: AccentHex = DEFAULT_ACCENT, ground: string = T.bg) {
-  if (accent.toLowerCase() === ACCENTS.noir.toLowerCase()) {
-    return 'radial-gradient(120% 70% at 0% 0%, rgba(255,255,255,0.06) 0%, transparent 70%), #000000';
-  }
-  return `radial-gradient(120% 70% at 0% 0%, ${accent}2e 0%, transparent 70%), radial-gradient(120% 70% at 100% 100%, ${accent}24 0%, transparent 70%), linear-gradient(165deg, ${accent}1f 0%, ${accent}12 50%, ${accent}1c 100%), ${ground}`;
+export function ambient(accent: AccentHex = DEFAULT_ACCENT) {
+  // The event's colour is only a faint touch in one corner; the ground stays green-black.
+  return `radial-gradient(90% 40% at 0% 0%, ${alpha(accent, 0.1)} 0%, rgba(0,0,0,0) 70%), ${GROUND}`;
 }
 
 /** Glass surface for controls (pills, capsules, round buttons). */
@@ -99,6 +107,6 @@ export const glass = (strong = false): CSSProperties => ({
 
 /** Full-bleed art scrims (README "Imagery"). */
 export const SCRIM = {
-  bottom: 'linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.85) 28%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 100%)',
-  top: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 100%)',
+  bottom: 'linear-gradient(to top, #030806 0%, rgba(4,16,10,0.9) 30%, rgba(3,8,6,0.35) 62%, rgba(3,8,6,0) 100%)',
+  top: 'linear-gradient(to bottom, rgba(3,8,6,0.6) 0%, rgba(3,8,6,0) 100%)',
 } as const;

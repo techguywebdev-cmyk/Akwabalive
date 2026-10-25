@@ -95,13 +95,13 @@ export default function AuthPage() {
       <div style={{ width: '100%', maxWidth: 380 }}>
 
         <Link href="/" style={{ display: 'flex', justifyContent: 'center', marginBottom: 32, textDecoration: 'none' }}>
-          <span style={{ fontFamily: 'var(--font-syne,sans-serif)', fontSize: 20, fontWeight: 800, letterSpacing: '4px', textTransform: 'uppercase', color: C.cream }}>
+          <span style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 20, fontWeight: 800, letterSpacing: '4px', textTransform: 'uppercase', color: C.cream }}>
             AK<span style={{ color: C.gold }}>W</span>AABA
           </span>
         </Link>
 
         <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 16, padding: 28 }}>
-          <h1 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 28, fontWeight: 400, color: C.cream, textAlign: 'center', marginBottom: 6 }}>
+          <h1 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 28, fontWeight: 400, color: C.cream, textAlign: 'center', marginBottom: 6 }}>
             {mode === 'signin' ? 'Welcome back' : 'Join Akwaaba'}
           </h1>
           <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, textAlign: 'center', marginBottom: 24 }}>
@@ -118,7 +118,7 @@ export default function AuthPage() {
                     style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '13px 14px 13px 40px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14, color: C.cream, outline: 'none' }} />
                 </div>
                 <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14 }}>@</span>
+                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: C.c3, fontFamily: 'var(--font-inter), sans-serif', fontSize: 14 }}>@</span>
                   <input type="text" placeholder="username" value={username}
                     onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                     required minLength={3}
@@ -153,7 +153,7 @@ export default function AuthPage() {
             )}
 
             <button type="submit" disabled={loading || success}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: success ? '#2D6A4F' : C.gold, color: success ? '#fff' : '#0D0B08', border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: (loading || success) ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, marginTop: 6, transition: 'background 250ms' }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: success ? '#2D6A4F' : C.gold, color: success ? '#fff' : '#0D0B08', border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: (loading || success) ? 'wait' : 'pointer', opacity: loading ? 0.7 : 1, marginTop: 6, transition: 'background 250ms' }}>
               {success ? <>Success <ArrowRight size={14} /></>
                 : loading ? <Loader2 size={14} className="animate-spin" />
                 : <>{mode === 'signin' ? 'Sign In' : 'Create Account'} <ArrowRight size={14} /></>

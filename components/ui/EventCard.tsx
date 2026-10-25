@@ -12,9 +12,9 @@ import { LineupChips } from '@/components/ui/LineupChips';
 
 type Size = 'feature' | 'standard' | 'mini';
 
-const mono = 'var(--font-dm-mono,monospace)';
+const mono = 'var(--font-inter), sans-serif';
 const sans = 'var(--font-inter,sans-serif)';
-const serif = 'var(--font-cormorant,serif)';
+const serif = 'var(--font-display), sans-serif';
 
 /**
  * Event card — flat frosted glass.

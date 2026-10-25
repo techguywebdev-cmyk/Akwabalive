@@ -1,5 +1,3 @@
-import { C, BRAND_NAME } from '@/lib/theme';
-import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import EventsClient from '@/components/events/EventsClient';
 import { events as staticEvents } from '@/lib/data/events';
@@ -29,10 +27,7 @@ export default async function EventsPage() {
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
-      <Nav active="Events" />
-      <main>
-        <EventsClient events={allEvents} />
-      </main>
+      <EventsClient events={allEvents} />
       <Footer />
     </div>
   );

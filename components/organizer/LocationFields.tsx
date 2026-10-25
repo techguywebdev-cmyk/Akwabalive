@@ -33,7 +33,7 @@ export default function LocationFields({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <p style={{
-        fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px',
+        fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px',
         textTransform: 'uppercase', color: C.gold, opacity: 0.75, display: 'flex', alignItems: 'center', gap: 8, margin: 0,
       }}>
         <MapPin size={11} /> Neighbourhood pin
@@ -65,7 +65,7 @@ export default function LocationFields({
               type="button"
               onClick={() => pick(p)}
               style={{
-                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1px',
+                fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '1px',
                 textTransform: 'uppercase', padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
                 border: `1px solid ${active ? C.goldBd : C.bd}`,
                 background: active ? C.goldDim : 'transparent',
@@ -79,7 +79,7 @@ export default function LocationFields({
       </div>
 
       {lat != null && lng != null && area ? (
-        <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, color: C.greenL, margin: 0 }}>
+        <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, color: C.greenL, margin: 0 }}>
           Pinned · {area} · {lat.toFixed(4)}, {lng.toFixed(4)}
         </p>
       ) : (
@@ -90,7 +90,7 @@ export default function LocationFields({
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
         <div>
-          <label style={{ display: 'block', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>Area</label>
+          <label style={{ display: 'block', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>Area</label>
           <input
             value={area}
             onChange={e => onChange({ area: e.target.value, lat: lat ?? 0, lng: lng ?? 0 })}
@@ -99,7 +99,7 @@ export default function LocationFields({
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>Lat</label>
+          <label style={{ display: 'block', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>Lat</label>
           <input
             type="number" step="0.0001"
             value={lat ?? ''}
@@ -109,7 +109,7 @@ export default function LocationFields({
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>Lng</label>
+          <label style={{ display: 'block', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>Lng</label>
           <input
             type="number" step="0.0001"
             value={lng ?? ''}

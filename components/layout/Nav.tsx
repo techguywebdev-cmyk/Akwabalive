@@ -1,68 +1,99 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { C, G, R } from '@/lib/theme';
+import { T, FONT } from '@/lib/thiscene';
 import { Icon, PAGE_ICONS, type IconName } from '@/components/ui/Icon';
+import Wordmark, { BrandGlyph } from '@/components/brand/Wordmark';
 
-const LINKS: { href: string; label: string; live?: boolean }[] = [
-  { href: '/', label: 'Discover' },
-  { href: '/events', label: 'Events' },
-  { href: '#', label: 'Live', live: true },
-  { href: '/moments', label: 'Moments' },
-  { href: '#', label: 'Cities' },
+/** Main sections. On phones they live in the bottom tab bar; on desktop, in the header. */
+const SECTIONS: { href: string; label: string; icon: IconName }[] = [
+  { href: '/', label: 'Discover', icon: 'compass' },
+  { href: '/events', label: 'Events', icon: 'calendar' },
+  { href: '/moments', label: 'Moments', icon: 'moments' },
 ];
 
-const sans = 'var(--font-inter,sans-serif)';
-const mono = 'var(--font-dm-mono,monospace)';
-const ACCENT = 'rgb(var(--accent-rgb))';
+const GLASS: React.CSSProperties = {
+  background: 'rgba(3,10,6,0.36)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+};
 
-/** 38px square glass button — This-scine's header control. */
-function HeaderButton({
-  label, icon, href, onClick, active = false, badge, size = 17,
+/**
+ * 44px round icon button used in the header. Pages pass their own (filter, view toggle…)
+ * through Nav's `actions`.
+ */
+export function HeaderIconButton({
+  label, icon, href, onClick, active = false, dot = false, pressed,
 }: {
-  label: string; icon: IconName; href?: string; onClick?: () => void; active?: boolean; badge?: number; size?: number;
+  label: string; icon: IconName; href?: string; onClick?: () => void;
+  /** Mint-tinted when something is switched on (e.g. filters applied) */
+  active?: boolean;
+  /** Small mint dot in the corner */
+  dot?: boolean;
+  pressed?: boolean;
 }) {
   const style: React.CSSProperties = {
-    position: 'relative', width: 38, height: 38, borderRadius: 12, flexShrink: 0, padding: 0, cursor: 'pointer',
+    position: 'relative', width: 44, height: 44, borderRadius: 22, flexShrink: 0, padding: 0, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none',
-    background: active ? 'rgba(var(--accent-rgb), 0.16)' : 'rgba(0,0,0,0.55)',
-    border: `1px solid ${active ? 'rgba(var(--accent-rgb), 0.45)' : 'rgba(255,255,255,0.10)'}`,
-    backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-    color: active ? ACCENT : 'rgba(255,255,255,0.75)', transition: 'all 0.2s ease',
+    color: active ? T.mintText : T.text,
+    ...GLASS,
+    ...(active ? { background: 'rgba(123,227,168,0.12)', border: '1px solid rgba(123,227,168,0.35)' } : {}),
+    transition: 'background 200ms ease, border-color 200ms ease, color 200ms ease',
   };
   const inner = (
     <>
-      <Icon name={icon} size={size} />
-      {!!badge && badge > 0 && (
-        <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 8, padding: '0 4px', background: ACCENT, color: '#07070F', fontSize: 9, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #0D0B08', lineHeight: 1 }}>
-          {badge > 9 ? '9+' : badge}
-        </span>
-      )}
+      <Icon name={icon} size={22} />
+      {dot && <span aria-hidden style={{ position: 'absolute', top: 9, right: 9, width: 7, height: 7, borderRadius: 4, background: T.mint, boxShadow: '0 0 0 2px rgba(3,8,6,0.9)' }} />}
     </>
   );
   if (href) return <Link href={href} aria-label={label} title={label} style={style}>{inner}</Link>;
-  return <button type="button" aria-label={label} title={label} aria-expanded={onClick ? active : undefined} onClick={onClick} style={style}>{inner}</button>;
+  return (
+    <button type="button" aria-label={label} title={label} aria-pressed={pressed} onClick={onClick} style={style}>
+      {inner}
+    </button>
+  );
 }
 
 /**
- * Transparent header (This-scine style): no bar, just a dark fade from the top so
- * controls stay legible over full-bleed imagery. Glass icon buttons on the right,
- * an accent dot that follows the page's current colour next to the wordmark.
+ * Header: no wordmark, no bar. A soft fade from the top keeps icon buttons legible over
+ * full-bleed imagery. Left: menu (or back). Right: the page's own actions, then search
+ * and the profile/sign-in button. Phones also get a floating glass tab bar at the bottom.
  */
 export default function Nav({
-  active,
+  active, actions, back, tabs = false,
 }: {
-  /** kept for older call sites; the header is always transparent now */
+  /** kept for older call sites */
   transparent?: boolean;
-  active?: string;
   variant?: 'default' | 'moments';
   onSearch?: () => void;
+  active?: string;
+  /** Page-specific header buttons (e.g. sort & filter) */
+  actions?: ReactNode;
+  /** Show a back button instead of the menu */
+  back?: string;
+  /** Show the bottom tab bar on phones */
+  tabs?: boolean;
 }) {
   const { user, profile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
+  const [tabsHidden, setTabsHidden] = useState(false);
+
+  // Hide the tab bar while scrolling down the page, bring it back on any scroll up
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - last) < 8) return;
+      setTabsHidden(y > last && y > 120);
+      last = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     const fn = () => setIsMobile(window.innerWidth < 900);
@@ -71,161 +102,239 @@ export default function Nav({
     return () => window.removeEventListener('resize', fn);
   }, []);
 
+  // Drawer: mount, then slide in on the next frame; slide out, then unmount
+  const [menuMounted, setMenuMounted] = useState(false);
+  const [menuShown, setMenuShown] = useState(false);
   useEffect(() => {
-    if (!menuOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    if (menuOpen) {
+      setMenuMounted(true);
+      const raf = requestAnimationFrame(() => requestAnimationFrame(() => setMenuShown(true)));
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+      window.addEventListener('keydown', onKey);
+      return () => { cancelAnimationFrame(raf); document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+    }
+    setMenuShown(false);
+    const t = setTimeout(() => setMenuMounted(false), 420);
+    return () => clearTimeout(t);
   }, [menuOpen]);
+  const stagger = (i: number): React.CSSProperties => ({
+    opacity: menuShown ? 1 : 0,
+    transform: menuShown ? 'translateX(0)' : 'translateX(-16px)',
+    transition: `opacity 360ms ease ${120 + i * 45}ms, transform 420ms cubic-bezier(0.22,1,0.36,1) ${120 + i * 45}ms`,
+  });
+
+  const profileHref = user ? `/u/${profile?.username ?? ''}` : '/auth';
+  const ticketsHref = user ? '/account/tickets' : '/auth';
 
   const accountLinks = user
     ? [
-        { label: 'My profile', href: `/u/${profile?.username ?? ''}` },
+        { label: 'My profile', href: profileHref },
         { label: 'My tickets', href: '/account/tickets' },
         { label: 'Dream events', href: '/account/dream-events' },
         { label: 'Organizer dashboard', href: '/organizer/dashboard' },
       ]
     : [];
 
-  const avatar = (
-    <Link href={`/u/${profile?.username ?? ''}`} aria-label="My profile" style={{ width: 36, height: 36, flexShrink: 0, position: 'relative', textDecoration: 'none' }}>
-      <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden', background: 'rgba(var(--accent-rgb), 0.14)', border: '2px solid rgba(var(--accent-rgb), 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {profile?.avatar_url
-          // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : <span style={{ fontFamily: sans, fontSize: 13, fontWeight: 700, color: ACCENT }}>{(profile?.username?.[0] ?? 'U').toUpperCase()}</span>}
-      </span>
+  const avatar = user ? (
+    <Link href={profileHref} aria-label="My profile" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 22, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: '#1F5A3F', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
+      {profile?.avatar_url
+        // eslint-disable-next-line @next/next/no-img-element
+        ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        : (profile?.username?.[0] ?? 'U').toUpperCase()}
     </Link>
+  ) : (
+    <HeaderIconButton label="Sign in" icon="user" href="/auth" />
   );
+
+  const tabItems: { href: string; label: string; icon: IconName; key: string }[] = [
+    ...SECTIONS.map((s) => ({ ...s, key: s.label })),
+    { href: ticketsHref, label: 'My tickets', icon: 'ticket', key: 'Tickets' },
+    { href: profileHref, label: user ? 'My profile' : 'Sign in', icon: 'user', key: 'Profile' },
+  ];
 
   return (
     <>
       <header
         style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
-          padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 26px',
-          background: 'linear-gradient(to bottom, rgba(8,6,4,0.9) 0%, rgba(8,6,4,0.55) 55%, transparent 100%)',
+          padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 28px',
+          background: 'linear-gradient(to bottom, rgba(3,8,6,0.42) 0%, rgba(3,8,6,0.16) 60%, rgba(3,8,6,0) 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
           pointerEvents: 'none',
         }}
       >
-        {/* Wordmark + live accent dot */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', pointerEvents: 'auto', flexShrink: 0 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: ACCENT, boxShadow: `0 0 12px ${ACCENT}`, transition: 'all 0.5s ease' }} />
-          <span style={{ fontFamily: 'var(--font-syne, sans-serif)', fontSize: 16, fontWeight: 800, letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.92)' }}>
-            AK<span style={{ color: C.gold }}>W</span>AABA
-          </span>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
+          {back
+            ? <HeaderIconButton label="Back" icon="arrowLeft" href={back} />
+            : <HeaderIconButton label="Menu" icon="menu" onClick={() => setMenuOpen(true)} />}
+          {!isMobile && <span style={{ marginLeft: 8 }}><Wordmark /></span>}
 
-        {/* Page links with icons (desktop) */}
-        {!isMobile && (
-          <nav aria-label="Main" style={{ display: 'flex', alignItems: 'center', gap: 4, pointerEvents: 'auto' }}>
-            {LINKS.map((l) => {
-              const on = active === l.label;
+          {!isMobile && (
+            <nav aria-label="Main" style={{ display: 'flex', alignItems: 'center', gap: 2, marginLeft: 8 }}>
+              {SECTIONS.map((l) => {
+                const on = active === l.label;
+                return (
+                  <Link
+                    key={l.label}
+                    href={l.href}
+                    aria-current={on ? 'page' : undefined}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8, height: 44, padding: '0 14px', borderRadius: 22,
+                      fontFamily: FONT.sans, fontSize: 14, fontWeight: on ? 600 : 500, textDecoration: 'none',
+                      color: on ? T.white : 'rgba(255,255,255,0.62)',
+                    }}
+                  >
+                    <Icon name={l.icon} size={18} color={on ? T.mint : 'currentColor'} />
+                    {l.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
+        </div>
+
+        {isMobile && (
+          <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: 'calc(14px + env(safe-area-inset-top, 0px))', height: 44, display: 'flex', alignItems: 'center', pointerEvents: 'auto' }}>
+            {actions
+              ? <Link href="/" aria-label="Akwaaba home" style={{ display: 'flex' }}><BrandGlyph size={28} /></Link>
+              : <Wordmark />}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
+          {actions ?? <HeaderIconButton label="Search events" icon="search" href="/events?search=1" />}
+          {(!isMobile || !actions) && avatar}
+        </div>
+      </header>
+
+      {/* Bottom tab bar — phones. Slim floating pill over a soft fade; slides away while you scroll down. */}
+      {tabs && isMobile && (
+        <>
+          <style>{'@media (max-width: 899px) { body { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); } }'}</style>
+          <div aria-hidden style={{ position: 'fixed', zIndex: 189, left: 0, right: 0, bottom: 0, height: 'calc(110px + env(safe-area-inset-bottom, 0px))', background: 'linear-gradient(180deg, rgba(3,8,6,0) 0%, rgba(3,8,6,0.7) 55%, rgba(3,8,6,0.92) 100%)', pointerEvents: 'none', transform: tabsHidden ? 'translateY(100%)' : 'none', transition: 'transform 320ms cubic-bezier(0.22,1,0.36,1)' }} />
+          <nav
+            aria-label="Primary"
+            style={{
+              position: 'fixed', zIndex: 190, left: '50%', bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
+              width: 'min(340px, calc(100vw - 48px))', height: 58, borderRadius: 29,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-around', padding: '0 6px',
+              background: 'rgba(8,24,16,0.55)', border: '1px solid rgba(255,255,255,0.07)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
+              backdropFilter: 'blur(26px) saturate(160%)', WebkitBackdropFilter: 'blur(26px) saturate(160%)',
+              transform: `translateX(-50%) translateY(${tabsHidden ? 'calc(100% + 24px)' : '0'})`,
+              transition: 'transform 320ms cubic-bezier(0.22,1,0.36,1)',
+            }}
+          >
+            {tabItems.map((t) => {
+              const on = active === t.key || (t.key === 'Profile' && active === 'My profile') || (t.key === 'Tickets' && active === 'My tickets');
               return (
                 <Link
-                  key={l.label}
-                  href={l.href}
+                  key={t.key}
+                  href={t.href}
+                  aria-label={t.label}
                   aria-current={on ? 'page' : undefined}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 7, height: 38, padding: '0 14px', borderRadius: 12,
-                    fontFamily: sans, fontSize: 14, fontWeight: on ? 700 : 500, textDecoration: 'none',
-                    color: on ? '#fff' : 'rgba(255,255,255,0.7)',
-                    ...(on
-                      ? { background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.10)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }
-                      : { border: '1px solid transparent' }),
-                    textShadow: on ? 'none' : '0 1px 6px rgba(0,0,0,0.6)',
-                  }}
+                  style={{ position: 'relative', width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 24, color: on ? T.mint : 'rgba(255,255,255,0.42)', background: on ? 'rgba(123,227,168,0.1)' : 'transparent', textDecoration: 'none', transition: 'background 200ms ease, color 200ms ease' }}
                 >
-                  <Icon name={PAGE_ICONS[l.label]} size={16} color={on ? ACCENT : 'currentColor'} />
-                  {l.label}
-                  {l.live && <span style={{ width: 6, height: 6, borderRadius: 3, background: C.red, animation: 'blink 1.4s ease-in-out infinite' }} />}
+                  <Icon name={t.icon} size={22} />
                 </Link>
               );
             })}
           </nav>
-        )}
+        </>
+      )}
 
-        {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
-          {isMobile && <HeaderButton label="Moments" icon="moments" href="/moments" active={active === 'Moments'} />}
-          {user && <HeaderButton label="My tickets" icon="ticket" href="/account/tickets" />}
-          {user && !isMobile && <HeaderButton label="Dream events" icon="bookmark" href="/account/dream-events" />}
-          {!isMobile && (
-            <Link href="/organizer/events/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 38, padding: '0 14px', borderRadius: 12, background: C.gold, color: C.onAccent, fontFamily: sans, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-              <Icon name="plus" size={15} strokeWidth={2.2} /> List event
-            </Link>
-          )}
-          <HeaderButton label={menuOpen ? 'Close menu' : 'Menu'} icon={menuOpen ? 'close' : 'menu'} onClick={() => setMenuOpen((o) => !o)} active={menuOpen} />
-          {user ? avatar : (
-            <Link href="/auth" style={{ height: 34, padding: '0 12px', borderRadius: 22, background: 'rgba(var(--accent-rgb), 0.12)', border: '1px solid rgba(var(--accent-rgb), 0.4)', color: ACCENT, fontFamily: sans, fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-              Sign in
-            </Link>
-          )}
-        </div>
-      </header>
-
-      {/* Menu — glass sheet with a page icon per item */}
-      {menuOpen && (
-        <>
-          <button type="button" aria-label="Close menu" onClick={() => setMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 198, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', border: 'none', cursor: 'default' }} />
-          <div
+      {/* Menu: a full-height drawer that slides in from the left */}
+      {menuMounted && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 400 }}>
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setMenuOpen(false)}
+            style={{ position: 'absolute', inset: 0, border: 'none', cursor: 'default', background: 'rgba(1,4,3,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', opacity: menuShown ? 1 : 0, transition: 'opacity 320ms ease' }}
+          />
+          <nav
             role="dialog"
+            aria-modal="true"
             aria-label="Menu"
             style={{
-              position: 'fixed', zIndex: 199, top: 'calc(64px + env(safe-area-inset-top, 0px))', right: 12, width: 'min(320px, calc(100vw - 24px))',
-              maxHeight: 'calc(100svh - 84px)', overflowY: 'auto',
-              ...G.sheet, border: '1px solid rgba(255,255,255,0.10)', borderRadius: R.card + 2, padding: 8,
+              position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(400px, 88vw)', display: 'flex', flexDirection: 'column',
+              padding: 'calc(14px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))',
+              background: 'radial-gradient(120% 50% at 0% 0%, rgba(20,78,52,0.9) 0%, rgba(6,22,14,0) 70%), linear-gradient(180deg, #071A10 0%, #030806 100%)',
+              borderRight: '1px solid rgba(255,255,255,0.08)', boxShadow: '30px 0 80px rgba(0,0,0,0.5)',
+              transform: menuShown ? 'translateX(0)' : 'translateX(-104%)', transition: 'transform 420ms cubic-bezier(0.22,1,0.36,1)',
+              overflowY: 'auto',
             }}
           >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 44 }}>
+              <Wordmark />
+              <HeaderIconButton label="Close menu" icon="close" onClick={() => setMenuOpen(false)} />
+            </div>
+
             {user && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px 12px', borderBottom: `1px solid ${C.bd}`, marginBottom: 6 }}>
-                <span style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(var(--accent-rgb), 0.16)', border: '2px solid rgba(var(--accent-rgb), 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: ACCENT, fontFamily: sans, fontWeight: 700 }}>
-                  {(profile?.username?.[0] ?? 'U').toUpperCase()}
+              <Link href={profileHref} onClick={() => setMenuOpen(false)} style={{ ...stagger(0), display: 'flex', alignItems: 'center', gap: 12, marginTop: 28, textDecoration: 'none' }}>
+                <span style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', background: '#1F5A3F', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
+                  {profile?.avatar_url
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : (profile?.username?.[0] ?? 'U').toUpperCase()}
                 </span>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontFamily: sans, fontSize: 14, fontWeight: 600, color: C.cream }}>{profile?.full_name}</p>
-                  <p style={{ fontFamily: mono, fontSize: 11, color: C.c3 }}>@{profile?.username}</p>
-                </div>
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>{profile?.full_name || profile?.username}</span>
+                  <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>@{profile?.username}</span>
+                </span>
+              </Link>
+            )}
+
+            <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column' }}>
+              {SECTIONS.map((l, i) => {
+                const on = active === l.label;
+                return (
+                  <Link
+                    key={l.label}
+                    href={l.href}
+                    onClick={() => setMenuOpen(false)}
+                    aria-current={on ? 'page' : undefined}
+                    style={{ ...stagger(i + 1), display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', textDecoration: 'none', fontFamily: FONT.display, fontSize: 34, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, color: on ? T.mint : T.white }}
+                  >
+                    {l.label}
+                    {on
+                      ? <span aria-hidden style={{ width: 8, height: 8, borderRadius: 4, background: T.mint, boxShadow: `0 0 12px ${T.mint}` }} />
+                      : <Icon name="arrowRight" size={22} color="rgba(255,255,255,0.35)" />}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {accountLinks.length > 0 && (
+              <div style={{ ...stagger(5), marginTop: 28, paddingTop: 20, borderTop: `1px solid ${T.hairline}` }}>
+                <p style={{ margin: '0 0 6px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Your Akwaaba</p>
+                {accountLinks.map((l) => (
+                  <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 46, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 16, fontWeight: 500, color: active === l.label ? T.mint : 'rgba(255,255,255,0.82)' }}>
+                    <Icon name={PAGE_ICONS[l.label] ?? 'dots'} size={19} color="rgba(255,255,255,0.55)" />
+                    {l.label}
+                  </Link>
+                ))}
               </div>
             )}
-            {[...LINKS, ...accountLinks].map((l) => {
-              const on = active === l.label;
-              return (
-                <Link
-                  key={l.label}
-                  href={l.href}
-                  onClick={() => setMenuOpen(false)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12, minHeight: 46, padding: '0 12px', borderRadius: 12,
-                    fontFamily: sans, fontSize: 15, fontWeight: on ? 700 : 500, textDecoration: 'none',
-                    color: on ? '#fff' : 'rgba(255,255,255,0.78)', background: on ? 'rgba(255,255,255,0.06)' : 'transparent',
-                  }}
-                >
-                  <span style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: on ? 'rgba(var(--accent-rgb), 0.16)' : 'rgba(255,255,255,0.05)', color: on ? ACCENT : 'rgba(255,255,255,0.7)' }}>
-                    <Icon name={PAGE_ICONS[l.label] ?? 'dots'} size={17} />
-                  </span>
-                  {l.label}
-                  {'live' in l && Boolean(l.live) && <span style={{ width: 6, height: 6, borderRadius: 3, background: C.red, marginLeft: 'auto' }} />}
-                </Link>
-              );
-            })}
-            <div style={{ display: 'flex', gap: 8, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.bd}` }}>
-              <Link href="/organizer/events/new" onClick={() => setMenuOpen(false)} style={{ flex: 1, height: 46, borderRadius: R.btn, background: C.gold, color: C.onAccent, fontFamily: sans, fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, textDecoration: 'none' }}>
-                <Icon name="plus" size={15} strokeWidth={2.2} /> List event
+
+            <div style={{ ...stagger(6), marginTop: 'auto', paddingTop: 28, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Link href="/organizer/events/new" onClick={() => setMenuOpen(false)} style={{ height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+                <Icon name="plus" size={18} strokeWidth={2} /> List an event
               </Link>
               {user ? (
-                <button type="button" onClick={() => { signOut(); setMenuOpen(false); }} style={{ flex: 1, height: 46, borderRadius: R.btn, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(206,17,38,0.4)', color: '#FCA5A5', fontFamily: sans, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                  <Icon name="logout" size={16} /> Sign out
+                <button type="button" onClick={() => { signOut(); setMenuOpen(false); }} style={{ height: 48, borderRadius: 999, background: 'none', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
+                  Sign out
                 </button>
               ) : (
-                <Link href="/auth" onClick={() => setMenuOpen(false)} style={{ flex: 1, height: 46, borderRadius: R.btn, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: C.cream, fontFamily: sans, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, textDecoration: 'none' }}>
-                  <Icon name="user" size={16} /> Sign in
+                <Link href="/auth" onClick={() => setMenuOpen(false)} style={{ height: 48, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.14)', color: T.white, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
+                  Sign in
                 </Link>
               )}
             </div>
-          </div>
-        </>
+          </nav>
+        </div>
       )}
     </>
   );

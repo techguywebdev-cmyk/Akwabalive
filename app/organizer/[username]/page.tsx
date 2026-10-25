@@ -134,7 +134,7 @@ function SoftMissing({ title, body }: { title: string; body: string }) {
       >
         <p
           style={{
-            fontFamily: 'var(--font-dm-mono,monospace)',
+            fontFamily: 'var(--font-inter), sans-serif',
             fontSize: 10,
             letterSpacing: '2px',
             textTransform: 'uppercase',
@@ -146,7 +146,7 @@ function SoftMissing({ title, body }: { title: string; body: string }) {
         </p>
         <h1
           style={{
-            fontFamily: 'var(--font-cormorant,serif)',
+            fontFamily: 'var(--font-display), sans-serif',
             fontSize: 28,
             color: C.cream,
             fontWeight: 400,
@@ -170,7 +170,7 @@ function SoftMissing({ title, body }: { title: string; body: string }) {
           href="/events"
           style={{
             color: C.gold,
-            fontFamily: 'var(--font-dm-mono,monospace)',
+            fontFamily: 'var(--font-inter), sans-serif',
             fontSize: 11,
             letterSpacing: '1.5px',
             textTransform: 'uppercase',

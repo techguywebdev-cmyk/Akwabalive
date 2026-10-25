@@ -3,34 +3,49 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { GhanaEvent } from '@/lib/types';
-import { isListedEvent } from '@/lib/types';
 import { cityLabel, formatDistance } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { Icon } from '@/components/ui/Icon';
-import GlassPill, { Capsule } from '@/components/thiscene/GlassPill';
 import RsvpSheet from '@/components/thiscene/RsvpSheet';
-import { dateSlot, statusText } from '@/components/thiscene/dates';
-import { T, TYPE, SCRIM, RADIUS, alpha, ambient, cardTitleSize, glass } from '@/lib/thiscene';
+import PaystackCheckout from '@/components/payment/PaystackCheckout';
+import FlyerCanvas from '@/components/events/FlyerCanvas';
+import FriendsStrip from '@/components/social/FriendsStrip';
+import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
+import { EventTags, MetaRows, BTN, PriceTag } from '@/components/events/CardParts';
+import { statusText } from '@/components/thiscene/dates';
+import { parseDay, shortDay } from '@/lib/dates';
+import { splitEventTitle, eventBlurb } from '@/lib/events/title';
+import type { CheckoutTier } from '@/lib/events/tiers';
+import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
 
 export interface FeedItem { event: GhanaEvent; dist: number | null }
 
+/** "Sat 14 Dec" */
+function shortDate(e: GhanaEvent) {
+  const d = parseDay(e.date);
+  return d ? shortDay(d) : e.dateLabel || '';
+}
+
 const fmtCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n));
 
-/* ── Thiscene Card: one event, full screen ─────────────────────────── */
+export const mapsLink = (e: GhanaEvent) => (e.lat && e.lng
+  ? `https://www.google.com/maps/search/?api=1&query=${e.lat},${e.lng}`
+  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${e.venue}, ${cityLabel(e.city)}`)}`);
+
+/* ── One event, full screen ────────────────────────────────────────── */
 function EventCard({
-  item, active, near, wide, reminded, going, onRemind, onGoing, onShare, onRsvp, topInset,
+  item, active, near, wide, saved, going, onSave, onGoing, onShare, onTickets, topInset,
 }: {
   item: FeedItem; active: boolean; near: boolean; wide: boolean;
-  reminded: boolean; going: boolean;
-  onRemind: () => void; onGoing: () => void; onShare: () => void; onRsvp: (accent: string) => void;
+  saved: boolean; going: boolean;
+  onSave: () => void; onGoing: () => void; onShare: () => void; onTickets: (accent: string) => void;
   topInset: number;
 }) {
   const { event, dist } = item;
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
-  const [loaded, setLoaded] = useState(false);
-  const [portrait, setPortrait] = useState(false);
   const [more, setMore] = useState(false);
+  const block = useRef<HTMLDivElement>(null);
+  const [blockH, setBlockH] = useState(300);
 
   useEffect(() => {
     if (!near) return;
@@ -39,144 +54,106 @@ function EventCard({
     return () => { live = false; };
   }, [near, event.image, event.category]);
 
+  // The flyer gets whatever room the details leave
+  useEffect(() => {
+    const el = block.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setBlockH(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const a = toHex(rgb);
-  const listed = isListedEvent(event) && !!event.ticketUrl;
-  const free = event.price === 0;
-  const showWhole = wide && portrait; // portrait flyer on a wide screen: show it whole, don't crop
-  const overview = [event.lineup?.length ? `With ${event.lineup.join(', ')}.` : '', event.description || ''].filter(Boolean).join(' ');
+  const { title, subtitle } = splitEventTitle(event.title);
+  const blurb = eventBlurb(event, 220);
   const goingCount = (event.attending ?? 0) + (going ? 1 : 0);
-  const maps = event.lat && event.lng
-    ? `https://www.google.com/maps/search/?api=1&query=${event.lat},${event.lng}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${event.venue}, ${cityLabel(event.city)}`)}`;
+  const tags = [event.category, statusText(event)]
+    .filter(Boolean)
+    .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
+  const when = [shortDate(event), event.time?.toLowerCase()].filter(Boolean).join(' · ');
+  const where = [event.venue + (event.area ? `, ${event.area}` : ''), dist != null ? `${formatDistance(dist)} away` : ''].filter(Boolean).join(' · ');
+  const bottom = wide ? 40 : 28;
+  const label = ticketsLabel(event);
+  const titleSize = wide ? 'clamp(44px, 4.6vw, 68px)' : title.length > 22 ? 34 : title.length > 14 ? 40 : 46;
 
   return (
     <section
       aria-label={event.title}
-      style={{ position: 'relative', width: '100%', height: '100svh', overflow: 'hidden', background: ambient(a), color: T.text, scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+      style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: ambient(a), color: T.text, scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
     >
-      {/* Art */}
       {near && (
-        <>
-          <div
-            style={{
-              position: 'absolute',
-              ...(showWhole ? { top: 76, bottom: 32, right: '4%', width: '46%', borderRadius: RADIUS.card, overflow: 'hidden' } : { inset: 0 }),
-              backgroundImage: `url(${event.image})`, backgroundSize: showWhole ? 'contain' : 'cover',
-              backgroundRepeat: 'no-repeat', backgroundPosition: showWhole ? 'center' : 'center top',
-              opacity: loaded ? (active ? 1 : 0.7) : 0, transition: 'opacity 0.6s ease',
-            }}
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={event.image}
-            alt=""
-            onLoad={(e) => { setLoaded(true); setPortrait(e.currentTarget.naturalHeight > e.currentTarget.naturalWidth * 1.05); }}
-            style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
-          />
-        </>
+        <FlyerCanvas
+          src={event.image}
+          accent={a}
+          category={event.category}
+          dim={!active}
+          area={wide
+            ? { top: topInset + 16, bottom: 40, right: '10%', left: '50%' }
+            : { top: 0, bottom: blockH + bottom + 12, left: 0, right: 0 }}
+          bleed={!wide}
+        />
       )}
 
-      {/* Scrims */}
-      <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '25%', background: SCRIM.top, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '75%', background: SCRIM.bottom, pointerEvents: 'none' }} />
-      {wide && <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '60%', background: 'linear-gradient(to right, rgba(0,0,0,0.75), rgba(0,0,0,0))', pointerEvents: 'none' }} />}
-
-      {/* 1 · Header row of glass capsules */}
-      <div style={{ position: 'absolute', top: topInset, left: 16, right: 16, display: 'flex', gap: 8, zIndex: 3, opacity: active ? 1 : 0.5, transition: 'opacity 0.4s ease' }}>
-        <Capsule><span style={{ width: 5, height: 5, borderRadius: '50%', background: a }} />{statusText(event)}</Capsule>
-        <Capsule accent={a} accentBorder>{free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</Capsule>
-        {dist != null && <Capsule>{formatDistance(dist)} away</Capsule>}
-      </div>
-
-      {/* 2 · Centre play button — only when there's a promo video */}
-      {event.promoVideoUrl && (
-        <Link
-          href={`/events/${event.slug}`}
-          aria-label={`Watch the ${event.title} promo`}
-          style={{ position: 'absolute', top: '42%', left: wide ? '30%' : '50%', transform: 'translate(-50%, -50%)', zIndex: 3, width: 68, height: 68, borderRadius: '50%', ...glass(true), border: `1.5px solid ${alpha(a, 0.55)}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          <Icon name="play" size={22} color="#fff" filled />
-        </Link>
-      )}
-
-      {/* 3 · Bottom block */}
+      {/* Details: tags, short title, subtitle, friends, description, when/where, one action */}
       <div
+        ref={block}
         style={{
-          position: 'absolute', zIndex: 3, left: wide ? 40 : 18, bottom: `calc(${wide ? 36 : 20}px + env(safe-area-inset-bottom, 0px))`,
-          right: wide ? undefined : 66, width: wide ? 'min(46%, 620px)' : undefined,
-          opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(18px)', transition: 'all 0.5s ease',
+          position: 'absolute', zIndex: 3, left: wide ? 48 : 20, right: wide ? undefined : 20, width: wide ? 'min(44%, 600px)' : undefined,
+          bottom: `calc(${bottom}px + env(safe-area-inset-bottom, 0px))`,
+          display: 'flex', flexDirection: 'column', gap: 14,
+          opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'all 0.5s ease',
         }}
       >
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-          {[event.category, event.badge].filter(Boolean).filter((t, i, arr) => arr.indexOf(t) === i).map((t) => (
-            <span key={t} style={{ ...TYPE.eyebrow, fontSize: 9, color: a, padding: '3px 8px', border: `1px solid ${alpha(a, 0.22)}`, borderRadius: RADIUS.tag }}>{t}</span>
-          ))}
-        </div>
+        <EventTags event={event} accent={a} />
 
-        <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none' }}>
-          <h2 style={{ ...TYPE.cardTitle, fontSize: cardTitleSize(event.title, wide ? 64 : 50), color: T.white, margin: '0 0 7px', textShadow: `0 0 50px ${alpha(a, 0.16)}` }}>
-            {event.title}
+        <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <h2 style={{ margin: 0, fontFamily: FONT.display, fontWeight: 800, lineHeight: 0.98, letterSpacing: '-0.035em', fontSize: titleSize, color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
+            {title}
           </h2>
+          {subtitle && <span style={{ fontFamily: FONT.display, fontSize: wide ? 20 : 17, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)' }}>{subtitle}</span>}
         </Link>
 
-        {/* Meta: date in the year's slot, venue in the meta slot */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-          <span style={{ fontFamily: TYPE.stat.fontFamily, fontWeight: 700, fontSize: 13, color: alpha(a, 0.73) }}>{dateSlot(event)}</span>
-          <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(255,255,255,0.18)' }} />
-          <span style={{ ...TYPE.meta, color: T.text3 }}>{event.venue}{event.area ? `, ${event.area}` : ''} · {event.time}</span>
-        </div>
+        <FriendsStrip slug={event.slug} enabled={near} />
 
-        {overview && (
-          <p style={{ ...TYPE.body, color: T.text2, margin: '0 0 14px', ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>
-            {overview}
-          </p>
-        )}
-        {overview.length > 110 && (
-          <button type="button" onClick={() => setMore((m) => !m)} style={{ ...TYPE.meta, fontWeight: 700, color: T.text, background: 'none', border: 'none', padding: 0, margin: '-8px 0 14px', cursor: 'pointer' }}>
-            {more ? 'Show less' : 'Read more'}
-          </button>
-        )}
-
-        {/* Pills, side by side */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {free && !listed ? (
-            <GlassPill variant="primary" accent={a} compact={!wide} onClick={() => onRsvp(a)}>
-              <Icon name="ticket" size={17} /> {going ? "You're going" : 'RSVP'}
-            </GlassPill>
-          ) : (
-            <GlassPill variant="primary" accent={a} compact={!wide} href={listed ? event.ticketUrl! : `/events/${event.slug}?tickets=1`} external={listed}>
-              <Icon name="ticket" size={17} /> Get tickets
-            </GlassPill>
+        <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2, ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>
+          {blurb}
+          {blurb.length > 90 && (
+            <>
+              {' '}
+              <button type="button" onClick={() => setMore((m) => !m)} style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: T.mintText, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                {more ? 'Less' : 'More'}
+              </button>
+            </>
           )}
-          <GlassPill variant="secondary" compact={!wide} onClick={onRemind}>
-            <Icon name={reminded ? 'check' : 'bell'} size={16} color={reminded ? T.success : '#fff'} />
-            <span style={{ color: reminded ? T.success : undefined }}>{reminded ? 'Saved' : 'Remind me'}</span>
-          </GlassPill>
+        </p>
+
+        <MetaRows when={when} where={where} />
+
+        {/* One clear action. Going, save, share and directions live on the event page. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+          {label === 'Ended' ? (
+            <Link href={`/events/${event.slug}`} style={{ ...BTN.secondary, flex: wide ? undefined : 1 }}>View event</Link>
+          ) : (
+            <button type="button" onClick={() => onTickets(a)} style={{ ...BTN.primary, flex: wide ? undefined : 1 }}>
+              Get tickets <PriceTag text={label} />
+            </button>
+          )}
+          {label !== 'Ended' && (
+            <Link href={`/events/${event.slug}`} style={BTN.secondary}>Details</Link>
+          )}
         </div>
       </div>
 
-      {/* 4 · Action rail: round glass buttons */}
-      <div style={{ position: 'absolute', zIndex: 4, right: wide ? 28 : 12, bottom: `calc(${wide ? 36 : 150}px + env(safe-area-inset-bottom, 0px))`, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', opacity: active ? 1 : 0, transform: active ? 'translateX(0)' : 'translateX(24px)', transition: 'all 0.45s ease 0.12s' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-          <GlassPill variant="round" accent={a} active={going} label={going ? 'Not going' : "I'm going"} onClick={onGoing}>
-            <Icon name="heart" size={19} filled={going} color={going ? a : '#fff'} />
-          </GlassPill>
-          {goingCount > 0 && <span style={{ ...TYPE.meta, fontSize: 11, color: T.text2 }}>{fmtCount(goingCount)}</span>}
-        </div>
-        <GlassPill variant="round" label="Share" onClick={onShare}><Icon name="share" size={18} color="#fff" /></GlassPill>
-        <GlassPill variant="round" label={`Map: ${event.venue}`} href={maps} external><Icon name="mapPin" size={18} color="#fff" /></GlassPill>
-        <GlassPill variant="round" label="Details" href={`/events/${event.slug}`}><Icon name="info" size={18} color="#fff" /></GlassPill>
-      </div>
     </section>
   );
 }
 
 /**
- * Full-screen events feed on the Thiscene Card. One card per screen, vertical snap;
- * the active card's accent drives the page's ambient gradient.
+ * Full-screen events feed. One card per screen, vertical snap. The page stays
+ * green-black; each card's colour only tints its tags, title glow and main button.
  */
 export default function EventFeed({
-  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll,
+  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel,
 }: {
   items: FeedItem[];
   saved: Set<string>;
@@ -186,6 +163,7 @@ export default function EventFeed({
   onToggleGoing: (e: GhanaEvent) => void | Promise<void>;
   topInset: number;
   onShowAll?: () => void;
+  showAllLabel?: string;
 }) {
   const { user } = useAuth();
   const scroller = useRef<HTMLDivElement>(null);
@@ -193,6 +171,8 @@ export default function EventFeed({
   const [wide, setWide] = useState(false);
   const [toast, setToast] = useState('');
   const [rsvp, setRsvp] = useState<{ event: GhanaEvent; accent: string } | null>(null);
+  const [tickets, setTickets] = useState<{ event: GhanaEvent; accent: string } | null>(null);
+  const [checkout, setCheckout] = useState<{ event: GhanaEvent; tiers: CheckoutTier[] } | null>(null);
   const hasItems = items.length > 0;
 
   useEffect(() => {
@@ -235,7 +215,7 @@ export default function EventFeed({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (rsvp) return;
+      if (rsvp || tickets || checkout) return;
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       const el = scroller.current;
@@ -245,7 +225,7 @@ export default function EventFeed({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [rsvp]);
+  }, [rsvp, tickets, checkout]);
 
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2200); };
   const share = useCallback(async (e: GhanaEvent) => {
@@ -258,11 +238,14 @@ export default function EventFeed({
 
   if (!hasItems) {
     return (
-      <div style={{ minHeight: '62vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: `${topInset}px 24px 24px`, textAlign: 'center' }}>
-        <p style={{ ...TYPE.eyebrow, color: 'rgb(var(--accent-rgb))' }}>Nothing on</p>
-        <p style={{ ...TYPE.sheetTitle, color: T.text }}>No events match</p>
-        <p style={{ ...TYPE.body, color: T.text2 }}>Try another date, city or price.</p>
-        {onShowAll && <div style={{ marginTop: 8 }}><GlassPill variant="primary" accent="#F5A623" onClick={onShowAll}>Show all dates</GlassPill></div>}
+      <div style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, padding: `${topInset + 20}px 24px 24px`, textAlign: 'center' }}>
+        <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>Nothing matches yet</p>
+        <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Try another date, city or price.</p>
+        {onShowAll && (
+          <button type="button" onClick={onShowAll} style={{ marginTop: 14, height: 48, padding: '0 22px', borderRadius: 999, border: 'none', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            {showAllLabel ?? 'Show all dates'}
+          </button>
+        )}
       </div>
     );
   }
@@ -281,16 +264,40 @@ export default function EventFeed({
             active={i === active}
             near={Math.abs(i - active) <= 2}
             wide={wide}
-            reminded={saved.has(item.event.slug)}
+            saved={saved.has(item.event.slug)}
             going={going.has(item.event.slug)}
-            onRemind={() => onToggleSave(item.event)}
+            onSave={() => onToggleSave(item.event)}
             onGoing={() => onToggleGoing(item.event)}
             onShare={() => share(item.event)}
-            onRsvp={(accent) => setRsvp({ event: item.event, accent })}
+            onTickets={(accent) => setTickets({ event: item.event, accent })}
             topInset={topInset}
           />
         ))}
       </div>
+
+      {tickets && (
+        <TicketsSheet
+          event={tickets.event}
+          accent={tickets.accent}
+          onClose={() => setTickets(null)}
+          onBuy={(tiers) => { setCheckout({ event: tickets.event, tiers }); setTickets(null); }}
+          onRsvp={() => { setRsvp(tickets); setTickets(null); }}
+          footer={
+            <Link href={`/events/${tickets.event.slug}`} style={{ display: 'block', textAlign: 'center', marginTop: 14, fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>
+              See the full event page
+            </Link>
+          }
+        />
+      )}
+
+      {checkout && (
+        <PaystackCheckout
+          event={checkout.event}
+          tiers={checkout.tiers}
+          onClose={() => setCheckout(null)}
+          onSuccess={() => { setCheckout(null); flash('Ticket confirmed — it\'s in My tickets'); }}
+        />
+      )}
 
       {rsvp && (
         <RsvpSheet

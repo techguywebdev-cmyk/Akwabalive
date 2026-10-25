@@ -49,7 +49,7 @@ const ctaStyle = {
   color: C.onAccent,
   padding: '8px 12px',
   borderRadius: 6,
-  fontFamily: 'var(--font-dm-mono,monospace)',
+  fontFamily: 'var(--font-inter), sans-serif',
   fontSize: 10,
   letterSpacing: '1.5px',
   textTransform: 'uppercase',
@@ -96,7 +96,7 @@ export default function OrganizerPageClient({
             gap: 6,
             marginTop: 16,
             marginBottom: 24,
-            fontFamily: 'var(--font-dm-mono,monospace)',
+            fontFamily: 'var(--font-inter), sans-serif',
             fontSize: 10,
             letterSpacing: '1.5px',
             textTransform: 'uppercase',
@@ -120,7 +120,7 @@ export default function OrganizerPageClient({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontFamily: 'var(--font-cormorant,serif)',
+              fontFamily: 'var(--font-display), sans-serif',
               fontSize: 32,
               color: C.gold,
             }}
@@ -139,7 +139,7 @@ export default function OrganizerPageClient({
           <div>
             <p
               style={{
-                fontFamily: 'var(--font-dm-mono,monospace)',
+                fontFamily: 'var(--font-inter), sans-serif',
                 fontSize: 10,
                 letterSpacing: '2px',
                 textTransform: 'uppercase',
@@ -151,7 +151,7 @@ export default function OrganizerPageClient({
             </p>
             <h1
               style={{
-                fontFamily: 'var(--font-cormorant,serif)',
+                fontFamily: 'var(--font-display), sans-serif',
                 fontSize: 32,
                 fontWeight: 400,
                 color: C.cream,
@@ -237,7 +237,7 @@ function Section({
     <section style={{ marginBottom: 36, opacity: muted ? 0.75 : 1 }}>
       <p
         style={{
-          fontFamily: 'var(--font-dm-mono,monospace)',
+          fontFamily: 'var(--font-inter), sans-serif',
           fontSize: 10,
           letterSpacing: '2px',
           textTransform: 'uppercase',
@@ -296,7 +296,7 @@ function EventRow({ event }: { event: GhanaEvent }) {
         <div style={{ minWidth: 0 }}>
           <p
             style={{
-              fontFamily: 'var(--font-dm-mono,monospace)',
+              fontFamily: 'var(--font-inter), sans-serif',
               fontSize: 10,
               color: C.gold,
               letterSpacing: '1px',
@@ -308,7 +308,7 @@ function EventRow({ event }: { event: GhanaEvent }) {
           </p>
           <h3
             style={{
-              fontFamily: 'var(--font-cormorant,serif)',
+              fontFamily: 'var(--font-display), sans-serif',
               fontSize: 18,
               fontWeight: 400,
               color: C.cream,

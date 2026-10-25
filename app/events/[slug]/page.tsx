@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import EventDetailClient from '@/components/events/EventDetailClient';
 import { events as staticEvents } from '@/lib/data/events';
@@ -67,7 +66,6 @@ export default async function EventPage({ params }: { params: { slug: string } }
     const seriesMomentId = await findSeriesMoment(staticEvent.title);
     return (
       <div style={{ background: 'transparent', minHeight: '100vh' }}>
-        <Nav active="Events" />
         <EventDetailClient event={staticEvent} related={related} seriesMomentId={seriesMomentId} />
         <Footer />
       </div>
@@ -114,7 +112,6 @@ export default async function EventPage({ params }: { params: { slug: string } }
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
-      <Nav active="Events" />
       <EventDetailClient event={event} related={related} seriesMomentId={seriesMomentId} />
       <Footer />
     </div>
