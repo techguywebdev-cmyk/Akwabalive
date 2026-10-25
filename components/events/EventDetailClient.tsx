@@ -10,6 +10,7 @@ import { getTiers } from '@/lib/events/tiers';
 import { hiRes } from '@/lib/events/image';
 import { EventTags } from '@/components/events/CardParts';
 import FriendsStrip from '@/components/social/FriendsStrip';
+import { useEventMoments, MomentsRail, MomentsViewer } from '@/components/moments/EventMoments';
 import { ActionBar, TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { parseDay, longDay } from '@/lib/dates';
@@ -51,6 +52,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [dreamToast,     setDreamToast]     = useState('');
   const [ticketSuccess,  setTicketSuccess]  = useState(false);
   const [showPromoVideo, setShowPromoVideo] = useState(false);
+  const [watchAt,        setWatchAt]        = useState<number | null>(null);
+  const moments = useEventMoments(event);
   const [wantSound, setWantSound] = useState(false);
 
   useEffect(() => {
@@ -200,7 +203,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         tabs={false}
         actions={
           <>
-            {seriesMomentId && <HeaderIconButton label="Watch the last edition" icon="moments" href={`/moments?id=${seriesMomentId}&from=${encodeURIComponent(`/events/${event.slug}`)}`} />}
+            {!moments.length && seriesMomentId && <HeaderIconButton label="Watch the last edition" icon="moments" href={`/moments?id=${seriesMomentId}&from=${encodeURIComponent(`/events/${event.slug}`)}`} />}
           </>
         }
       />
@@ -264,6 +267,9 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         </div>
 
         <FriendsStrip slug={event.slug} variant="full" />
+
+        <MomentsRail list={moments} onOpen={setWatchAt} />
+        {watchAt !== null && <MomentsViewer list={moments} start={watchAt} eventTitle={event.title} onClose={() => setWatchAt(null)} />}
 
         <div style={{ marginTop: 28 }}>
           <div style={infoRow}>

@@ -9,6 +9,7 @@ import RsvpSheet from '@/components/thiscene/RsvpSheet';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import FlyerCanvas from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
+import { useEventMoments, MomentsPill, MomentsViewer } from '@/components/moments/EventMoments';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { EventTags, MetaRows, BTN, PriceTag } from '@/components/events/CardParts';
 import { statusText } from '@/components/thiscene/dates';
@@ -44,6 +45,8 @@ function EventCard({
   const { event, dist } = item;
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
   const [more, setMore] = useState(false);
+  const [watching, setWatching] = useState(false);
+  const moments = useEventMoments(event, near);
   const block = useRef<HTMLDivElement>(null);
   const [blockH, setBlockH] = useState(300);
 
@@ -104,6 +107,8 @@ function EventCard({
           opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'all 0.5s ease',
         }}
       >
+        <MomentsPill list={moments} slug={event.slug} onOpen={() => setWatching(true)} />
+
         <EventTags event={event} accent={a} />
 
         <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -144,6 +149,7 @@ function EventCard({
         </div>
       </div>
 
+      {watching && <MomentsViewer list={moments} eventTitle={event.title} onClose={() => setWatching(false)} />}
     </section>
   );
 }

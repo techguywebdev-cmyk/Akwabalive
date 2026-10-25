@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import Link from 'next/link';
-import Nav, { HeaderIconButton } from '@/components/layout/Nav';
+import Nav from '@/components/layout/Nav';
 import EventFeed from '@/components/events/EventFeed';
 import FilterSheet, { CITIES, CATEGORIES, WHEN_OPTS, PRICE_OPTS, type Place } from '@/components/events/FilterSheet';
 import { Icon } from '@/components/ui/Icon';
@@ -271,22 +271,19 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
     return out;
   }, [filtered, page, filters.sort]);
 
+  // One capsule: search | filters (the cards/list switch lives in the filter sheet)
+  const capBtn = (on: boolean): CSSProperties => ({ position: 'relative', width: 46, height: 44, padding: 0, border: 'none', background: on ? 'rgba(123,227,168,0.14)' : 'transparent', color: on ? T.mintText : T.text, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' });
   const headerActions = (
-    <>
-      <HeaderIconButton
-        label={view === 'feed' ? 'Show as a list' : 'Show full-screen cards'}
-        icon={view === 'feed' ? 'list' : 'feed'}
-        onClick={() => setView(view === 'feed' ? 'list' : 'feed')}
-      />
-      <HeaderIconButton label="Search" icon="search" onClick={() => setSearchOpen((s) => !s)} active={searchOpen || !!filters.search} pressed={searchOpen} />
-      <HeaderIconButton
-        label={filtersOn ? `Sort and filter, ${summary.length || 1} on` : 'Sort and filter'}
-        icon="sliders"
-        onClick={() => setFilterOpen(true)}
-        active={filtersOn}
-        dot={filtersOn}
-      />
-    </>
+    <div role="group" aria-label="Search and filter" style={{ display: 'flex', alignItems: 'center', height: 44, borderRadius: 22, overflow: 'hidden', background: 'rgba(3,10,6,0.38)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
+      <button type="button" aria-label="Search" aria-pressed={searchOpen} onClick={() => setSearchOpen((s) => !s)} style={capBtn(searchOpen || !!filters.search)}>
+        <Icon name="search" size={21} />
+      </button>
+      <span aria-hidden style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.14)' }} />
+      <button type="button" aria-label={filtersOn ? `Sort and filter, ${summary.length || 1} on` : 'Sort and filter'} onClick={() => setFilterOpen(true)} style={capBtn(filtersOn)}>
+        <Icon name="sliders" size={21} />
+        {filtersOn && <span aria-hidden style={{ position: 'absolute', top: 9, right: 10, width: 7, height: 7, borderRadius: 4, background: T.mint, boxShadow: '0 0 0 2px rgba(3,8,6,0.9)' }} />}
+      </button>
+    </div>
   );
 
   const headerH = 74;
@@ -388,6 +385,8 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
         places={PLACES}
         pickPlace={pickPlace}
         clearLoc={clearLoc}
+        view={view}
+        setView={setView}
       />
     </>
   );

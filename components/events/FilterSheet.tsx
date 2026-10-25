@@ -93,7 +93,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
  */
 export default function FilterSheet({
   open, onClose, filters, set, clear, count,
-  locStatus, locLabel, radius, setRadius, requestLoc, places, pickPlace, clearLoc,
+  locStatus, locLabel, radius, setRadius, requestLoc, places, pickPlace, clearLoc, view, setView,
 }: {
   open: boolean;
   onClose: () => void;
@@ -109,6 +109,8 @@ export default function FilterSheet({
   places: Place[];
   pickPlace: (p: Place) => void;
   clearLoc: () => void;
+  view?: 'feed' | 'list';
+  setView?: (v: 'feed' | 'list') => void;
 }) {
   const [shown, setShown] = useState(false);
 
@@ -154,6 +156,13 @@ export default function FilterSheet({
         </div>
 
         <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px' }}>
+          {view && setView && (
+            <Group title="Show as">
+              <Chip on={view === 'feed'} onClick={() => setView('feed')}>Full-screen cards</Chip>
+              <Chip on={view === 'list'} onClick={() => setView('list')}>List</Chip>
+            </Group>
+          )}
+
           <Group title="Sort by">
             {SORT_OPTS.map((o) => (
               <Chip key={o.value} on={filters.sort === o.value} onClick={() => { set('sort', o.value); if (o.value === 'nearby' && locStatus !== 'found') requestLoc(); }}>
