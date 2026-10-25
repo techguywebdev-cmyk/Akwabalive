@@ -40,7 +40,7 @@ function TierChips({ event, accent, onOpen }: { event: GhanaEvent; accent: strin
     return <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>Tickets sold on {event.ticketSource || 'the official site'}</p>;
   }
   const tiers = getTiers(event);
-  if (tiers.length < 2) return null;
+  if (!tiers.length) return null;
   return (
     <div className="no-scrollbar" role="list" aria-label="Ticket types" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px', pointerEvents: 'auto' }}>
       {tiers.map((t) => {
@@ -178,7 +178,7 @@ function EventCard({
         {label !== 'Ended' && (
           <div style={{ display: 'flex', marginTop: 2, pointerEvents: 'auto' }}>
             <button type="button" onClick={() => onTickets(a)} style={{ ...BTN.primary, flex: wide ? undefined : 1, minWidth: wide ? 260 : undefined }}>
-              Get tickets <PriceTag text={label} />
+              {isListedEvent(event) && event.ticketUrl ? <>Get tickets <PriceTag text={label} /></> : label === 'Free' ? 'Reserve a free spot' : 'Get tickets'}
             </button>
           </div>
         )}
