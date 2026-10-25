@@ -11,11 +11,12 @@ import FlyerCanvas from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments, MomentsPill, MomentsViewer } from '@/components/moments/EventMoments';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
-import { EventTags, MetaRows, BTN } from '@/components/events/CardParts';
+import { EventTags, BTN, whenTag } from '@/components/events/CardParts';
 import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { getTiers, type CheckoutTier } from '@/lib/events/tiers';
+import { CalendarDays, MapPin, Ticket, Heart, Share2 } from 'lucide-react';
 import { isListedEvent } from '@/lib/types';
 import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
@@ -33,6 +34,50 @@ const fmtCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 
 export const mapsLink = (e: GhanaEvent) => (e.lat && e.lng
   ? `https://www.google.com/maps/search/?api=1&query=${e.lat},${e.lng}`
   : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${e.venue}, ${cityLabel(e.city)}`)}`);
+
+/* ── Title clean-up ──────────────────────────────────────────────────── */
+const SMALL = new Set(['a', 'an', 'and', 'at', 'by', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with', 'x']);
+/** 'ANNUAL GHANA HOLIDAY TOUR' → 'Annual Ghana Holiday Tour' (short words like DJ, VIP, II stay as they are) */
+function calmCase(t: string) {
+  const letters = t.replace(/[^A-Za-z]/g, '');
+  if (letters.length < 8 || letters.replace(/[^A-Z]/g, '').length / letters.length < 0.7) return t;
+  return t.split(/(\s+)/).map((w, i) => {
+    if (/^\s+$/.test(w)) return w;
+    const bare = w.replace(/[^A-Za-z]/g, '');
+    if (bare.length <= 3 && !SMALL.has(bare.toLowerCase())) return w; // DJ, VIP, MTN, II
+    const low = w.toLowerCase();
+    if (i > 0 && SMALL.has(bare.toLowerCase())) return low;
+    return low.replace(/[a-z]/, (c) => c.toUpperCase());
+  }).join('');
+}
+/** Cut long titles at a word, not mid-line */
+function shorten(t: string, max = 46) {
+  return t.length <= max ? t : `${t.slice(0, max).replace(/\s+\S*$/, '').replace(/[\s&,·:–—-]+$/, '')}…`;
+}
+
+const roundBtn: React.CSSProperties = {
+  width: 50, height: 50, flexShrink: 0, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+  background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', color: T.white,
+  backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', transition: 'background 200ms ease, color 200ms ease, border-color 200ms ease',
+};
+
+/* ── Details: when, where, tickets ─────────────────────────────────── */
+function DetailRow({ icon, accent, main, sub, action }: { icon: React.ReactNode; accent: string; main: string; sub?: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+      <span aria-hidden style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: alpha(accent, 0.18), border: `1px solid ${alpha(accent, 0.28)}`, color: accent, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+        {icon}
+      </span>
+      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <span style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{main}</span>
+        {sub && <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</span>}
+      </span>
+      {action}
+    </div>
+  );
+}
+
+const linkish: React.CSSProperties = { pointerEvents: 'auto', flexShrink: 0, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText, textDecoration: 'none', padding: '8px 0 8px 8px' };
 
 /* ── Ticket packages, right on the card ───────────────────────────── */
 function TierChips({ event, accent, onOpen }: { event: GhanaEvent; accent: string; onOpen: () => void }) {
@@ -102,16 +147,25 @@ function EventCard({
   }, []);
 
   const a = toHex(rgb);
-  const { title, subtitle } = splitEventTitle(event.title);
-  const blurb = eventBlurb(event, 220);
+  const split = splitEventTitle(event.title);
+  const title = shorten(calmCase(split.title));
+  const subtitle = shorten(calmCase(split.subtitle), 60);
   const goingCount = (event.attending ?? 0) + (going ? 1 : 0);
   const tags = [event.category, statusText(event)]
     .filter(Boolean)
     .filter((t, i, arr) => arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i);
-  const when = [shortDate(event), event.time?.toLowerCase()].filter(Boolean).join(' · ');
-  const where = [event.venue + (event.area ? `, ${event.area}` : ''), dist != null ? `${formatDistance(dist)} away` : ''].filter(Boolean).join(' · ');
-  const bottom = wide ? 40 : 28;
+  const when = [shortDate(event), event.time && !/tba/i.test(event.time) ? event.time.toLowerCase() : 'time TBA'].filter(Boolean).join(' · ');
+  const place = [event.area && !event.venue.toLowerCase().includes(event.area.toLowerCase()) ? event.area : '', event.venue.toLowerCase().includes(cityLabel(event.city).toLowerCase()) ? '' : cityLabel(event.city), dist != null ? `${formatDistance(dist)} away` : ''].filter(Boolean).join(' · ');
   const label = ticketsLabel(event);
+  const tierList = getTiers(event);
+  const listed = isListedEvent(event);
+  const ticketMain = label === 'See prices' ? 'Tickets available' : label === 'Free' ? 'Free entry' : `From ${label}`;
+  const ticketSub = listed ? `Sold on ${event.ticketSource || 'the official site'}` : label === 'Free' ? 'Reserve your spot on Akwaaba' : 'MoMo or card · QR ticket';
+  const calLink = (() => {
+    const d = event.date?.slice(0, 10).replace(/-/g, '');
+    return d ? `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${d}/${d}&location=${encodeURIComponent(`${event.venue}, Ghana`)}` : null;
+  })();
+  const bottom = wide ? 40 : 28;
   // Long titles get smaller so the text block stays short and the flyer gets the room
   const titleSize = wide ? 'clamp(44px, 4.6vw, 68px)' : title.length > 34 ? 28 : title.length > 22 ? 32 : title.length > 14 ? 38 : 44;
 
@@ -152,38 +206,53 @@ function EventCard({
         <EventTags event={event} accent={a} />
 
         <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6, pointerEvents: 'auto' }}>
-          <h2 style={{ margin: 0, fontFamily: FONT.display, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', fontSize: titleSize, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
+          <h2 style={{ margin: 0, fontFamily: FONT.display, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', fontSize: titleSize, color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
             {title}
           </h2>
-          {subtitle && <span style={{ fontFamily: FONT.display, fontSize: wide ? 20 : 17, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)' }}>{subtitle}</span>}
+          {subtitle && <span style={{ fontFamily: FONT.display, fontSize: wide ? 20 : 16, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</span>}
         </Link>
 
         <div style={{ pointerEvents: 'auto' }}><FriendsStrip slug={event.slug} enabled={near} /></div>
 
-        <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2, ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }) }}>
-          {blurb}
-          {blurb.length > 90 && (
-            <>
-              {' '}
-              <button type="button" onClick={() => setMore((m) => !m)} style={{ pointerEvents: 'auto', fontFamily: FONT.sans, fontSize: 14, fontWeight: 500, color: T.mintText, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-                {more ? 'Less' : 'More'}
-              </button>
-            </>
+        {/* When, where, tickets */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 2 }}>
+          <DetailRow
+            accent={a}
+            icon={<CalendarDays size={20} strokeWidth={2} />}
+            main={when}
+            sub={label === 'Ended' ? 'This event has ended' : whenTag(event)?.text}
+            action={label !== 'Ended' && calLink ? <a href={calLink} target="_blank" rel="noopener noreferrer" style={linkish}>Add to calendar</a> : undefined}
+          />
+          <DetailRow
+            accent={a}
+            icon={<MapPin size={20} strokeWidth={2} />}
+            main={event.venue}
+            sub={place || undefined}
+            action={<a href={mapsLink(event)} target="_blank" rel="noopener noreferrer" style={linkish}>Directions</a>}
+          />
+          {label !== 'Ended' && tierList.length < 2 && (
+            <DetailRow accent={a} icon={<Ticket size={20} strokeWidth={2} />} main={ticketMain} sub={ticketSub} />
           )}
-        </p>
+        </div>
 
-        <MetaRows when={when} where={where} />
+        {label !== 'Ended' && tierList.length >= 2 && <TierChips event={event} accent={a} onOpen={() => onTickets(a)} />}
 
-        {label !== 'Ended' && <TierChips event={event} accent={a} onOpen={() => onTickets(a)} />}
-
-        {/* One action: tickets. The card itself opens the event; nothing for past events. */}
-        {label !== 'Ended' && (
-          <div style={{ display: 'flex', marginTop: 2, pointerEvents: 'auto' }}>
-            <button type="button" onClick={() => onTickets(a)} style={{ ...BTN.primary, flex: wide ? undefined : 1, minWidth: wide ? 260 : undefined }}>
-              {label === 'Free' && !isListedEvent(event) ? 'Reserve a free spot' : 'Get tickets'}
+        {/* Tickets, plus save and share. The card itself opens the event. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, pointerEvents: 'auto' }}>
+          {label !== 'Ended' ? (
+            <button type="button" onClick={() => onTickets(a)} style={{ ...BTN.primary, flex: wide ? undefined : 1, minWidth: wide ? 240 : undefined }}>
+              {label === 'Free' && !listed ? 'Reserve a free spot' : 'Get tickets'}
             </button>
-          </div>
-        )}
+          ) : (
+            <Link href={`/events/${event.slug}`} style={{ ...BTN.secondary, flex: wide ? undefined : 1 }}>See photos & details</Link>
+          )}
+          <button type="button" onClick={onSave} aria-label={saved ? 'Saved' : 'Save'} aria-pressed={saved} style={{ ...roundBtn, ...(saved ? { background: alpha(a, 0.2), borderColor: alpha(a, 0.5), color: a } : {}) }}>
+            <Heart size={21} strokeWidth={2} fill={saved ? 'currentColor' : 'none'} />
+          </button>
+          <button type="button" onClick={onShare} aria-label="Share" style={roundBtn}>
+            <Share2 size={20} strokeWidth={2} />
+          </button>
+        </div>
       </div>
 
       {watching && <MomentsViewer list={moments} eventTitle={event.title} onClose={() => setWatching(false)} />}
