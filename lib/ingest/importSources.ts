@@ -243,6 +243,7 @@ function tiersFromOffers(offers: any): ImportTier[] {
     if (!Number.isFinite(price)) continue;
     const name = String(o.name || o.category || (list.length === 1 ? 'General' : '')).trim().slice(0, 60);
     if (!name || out.some((t) => t.name.toLowerCase() === name.toLowerCase())) continue;
+    if (price === 0 && !/free|rsvp|register/i.test(name)) continue; // sites put 0 on 'pay by MoMo' passes
     out.push({ name, price });
   }
   return out;
