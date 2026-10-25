@@ -52,6 +52,8 @@ export interface SupabaseEvent {
     price: number;
     quantity: number;
     sold: number;
+    /** false = hidden (not offered on Akwaaba) */
+    is_available?: boolean | null;
   }[];
 }
 
@@ -60,7 +62,9 @@ function isSellingFast(tiers: SupabaseEvent['ticket_tiers']): boolean {
   return tiers.some((t) => t.quantity > 0 && t.sold / t.quantity >= 0.7);
 }
 
-export function supabaseToGhanaEvent(ev: SupabaseEvent): GhanaEvent {
+export function supabaseToGhanaEvent(raw: SupabaseEvent): GhanaEvent {
+  // Ticket types switched off (is_available = false) are left out everywhere
+  const ev: SupabaseEvent = { ...raw, ticket_tiers: (raw.ticket_tiers ?? []).filter((t) => t.is_available !== false) };
   const minPrice =
     ev.ticket_tiers?.length > 0
       ? Math.min(...ev.ticket_tiers.map((t) => t.price))
