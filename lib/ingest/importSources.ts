@@ -184,6 +184,23 @@ function detectCity(...parts: (string | null | undefined)[]): { city: string; ar
   return /\bghana\b/i.test(s) ? { city: 'accra', area: null } : null;
 }
 
+const CITY_CENTRES: [string, number, number][] = [
+  ['accra', 5.6037, -0.187], ['kumasi', 6.6885, -1.6244], ['cape-coast', 5.1053, -1.2466],
+  ['takoradi', 4.8975, -1.7603], ['tamale', 9.4008, -0.8393], ['ho', 6.6008, 0.4713],
+];
+/** Nearest city to a point in Ghana (null when the point is outside Ghana) */
+function cityFromGeo(lat: number | null, lng: number | null): string | null {
+  if (lat == null || lng == null || lat < 4.5 || lat > 11.3 || lng < -3.4 || lng > 1.3) return null;
+  let best = 'accra'; let d = Infinity;
+  for (const [c, a, b] of CITY_CENTRES) { const x = (a - lat) ** 2 + (b - lng) ** 2; if (x < d) { d = x; best = c; } }
+  return best;
+}
+
+/** Words that show a listing is an event someone can go to */
+const EVENT_SIGNAL = /\b(concert|festival|fest|party|rave|live|tickets?|show|night|tour|carnival|comedy|worship|praise|summit|conference|forum|fair|exhibition|expo|brunch|experience|championship|gala|awards?|launch|premiere|screening|workshop|masterclass|hangout|meet ?up|jam|session|picnic|games?|tournament|race|run|marathon|walk|yoga)\b/i;
+/** Titles that are news or notices, not events */
+const NOT_EVENT = /\b(part ways|breaking|reportedly|sources say|transfer|signs for|condolence|obituary|for sale|admission(s)? open|vacanc(y|ies)|hiring|recruitment|learning \w+)\b/i;
+
 const CATEGORY_WORDS: [RegExp, string][] = [
   [/\b(festival|fest|carnival)\b/i, 'festival'],
   [/\b(party|rave|club|night\s?life|dj|afterparty|after party|day party|brunch party)\b/i, 'nightlife'],
@@ -300,8 +317,13 @@ export function parseEventPage(url: string, html: string, source: string): Impor
   if (!tiers.length) tiers = tiersFromText(text);
 
   if (!title || !when) return null;
-  const place = detectCity(venue, address, title, description, text.slice(0, 3000));
+  if (source === 'AllEvents' && !EVENT_SIGNAL.test(`${title} ${description}`)) return null; // posts that aren't events
+  if (NOT_EVENT.test(title)) return null;
+  const geoCity = cityFromGeo(lat, lng);
+  const named = detectCity(venue, address, title) ?? detectCity(description);
+  const place = geoCity ? { city: geoCity, area: named?.city === geoCity ? named.area : null } : named ?? detectCity(text.slice(0, 3000));
   if (!place) return null; // not in Ghana
+  if (image && /dyn-image\.allevents|generate-image/i.test(image)) image = ogImage && !/dyn-image|generate-image/i.test(ogImage) ? ogImage : null;
 
   return {
     title: title.slice(0, 140),
@@ -390,7 +412,12 @@ export async function runImport(opts: { dryRun?: boolean; max?: number; only?: s
     report.duplicates += candidates.length - candidates.filter((c) => !known.has(c.url)).length;
     fresh = candidates.filter((c) => !known.has(c.url));
   }
-  fresh = fresh.slice(0, opts.max ?? 40);
+  // Take turns between sites so one big listing doesn't use up the whole run
+  const bySource = new Map<string, typeof fresh>();
+  fresh.forEach((c) => bySource.set(c.source, [...(bySource.get(c.source) ?? []), c]));
+  const mixed: typeof fresh = [];
+  for (let k = 0; mixed.length < fresh.length; k++) bySource.forEach((list) => { if (list[k]) mixed.push(list[k]); });
+  fresh = mixed.slice(0, opts.max ?? 40);
 
   // 3. Read each new page and queue it for review
   const today = new Date().toISOString().slice(0, 10);
