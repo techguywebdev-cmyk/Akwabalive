@@ -41,7 +41,7 @@ export const SOURCES: Source[] = [
     name: 'Egotickets',
     lists: ['https://egotickets.com/events', 'https://egotickets.com/events?page=2', 'https://egotickets.com/events?page=3'],
     link: /^https:\/\/(?:www\.)?egotickets\.com\/events\/[a-z0-9][a-z0-9-]+$/i,
-    skip: /\/events\/(?:new|search|category|categories|page|create)(?:$|[/?])/i,
+    skip: /\/events\/(?:new|search|category|categories|page|create|featured|popular|upcoming|past|online)(?:$|[/?])/i,
   },
   {
     name: 'AllEvents',
@@ -205,6 +205,7 @@ const CATEGORY_WORDS: [RegExp, string][] = [
   [/\b(festival|fest|carnival)\b/i, 'festival'],
   [/\b(party|rave|club|night\s?life|dj|afterparty|after party|day party|brunch party)\b/i, 'nightlife'],
   [/\b(food|jollof|brunch|dinner|tasting|chops|wine|cocktail)\b/i, 'food'],
+  [/\b(church|gospel|worship|praise|prayer|crusade|revival|choir)\b/i, 'culture'],
   [/\b(tech|summit|conference|hackathon|startup|ai|workshop|masterclass|bootcamp)\b/i, 'tech'],
   [/\b(art|exhibition|gallery|painting|photography)\b/i, 'art'],
   [/\b(fashion|runway|style)\b/i, 'fashion'],
@@ -314,11 +315,13 @@ export function parseEventPage(url: string, html: string, source: string): Impor
   when = when || fromText(`${ogTitle} ${ogDesc} ${text.slice(0, 4000)}`);
   description = description || ogDesc;
   image = image || ogImage || null;
-  if (!tiers.length) tiers = tiersFromText(text);
+  // Sites often publish one 'from' price in their data; the page text has the real ticket types
+  if (tiers.length <= 1) { const named = tiersFromText(text); if (named.length > tiers.length) tiers = named; }
 
   if (!title || !when) return null;
   if (source === 'AllEvents' && !EVENT_SIGNAL.test(`${title} ${description}`)) return null; // posts that aren't events
   if (NOT_EVENT.test(title)) return null;
+  if (lat != null && lng != null && !cityFromGeo(lat, lng)) return null; // pinned outside Ghana
   const geoCity = cityFromGeo(lat, lng);
   const named = detectCity(venue, address, title) ?? detectCity(description);
   const place = geoCity ? { city: geoCity, area: named?.city === geoCity ? named.area : null } : named ?? detectCity(text.slice(0, 3000));
