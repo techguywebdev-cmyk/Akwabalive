@@ -77,7 +77,9 @@ export function eventToHeroSlide(ev: GhanaEvent): HeroSlide {
   const glow: HeroSlide['glow'] =
     ev.category === 'concert' ? 'red' : ev.hot || ev.isFeatured ? 'gold' : 'green';
   const cta =
-    ev.price === 0
+    ev.priceUnknown
+      ? 'Get Tickets'
+      : ev.price === 0
       ? 'RSVP Free'
       : `Get Tickets — from ₵${ev.price.toLocaleString()}`;
   return {

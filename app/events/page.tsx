@@ -5,6 +5,7 @@ import { fetchPublishedEvents, supabaseToGhanaEvent } from '@/lib/supabase/event
 import { sortNewestFirst } from '@/lib/events/rank';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 export const metadata = {
   title: 'Events in Ghana — Akwaaba',

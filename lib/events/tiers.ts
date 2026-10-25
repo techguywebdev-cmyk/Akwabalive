@@ -13,7 +13,7 @@ export interface CheckoutTier {
 export function getTiers(event: GhanaEvent): CheckoutTier[] {
   // Real tiers set by the organizer
   if (event.tiers?.length) {
-    return event.tiers.map((t) => {
+    return [...event.tiers].sort((x, y) => x.price - y.price).map((t) => {
       const spots = Math.max(0, t.quantity - t.sold);
       return {
         id: t.id,
@@ -25,6 +25,8 @@ export function getTiers(event: GhanaEvent): CheckoutTier[] {
       };
     });
   }
+  // Listed elsewhere with no prices entered: nothing to show
+  if (event.priceUnknown) return [];
   // Events without organizer tiers: one ticket at the listed price (preview only, not purchasable)
   return [{
     name: event.price === 0 ? 'Free entry' : 'General',

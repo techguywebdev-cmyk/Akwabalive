@@ -66,6 +66,7 @@ export function ActionBar({ actions, accent, maxWidth = 400, vertical = false }:
 export function ticketsLabel(e: GhanaEvent) {
   const d = parseDay(e.date);
   if (d && d.getTime() < new Date(new Date().toDateString()).getTime()) return 'Ended';
+  if (e.priceUnknown) return 'See prices';
   const tiers = getTiers(e).filter((t) => t.available);
   const from = tiers.length ? Math.min(...tiers.map((t) => t.price)) : e.price;
   return from === 0 ? 'Free' : `GH₵ ${from.toLocaleString()}`;
@@ -135,11 +136,12 @@ export function TicketsSheet({
         </div>
 
         <div style={{ marginTop: 16 }}>
-          {listed ? (
-            <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
+          {listed && (
+            <p style={{ margin: '8px 0 4px', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
               Tickets are sold by {event.ticketSource || 'the organiser'}, not on Akwaaba. Buy only on the official page.
             </p>
-          ) : (
+          )}
+          {(!listed || !!event.tiers?.length) && (
             tiers.map((t, i) => (
               <div key={t.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 0', borderTop: i ? `1px solid ${T.hairline}` : 'none', color: t.available ? T.white : 'rgba(255,255,255,0.4)' }}>
                 <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>

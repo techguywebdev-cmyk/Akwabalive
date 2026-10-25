@@ -42,6 +42,8 @@ export default function ReviewQueuePage() {
   const [bulkUrls, setBulkUrls] = useState('');
   const [ingesting, setIngesting] = useState(false);
   const [ingestLog, setIngestLog] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importLog, setImportLog] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -175,9 +177,60 @@ export default function ReviewQueuePage() {
             marginBottom: 24,
           }}
         >
-          Links you imported as <strong style={{ color: C.cream }}>Save for review</strong> land
-          here. Approve to publish, keep as draft, or reject.
+          Events found on ticket sites and links you imported land here. Approve to publish,
+          keep as draft, or reject.
         </p>
+
+        {/* Ticket-site importer (runs daily by itself; this runs it now) */}
+        <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, padding: 16, marginBottom: 16 }}>
+          <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, marginBottom: 8 }}>
+            Import from ticket sites
+          </p>
+          <p style={{ fontSize: 13, color: C.c2, lineHeight: 1.5, marginBottom: 12 }}>
+            Every morning Akwaaba checks Egotickets, AllEvents and Eventbrite for new events in Ghana and
+            puts them here for you to approve. Run it now to fetch the latest.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              disabled={importing}
+              onClick={async () => {
+                setImporting(true); setImportLog(''); setError('');
+                try {
+                  const { data: session } = await supabase.auth.getSession();
+                  const token = session.session?.access_token;
+                  const res = await fetch('/api/events/cron/import-events', { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+                  const json = await res.json();
+                  if (!res.ok || !json.ok) throw new Error(json.error || 'Import failed');
+                  const found = (json.sources || []).map((x: any) => `${x.name}: ${x.found} listed${x.errors?.length ? ' (some pages failed)' : ''}`).join(' · ');
+                  setImportLog(`${json.added.length} new event${json.added.length === 1 ? '' : 's'} to review · ${json.duplicates} already in Akwaaba · ${json.skipped.length} skipped\n${found}`);
+                  await load();
+                } catch (e: any) {
+                  setError(e.message);
+                } finally {
+                  setImporting(false);
+                }
+              }}
+              style={{ background: C.gold, color: C.onAccent, border: 'none', borderRadius: 999, padding: '12px 18px', fontFamily: 'var(--font-inter), sans-serif', fontSize: 13, fontWeight: 700, cursor: importing ? 'wait' : 'pointer' }}
+            >
+              {importing ? 'Importing… (up to a minute)' : 'Import now'}
+            </button>
+            {items.length > 1 && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!confirm(`Publish all ${items.length} events in the queue?`)) return;
+                  const { error: err } = await supabase.from('events').update({ status: 'published' }).in('id', items.map((x) => x.id)).eq('organizer_id', user!.id);
+                  if (err) setError(err.message); else { setItems([]); setNote('All published.'); setTimeout(() => setNote(''), 2500); }
+                }}
+                style={{ background: 'transparent', color: C.cream, border: `1px solid ${C.bd}`, borderRadius: 999, padding: '12px 18px', fontFamily: 'var(--font-inter), sans-serif', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Approve all ({items.length})
+              </button>
+            )}
+          </div>
+          {importLog && <pre style={{ marginTop: 12, fontSize: 12, color: C.c2, whiteSpace: 'pre-wrap', fontFamily: 'var(--font-inter), sans-serif', lineHeight: 1.5 }}>{importLog}</pre>}
+        </div>
 
         <div style={{
           ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14,

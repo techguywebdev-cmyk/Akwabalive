@@ -85,6 +85,8 @@ export interface GhanaEvent {
   description?: string | null;
   /** Real ticket tiers (Supabase events only). Needed to sell tickets on Akwaaba. */
   tiers?: EventTicketTier[];
+  /** Listed event with no ticket types entered: we don't know the price (it is not free) */
+  priceUnknown?: boolean;
 }
 
 export interface CityInfo {

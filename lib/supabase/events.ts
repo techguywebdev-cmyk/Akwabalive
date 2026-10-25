@@ -1,10 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
 import type { GhanaEvent } from '@/lib/types';
 
+/**
+ * Server reads always go to the database: without no-store, Next/Vercel keep the first
+ * response in the data cache and new events never show up in the feed.
+ */
 function getServerClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) } },
   );
 }
 
@@ -47,6 +52,8 @@ export interface SupabaseEvent {
     price: number;
     quantity: number;
     sold: number;
+    /** false = hidden (not offered on Akwaaba) */
+    is_available?: boolean | null;
   }[];
 }
 
@@ -55,7 +62,9 @@ function isSellingFast(tiers: SupabaseEvent['ticket_tiers']): boolean {
   return tiers.some((t) => t.quantity > 0 && t.sold / t.quantity >= 0.7);
 }
 
-export function supabaseToGhanaEvent(ev: SupabaseEvent): GhanaEvent {
+export function supabaseToGhanaEvent(raw: SupabaseEvent): GhanaEvent {
+  // Ticket types switched off (is_available = false) are left out everywhere
+  const ev: SupabaseEvent = { ...raw, ticket_tiers: (raw.ticket_tiers ?? []).filter((t) => t.is_available !== false) };
   const minPrice =
     ev.ticket_tiers?.length > 0
       ? Math.min(...ev.ticket_tiers.map((t) => t.price))
@@ -102,6 +111,7 @@ export function supabaseToGhanaEvent(ev: SupabaseEvent): GhanaEvent {
     listingType: ev.listing_type === 'listed' ? 'listed' : 'hosted',
     ticketUrl: ev.ticket_url ?? null,
     ticketSource: ev.ticket_source ?? null,
+    priceUnknown: ev.listing_type === 'listed' && !(ev.ticket_tiers?.length),
     sourceUrl: ev.source_url ?? null,
     isFeatured: featured,
     featuredOrder: ev.featured_order ?? 100,

@@ -10,6 +10,7 @@ import { getTiers } from '@/lib/events/tiers';
 import { hiRes } from '@/lib/events/image';
 import { EventTags } from '@/components/events/CardParts';
 import FriendsStrip from '@/components/social/FriendsStrip';
+import { useEventMoments, MomentsRail, MomentsViewer } from '@/components/moments/EventMoments';
 import { ActionBar, TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { parseDay, longDay } from '@/lib/dates';
@@ -51,6 +52,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [dreamToast,     setDreamToast]     = useState('');
   const [ticketSuccess,  setTicketSuccess]  = useState(false);
   const [showPromoVideo, setShowPromoVideo] = useState(false);
+  const [watchAt,        setWatchAt]        = useState<number | null>(null);
+  const moments = useEventMoments(event);
   const [wantSound, setWantSound] = useState(false);
 
   useEffect(() => {
@@ -200,7 +203,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         tabs={false}
         actions={
           <>
-            {seriesMomentId && <HeaderIconButton label="Watch the last edition" icon="moments" href={`/moments?id=${seriesMomentId}&from=${encodeURIComponent(`/events/${event.slug}`)}`} />}
+            {!moments.length && seriesMomentId && <HeaderIconButton label="Watch the last edition" icon="moments" href={`/moments?id=${seriesMomentId}&from=${encodeURIComponent(`/events/${event.slug}`)}`} />}
           </>
         }
       />
@@ -265,6 +268,9 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
         <FriendsStrip slug={event.slug} variant="full" />
 
+        <MomentsRail list={moments} onOpen={setWatchAt} />
+        {watchAt !== null && <MomentsViewer list={moments} start={watchAt} eventTitle={event.title} onClose={() => setWatchAt(null)} />}
+
         <div style={{ marginTop: 28 }}>
           <div style={infoRow}>
             <Icon name="calendar" size={22} color="rgba(255,255,255,0.7)" />
@@ -306,11 +312,12 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
         <section id="tickets" style={{ marginTop: 34 }}>
           <h2 style={eyebrow}>Tickets</h2>
-          {listed ? (
+          {listed && (
             <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
               Tickets are sold by {event.ticketSource || 'the organiser'}, not on Akwaaba. We list the event so you can find it — buy only on the official page.
             </p>
-          ) : (
+          )}
+          {(!listed || tiers.length > 0) && (
             <>
               {tiers.map((tier, i) => (
                 <div key={tier.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 0', borderBottom: i === tiers.length - 1 ? 'none' : `1px solid ${T.hairline}`, color: tier.available ? T.white : 'rgba(255,255,255,0.4)' }}>
@@ -365,7 +372,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                     <img src={ev.image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                   </span>
                   <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{ev.title}</span>
-                  <span style={{ marginTop: -6, fontFamily: FONT.sans, fontSize: 12.5, color: T.text2 }}>{ev.price === 0 ? 'Free' : `GH₵ ${ev.price.toLocaleString()}`}</span>
+                  <span style={{ marginTop: -6, fontFamily: FONT.sans, fontSize: 12.5, color: T.text2 }}>{ev.priceUnknown ? 'See prices' : ev.price === 0 ? 'Free' : `GH₵ ${ev.price.toLocaleString()}`}</span>
                 </Link>
               ))}
             </div>
