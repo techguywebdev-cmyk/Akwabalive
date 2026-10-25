@@ -28,7 +28,7 @@ export default async function EventsPage() {
   ]);
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh' }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <main>
         <EventsClient events={allEvents} />

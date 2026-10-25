@@ -29,10 +29,13 @@ export type FulfillResult =
   | { ok: false; error: FulfillError; message: string };
 
 export interface PaymentMetadata {
+  /** The payer */
   user_id: string;
   event_slug: string;
   tier_id: string;
   quantity: number;
+  /** Optional: profiles.id of the person receiving the ticket as a gift */
+  gift_to?: string;
 }
 
 const MAX_QTY = 10;
@@ -78,16 +81,17 @@ export function parseMetadata(raw: unknown): PaymentMetadata | null {
     event_slug: String(m.event_slug),
     tier_id: String(m.tier_id),
     quantity,
+    gift_to: m.gift_to ? String(m.gift_to) : undefined,
   };
 }
 
 async function findTicketByRef(db: SupabaseClient, reference: string) {
   const { data } = await db
     .from('tickets')
-    .select('id, user_id')
+    .select('id, user_id, gifted_by')
     .eq('qr_code', reference)
     .maybeSingle();
-  return data as { id: string; user_id: string } | null;
+  return data as { id: string; user_id: string; gifted_by: string | null } | null;
 }
 
 async function loadEventAndTier(db: SupabaseClient, slug: string, tierId: string) {
@@ -132,9 +136,11 @@ async function issueTicket(
     tier: any;
     quantity: number;
     totalPaid: number;
+    /** Set when the ticket is a gift: the payer's id (userId is then the recipient) */
+    giftedBy?: string;
   },
 ): Promise<FulfillResult> {
-  const { reference, userId, ev, tier, quantity, totalPaid } = args;
+  const { reference, userId, ev, tier, quantity, totalPaid, giftedBy } = args;
 
   const { data: inserted, error } = await db
     .from('tickets')
@@ -149,6 +155,8 @@ async function issueTicket(
       total_paid: totalPaid,
       qr_code: reference,
       status: 'active',
+      gifted_by: giftedBy ?? null,
+      gifted_to: giftedBy ? userId : null,
     })
     .select('id')
     .single();
@@ -177,7 +185,8 @@ export async function fulfillPaidTicket(
 
   const existing = await findTicketByRef(db, reference);
   if (existing) {
-    if (opts.expectedUserId && existing.user_id !== opts.expectedUserId) {
+    const owner = existing.gifted_by ?? existing.user_id;
+    if (opts.expectedUserId && owner !== opts.expectedUserId) {
       return fail('owner_mismatch', 'This payment belongs to another account.');
     }
     return { ok: true, reference, ticketId: existing.id, alreadyIssued: true };
@@ -212,9 +221,11 @@ export async function fulfillPaidTicket(
     console.warn('[payments] oversell after successful payment', { reference, tier: tier.id });
   }
 
+  const isGift = Boolean(meta.gift_to && meta.gift_to !== meta.user_id);
   return issueTicket(db, {
     reference,
-    userId: meta.user_id,
+    userId: isGift ? meta.gift_to! : meta.user_id,
+    giftedBy: isGift ? meta.user_id : undefined,
     ev,
     tier,
     quantity: meta.quantity,

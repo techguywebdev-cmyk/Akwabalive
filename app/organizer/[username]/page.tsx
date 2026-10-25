@@ -121,7 +121,7 @@ export default async function OrganizerPage({
 
 function SoftMissing({ title, body }: { title: string; body: string }) {
   return (
-    <div style={{ background: C.bg, minHeight: '100vh' }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <div
         style={{
@@ -135,7 +135,7 @@ function SoftMissing({ title, body }: { title: string; body: string }) {
         <p
           style={{
             fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 8,
+            fontSize: 10,
             letterSpacing: '2px',
             textTransform: 'uppercase',
             color: C.gold,
@@ -171,7 +171,7 @@ function SoftMissing({ title, body }: { title: string; body: string }) {
           style={{
             color: C.gold,
             fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 9,
+            fontSize: 11,
             letterSpacing: '1.5px',
             textTransform: 'uppercase',
             textDecoration: 'none',

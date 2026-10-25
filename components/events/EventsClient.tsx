@@ -1,5 +1,5 @@
 'use client';
-import { C } from '@/lib/theme';
+import { C, G, R } from '@/lib/theme';
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -86,7 +86,7 @@ function Pill({ active, onClick, children }: {
 }) {
   return (
     <button type="button" onClick={onClick} style={{
-      fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1.2px', textTransform: 'uppercase',
+      fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1.2px', textTransform: 'uppercase',
       padding: '7px 12px', borderRadius: 999,
       border: `1px solid ${active ? C.goldBd : C.bd}`,
       background: active ? C.goldDim : 'transparent',
@@ -125,7 +125,7 @@ function IconBtn({
           position: 'absolute', top: -4, right: -4,
           minWidth: 16, height: 16, borderRadius: 8,
           background: C.gold, color: C.bg,
-          fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, fontWeight: 700,
+          fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, fontWeight: 700,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px',
         }}>
           {badge}
@@ -148,13 +148,13 @@ function Sheet({ open, onClose, title, children }: {
       {open && (
         <div onClick={onClose} style={{
           position: 'fixed', inset: 0, zIndex: 400,
-          background: 'rgba(13,11,8,0.85)', backdropFilter: 'blur(6px)',
+          ...G.scrim,
         }} />
       )}
       <div style={{
         position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 401,
-        background: C.bg2, borderTop: `1px solid ${C.bd2}`,
-        borderRadius: '20px 20px 0 0', maxHeight: '90vh', overflowY: 'auto',
+        ...G.sheet, border: `1px solid ${C.bd2}`, borderBottom: 'none',
+        borderRadius: `${R.sheet}px ${R.sheet}px 0 0`, maxHeight: '90vh', overflowY: 'auto',
         transform: open ? 'translateY(0)' : 'translateY(110%)',
         transition: 'transform 340ms cubic-bezier(.22,1,.36,1)',
         paddingBottom: 36,
@@ -285,7 +285,7 @@ function EventCard({
       <div style={{ position: 'relative', width: '100%' }}>
         <Link href={`/events/${event.slug}`} style={{
           display: 'flex', gap: 12, padding: 12, borderRadius: 12,
-          border: `1px solid ${C.bd}`, background: C.bg2, textDecoration: 'none',
+          border: `1px solid ${C.bd}`, ...G.panel, textDecoration: 'none',
           width: '100%', boxSizing: 'border-box',
         }}>
           <div style={{
@@ -293,7 +293,7 @@ function EventCard({
             backgroundImage: `url(${event.image})`, backgroundSize: 'cover', backgroundPosition: 'center',
           }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, color: C.gold, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 4px' }}>
+            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, color: C.gold, letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 4px' }}>
               {event.badge || event.category}
               {distKm != null && distKm < 900 && (
                 <span style={{ color: '#4ade80', marginLeft: 8 }}>· {formatDistance(distKm)}</span>
@@ -315,7 +315,7 @@ function EventCard({
             {event.price === 0
               ? <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#4ade80' }}>Free</span>
               : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14, color: C.cream }}>
-                  <span style={{ fontSize: 9, color: C.gold }}>₵</span>{event.price}
+                  <span style={{ fontSize: 11, color: C.gold }}>₵</span>{event.price}
                 </span>
             }
           </div>
@@ -331,22 +331,20 @@ function EventCard({
         href={`/events/${event.slug}`}
         style={{
           display: 'block', position: 'relative', overflow: 'hidden', borderRadius: 12,
-          border: `1px solid ${C.bd}`, background: C.bg2, textDecoration: 'none',
+          border: `1px solid ${C.bd}`, ...G.panel, textDecoration: 'none',
           width: '100%', height: '100%',
         }}
       >
         {/* no gold top stripe — matches clean home cards */}
-        <div style={{ width: '100%', paddingTop: '58%', position: 'relative', overflow: 'hidden', background: C.bg3 }}>
+        <div style={{ width: '100%', paddingTop: '58%', position: 'relative', overflow: 'hidden', ...G.raised }}>
           <div style={{
             position: 'absolute', inset: 0,
             backgroundImage: `url(${event.image})`, backgroundSize: 'cover', backgroundPosition: 'center',
-            filter: 'brightness(0.72) saturate(0.82)',
           }} />
-          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to top, ${C.bg2} 0%, transparent 60%)` }} />
           <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 4, maxWidth: 'calc(100% - 48px)' }}>
             <span style={{
-              fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px', textTransform: 'uppercase',
-              padding: '4px 8px', borderRadius: 3, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}`,
+              fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase',
+              padding: '4px 8px', borderRadius: 6, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}`,
               display: 'inline-block',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%',
             }}>
@@ -355,8 +353,8 @@ function EventCard({
             {distKm != null && distKm < 900 && (
               <span style={{
                 display: 'inline-block', marginLeft: 6,
-                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1px',
-                padding: '4px 8px', borderRadius: 3, background: 'rgba(45,106,79,0.35)', color: '#7dcea0',
+                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px',
+                padding: '4px 8px', borderRadius: 6, background: 'rgba(45,106,79,0.35)', color: '#7dcea0',
                 border: '1px solid rgba(45,106,79,0.45)',
               }}>
                 {formatDistance(distKm)}
@@ -390,18 +388,18 @@ function EventCard({
             {event.price === 0
               ? <span style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', color: '#4ade80', flexShrink: 0 }}>Free</span>
               : <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14, color: C.cream, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  <span style={{ fontSize: 9, color: C.gold }}>₵</span>{event.price}
+                  <span style={{ fontSize: 11, color: C.gold }}>₵</span>{event.price}
                 </span>
             }
             <span style={{
               fontFamily: 'var(--font-dm-mono,monospace)',
-              fontSize: 7,
+              fontSize: 10,
               letterSpacing: '1.5px',
               textTransform: 'uppercase',
               background: C.gold,
               color: '#000',
               padding: '7px 10px',
-              borderRadius: 5,
+              borderRadius: 10,
               fontWeight: 700,
               whiteSpace: 'nowrap',
               flexShrink: 0,
@@ -742,13 +740,13 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
       ` }} />
       <div style={{
         position: 'sticky',
-        top: 'calc(62px + env(safe-area-inset-top, 0px))',
+        top: 'calc(72px + env(safe-area-inset-top, 0px))',
         zIndex: 90,
-        background: C.bg,
-        backdropFilter: 'blur(18px)',
-        borderBottom: `1px solid ${C.bd}`,
-        padding: '10px 14px 0',
-        marginTop: 'calc(62px + env(safe-area-inset-top, 0px))',
+        margin: 'calc(72px + env(safe-area-inset-top, 0px)) 10px 0',
+        ...G.bar,
+        border: `1px solid ${C.bd2}`,
+        borderRadius: R.sheet,
+        padding: '10px 12px 0',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 1100, margin: '0 auto' }}>
           <IconBtn active={searchOpen || !!filters.search} onClick={() => setSearchOpen(s => !s)} label="Search">
@@ -763,7 +761,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <span style={{
-              fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1px',
+              fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1px',
               color: C.c3, textTransform: 'uppercase',
             }}>
               {withDist.length} events
@@ -801,7 +799,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
               style={{
                 width: '100%', boxSizing: 'border-box',
                 padding: '12px 40px 12px 36px', borderRadius: 10,
-                border: `1px solid ${C.goldBd}`, background: C.bg2, color: C.cream,
+                border: `1px solid ${C.goldBd}`, ...G.panel, color: C.cream,
                 fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, outline: 'none',
               }}
             />
@@ -829,7 +827,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
                 onClick={ch.clear}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6,
-                  fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '0.5px',
+                  fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '0.5px',
                   padding: '5px 10px', borderRadius: 999,
                   border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold,
                   cursor: 'pointer',
@@ -843,7 +841,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
               type="button"
               onClick={clear}
               style={{
-                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '1px',
+                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '1px',
                 padding: '5px 10px', borderRadius: 999, border: 'none',
                 background: 'transparent', color: C.c3, cursor: 'pointer', textDecoration: 'underline',
               }}
@@ -860,7 +858,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
               <p style={{
-                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px',
+                fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px',
                 textTransform: 'uppercase', color: C.gold, opacity: 0.8, margin: '0 0 4px',
               }}>
                 Touring &amp; major acts
@@ -910,7 +908,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
                     borderRadius: '50%',
                     padding: 2,
                     background: active
-                      ? `linear-gradient(135deg, ${C.gold}, #e8b84a)`
+                      ? C.gold
                       : 'transparent',
                     border: active ? 'none' : `1.5px solid ${C.bd2}`,
                     boxSizing: 'border-box',
@@ -920,7 +918,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
                       height: '100%',
                       borderRadius: '50%',
                       overflow: 'hidden',
-                      background: C.bg3,
+                      ...G.raised,
                       border: active ? `2px solid ${C.bg}` : 'none',
                       boxSizing: 'border-box',
                     }}>
@@ -939,7 +937,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
                   </div>
                   <span style={{
                     fontFamily: 'var(--font-dm-mono,monospace)',
-                    fontSize: 8,
+                    fontSize: 10,
                     letterSpacing: '0.3px',
                     color: active ? C.gold : C.c2,
                     textAlign: 'center',
@@ -962,7 +960,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 10 }}>
               <div>
                 <p style={{
-                  fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px',
+                  fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px',
                   textTransform: 'uppercase', color: C.gold, opacity: 0.8, margin: '0 0 4px',
                 }}>
                   On the radar
@@ -994,33 +992,28 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
                       borderRadius: 14,
                       overflow: 'hidden',
                       border: `1px solid ${C.bd}`,
-                      background: C.bg2,
+                      ...G.panel,
                       textDecoration: 'none',
                       position: 'relative',
                       display: 'block',
                     }}
                   >
-                    <div style={{ position: 'relative', width: '100%', paddingTop: '62%', background: C.bg3 }}>
+                    <div style={{ position: 'relative', width: '100%', paddingTop: '62%', ...G.raised }}>
                       <div style={{
                         position: 'absolute', inset: 0,
                         backgroundImage: `url(${ev.image})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
-                        filter: 'brightness(0.78) saturate(0.9)',
-                      }} />
-                      <div style={{
-                        position: 'absolute', inset: 0,
-                        background: 'linear-gradient(to top, rgba(13,11,8,0.95) 0%, rgba(13,11,8,0.35) 45%, transparent 70%)',
                       }} />
                       <span style={{
                         position: 'absolute', top: 10, left: 10,
-                        fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px',
-                        textTransform: 'uppercase', padding: '4px 8px', borderRadius: 3,
-                        background: 'rgba(34,197,94,0.2)', color: C.gold, border: `1px solid ${C.goldBd}`,
+                        fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px',
+                        textTransform: 'uppercase', padding: '4px 8px', borderRadius: 6,
+                        ...G.overlay, color: C.cream, border: '1px solid rgba(255,255,255,0.16)',
                       }}>
                         {ev.badge || 'Major'}
                       </span>
-                      <div style={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
+                      <div style={{ position: 'absolute', left: 10, right: 10, bottom: 10, ...G.panel, border: `1px solid ${C.bd2}`, borderRadius: R.card - 6, padding: '9px 12px' }}>
                         <p style={{
                           fontFamily: 'var(--font-inter,sans-serif)', fontSize: 10, color: C.c2,
                           margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -1078,7 +1071,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
         )}
 
         <p style={{
-          fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px',
+          fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px',
           textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 12,
         }}>
           {showRails ? 'All matching' : 'Results'}
@@ -1164,7 +1157,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           )}
 
           <p style={{
-            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px',
+            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px',
             textTransform: 'uppercase', color: C.gold, opacity: 0.75, margin: '22px 0 10px',
           }}>
             Radius
@@ -1176,7 +1169,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           </div>
 
           <p style={{
-            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px',
+            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px',
             textTransform: 'uppercase', color: C.gold, opacity: 0.75, margin: '22px 0 10px',
           }}>
             Neighbourhood / area
@@ -1188,7 +1181,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
             style={{
               width: '100%', boxSizing: 'border-box', marginBottom: 12,
               padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.bd}`,
-              background: C.bg3, color: C.cream, fontSize: 14, outline: 'none',
+              ...G.raised, color: C.cream, fontSize: 14, outline: 'none',
               fontFamily: 'var(--font-inter,sans-serif)',
             }}
           />
@@ -1218,7 +1211,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
                   </span>
                   <span style={{
                     fontFamily: 'var(--font-dm-mono,monospace)',
-                    fontSize: 9,
+                    fontSize: 11,
                     letterSpacing: '1.5px',
                     textTransform: 'uppercase',
                     color: C.c3,
@@ -1236,7 +1229,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
       <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters">
         <div style={{ padding: '8px 20px 0' }}>
           <p style={{
-            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px',
+            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px',
             textTransform: 'uppercase', color: C.gold, opacity: 0.75, margin: '12px 0 10px',
           }}>City</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -1246,7 +1239,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           </div>
 
           <p style={{
-            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px',
+            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px',
             textTransform: 'uppercase', color: C.gold, opacity: 0.75, margin: '20px 0 10px',
           }}>Category</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -1262,7 +1255,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           </div>
 
           <p style={{
-            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px',
+            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px',
             textTransform: 'uppercase', color: C.gold, opacity: 0.75, margin: '20px 0 10px',
           }}>Price</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -1278,7 +1271,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
           </div>
 
           <p style={{
-            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px',
+            fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px',
             textTransform: 'uppercase', color: C.gold, opacity: 0.75, margin: '20px 0 10px',
           }}>Sort</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

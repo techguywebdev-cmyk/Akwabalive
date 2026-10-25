@@ -12,15 +12,8 @@ import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 
-const C = {
-  bg: '#0D0B08', bg2: '#141109', bg3: '#1C1710', bg4: '#242018',
-  gold: '#C8922A', goldDim: 'rgba(200,146,42,0.14)', goldBd: 'rgba(200,146,42,0.28)',
-  cream: '#F5ECD7', c2: 'rgba(245,236,215,0.55)', c3: 'rgba(245,236,215,0.24)',
-  c4: 'rgba(245,236,215,0.08)', bd: 'rgba(245,236,215,0.07)', bd2: 'rgba(245,236,215,0.13)',
-  red: '#CE1126', green: '#2D6A4F', greenL: '#4ade80',
-  greenDim: 'rgba(45,106,79,0.15)', greenBd: 'rgba(45,106,79,0.35)',
-};
 
+import { C, G } from '@/lib/theme';
 interface OrgEvent {
   id: string;
   title: string;
@@ -82,16 +75,16 @@ export default function OrganizerDashboard() {
   const totalViews    = events.length * 0; // placeholder until views tracking added
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh' }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <div style={{ paddingTop: 62 }}>
 
         {/* Header */}
-        <div style={{ background: C.bg2, borderBottom: `1px solid ${C.bd}`, padding: '28px 20px 24px' }}>
+        <div style={{ ...G.panel, borderBottom: `1px solid ${C.bd}`, padding: '28px 20px 24px' }}>
           <div style={{ maxWidth: 900, margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
               <div>
-                <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />
                   Organizer Dashboard
                 </p>
@@ -99,17 +92,17 @@ export default function OrganizerDashboard() {
                   {profile?.full_name ?? 'Your Events'}
                 </h1>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, flexShrink: 1, minWidth: 0, flexWrap: 'wrap' }}>
                 <Link href="/organizer/events/from-link"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: C.gold, border: `1px solid ${C.goldBd}`, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, padding: '12px 18px', borderRadius: 8, textDecoration: 'none' }}>
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: C.gold, border: `1px solid ${C.goldBd}`, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, padding: '12px 18px', borderRadius: 8, textDecoration: 'none' }}>
                   Add from link
                 </Link>
               <Link href="/organizer/review"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold, padding: '10px 14px', borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '1.5px', textTransform: 'uppercase', textDecoration: 'none' }}>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold, padding: '10px 14px', borderRadius: 8, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', textDecoration: 'none' }}>
                 Review queue
               </Link>
                 <Link href="/organizer/events/new"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: C.gold, color: '#0D0B08', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, padding: '12px 20px', borderRadius: 8, textDecoration: 'none' }}>
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: C.gold, color: '#0D0B08', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, padding: '12px 20px', borderRadius: 8, textDecoration: 'none' }}>
                   <Plus size={14} /> Create Event
                 </Link>
               </div>
@@ -123,10 +116,10 @@ export default function OrganizerDashboard() {
                 { icon: Calendar,  label: 'Live Events',     value: publishedCount,                 color: C.gold  },
                 { icon: BarChart2, label: 'Total Events',    value: events.length,                  color: C.c2   },
               ].map(({ icon: Icon, label, value, color }) => (
-                <div key={label} style={{ background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 12, padding: '16px' }}>
+                <div key={label} style={{ ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 12, padding: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <Icon size={14} style={{ color, flexShrink: 0 }} />
-                    <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7.5, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>{label}</span>
+                    <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>{label}</span>
                   </div>
                   <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 28, fontWeight: 400, color: C.cream, letterSpacing: '-1px', lineHeight: 1 }}>{value}</p>
                 </div>
@@ -141,24 +134,24 @@ export default function OrganizerDashboard() {
             <h2 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 22, fontWeight: 400, color: C.cream }}>
               Your Events
             </h2>
-            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, color: C.c3 }}>
+            <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, color: C.c3 }}>
               {events.length} total
             </span>
           </div>
 
           {loading ? (
             <div style={{ textAlign: 'center', padding: '48px 0' }}>
-              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 9, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
+              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
             </div>
           ) : events.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '64px 20px', background: C.bg2, border: `1px solid ${C.bd}`, borderRadius: 16 }}>
+            <div style={{ textAlign: 'center', padding: '64px 20px', ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 16 }}>
               <Calendar size={40} style={{ color: C.c3, margin: '0 auto 16px', display: 'block', opacity: 0.4 }} />
               <p style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 24, color: C.c2, marginBottom: 8 }}>No events yet</p>
               <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, marginBottom: 24, maxWidth: 280, margin: '0 auto 24px', lineHeight: 1.6 }}>
                 Create your first event and start selling tickets to thousands of Ghanaians.
               </p>
               <Link href="/organizer/events/new"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: C.gold, color: '#0D0B08', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, padding: '13px 24px', borderRadius: 8, textDecoration: 'none' }}>
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: C.gold, color: '#0D0B08', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, padding: '13px 24px', borderRadius: 8, textDecoration: 'none' }}>
                 <Plus size={14} /> Create First Event
               </Link>
             </div>
@@ -171,9 +164,9 @@ export default function OrganizerDashboard() {
                 const pct           = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
 
                 return (
-                  <div key={ev.id} style={{ background: C.bg2, border: `1px solid ${ev.status === 'published' ? C.goldBd : C.bd}`, borderRadius: 14, overflow: 'hidden' }}>
+                  <div key={ev.id} style={{ ...G.panel, border: `1px solid ${ev.status === 'published' ? C.goldBd : C.bd}`, borderRadius: 14, overflow: 'hidden' }}>
                     {ev.status === 'published' && (
-                      <div style={{ height: 2, background: `linear-gradient(to right, ${C.gold}, rgba(200,146,42,0.2))` }} />
+                      <div style={{ height: 2, background: C.gold }} />
                     )}
                     <div style={{ display: 'flex', gap: 0 }}>
                       {/* Image */}
@@ -185,10 +178,10 @@ export default function OrganizerDashboard() {
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 3, background: ev.status === 'published' ? C.greenDim : C.c4, color: ev.status === 'published' ? C.greenL : C.c3, border: `1px solid ${ev.status === 'published' ? C.greenBd : C.bd}` }}>
+                              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 6, background: ev.status === 'published' ? C.greenDim : C.c4, color: ev.status === 'published' ? C.greenL : C.c3, border: `1px solid ${ev.status === 'published' ? C.greenBd : C.bd}` }}>
                                 {ev.status === 'published' ? '● Live' : '○ Draft'}
                               </span>
-                              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1px', textTransform: 'uppercase', color: C.c3 }}>{ev.category}</span>
+                              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: C.c3 }}>{ev.category}</span>
                             </div>
                             <h3 style={{ fontFamily: 'var(--font-cormorant,serif)', fontSize: 18, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {ev.title}
@@ -207,8 +200,8 @@ export default function OrganizerDashboard() {
                             { label: 'Revenue', value: `₵${revenue.toLocaleString()}` },
                             { label: 'Fill',    value: `${pct}%`    },
                           ].map(stat => (
-                            <div key={stat.label} style={{ background: C.bg3, borderRadius: 8, padding: '8px 10px' }}>
-                              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 3 }}>{stat.label}</p>
+                            <div key={stat.label} style={{ ...G.raised, borderRadius: 8, padding: '8px 10px' }}>
+                              <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 3 }}>{stat.label}</p>
                               <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 14, color: C.cream, letterSpacing: '-0.5px' }}>{stat.value}</p>
                             </div>
                           ))}
@@ -225,23 +218,23 @@ export default function OrganizerDashboard() {
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                           <button
                             onClick={() => togglePublish(ev)}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7.5, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${ev.status === 'published' ? C.bd : C.goldBd}`, background: ev.status === 'published' ? 'transparent' : C.goldDim, color: ev.status === 'published' ? C.c3 : C.gold, padding: '8px 14px', borderRadius: 6, cursor: 'pointer', transition: 'all 180ms' }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${ev.status === 'published' ? C.bd : C.goldBd}`, background: ev.status === 'published' ? 'transparent' : C.goldDim, color: ev.status === 'published' ? C.c3 : C.gold, padding: '8px 14px', borderRadius: 6, cursor: 'pointer', transition: 'all 180ms' }}>
                             {ev.status === 'published' ? <><Clock size={11} /> Unpublish</> : <><CheckCircle size={11} /> Publish</>}
                           </button>
                           <Link href={`/organizer/events/${ev.id}`}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7.5, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, background: 'transparent', color: C.c2, padding: '8px 14px', borderRadius: 6, textDecoration: 'none' }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, background: 'transparent', color: C.c2, padding: '8px 14px', borderRadius: 6, textDecoration: 'none' }}>
                             <Edit size={11} /> Edit
                           </Link>
                           {ev.status === 'published' && (
                             <Link href={`/events/${ev.slug}`}
-                              style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7.5, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, background: 'transparent', color: C.c2, padding: '8px 14px', borderRadius: 6, textDecoration: 'none' }}>
+                              style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, background: 'transparent', color: C.c2, padding: '8px 14px', borderRadius: 6, textDecoration: 'none' }}>
                               <Eye size={11} /> View
                             </Link>
                           )}
                           <button
                             onClick={() => deleteEvent(ev.id)}
                             disabled={deleting === ev.id}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7.5, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid rgba(206,17,38,0.2)', background: 'transparent', color: 'rgba(206,17,38,0.6)', padding: '8px 14px', borderRadius: 6, cursor: 'pointer', marginLeft: 'auto' }}>
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid rgba(206,17,38,0.2)', background: 'transparent', color: 'rgba(206,17,38,0.6)', padding: '8px 14px', borderRadius: 6, cursor: 'pointer', marginLeft: 'auto' }}>
                             <Trash2 size={11} /> {deleting === ev.id ? '…' : 'Delete'}
                           </button>
                         </div>

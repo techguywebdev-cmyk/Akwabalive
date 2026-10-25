@@ -4,14 +4,8 @@ import { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon, Loader2, CheckCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-const C = {
-  bg: '#0D0B08', bg2: '#141109', bg3: '#1C1710',
-  gold: '#C8922A', goldDim: 'rgba(200,146,42,0.14)', goldBd: 'rgba(200,146,42,0.28)',
-  cream: '#F5ECD7', c2: 'rgba(245,236,215,0.55)', c3: 'rgba(245,236,215,0.24)',
-  bd: 'rgba(245,236,215,0.07)', red: '#CE1126',
-  greenL: '#4ade80', greenDim: 'rgba(45,106,79,0.15)', greenBd: 'rgba(45,106,79,0.35)',
-};
 
+import { C, G } from '@/lib/theme';
 interface ImageUploadProps {
   value: string;
   onChange: (url: string) => void;
@@ -79,7 +73,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
 
   return (
     <div>
-      <label style={{ display: 'block', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>
+      <label style={{ display: 'block', fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>
         {label}
       </label>
 
@@ -95,7 +89,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
           {success && (
             <div style={{ position: 'absolute', bottom: 8, left: 8, display: 'flex', alignItems: 'center', gap: 5, background: C.greenDim, border: `1px solid ${C.greenBd}`, borderRadius: 6, padding: '4px 10px' }}>
               <CheckCircle size={11} style={{ color: C.greenL }} />
-              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7.5, letterSpacing: '1px', color: C.greenL }}>Uploaded</span>
+              <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1px', color: C.greenL }}>Uploaded</span>
             </div>
           )}
         </div>
@@ -119,7 +113,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
         {uploading ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
             <Loader2 size={24} style={{ color: C.gold, animation: 'spin 0.8s linear infinite' }} />
-            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 8, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold }}>Uploading…</p>
+            <p style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold }}>Uploading…</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -153,7 +147,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
       {/* URL fallback */}
       <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ flex: 1, height: 1, background: C.bd }} />
-        <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 7, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>or paste URL</span>
+        <span style={{ fontFamily: 'var(--font-dm-mono,monospace)', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>or paste URL</span>
         <div style={{ flex: 1, height: 1, background: C.bd }} />
       </div>
       <input
@@ -161,7 +155,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder="https://images.unsplash.com/…"
-        style={{ width: '100%', background: C.bg3, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '10px 14px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.cream, outline: 'none', marginTop: 10 }}
+        style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '10px 14px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.cream, outline: 'none', marginTop: 10 }}
       />
     </div>
   );

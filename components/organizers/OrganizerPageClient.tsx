@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Ticket, ExternalLink, Calendar } from 'lucide-react';
 import type { GhanaEvent } from '@/lib/types';
 import { isListedEvent } from '@/lib/types';
-import { C, BRAND_NAME } from '@/lib/theme';
+import { C, BRAND_NAME, G } from '@/lib/theme';
 import { cityLabel } from '@/lib/utils';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
@@ -50,7 +50,7 @@ const ctaStyle = {
   padding: '8px 12px',
   borderRadius: 6,
   fontFamily: 'var(--font-dm-mono,monospace)',
-  fontSize: 8,
+  fontSize: 10,
   letterSpacing: '1.5px',
   textTransform: 'uppercase',
   fontWeight: 700,
@@ -76,7 +76,7 @@ export default function OrganizerPageClient({
   const past = events.filter((e) => !upcoming.includes(e));
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh' }}>
+    <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <Nav active="Events" />
       <div
         style={{
@@ -97,7 +97,7 @@ export default function OrganizerPageClient({
             marginTop: 16,
             marginBottom: 24,
             fontFamily: 'var(--font-dm-mono,monospace)',
-            fontSize: 8,
+            fontSize: 10,
             letterSpacing: '1.5px',
             textTransform: 'uppercase',
             color: C.c3,
@@ -115,7 +115,7 @@ export default function OrganizerPageClient({
               borderRadius: '50%',
               overflow: 'hidden',
               border: `2px solid ${C.goldBd}`,
-              background: C.bg3,
+              ...G.raised,
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
@@ -140,7 +140,7 @@ export default function OrganizerPageClient({
             <p
               style={{
                 fontFamily: 'var(--font-dm-mono,monospace)',
-                fontSize: 8,
+                fontSize: 10,
                 letterSpacing: '2px',
                 textTransform: 'uppercase',
                 color: C.gold,
@@ -195,7 +195,7 @@ export default function OrganizerPageClient({
               textAlign: 'center',
               border: `1px solid ${C.bd}`,
               borderRadius: 12,
-              background: C.bg2,
+              ...G.panel,
               color: C.c2,
               fontSize: 14,
             }}
@@ -238,7 +238,7 @@ function Section({
       <p
         style={{
           fontFamily: 'var(--font-dm-mono,monospace)',
-          fontSize: 8,
+          fontSize: 10,
           letterSpacing: '2px',
           textTransform: 'uppercase',
           color: muted ? C.c3 : C.gold,
@@ -264,7 +264,7 @@ function EventRow({ event }: { event: GhanaEvent }) {
         gap: 14,
         alignItems: 'center',
         padding: 12,
-        background: C.bg2,
+        ...G.panel,
         border: `1px solid ${C.bd}`,
         borderRadius: 12,
       }}
@@ -286,7 +286,7 @@ function EventRow({ event }: { event: GhanaEvent }) {
             height: 64,
             borderRadius: 8,
             overflow: 'hidden',
-            background: C.bg3,
+            ...G.raised,
             flexShrink: 0,
           }}
         >
@@ -297,7 +297,7 @@ function EventRow({ event }: { event: GhanaEvent }) {
           <p
             style={{
               fontFamily: 'var(--font-dm-mono,monospace)',
-              fontSize: 8,
+              fontSize: 10,
               color: C.gold,
               letterSpacing: '1px',
               textTransform: 'uppercase',
