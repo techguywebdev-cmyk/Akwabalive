@@ -20,7 +20,7 @@ type Area = { top: number | string; bottom: number | string; left: number | stri
  * `area.bottom` (a number in px) is the room the text below needs.
  */
 export default function FlyerCanvas({
-  src, area, accent = '#7BE3A8', category, dim = false, radius = 18, bleed = false,
+  src, area, accent = '#7BE3A8', category, dim = false, radius = 18, bleed = false, fill: fillBox = false,
 }: {
   src?: string | null;
   area: Area;
@@ -30,6 +30,8 @@ export default function FlyerCanvas({
   dim?: boolean;
   radius?: number;
   bleed?: boolean;
+  /** Bleed only: square and wide images fill the whole box (cropped at the sides) instead of resting on the text */
+  fill?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   const [ratio, setRatio] = useState<number | null>(null); // width / height
@@ -71,6 +73,10 @@ export default function FlyerCanvas({
       // whatever doesn't fit above the text continues under it, behind a dark fade
       poster = { position: 'absolute', left: 0, top: 0, width: '100%', height: Math.min(fullH, size.h), objectFit: 'cover', objectPosition: 'center top' };
       fadeFrom = Math.max(room - 60, size.h * 0.45);
+    } else if (fillBox) {
+      // Square / wide in the home hero: fill the screen, like a cover photo
+      poster = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 35%' };
+      fadeFrom = Math.max(room - 140, size.h * 0.4);
     } else {
       // Square / wide: full width, resting right on the text
       poster = { position: 'absolute', left: 0, top: room - fullH, width: '100%', height: fullH, objectFit: 'cover' };

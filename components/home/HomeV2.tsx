@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from
 import Link from 'next/link';
 import type { GhanaEvent, City } from '@/lib/types';
 import { hiRes } from '@/lib/events/image';
-import FriendsStrip from '@/components/social/FriendsStrip';
+import HomeHero from '@/components/home/HomeHero';
 import { Icon, CATEGORY_ICONS } from '@/components/ui/Icon';
-import { EventTags, MetaRows, BTN, PriceTag } from '@/components/events/CardParts';
+import { BTN } from '@/components/events/CardParts';
 import { ticketsLabel } from '@/components/events/EventActions';
-import { splitEventTitle, eventBlurb } from '@/lib/events/title';
+import { splitEventTitle } from '@/lib/events/title';
 import { matchesWhen } from '@/lib/utils';
 import { rankScore } from '@/lib/events/rank';
 import { parseDay, shortDay } from '@/lib/dates';
@@ -82,8 +82,8 @@ function SectionHead({ title, note, href, label = 'See all' }: { title: string; 
 
 const rail: CSSProperties = { display: 'flex', gap: 14, overflowX: 'auto', scrollSnapType: 'x mandatory', padding: '0 20px 4px', scrollPaddingLeft: 20 };
 
-function Section({ children }: { children: ReactNode }) {
-  return <section style={{ marginTop: 48 }}>{children}</section>;
+function Section({ children, first }: { children: ReactNode; first?: boolean }) {
+  return <section style={{ marginTop: first ? 20 : 48 }}>{children}</section>;
 }
 
 /** Rail card: whole flyer, then title, date and price */
@@ -140,8 +140,10 @@ export default function HomeV2({ events }: { events: GhanaEvent[] }) {
   // With nothing upcoming yet, fall back to the most recent events so the page is never empty
   const pool = useMemo(() => (live ? upcomingAll : [...events].sort((a, b) => byDate(b, a))).filter(inCity), [live, upcomingAll, events, city]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hero = useMemo(() => [...pool].sort((a, b) => rankScore(b) - rankScore(a))[0], [pool]);
-  const rest = useMemo(() => pool.filter((e) => e.slug !== hero?.slug), [pool, hero]);
+  const heroes = useMemo(() => [...pool].sort((a, b) => rankScore(b) - rankScore(a)).slice(0, 5), [pool]);
+  const hero = heroes[0];
+  // Rails skip what the hero already shows, unless that would leave them empty
+  const rest = useMemo(() => { const r = pool.filter((e) => !heroes.includes(e)); return r.length >= 3 ? r : pool.filter((e) => e !== hero); }, [pool, heroes, hero]);
 
   const weekendOnly = rest.filter((e) => matchesWhen(e, 'weekend'));
   const firstRail = live && weekendOnly.length >= 2
@@ -169,18 +171,18 @@ export default function HomeV2({ events }: { events: GhanaEvent[] }) {
     ...c, n: (live ? upcomingAll : events).filter((e) => e.city === c.value).length,
   })).filter((c) => c.n > 0), [live, upcomingAll, events]);
 
-  /* City switch, shown above the hero title */
+  /* City switch: the heading under the hero */
   const citySwitch = (
-    <div style={{ position: 'relative', marginBottom: 14 }}>
+    <div style={{ position: 'relative' }}>
       <button
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: 0, background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT.display, fontSize: 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT.display, fontSize: 'clamp(30px, 6vw, 40px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, color: T.white, textAlign: 'left' }}
       >
-        {live ? 'Top pick in' : 'Recently in'} <span style={{ color: T.mint }}>{cityName(city)}</span>
-        <Icon name="chevron" size={15} strokeWidth={2.4} color={T.mint} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 200ms ease' }} />
+        <span>{live ? 'What’s on in' : 'Recently in'} <span style={{ color: T.mint }}>{cityName(city)}</span></span>
+        <Icon name="chevron" size={24} strokeWidth={2.4} color={T.mint} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 200ms ease' }} />
       </button>
       {open && (
         <div role="listbox" aria-label="Choose a city" style={{ position: 'absolute', zIndex: 20, top: '100%', left: -6, marginTop: 8, minWidth: 220, padding: 6, borderRadius: 18, background: 'rgba(8,24,16,0.97)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column' }}>
@@ -205,45 +207,16 @@ export default function HomeV2({ events }: { events: GhanaEvent[] }) {
     );
   }
 
-  const a = accentOf(hero);
-  const short = splitEventTitle(hero.title);
-  const label = ticketsLabel(hero);
-
   return (
     <div style={{ paddingBottom: 24 }}>
-      {/* ── Hero: exactly like the top of an event page ── */}
-      <Link href={`/events/${hero.slug}`} aria-label={`Open ${hero.title}`} style={{ position: 'relative', display: 'block', width: '100%', maxWidth: 820, margin: '0 auto', overflow: 'hidden', minHeight: hero.image ? undefined : 320 }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={hiRes(hero.image) ?? hero.image} alt={`${hero.title} flyer`} style={{ display: 'block', width: '100%', height: 'auto', maxHeight: '88svh', objectFit: 'cover', objectPosition: 'center top' }} />
-        <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0.5) 0%, rgba(3,8,6,0) 18%, rgba(3,8,6,0) 85%, #030806 100%)' }} />
-      </Link>
-
-      <main style={{ position: 'relative', maxWidth: 720, margin: '8px auto 0', padding: '0 20px' }}>
-        {citySwitch}
-        <EventTags event={hero} accent={a} />
-        <Link href={`/events/${hero.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
-          <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: short.title.length > 22 ? 'clamp(34px, 8vw, 56px)' : 'clamp(40px, 10vw, 68px)', fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.035em', color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
-            {short.title}
-          </h1>
-          {short.subtitle && <p style={{ margin: '8px 0 0', fontFamily: FONT.display, fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)' }}>{short.subtitle}</p>}
-        </Link>
-        <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{eventBlurb(hero, 140)}</p>
-        <div style={{ marginTop: 16 }}><MetaRows when={whenOf(hero)} where={hero.venue} /></div>
-        <FriendsStrip slug={hero.slug} />
-        <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-          {label === 'Ended'
-            ? <Link href={`/events/${hero.slug}`} style={{ ...BTN.primary, flex: 1 }}>View event</Link>
-            : <>
-                <Link href={`/events/${hero.slug}?tickets=1`} style={{ ...BTN.primary, flex: 1 }}>Get tickets <PriceTag text={label} /></Link>
-                <Link href={`/events/${hero.slug}`} style={BTN.secondary}>Details</Link>
-              </>}
-        </div>
-      </main>
+      {/* ── Top events, full screen ── */}
+      <HomeHero events={heroes} accentOf={accentOf} live={live} />
 
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         {/* ── This weekend / Coming up ── */}
+        <div style={{ padding: '36px 20px 0' }}>{citySwitch}</div>
         {firstRail.items.length > 0 && (
-          <Section>
+          <Section first>
             <SectionHead title={firstRail.title} note={firstRail.note} href={firstRail.href} />
             <div className="no-scrollbar" style={rail}>
               {firstRail.items.map((e) => <RailCard key={e.slug} e={e} />)}
