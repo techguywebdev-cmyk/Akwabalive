@@ -49,8 +49,9 @@ async function getJson(url: string, ms: number) {
   const t = setTimeout(() => ctl.abort(), ms);
   try {
     const r = await fetch(url, { headers: { 'User-Agent': UA, 'Api-User-Agent': UA }, signal: ctl.signal, cache: 'no-store' });
+    if (!r.ok) console.warn('[artist photos]', r.status, url.slice(0, 80));
     return r.ok ? await r.json() : null;
-  } catch { return null; } finally { clearTimeout(t); }
+  } catch (e) { console.warn('[artist photos] fetch failed', String(e)); return null; } finally { clearTimeout(t); }
 }
 
 const stripHtml = (s?: string) =>
@@ -66,8 +67,8 @@ async function lookupWikimedia(list: Artist[], ms: number): Promise<Map<string, 
   if (!withWiki.length) return out;
 
   const titles = withWiki.map((a) => a.wiki!.replace(/ /g, '_')).join('|');
-  const wd = await getJson(`https://www.wikidata.org/w/api.php?action=wbgetentities&sites=enwiki&titles=${encodeURIComponent(titles)}&props=claims|sitelinks&sitefilter=enwiki&normalize=1&format=json`, ms);
-  if (!wd?.entities) return out;
+  const wd = await getJson(`https://www.wikidata.org/w/api.php?action=wbgetentities&sites=enwiki&titles=${encodeURIComponent(titles)}&props=claims|sitelinks&sitefilter=enwiki&format=json`, ms);
+  if (!wd?.entities) { console.warn('[artist photos] wikidata lookup failed', wd?.error?.info ?? 'no response'); return out; }
 
   // Wikipedia title → Commons file name
   const fileByTitle = new Map<string, string>();
@@ -106,7 +107,7 @@ async function lookupWikimedia(list: Artist[], ms: number): Promise<Map<string, 
 /** Look up free photos for artists not checked in the last week (never touches uploaded photos) */
 async function refreshStale(artists: Artist[], rows: Row[], ms: number): Promise<Row[]> {
   const db = admin();
-  if (!db) return rows;
+  if (!db) { console.warn('[artist photos] no service role key'); return rows; }
   const bySlug = new Map(rows.map((r) => [r.slug, r]));
   const now = Date.now();
   const stale = artists.filter((a) => {
@@ -126,7 +127,9 @@ async function refreshStale(artists: Artist[], rows: Row[], ms: number): Promise
       photo_source_url: p?.sourceUrl ?? null, photo_source: p ? 'wikimedia' : null, checked_at: stamp,
     };
   });
-  try { await db.from('artist_profiles').upsert(updates.map((u) => ({ ...u, updated_at: stamp }))); } catch { /* best effort */ }
+  const { error } = await db.from('artist_profiles').upsert(updates.map((u) => ({ ...u, updated_at: stamp })));
+  if (error) console.warn('[artist photos] save failed', error.message);
+  else console.log(`[artist photos] checked ${updates.length}, found ${updates.filter((u) => u.photo_url).length}`);
   updates.forEach((u) => bySlug.set(u.slug, u));
   return Array.from(bySlug.values());
 }
