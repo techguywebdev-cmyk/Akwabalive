@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -101,15 +101,18 @@ export function MomentsViewer({ list, start = 0, eventTitle, onClose }: { list: 
   const [i, setI] = useState(start);
   const [shown, setShown] = useState(false);
   const m = list[i];
+  // Keep the latest onClose without re-running the effect (re-running would leave the page scroll-locked)
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
 
   useEffect(() => {
     const t = requestAnimationFrame(() => setShown(true));
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeRef.current(); };
     window.addEventListener('keydown', onKey);
     return () => { cancelAnimationFrame(t); document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
-  }, [onClose]);
+  }, []);
 
   if (!m || typeof document === 'undefined') return null;
 

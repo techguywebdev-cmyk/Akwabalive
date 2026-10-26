@@ -6,6 +6,7 @@ import { Icon } from '@/components/ui/Icon';
 import { T, FONT, alpha } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, toHex } from '@/lib/events/accent';
 import { resolveLineupNames } from '@/components/ui/LineupChips';
+import { artistForName } from '@/lib/data/artists';
 import { getTiers } from '@/lib/events/tiers';
 import { hiRes } from '@/lib/events/image';
 import { EventTags } from '@/components/events/CardParts';
@@ -303,7 +304,14 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {lineup.map((name, i) => (
                 <li key={name} style={{ padding: '12px 0', borderBottom: i === lineup.length - 1 ? 'none' : `1px solid ${T.hairline}`, fontFamily: FONT.display, fontSize: i === 0 ? 22 : 18, fontWeight: i === 0 ? 700 : 600, letterSpacing: '-0.02em', color: i === 0 ? T.white : 'rgba(255,255,255,0.85)' }}>
-                  {name}
+                  {(() => {
+                    const a = artistForName(name);
+                    return a ? (
+                      <Link href={`/artists/${a.slug}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, color: 'inherit', textDecoration: 'none' }}>
+                        {name}<Icon name="arrowRight" size={18} color="rgba(255,255,255,0.35)" />
+                      </Link>
+                    ) : name;
+                  })()}
                 </li>
               ))}
             </ul>

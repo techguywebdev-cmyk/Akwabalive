@@ -143,6 +143,11 @@ export const artists: Artist[] = [
     instagram: 'r2bees',
     xHandle: 'R2Bees',
   },
+  // Acts with shows on Akwaaba right now (Oct 2026)
+  { id: 'kwabena-kwabena', slug: 'kwabena-kwabena', name: 'Kwabena Kwabena', image: '', isMajor: true, priority: 13, keywords: ['kwabena kwabena'] },
+  { id: 'fancy-gadam', slug: 'fancy-gadam', name: 'Fancy Gadam', image: '', isMajor: true, priority: 14, keywords: ['fancy gadam', 'gadam nation', 'gadam concert'] },
+  { id: 'kweku-smoke', slug: 'kweku-smoke', name: 'Kweku Smoke', image: '', isMajor: true, priority: 15, keywords: ['kweku smoke'] },
+  { id: 'essumann', slug: 'essumann', name: 'Essumann', image: '', isMajor: true, priority: 16, keywords: ['essumann'] },
 ];
 
 export const majorArtists = artists
@@ -237,4 +242,11 @@ export function detectArtistsFromText(
     artistSlugs: found.map((a) => a.slug),
     lineup: found.map((a) => a.name),
   };
+}
+
+/** The artist a line-up name refers to ("Sarkodie", "King Promise (live band)"), if we have a page for them */
+export function artistForName(name: string): Artist | undefined {
+  const n = name.toLowerCase();
+  return artists.find((a) => a.name.toLowerCase() === n.trim())
+    ?? artists.find((a) => [a.name, ...a.keywords].some((k) => keywordInText(k, n)));
 }
