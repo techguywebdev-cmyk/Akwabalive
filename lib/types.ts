@@ -110,6 +110,8 @@ export interface Artist {
   keywords: string[];
   instagram?: string;
   xHandle?: string;
+  /** English Wikipedia article title, used to find a free photo on Wikimedia Commons */
+  wiki?: string;
 }
 
 

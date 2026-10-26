@@ -6,6 +6,7 @@ import { loadAllEvents } from '@/lib/data/allEvents';
 import { BRAND_NAME } from '@/lib/theme';
 import type { Moment } from '@/components/moments/types';
 import { momentsForArtist } from '@/lib/moments/matchArtist';
+import { getArtistPhotos } from '@/lib/artists/photos';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -47,10 +48,10 @@ export default async function ArtistPage({ params }: { params: { slug: string } 
     .filter((e) => eventMatchesArtist(e, artist))
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
-  const allMoments = await fetchMoments();
+  const [allMoments, photos] = await Promise.all([fetchMoments(), getArtistPhotos([artist])]);
   const moments = momentsForArtist(allMoments, artist, events);
 
   return (
-    <ArtistPageClient artist={artist} events={matched} moments={moments} />
+    <ArtistPageClient artist={artist} events={matched} moments={moments} photo={photos[artist.slug] ?? null} />
   );
 }

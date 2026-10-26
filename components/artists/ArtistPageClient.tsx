@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Instagram, Share2, Check, Play, CalendarDays } from 'lucide-react';
+import { Instagram, Share2, Check, Play, CalendarDays, Camera } from 'lucide-react';
 import type { Artist, GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
 import Nav from '@/components/layout/Nav';
@@ -16,6 +16,8 @@ import { parseDay, longDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { cityLabel } from '@/lib/utils';
 import { T, FONT, GROUND } from '@/lib/thiscene';
+import type { ArtistPhoto } from '@/lib/artists/photos';
+import ArtistPhotoSheet from '@/components/artists/ArtistPhotoSheet';
 
 const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
 
@@ -31,6 +33,9 @@ const place = (e: GhanaEvent) => {
   const city = e.city ? cityLabel(e.city) : '';
   return city && !e.venue?.toLowerCase().includes(city.toLowerCase()) ? [e.venue, city].filter(Boolean).join(', ') : e.venue;
 };
+
+/** The photo melts into the page instead of ending on a hard edge */
+const FADE = 'linear-gradient(180deg, #000 0%, #000 42%, rgba(0,0,0,0.55) 68%, rgba(0,0,0,0) 100%)';
 
 const compact = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n));
 
@@ -97,7 +102,7 @@ function ShowRow({ event, past }: { event: GhanaEvent; past?: boolean }) {
   );
 }
 
-export default function ArtistPageClient({ artist, events, moments = [] }: { artist: Artist; events: GhanaEvent[]; moments?: Moment[] }) {
+export default function ArtistPageClient({ artist, events, moments = [], photo: initialPhoto = null }: { artist: Artist; events: GhanaEvent[]; moments?: Moment[]; photo?: ArtistPhoto | null }) {
   const { user } = useAuth();
   const supabase = useMemo(() => createClient(), []);
   const [followers, setFollowers] = useState<number | null>(null);
@@ -105,6 +110,9 @@ export default function ArtistPageClient({ artist, events, moments = [] }: { art
   const [busy, setBusy] = useState(false);
   const [viewer, setViewer] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  const [photo, setPhoto] = useState<ArtistPhoto | null>(initialPhoto);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [photoSheet, setPhotoSheet] = useState(false);
 
   const t0 = today();
   const upcoming = events.filter((e) => { const d = parseDay(e.date); return !d || d >= t0; });
@@ -116,6 +124,7 @@ export default function ArtistPageClient({ artist, events, moments = [] }: { art
     supabase.from('artist_follows').select('*', { count: 'exact', head: true }).eq('artist_slug', artist.slug)
       .then(({ count }) => setFollowers(count ?? 0));
     if (user) {
+      supabase.rpc('is_akwaaba_admin').then(({ data }) => setIsAdmin(data === true));
       supabase.from('artist_follows').select('artist_slug').eq('user_id', user.id).eq('artist_slug', artist.slug).maybeSingle()
         .then(({ data }) => setFollowing(!!data));
     }
@@ -155,16 +164,21 @@ export default function ArtistPageClient({ artist, events, moments = [] }: { art
         <button type="button" onClick={share} aria-label="Share artist" style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}>{copied ? <Check size={18} /> : <Share2 size={18} />}</button>
       } />
 
-      {/* Hero: the latest flyer, blurred, behind the name */}
-      <header style={{ position: 'relative', overflow: 'hidden', padding: 'calc(150px + env(safe-area-inset-top, 0px)) 20px 8px' }}>
-        {backdrop && (
+      {/* Hero: the artist's photo, full width, fading into the page — or the latest flyer, blurred */}
+      <header style={{ position: 'relative', overflow: 'hidden', padding: photo ? 'calc(min(118vw, 520px) - 150px) 20px 8px' : 'calc(150px + env(safe-area-inset-top, 0px)) 20px 8px' }}>
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo.url} alt={artist.name} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 'min(118vw, 520px)', objectFit: 'cover', objectPosition: '50% 20%', WebkitMaskImage: FADE, maskImage: FADE }} />
+        ) : backdrop && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={hiRes(backdrop, 800) ?? backdrop} alt="" aria-hidden style={{ position: 'absolute', inset: -40, width: 'calc(100% + 80px)', height: 'calc(100% + 80px)', objectFit: 'cover', filter: 'blur(36px) saturate(1.2)', opacity: 0.55, transform: 'scale(1.1)' }} />
         )}
-        <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,32,21,0.2) 0%, rgba(8,32,21,0.55) 55%, rgba(8,30,20,0.98) 100%)' }} />
+        <span aria-hidden style={photo
+          ? { position: 'absolute', top: 0, left: 0, right: 0, height: 140, background: 'linear-gradient(180deg, rgba(3,8,6,0.45), rgba(3,8,6,0))' }
+          : { position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,32,21,0.2) 0%, rgba(8,32,21,0.55) 55%, rgba(8,30,20,0.98) 100%)' }} />
         <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
           <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.mintText }}>Artist</p>
-          <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: artist.name.length > 12 ? 46 : 56, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.98, color: T.white }}>{artist.name}</h1>
+          <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: artist.name.length > 12 ? 46 : 56, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.98, color: T.white, textShadow: photo ? '0 2px 24px rgba(0,0,0,0.35)' : undefined }}>{artist.name}</h1>
           <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, color: T.text2 }}>{stats}</p>
           <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
             <button type="button" onClick={toggleFollow} disabled={busy} style={{ ...(following ? BTN.secondary : BTN.primary), flex: 1, height: 46 }}>
@@ -176,7 +190,18 @@ export default function ArtistPageClient({ artist, events, moments = [] }: { art
             {artist.xHandle && (
               <a href={`https://x.com/${artist.xHandle}`} target="_blank" rel="noopener noreferrer" aria-label={`${artist.name} on X`} style={roundBtn}><XLogo size={16} /></a>
             )}
+            {isAdmin && (
+              <button type="button" onClick={() => setPhotoSheet(true)} aria-label="Change photo" title="Change photo" style={roundBtn}><Camera size={18} /></button>
+            )}
           </div>
+          {photo && (photo.credit || photo.license) && (
+            <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 11, lineHeight: 1.4, color: T.text3 }}>
+              Photo{photo.credit ? `: ${photo.credit.length > 60 ? `${photo.credit.slice(0, 58)}…` : photo.credit}` : ''}
+              {photo.license && <> · {photo.sourceUrl
+                ? <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>{photo.license}, via Wikimedia Commons</a>
+                : photo.license}</>}
+            </p>
+          )}
         </div>
       </header>
 
@@ -238,6 +263,10 @@ export default function ArtistPageClient({ artist, events, moments = [] }: { art
         )}
       </main>
 
+      {photoSheet && (
+        <ArtistPhotoSheet slug={artist.slug} name={artist.name} current={photo} onClose={() => setPhotoSheet(false)}
+          onSaved={(p) => { setPhoto(p); setPhotoSheet(false); }} />
+      )}
       {viewer !== null && (
         <MomentsViewer list={moments.slice(0, 12)} start={viewer} eventTitle={artist.name} onClose={() => setViewer(null)} />
       )}

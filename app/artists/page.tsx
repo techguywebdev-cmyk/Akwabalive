@@ -2,6 +2,7 @@ import ArtistsIndexClient, { type ArtistCard } from '@/components/artists/Artist
 import { artists, eventMatchesArtist } from '@/lib/data/artists';
 import { loadAllEvents } from '@/lib/data/allEvents';
 import { parseDay } from '@/lib/dates';
+import { getArtistPhotos } from '@/lib/artists/photos';
 import { BRAND_NAME } from '@/lib/theme';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,7 @@ export const metadata = {
 };
 
 export default async function ArtistsPage() {
-  const events = await loadAllEvents();
+  const [events, photos] = await Promise.all([loadAllEvents(), getArtistPhotos(artists)]);
   const t0 = new Date(); t0.setHours(0, 0, 0, 0);
 
   const cards: ArtistCard[] = artists.map((artist) => {
@@ -28,6 +29,7 @@ export default async function ArtistsPage() {
       upcoming: upcoming.length,
       nextDate: next?.date ?? null, nextTitle: next?.title ?? null,
       image: latest?.image ?? null,
+      photo: photos[artist.slug]?.url ?? null,
     };
   });
 
