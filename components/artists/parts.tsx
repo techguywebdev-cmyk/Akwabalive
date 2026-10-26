@@ -12,6 +12,8 @@ import { hiRes } from '@/lib/events/image';
 import { cityLabel } from '@/lib/utils';
 import { useFollow } from '@/components/follow/useFollow';
 import { T, FONT } from '@/lib/thiscene';
+import { ScoreChip } from '@/components/ratings/Stars';
+import type { RatingSummary } from '@/lib/ratings';
 
 export const today = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
 export const initials = (n: string) => n.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -135,7 +137,7 @@ export function NextShow({ event }: { event: GhanaEvent }) {
 }
 
 /** A show in a list: date block, small flyer, title, place (and price when upcoming) */
-export function ShowRow({ event, past }: { event: GhanaEvent; past?: boolean }) {
+export function ShowRow({ event, past, rating }: { event: GhanaEvent; past?: boolean; rating?: RatingSummary }) {
   const d = parseDay(event.date);
   return (
     <Link href={`/events/${event.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', textDecoration: 'none', opacity: past ? 0.7 : 1 }}>
@@ -156,17 +158,18 @@ export function ShowRow({ event, past }: { event: GhanaEvent; past?: boolean }) 
           {place(event)}{!past && ` · ${priceLine(event)}`}
         </span>
       </span>
+      {rating && <span style={{ flexShrink: 0 }}><ScoreChip score={rating.overall} count={rating.ratings} /></span>}
     </Link>
   );
 }
 
 /** A series in a list: last flyer as a thumbnail, name, next edition, follow */
-export type SeriesSummary = { slug: string; name: string; usually: string; image: string | null; nextDate: string | null; hostNames: string[] };
+export type SeriesSummary = { slug: string; name: string; usually: string; image: string | null; nextDate: string | null; hostNames: string[]; lastSlug?: string | null };
 
-export function SeriesRow({ s }: { s: SeriesSummary }) {
+export function SeriesRow({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
   const d = parseDay(s.nextDate);
   return (
-    <Link href={`/series/${s.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', textDecoration: 'none' }}>
+    <Link href={`/shows/${s.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', textDecoration: 'none' }}>
       <span style={{ width: 58, height: 58, borderRadius: 16, overflow: 'hidden', flexShrink: 0, background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 75%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {s.image
           // eslint-disable-next-line @next/next/no-img-element
@@ -178,6 +181,7 @@ export function SeriesRow({ s }: { s: SeriesSummary }) {
         <span style={{ display: 'block', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.sans, fontSize: 13, color: d ? T.mintText : T.text3 }}>
           {d ? `Next: ${shortDay(d)}` : s.hostNames.length ? `By ${s.hostNames.join(' & ')}` : s.usually}
         </span>
+        {rating && <span style={{ display: 'block', marginTop: 3 }}><ScoreChip score={rating.overall} count={rating.ratings} /> <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>last edition</span></span>}
       </span>
       <FollowPill kind="series" slug={s.slug} label={s.name} />
     </Link>

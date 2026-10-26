@@ -15,6 +15,7 @@ import { parseDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { T, FONT, GROUND } from '@/lib/thiscene';
 import type { ArtistPhoto } from '@/lib/artists/photos';
+import { useRatingSummaries } from '@/lib/ratings';
 import ArtistPhotoSheet from '@/components/artists/ArtistPhotoSheet';
 import {
   today, roundBtn, SpotifyLogo, XLogo, SectionTitle, Portrait, NextShow, ShowRow, SeriesRow, MomentsStrip,
@@ -55,6 +56,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
   const [next, ...later] = upcoming;
   const backdrop = photo?.url ?? (next?.image ? hiRes(next.image, 800) ?? next.image : null);
   const reel = moments.slice(0, 12);
+  const ratings = useRatingSummaries(past.map((e) => e.slug));
 
   useEffect(() => {
     if (user) supabase.rpc('is_akwaaba_admin').then(({ data }) => setIsAdmin(data === true));
@@ -165,7 +167,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
         {past.length > 0 && (
           <section style={{ marginTop: 40 }}>
             <SectionTitle>Past shows</SectionTitle>
-            {(allPast ? past : past.slice(0, 5)).map((e) => <ShowRow key={e.slug} event={e} past />)}
+            {(allPast ? past : past.slice(0, 5)).map((e) => <ShowRow key={e.slug} event={e} past rating={ratings[e.slug]} />)}
             {past.length > 5 && !allPast && (
               <button type="button" onClick={() => setAllPast(true)} style={{ marginTop: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>
                 Show all {past.length}

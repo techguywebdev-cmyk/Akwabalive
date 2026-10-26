@@ -13,6 +13,8 @@ import { useFollow, compactCount } from '@/components/follow/useFollow';
 import { hiRes } from '@/lib/events/image';
 import { T, FONT, GROUND } from '@/lib/thiscene';
 import { roundBtn, SectionTitle, Portrait, NextShow, ShowRow, MomentsStrip } from '@/components/artists/parts';
+import { useRatingSummaries } from '@/lib/ratings';
+import { ScoreChip } from '@/components/ratings/Stars';
 
 type Host = { slug: string; name: string; photo: string | null };
 
@@ -24,10 +26,13 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
   const [viewer, setViewer] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [next, ...later] = upcoming;
+  const ratings = useRatingSummaries(past.map((e) => e.slug));
+  const rated = past.map((e) => ratings[e.slug]).filter(Boolean);
+  const lastRated = past.find((e) => ratings[e.slug]);
   const cover = (next ?? past[0])?.image;
 
   async function share() {
-    const url = `${window.location.origin}/series/${series.slug}`;
+    const url = `${window.location.origin}/shows/${series.slug}`;
     try {
       if (navigator.share) { await navigator.share({ title: `${series.name} on Akwaaba`, url }); return; }
       await navigator.clipboard.writeText(url);
@@ -39,7 +44,7 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
-      <Nav back="/artists" tabs actions={
+      <Nav back="/shows" tabs actions={
         <button type="button" onClick={share} aria-label="Share" style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}>{copied ? <Check size={18} /> : <Share2 size={18} />}</button>
       } />
 
@@ -69,6 +74,11 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
             </div>
           )}
           <p style={{ margin: '14px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{series.blurb}</p>
+          {lastRated && ratings[lastRated.slug] && (
+            <a href={`/events/${lastRated.slug}#ratings`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 12, fontFamily: FONT.sans, fontSize: 14, color: T.text2, textDecoration: 'none' }}>
+              <ScoreChip score={ratings[lastRated.slug].overall} count={ratings[lastRated.slug].ratings} /> last edition{rated.length > 1 ? ` · ${rated.length} editions rated` : ''}
+            </a>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 20 }}>
             <button type="button" onClick={toggle} disabled={busy} style={{ ...(following ? BTN.secondary : BTN.primary), flex: 1, maxWidth: 260, height: 46 }}>
               {following ? <><Check size={17} /> Following</> : `Follow ${series.name}`}
@@ -110,7 +120,7 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
         {past.length > 0 && (
           <section style={{ marginTop: 40 }}>
             <SectionTitle>Past editions</SectionTitle>
-            {past.map((e) => <ShowRow key={e.slug} event={e} past />)}
+            {past.map((e) => <ShowRow key={e.slug} event={e} past rating={ratings[e.slug]} />)}
           </section>
         )}
       </main>

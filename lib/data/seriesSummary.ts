@@ -12,6 +12,7 @@ export function summarizeSeries(list: EventSeries[], events: GhanaEvent[]): Seri
       slug: s.slug, name: s.name, usually: s.usually,
       image: show?.image ?? null, nextDate: upcoming[0]?.date ?? null,
       hostNames: s.hosts.map((h) => getArtistBySlug(h)?.name).filter(Boolean) as string[],
+      lastSlug: past[0]?.slug ?? null,
     };
   });
 }
