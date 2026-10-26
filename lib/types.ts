@@ -112,7 +112,11 @@ export interface Artist {
   xHandle?: string;
   /** English Wikipedia article title, used to find a free photo on Wikimedia Commons */
   wiki?: string;
+  /** Main genre, for the Artists page filters */
+  genre?: ArtistGenre;
 }
+
+export type ArtistGenre = 'Afrobeats' | 'Hip-hop' | 'Highlife' | 'Dancehall' | 'Alté' | 'Gospel' | 'DJ';
 
 
 /** upcoming = date; popular = attending/hot; nearby = distance; newest = createdAt */

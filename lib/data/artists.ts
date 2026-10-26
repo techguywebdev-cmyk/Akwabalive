@@ -1,4 +1,4 @@
-import type { Artist, GhanaEvent } from '@/lib/types';
+import type { Artist, ArtistGenre, GhanaEvent } from '@/lib/types';
 
 /** Placeholder portraits — replace with official press photos in production. */
 const p = (id: string) =>
@@ -199,10 +199,81 @@ export const artists: Artist[] = [
     ['celestine-donkor', 'Celestine Donkor', ['celestine donkor'], 'Celestine Donkor'],
     ['nacee', 'Nacee', ['nacee'], 'Nacee'],
     ['mogmusic', 'MOGmusic', ['mogmusic', 'mog music'], 'MOGmusic'],
+    ['mr-eazi', 'Mr Eazi', ['mr eazi', 'mr. eazi', 'mreazi'], 'Mr Eazi'],
   ] as const).map(([slug, name, keywords, wiki], i): Artist => ({
     id: slug, slug, name, wiki, image: '', isMajor: true, priority: 20 + i, keywords: [...keywords],
   })),
 ];
+
+/** Main genre per artist (Artists page filters) */
+const GENRE: Record<string, ArtistGenre> = {
+  'sarkodie': 'Hip-hop',
+  'black-sherif': 'Hip-hop',
+  'medikal': 'Hip-hop',
+  'r2bees': 'Hip-hop',
+  'kweku-smoke': 'Hip-hop',
+  'manifest': 'Hip-hop',
+  'amerado': 'Hip-hop',
+  'king-paluta': 'Hip-hop',
+  'kwesi-arthur': 'Hip-hop',
+  'joey-b': 'Hip-hop',
+  'obrafour': 'Hip-hop',
+  'okyeame-kwame': 'Hip-hop',
+  'reggie-rockstone': 'Hip-hop',
+  'edem': 'Hip-hop',
+  'eno-barony': 'Hip-hop',
+  'strongman': 'Hip-hop',
+  'teephlow': 'Hip-hop',
+  'kofi-mole': 'Hip-hop',
+  'kweku-flick': 'Hip-hop',
+  'yaw-tog': 'Hip-hop',
+  'oseikrom-sikanii': 'Hip-hop',
+  'pappy-kojo': 'Hip-hop',
+  'kojo-cue': 'Hip-hop',
+  'shatta-wale': 'Dancehall',
+  'stonebwoy': 'Dancehall',
+  'samini': 'Dancehall',
+  'king-promise': 'Afrobeats',
+  'gyakie': 'Afrobeats',
+  'kidi': 'Afrobeats',
+  'wendy-shay': 'Afrobeats',
+  'camidoh': 'Afrobeats',
+  'fameye': 'Afrobeats',
+  'fancy-gadam': 'Afrobeats',
+  'kuami-eugene': 'Afrobeats',
+  'lasmid': 'Afrobeats',
+  'kelvyn-boy': 'Afrobeats',
+  'efya': 'Afrobeats',
+  'becca': 'Afrobeats',
+  'adina': 'Afrobeats',
+  'sister-deborah': 'Afrobeats',
+  'sista-afia': 'Afrobeats',
+  'mzvee': 'Afrobeats',
+  'mr-drew': 'Afrobeats',
+  'krymi': 'Afrobeats',
+  'wiyaala': 'Afrobeats',
+  'article-wan': 'Afrobeats',
+  'mr-eazi': 'Afrobeats',
+  'kwabena-kwabena': 'Highlife',
+  'essumann': 'Highlife',
+  'kofi-kinaata': 'Highlife',
+  'kojo-antwi': 'Highlife',
+  'amakye-dede': 'Highlife',
+  'akwaboah': 'Highlife',
+  'bisa-kdei': 'Highlife',
+  'darkovibes': 'Alté',
+  'cina-soul': 'Alté',
+  'amaarae': 'Alté',
+  'moliy': 'Alté',
+  'diana-hamilton': 'Gospel',
+  'joe-mettle': 'Gospel',
+  'piesie-esther': 'Gospel',
+  'celestine-donkor': 'Gospel',
+  'nacee': 'Gospel',
+  'mogmusic': 'Gospel',
+  'dj-switch': 'DJ',
+};
+for (const a of artists) a.genre = a.genre ?? GENRE[a.slug];
 
 export const majorArtists = artists
   .filter((a) => a.isMajor)

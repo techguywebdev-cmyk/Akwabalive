@@ -7,6 +7,7 @@ import { T, FONT, alpha } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, toHex } from '@/lib/events/accent';
 import { resolveLineupNames } from '@/components/ui/LineupChips';
 import { artistForName } from '@/lib/data/artists';
+import PartOfSeries from '@/components/series/PartOfSeries';
 import { getTiers } from '@/lib/events/tiers';
 import { hiRes } from '@/lib/events/image';
 import { EventTags } from '@/components/events/CardParts';
@@ -297,6 +298,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             <p key={i} style={{ margin: i ? '14px 0 0' : '4px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.65, color: 'rgba(255,255,255,0.78)' }}>{p}</p>
           ))}
         </section>
+
+        <PartOfSeries event={event} />
 
         {lineup.length > 0 && (
           <section style={{ marginTop: 34 }}>
