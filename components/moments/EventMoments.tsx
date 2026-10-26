@@ -12,7 +12,7 @@ import { T, FONT, EASE } from '@/lib/thiscene';
 /* ── Data: every moment, loaded once per visit and shared ─────────────── */
 
 let all: Promise<Moment[]> | null = null;
-function loadAll(): Promise<Moment[]> {
+export function loadAll(): Promise<Moment[]> {
   if (!all) {
     all = Promise.resolve(createClient().from('moments').select(MOMENT_FIELDS).order('year', { ascending: false }).limit(500))
       .then(({ data }) => (data ?? []) as Moment[])
