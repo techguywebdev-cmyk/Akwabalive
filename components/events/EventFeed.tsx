@@ -16,7 +16,7 @@ import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { getTiers, type CheckoutTier } from '@/lib/events/tiers';
-import { CalendarDays, MapPin, Ticket, Heart, Share2 } from 'lucide-react';
+import { CalendarDays, CalendarPlus, MapPin, Navigation, Ticket, Heart, Share2 } from 'lucide-react';
 import { isListedEvent } from '@/lib/types';
 import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
@@ -77,7 +77,12 @@ function DetailRow({ icon, accent, main, sub, action }: { icon: React.ReactNode;
   );
 }
 
-const linkish: React.CSSProperties = { pointerEvents: 'auto', flexShrink: 0, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText, textDecoration: 'none', padding: '8px 0 8px 8px' };
+/** Small round icon button at the end of a detail row (Add to calendar, Directions) */
+const rowAction: React.CSSProperties = {
+  pointerEvents: 'auto', flexShrink: 0, width: 40, height: 40, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: T.white, textDecoration: 'none',
+  backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+};
 
 /* ── Ticket packages, right on the card ───────────────────────────── */
 function TierChips({ event, accent, onOpen }: { event: GhanaEvent; accent: string; onOpen: () => void }) {
@@ -221,14 +226,14 @@ function EventCard({
             icon={<CalendarDays size={20} strokeWidth={2} />}
             main={when}
             sub={label === 'Ended' ? 'This event has ended' : whenTag(event)?.text}
-            action={label !== 'Ended' && calLink ? <a href={calLink} target="_blank" rel="noopener noreferrer" style={linkish}>Add to calendar</a> : undefined}
+            action={label !== 'Ended' && calLink ? <a href={calLink} target="_blank" rel="noopener noreferrer" aria-label="Add to calendar" title="Add to calendar" style={rowAction}><CalendarPlus size={19} strokeWidth={2} /></a> : undefined}
           />
           <DetailRow
             accent={a}
             icon={<MapPin size={20} strokeWidth={2} />}
             main={event.venue}
             sub={place || undefined}
-            action={<a href={mapsLink(event)} target="_blank" rel="noopener noreferrer" style={linkish}>Directions</a>}
+            action={<a href={mapsLink(event)} target="_blank" rel="noopener noreferrer" aria-label="Directions" title="Directions" style={rowAction}><Navigation size={18} strokeWidth={2} /></a>}
           />
           {label !== 'Ended' && tierList.length < 2 && (
             <DetailRow accent={a} icon={<Ticket size={20} strokeWidth={2} />} main={ticketMain} sub={ticketSub} />
