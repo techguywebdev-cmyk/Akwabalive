@@ -2,10 +2,8 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import ArtistPageClient from '@/components/artists/ArtistPageClient';
 import { getArtistBySlug, eventMatchesArtist } from '@/lib/data/artists';
-import { events as staticEvents } from '@/lib/data/events';
-import { fetchPublishedEvents, supabaseToGhanaEvent } from '@/lib/supabase/events';
+import { loadAllEvents } from '@/lib/data/allEvents';
 import { BRAND_NAME } from '@/lib/theme';
-import type { GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
 import { momentsForArtist } from '@/lib/moments/matchArtist';
 
@@ -26,7 +24,7 @@ async function fetchMoments(): Promise<Moment[]> {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return [];
   try {
-    const supabase = createClient(url, key);
+    const supabase = createClient(url, key, { global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) } });
     const { data } = await supabase
       .from('moments')
       .select('*')
@@ -43,18 +41,7 @@ export default async function ArtistPage({ params }: { params: { slug: string } 
   const artist = getArtistBySlug(params.slug);
   if (!artist) notFound();
 
-  let events: GhanaEvent[] = [...staticEvents];
-  try {
-    const rows = await fetchPublishedEvents();
-    if (rows?.length) {
-      const mapped = rows.map(supabaseToGhanaEvent);
-      const bySlug = new Map<string, GhanaEvent>();
-      for (const e of [...mapped, ...staticEvents]) bySlug.set(e.slug, e);
-      events = Array.from(bySlug.values());
-    }
-  } catch {
-    // static fallback
-  }
+  const events = await loadAllEvents();
 
   const matched = events
     .filter((e) => eventMatchesArtist(e, artist))

@@ -287,7 +287,7 @@ export default function Nav({
             )}
 
             <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column' }}>
-              {SECTIONS.map((l, i) => {
+              {[...SECTIONS, { href: '/artists', label: 'Artists', icon: 'music' as IconName }].map((l, i) => {
                 const on = active === l.label;
                 return (
                   <Link
