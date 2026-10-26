@@ -7,7 +7,7 @@ import Nav from '@/components/layout/Nav';
 import type { ArtistGenre } from '@/lib/types';
 import { parseDay, shortDay } from '@/lib/dates';
 import { useMyFollows } from '@/components/follow/useFollow';
-import { Portrait, SectionTitle, SeriesRow, type SeriesSummary } from '@/components/artists/parts';
+import { Portrait, SectionTitle, type SeriesSummary } from '@/components/artists/parts';
 import { T, FONT, GROUND } from '@/lib/thiscene';
 
 export type ArtistCard = {
@@ -47,7 +47,6 @@ const rail: React.CSSProperties = { display: 'flex', gap: 16, overflowX: 'auto',
 export default function ArtistsIndexClient({ artists, series = [] }: { artists: ArtistCard[]; series?: SeriesSummary[] }) {
   const [q, setQ] = useState('');
   const [genre, setGenre] = useState<ArtistGenre | null>(null);
-  const [allSeries, setAllSeries] = useState(false);
   const mine = useMyFollows('artist');
 
   const query = q.trim().toLowerCase();
@@ -94,17 +93,14 @@ export default function ArtistsIndexClient({ artists, series = [] }: { artists: 
           </section>
         )}
 
-        {browsing && series.length > 0 && (
-          <section style={{ marginTop: 36 }}>
-            <SectionTitle>Shows to follow</SectionTitle>
-            <p style={{ margin: '-6px 0 4px', fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>The ones that come back every year. Follow to catch the next edition.</p>
-            {(allSeries ? series : series.slice(0, 5)).map((s) => <SeriesRow key={s.slug} s={s} />)}
-            {series.length > 5 && !allSeries && (
-              <button type="button" onClick={() => setAllSeries(true)} style={{ marginTop: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>
-                Show all {series.length}
-              </button>
-            )}
-          </section>
+        {browsing && (
+          <Link href="/shows" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 30, padding: '14px 0', borderTop: `1px solid ${T.hairline}`, borderBottom: `1px solid ${T.hairline}`, textDecoration: 'none' }}>
+            <span>
+              <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 17, fontWeight: 700, color: T.white }}>Yearly shows</span>
+              <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>Rapperholic, Detty Rave, Tidal Rave and more</span>
+            </span>
+            <span aria-hidden style={{ fontFamily: FONT.sans, fontSize: 22, color: T.text3 }}>›</span>
+          </Link>
         )}
 
         <section style={{ marginTop: 36 }}>

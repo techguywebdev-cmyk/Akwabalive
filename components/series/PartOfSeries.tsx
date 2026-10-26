@@ -12,7 +12,7 @@ export default function PartOfSeries({ event }: { event: Pick<GhanaEvent, 'title
   const s = seriesForEvent(event);
   if (!s) return null;
   return (
-    <Link href={`/series/${s.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 28, textDecoration: 'none' }}>
+    <Link href={`/shows/${s.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 28, textDecoration: 'none' }}>
       <span style={{ width: 44, height: 44, borderRadius: 22, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.12)', color: T.mintText }}>
         <Repeat size={19} />
       </span>

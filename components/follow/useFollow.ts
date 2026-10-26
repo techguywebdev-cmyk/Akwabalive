@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/supabase/AuthProvider';
 
 const TABLES = {
   artist: { table: 'artist_follows', col: 'artist_slug', path: '/artists/' },
-  series: { table: 'series_follows', col: 'series_slug', path: '/series/' },
+  series: { table: 'series_follows', col: 'series_slug', path: '/shows/' },
 } as const;
 
 /** Follow state + follower count for an artist or an event series, with optimistic toggling */

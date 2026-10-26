@@ -8,6 +8,7 @@ import { type RGB, categoryAccent, eventAccent, toHex } from '@/lib/events/accen
 import { resolveLineupNames } from '@/components/ui/LineupChips';
 import { artistForName } from '@/lib/data/artists';
 import PartOfSeries from '@/components/series/PartOfSeries';
+import RatingSection from '@/components/ratings/RatingSection';
 import { getTiers } from '@/lib/events/tiers';
 import { hiRes } from '@/lib/events/image';
 import { EventTags } from '@/components/events/CardParts';
@@ -320,6 +321,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             </ul>
           </section>
         )}
+
+        <RatingSection slug={event.slug} title={event.title} past={(() => { const d = parseDay(event.date); return !!d && d.getTime() <= new Date(new Date().toDateString()).getTime(); })()} />
 
         <section id="tickets" style={{ marginTop: 34 }}>
           <h2 style={eyebrow}>Tickets</h2>

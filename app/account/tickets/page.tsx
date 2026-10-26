@@ -204,7 +204,16 @@ export default function MyTicketsPage() {
           {loading ? (
             [0, 1].map((i) => <div key={i} style={{ height: 96, borderRadius: 22, background: 'rgba(255,255,255,0.04)' }} />)
           ) : shown.length ? (
-            shown.map((t) => <TicketRow key={t.id} ticket={t} ev={events[t.event_slug]} onOpen={() => setOpen(t)} />)
+            shown.map((t) => (
+              <div key={t.id}>
+                <TicketRow ticket={t} ev={events[t.event_slug]} onOpen={() => setOpen(t)} />
+                {tab === 'past' && (
+                  <Link href={`/events/${t.event_slug}?rate=1`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, margin: '10px 0 4px 6px', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: '#F5C451', textDecoration: 'none' }}>
+                    ★ Rate this show
+                  </Link>
+                )}
+              </div>
+            ))
           ) : (
             <div style={{ padding: '56px 8px', textAlign: 'center' }}>
               <span style={{ display: 'inline-flex', width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.1)', color: T.mint }}><Icon name="ticket" size={28} /></span>
