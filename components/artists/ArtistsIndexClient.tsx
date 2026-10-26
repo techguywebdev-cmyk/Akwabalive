@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Nav from '@/components/layout/Nav';
 import { parseDay, shortDay } from '@/lib/dates';
-import { hiRes } from '@/lib/events/image';
 import { T, FONT, GROUND } from '@/lib/thiscene';
 
 export type ArtistCard = {
@@ -25,27 +24,28 @@ export default function ArtistsIndexClient({ artists }: { artists: ArtistCard[] 
   const touring = list.filter((a) => a.upcoming > 0);
   const rest = list.filter((a) => a.upcoming === 0);
 
+  // Round portraits with the name underneath (no photo yet → initials on green)
   const grid = (items: ArtistCard[]) => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(156px, 1fr))', gap: 14 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '22px 14px' }}>
       {items.map((a) => {
         const d = parseDay(a.nextDate);
         return (
-          <Link key={a.slug} href={`/artists/${a.slug}`} style={{ position: 'relative', display: 'block', aspectRatio: '4 / 5', borderRadius: 22, overflow: 'hidden', textDecoration: 'none', background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 70%)' }}>
-            {a.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={a.photo} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 22%' }} />
-            ) : a.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={hiRes(a.image, 500) ?? a.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: a.upcoming ? 1 : 0.45 }} />
-            ) : (
-              <span aria-hidden style={{ position: 'absolute', top: '30%', left: 0, right: 0, textAlign: 'center', fontFamily: FONT.display, fontSize: 54, fontWeight: 800, color: 'rgba(214,251,230,0.22)' }}>{initials(a.name)}</span>
-            )}
-            <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,19,12,0) 35%, rgba(5,19,12,0.72) 68%, rgba(5,19,12,0.95) 100%)' }} />
-            <span style={{ position: 'absolute', left: 14, right: 14, bottom: 14 }}>
-              <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 20, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, color: T.white }}>{a.name}</span>
-              <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: d ? T.mintText : T.text3 }}>
-                {d ? `${shortDay(d)}${a.upcoming > 1 ? ` · +${a.upcoming - 1} more` : ''}` : 'No dates yet'}
-              </span>
+          <Link key={a.slug} href={`/artists/${a.slug}`} style={{ display: 'block', textDecoration: 'none', textAlign: 'center', minWidth: 0 }}>
+            <span style={{
+              position: 'relative', display: 'block', width: '100%', aspectRatio: '1 / 1', borderRadius: '50%', overflow: 'hidden',
+              background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 75%)',
+              boxShadow: a.upcoming ? `0 0 0 2px ${T.mint}, 0 0 0 5px rgba(3,8,6,0.9)` : '0 0 0 1px rgba(255,255,255,0.08)',
+            }}>
+              {a.photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={a.photo} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 22%' }} />
+              ) : (
+                <span aria-hidden style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: 30, fontWeight: 800, color: 'rgba(214,251,230,0.55)' }}>{initials(a.name)}</span>
+              )}
+            </span>
+            <span style={{ display: 'block', marginTop: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.display, fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', color: T.white }}>{a.name}</span>
+            <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: d ? T.mintText : T.text3 }}>
+              {d ? `${shortDay(d)}${a.upcoming > 1 ? ` +${a.upcoming - 1}` : ''}` : 'No dates yet'}
             </span>
           </Link>
         );

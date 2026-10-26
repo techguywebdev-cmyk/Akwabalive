@@ -34,9 +34,6 @@ const place = (e: GhanaEvent) => {
   return city && !e.venue?.toLowerCase().includes(city.toLowerCase()) ? [e.venue, city].filter(Boolean).join(', ') : e.venue;
 };
 
-/** The photo melts into the page instead of ending on a hard edge */
-const FADE = 'linear-gradient(180deg, #000 0%, #000 42%, rgba(0,0,0,0.55) 68%, rgba(0,0,0,0) 100%)';
-
 const compact = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '')}k` : String(n));
 
 const roundBtn: React.CSSProperties = {
@@ -172,24 +169,32 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
         <button type="button" onClick={share} aria-label="Share artist" style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}>{copied ? <Check size={18} /> : <Share2 size={18} />}</button>
       } />
 
-      {/* Hero: the artist's photo, full width, fading into the page — or the latest flyer, blurred */}
-      <header style={{ position: 'relative', overflow: 'hidden', padding: photo ? 'calc(min(118vw, 520px) - 150px) 20px 8px' : 'calc(150px + env(safe-area-inset-top, 0px)) 20px 8px' }}>
-        {photo ? (
+      {/* Hero: a round portrait over a soft blur of the same photo (or the latest flyer) */}
+      <header style={{ position: 'relative', overflow: 'hidden', padding: 'calc(84px + env(safe-area-inset-top, 0px)) 20px 8px', textAlign: 'center' }}>
+        {(photo?.url || backdrop) && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photo.url} alt={artist.name} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 'min(118vw, 520px)', objectFit: 'cover', objectPosition: '50% 20%', WebkitMaskImage: FADE, maskImage: FADE }} />
-        ) : backdrop && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={hiRes(backdrop, 800) ?? backdrop} alt="" aria-hidden style={{ position: 'absolute', inset: -40, width: 'calc(100% + 80px)', height: 'calc(100% + 80px)', objectFit: 'cover', filter: 'blur(36px) saturate(1.2)', opacity: 0.55, transform: 'scale(1.1)' }} />
+          <img src={photo?.url ?? hiRes(backdrop!, 800) ?? backdrop!} alt="" aria-hidden style={{ position: 'absolute', inset: -60, width: 'calc(100% + 120px)', height: 'calc(100% + 120px)', objectFit: 'cover', filter: 'blur(48px) saturate(1.25)', opacity: 0.5 }} />
         )}
-        <span aria-hidden style={photo
-          ? { position: 'absolute', top: 0, left: 0, right: 0, height: 140, background: 'linear-gradient(180deg, rgba(3,8,6,0.45), rgba(3,8,6,0))' }
-          : { position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,32,21,0.2) 0%, rgba(8,32,21,0.55) 55%, rgba(8,30,20,0.98) 100%)' }} />
+        <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,32,21,0.25) 0%, rgba(8,32,21,0.5) 55%, rgba(8,30,20,0.98) 100%)' }} />
         <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
+          <span style={{
+            display: 'block', width: 176, height: 176, margin: '0 auto 20px', borderRadius: '50%', overflow: 'hidden',
+            background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 75%)', boxShadow: '0 18px 50px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.1)',
+          }}>
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photo.url} alt={artist.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 22%', display: 'block' }} />
+            ) : (
+              <span aria-hidden style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: 58, fontWeight: 800, color: 'rgba(214,251,230,0.6)' }}>
+                {artist.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+              </span>
+            )}
+          </span>
           <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.mintText }}>Artist</p>
-          <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: artist.name.length > 12 ? 46 : 56, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.98, color: T.white, textShadow: photo ? '0 2px 24px rgba(0,0,0,0.35)' : undefined }}>{artist.name}</h1>
+          <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: artist.name.length > 12 ? 46 : 56, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.98, color: T.white, textShadow: '0 2px 24px rgba(0,0,0,0.3)' }}>{artist.name}</h1>
           <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, color: T.text2 }}>{stats}</p>
-          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-            <button type="button" onClick={toggleFollow} disabled={busy} style={{ ...(following ? BTN.secondary : BTN.primary), flex: 1, height: 46 }}>
+          <div style={{ display: 'flex', gap: 10, marginTop: 20, justifyContent: 'center' }}>
+            <button type="button" onClick={toggleFollow} disabled={busy} style={{ ...(following ? BTN.secondary : BTN.primary), flex: 1, maxWidth: 260, height: 46 }}>
               {following ? <><Check size={17} /> Following</> : 'Follow'}
             </button>
             {photo?.spotifyUrl && (
