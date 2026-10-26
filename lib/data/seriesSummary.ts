@@ -25,7 +25,10 @@ export async function seriesCovers(events: GhanaEvent[], moments: Moment[]): Pro
   for (const s of SERIES) {
     const { upcoming, past } = editionsOf(s, events);
     const flyer = (upcoming[0] ?? past[0])?.image;
-    const clip = moments.filter((m) => momentInSeries(m, s)).sort((a, b) => (b.year ?? 0) - (a.year ?? 0))[0];
+    // A video that's also filed under another show isn't a reliable picture of this one
+    const clip = moments
+      .filter((m) => momentInSeries(m, s) && !SERIES.some((o) => o.slug !== s.slug && moments.some((x) => x.youtube_id === m.youtube_id && momentInSeries(x, o))))
+      .sort((a, b) => (b.year ?? 0) - (a.year ?? 0))[0];
     const host = s.hosts.map((h) => hostPhotos[h]?.url).find(Boolean);
     const cover = flyer || wiki[`series-${s.slug}`]?.url || (clip ? videoStill(clip.youtube_id) : null) || host;
     if (cover) out[s.slug] = cover;

@@ -275,6 +275,11 @@ const GENRE: Record<string, ArtistGenre> = {
 };
 for (const a of artists) a.genre = a.genre ?? GENRE[a.slug];
 
+/** Popularity order (most known first) — what the Artists page sorts by when there's no live count */
+const POPULARITY = ['sarkodie', 'shatta-wale', 'stonebwoy', 'black-sherif', 'king-promise', 'kidi', 'mr-eazi', 'kuami-eugene', 'gyakie', 'medikal', 'r2bees', 'amaarae', 'camidoh', 'fameye', 'kofi-kinaata', 'wendy-shay', 'lasmid', 'kweku-smoke', 'king-paluta', 'amerado', 'kelvyn-boy', 'joey-b', 'kwesi-arthur', 'diana-hamilton', 'efya', 'bisa-kdei', 'samini', 'manifest', 'darkovibes', 'kojo-antwi', 'kwabena-kwabena', 'fancy-gadam', 'strongman', 'mr-drew', 'sister-deborah', 'sista-afia', 'piesie-esther', 'joe-mettle', 'okyeame-kwame', 'obrafour', 'edem', 'moliy', 'amakye-dede', 'akwaboah', 'cina-soul', 'kofi-mole', 'kweku-flick', 'yaw-tog', 'oseikrom-sikanii', 'pappy-kojo', 'eno-barony', 'teephlow', 'reggie-rockstone', 'becca', 'adina', 'mzvee', 'celestine-donkor', 'nacee', 'mogmusic', 'krymi', 'wiyaala', 'article-wan', 'essumann', 'kojo-cue', 'dj-switch'];
+POPULARITY.forEach((slug, i) => { const a = artists.find((x) => x.slug === slug); if (a) a.priority = i + 1; });
+
+
 export const majorArtists = artists
   .filter((a) => a.isMajor)
   .sort((a, b) => a.priority - b.priority);
