@@ -1,252 +1,138 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import {
-  Plus, TrendingUp, Ticket, Users, Eye,
-  Calendar, MapPin, MoreVertical, Edit,
-  Trash2, BarChart2, CheckCircle, Clock,
-} from 'lucide-react';
+import { Plus, Link2, Inbox, ScanLine, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
+import { Stat, StatusPill, Bar, QuickAction, ghs, card, type EventStatus } from '@/components/organizer/ui';
+import { parseDay, shortDay } from '@/lib/dates';
+import { hiRes } from '@/lib/events/image';
+import { T, FONT } from '@/lib/thiscene';
 
-
-import { C, G } from '@/lib/theme';
-interface OrgEvent {
-  id: string;
-  title: string;
-  slug: string;
-  date: string;
-  date_label: string;
-  time: string;
-  venue: string;
-  city: string;
-  category: string;
-  status: string;
-  image_url: string | null;
-  created_at: string;
+type OrgEvent = {
+  id: string; title: string; slug: string; date: string; time: string | null; venue: string; status: string;
+  image_url: string | null; listing_type: string | null; ticket_source: string | null;
   ticket_tiers: { price: number; quantity: number; sold: number }[];
+};
+type Stats = { event_id: string; tickets: number; people: number; revenue: number; checked_in: number };
+
+const isPast = (e: OrgEvent) => { const d = parseDay(e.date); return !!d && d.getTime() < new Date(new Date().toDateString()).getTime(); };
+const statusOf = (e: OrgEvent): EventStatus => (e.status === 'pending_review' ? 'review' : e.status !== 'published' ? 'draft' : isPast(e) ? 'ended' : 'live');
+
+function EventRow({ ev, st }: { ev: OrgEvent; st?: Stats }) {
+  const d = parseDay(ev.date);
+  const hosted = ev.listing_type !== 'listed';
+  const capacity = ev.ticket_tiers.reduce((s, t) => s + (t.quantity || 0), 0);
+  const sold = st?.people ?? ev.ticket_tiers.reduce((s, t) => s + (t.sold || 0), 0);
+  return (
+    <Link href={`/organizer/events/${ev.id}/manage`} style={{ ...card, display: 'flex', alignItems: 'stretch', overflow: 'hidden', textDecoration: 'none', color: T.white }}>
+      <span style={{ position: 'relative', width: 78, flexShrink: 0, background: '#06120C' }}>
+        {ev.image_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={hiRes(ev.image_url, 300) ?? ev.image_url} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        )}
+      </span>
+      <span style={{ flex: 1, minWidth: 0, padding: '13px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <StatusPill status={statusOf(ev)} />
+          <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d ? shortDay(d) : ev.date}</span>
+        </span>
+        <span style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 700, letterSpacing: '-0.015em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.title}</span>
+        {hosted && capacity > 0 ? (
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <Bar value={sold} max={capacity} />
+            <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.text2 }}>{sold} / {capacity} sold{st && st.revenue > 0 ? ` · ${ghs(st.revenue)}` : ''}</span>
+          </span>
+        ) : (
+          <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hosted ? 'No ticket types yet' : `Listed · tickets on ${ev.ticket_source || 'another site'}`}</span>
+        )}
+      </span>
+      <span style={{ display: 'flex', alignItems: 'center', paddingRight: 12, color: T.text3 }}><ChevronRight size={20} /></span>
+    </Link>
+  );
 }
 
 export default function OrganizerDashboard() {
   const { user, profile, loading: authLoading } = useAuth();
-  const supabase = createClient();
-
-  const [events,  setEvents]  = useState<OrgEvent[]>([]);
+  const supabase = useMemo(() => createClient(), []);
+  const [events, setEvents] = useState<OrgEvent[]>([]);
+  const [stats, setStats] = useState<Record<string, Stats>>({});
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [tab, setTab] = useState<'upcoming' | 'past' | 'drafts'>('upcoming');
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
-    loadEvents();
-  }, [user, authLoading]);
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent('/organizer/dashboard')}`; return; }
+    (async () => {
+      const [{ data }, { data: s }] = await Promise.all([
+        supabase.from('events').select('id, title, slug, date, time, venue, status, image_url, listing_type, ticket_source, ticket_tiers(price, quantity, sold)').eq('organizer_id', user.id).order('date', { ascending: true }),
+        supabase.rpc('organiser_event_stats'),
+      ]);
+      setEvents((data ?? []) as OrgEvent[]);
+      if (Array.isArray(s)) setStats(Object.fromEntries((s as Stats[]).map((x) => [x.event_id, x])));
+      setLoading(false);
+    })();
+  }, [user, authLoading, supabase]);
 
-  async function loadEvents() {
-    const { data } = await supabase
-      .from('events')
-      .select('*, ticket_tiers(*)')
-      .eq('organizer_id', user!.id)
-      .order('created_at', { ascending: false });
-    setEvents((data ?? []) as OrgEvent[]);
-    setLoading(false);
-  }
-
-  async function deleteEvent(id: string) {
-    if (!confirm('Delete this event? This cannot be undone.')) return;
-    setDeleting(id);
-    await supabase.from('events').delete().eq('id', id);
-    setEvents(e => e.filter(ev => ev.id !== id));
-    setDeleting(null);
-  }
-
-  async function togglePublish(ev: OrgEvent) {
-    const newStatus = ev.status === 'published' ? 'draft' : 'published';
-    await supabase.from('events').update({ status: newStatus }).eq('id', ev.id);
-    setEvents(evs => evs.map(e => e.id === ev.id ? { ...e, status: newStatus } : e));
-  }
-
-  // Stats
-  const totalRevenue  = events.flatMap(e => e.ticket_tiers).reduce((s, t) => s + (t.price * t.sold), 0);
-  const totalTickets  = events.flatMap(e => e.ticket_tiers).reduce((s, t) => s + t.sold, 0);
-  const publishedCount = events.filter(e => e.status === 'published').length;
-  const totalViews    = events.length * 0; // placeholder until views tracking added
+  const all = Object.values(stats);
+  const sold = all.reduce((n, s) => n + s.people, 0);
+  const revenue = all.reduce((n, s) => n + Number(s.revenue), 0);
+  const checked = all.reduce((n, s) => n + s.checked_in, 0);
+  const live = events.filter((e) => statusOf(e) === 'live');
+  const review = events.filter((e) => e.status === 'pending_review').length;
+  const lists = {
+    upcoming: live,
+    past: events.filter((e) => e.status === 'published' && isPast(e)).reverse(),
+    drafts: events.filter((e) => e.status !== 'published'),
+  };
+  const shown = lists[tab];
+  const first = (profile?.full_name || profile?.username || '').split(' ')[0];
 
   return (
-    <div style={{ background: 'transparent', minHeight: '100vh' }}>
-      <Nav active="Events" />
-      <div style={{ paddingTop: 62 }}>
+    <div style={{ minHeight: '100vh' }}>
+      <Nav active="Dashboard" />
+      <main style={{ maxWidth: 760, margin: '0 auto', padding: 'calc(88px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
+        <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Organiser</p>
+        <h1 style={{ margin: '4px 0 0', fontFamily: FONT.display, fontSize: 'clamp(32px, 7vw, 44px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, color: T.white }}>
+          {first ? `Hi ${first}` : 'Your events'}
+        </h1>
 
-        {/* Header */}
-        <div style={{ ...G.panel, borderBottom: `1px solid ${C.bd}`, padding: '28px 20px 24px' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-              <div>
-                <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ display: 'block', width: 16, height: 1, background: C.gold }} />
-                  Organizer Dashboard
-                </p>
-                <h1 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 28, fontWeight: 300, color: C.cream, letterSpacing: '-0.5px' }}>
-                  {profile?.full_name ?? 'Your Events'}
-                </h1>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexShrink: 1, minWidth: 0, flexWrap: 'wrap' }}>
-                <Link href="/organizer/events/from-link"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: C.gold, border: `1px solid ${C.goldBd}`, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, padding: '12px 18px', borderRadius: 8, textDecoration: 'none' }}>
-                  Add from link
-                </Link>
-              <Link href="/organizer/review"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: `1px solid ${C.goldBd}`, background: C.goldDim, color: C.gold, padding: '10px 14px', borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', textDecoration: 'none' }}>
-                Review queue
-              </Link>
-                <Link href="/organizer/events/new"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: C.gold, color: '#0D0B08', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, padding: '12px 20px', borderRadius: 8, textDecoration: 'none' }}>
-                  <Plus size={14} /> Create Event
-                </Link>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginTop: 24 }}>
-              {[
-                { icon: Ticket,    label: 'Tickets Sold',    value: totalTickets,                   color: C.gold  },
-                { icon: TrendingUp, label: 'Total Revenue',  value: `₵${totalRevenue.toLocaleString()}`, color: C.greenL },
-                { icon: Calendar,  label: 'Live Events',     value: publishedCount,                 color: C.gold  },
-                { icon: BarChart2, label: 'Total Events',    value: events.length,                  color: C.c2   },
-              ].map(({ icon: Icon, label, value, color }) => (
-                <div key={label} style={{ ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 12, padding: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <Icon size={14} style={{ color, flexShrink: 0 }} />
-                    <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>{label}</span>
-                  </div>
-                  <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 28, fontWeight: 400, color: C.cream, letterSpacing: '-1px', lineHeight: 1 }}>{value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 22 }}>
+          <Stat label="Tickets sold" value={sold.toLocaleString()} />
+          <Stat label="Money in" value={ghs(revenue)} note={revenue > 0 ? 'Before Paystack fees' : undefined} />
+          <Stat label="Checked in" value={checked.toLocaleString()} note={sold > 0 ? `${Math.round((checked / sold) * 100)}% of tickets` : undefined} />
+          <Stat label="Live events" value={String(live.length)} />
         </div>
 
-        {/* Events list */}
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px 80px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <h2 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 22, fontWeight: 400, color: C.cream }}>
-              Your Events
-            </h2>
-            <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, color: C.c3 }}>
-              {events.length} total
-            </span>
-          </div>
-
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '48px 0' }}>
-              <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3 }}>Loading…</p>
-            </div>
-          ) : events.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '64px 20px', ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 16 }}>
-              <Calendar size={40} style={{ color: C.c3, margin: '0 auto 16px', display: 'block', opacity: 0.4 }} />
-              <p style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 24, color: C.c2, marginBottom: 8 }}>No events yet</p>
-              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.c3, marginBottom: 24, maxWidth: 280, margin: '0 auto 24px', lineHeight: 1.6 }}>
-                Create your first event and start selling tickets to thousands of Ghanaians.
-              </p>
-              <Link href="/organizer/events/new"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: C.gold, color: '#0D0B08', fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, padding: '13px 24px', borderRadius: 8, textDecoration: 'none' }}>
-                <Plus size={14} /> Create First Event
-              </Link>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {events.map(ev => {
-                const totalSold     = ev.ticket_tiers.reduce((s, t) => s + t.sold, 0);
-                const totalCapacity = ev.ticket_tiers.reduce((s, t) => s + t.quantity, 0);
-                const revenue       = ev.ticket_tiers.reduce((s, t) => s + (t.price * t.sold), 0);
-                const pct           = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
-
-                return (
-                  <div key={ev.id} style={{ ...G.panel, border: `1px solid ${ev.status === 'published' ? C.goldBd : C.bd}`, borderRadius: 14, overflow: 'hidden' }}>
-                    {ev.status === 'published' && (
-                      <div style={{ height: 2, background: C.gold }} />
-                    )}
-                    <div style={{ display: 'flex', gap: 0 }}>
-                      {/* Image */}
-                      <div style={{ width: 90, flexShrink: 0, backgroundImage: ev.image_url ? `url(${ev.image_url})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', background: ev.image_url ? undefined : C.bg3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {!ev.image_url && <Calendar size={20} style={{ color: C.c3, opacity: 0.4 }} />}
-                      </div>
-
-                      <div style={{ flex: 1, padding: '16px 18px', minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                              <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 6, background: ev.status === 'published' ? C.greenDim : C.c4, color: ev.status === 'published' ? C.greenL : C.c3, border: `1px solid ${ev.status === 'published' ? C.greenBd : C.bd}` }}>
-                                {ev.status === 'published' ? '● Live' : '○ Draft'}
-                              </span>
-                              <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', color: C.c3 }}>{ev.category}</span>
-                            </div>
-                            <h3 style={{ fontFamily: 'var(--font-display), sans-serif', fontSize: 18, fontWeight: 400, color: C.cream, lineHeight: 1.2, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {ev.title}
-                            </h3>
-                            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3 }}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={10} style={{ color: C.gold }} />{ev.date_label || ev.date}</span>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={10} style={{ color: C.gold }} />{ev.venue}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Sales stats */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 14 }}>
-                          {[
-                            { label: 'Sold',    value: totalSold    },
-                            { label: 'Revenue', value: `₵${revenue.toLocaleString()}` },
-                            { label: 'Fill',    value: `${pct}%`    },
-                          ].map(stat => (
-                            <div key={stat.label} style={{ ...G.raised, borderRadius: 8, padding: '8px 10px' }}>
-                              <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3, marginBottom: 3 }}>{stat.label}</p>
-                              <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 14, color: C.cream, letterSpacing: '-0.5px' }}>{stat.value}</p>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Progress bar */}
-                        {totalCapacity > 0 && (
-                          <div style={{ height: 3, background: C.bd, borderRadius: 2, marginBottom: 14, overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${pct}%`, background: pct > 80 ? C.red : pct > 50 ? C.gold : C.green, borderRadius: 2, transition: 'width 600ms ease' }} />
-                          </div>
-                        )}
-
-                        {/* Actions */}
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                          <button
-                            onClick={() => togglePublish(ev)}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${ev.status === 'published' ? C.bd : C.goldBd}`, background: ev.status === 'published' ? 'transparent' : C.goldDim, color: ev.status === 'published' ? C.c3 : C.gold, padding: '8px 14px', borderRadius: 6, cursor: 'pointer', transition: 'all 180ms' }}>
-                            {ev.status === 'published' ? <><Clock size={11} /> Unpublish</> : <><CheckCircle size={11} /> Publish</>}
-                          </button>
-                          <Link href={`/organizer/events/${ev.id}`}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, background: 'transparent', color: C.c2, padding: '8px 14px', borderRadius: 6, textDecoration: 'none' }}>
-                            <Edit size={11} /> Edit
-                          </Link>
-                          {ev.status === 'published' && (
-                            <Link href={`/events/${ev.slug}`}
-                              style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${C.bd}`, background: 'transparent', color: C.c2, padding: '8px 14px', borderRadius: 6, textDecoration: 'none' }}>
-                              <Eye size={11} /> View
-                            </Link>
-                          )}
-                          <button
-                            onClick={() => deleteEvent(ev.id)}
-                            disabled={deleting === ev.id}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: '1px solid rgba(206,17,38,0.2)', background: 'transparent', color: 'rgba(206,17,38,0.6)', padding: '8px 14px', borderRadius: 6, cursor: 'pointer', marginLeft: 'auto' }}>
-                            <Trash2 size={11} /> {deleting === ev.id ? '…' : 'Delete'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, marginTop: 14 }}>
+          <QuickAction primary href="/organizer/events/new" icon={<Plus size={22} strokeWidth={2.2} />} label="Create event" />
+          <QuickAction href="/organizer/scan" icon={<ScanLine size={22} strokeWidth={2} />} label="Scan tickets" />
+          <QuickAction href="/organizer/events/from-link" icon={<Link2 size={22} strokeWidth={2} />} label="Add from a link" />
+          <QuickAction href="/organizer/review" icon={<Inbox size={22} strokeWidth={2} />} label="Review queue" badge={review} />
         </div>
-      </div>
+
+        <div role="tablist" aria-label="Your events" style={{ display: 'inline-flex', marginTop: 30, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          {(['upcoming', 'past', 'drafts'] as const).map((k) => (
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 38, padding: '0 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: tab === k ? T.white : 'transparent', color: tab === k ? T.onMint : T.text2 }}>
+              {k === 'upcoming' ? 'Upcoming' : k === 'past' ? 'Past' : 'Drafts & review'}{lists[k].length ? ` · ${lists[k].length}` : ''}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
+          {loading ? [0, 1, 2].map((i) => <div key={i} style={{ ...card, height: 96 }} />)
+            : shown.length ? shown.map((ev) => <EventRow key={ev.id} ev={ev} st={stats[ev.id]} />)
+            : (
+              <div style={{ ...card, padding: '36px 20px', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 19, fontWeight: 700, color: T.white }}>{tab === 'upcoming' ? 'No live events' : tab === 'past' ? 'No past events yet' : 'No drafts'}</p>
+                <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Create an event to sell tickets with MoMo and card, or add one from a link.</p>
+              </div>
+            )}
+        </div>
+      </main>
       <Footer />
     </div>
   );
