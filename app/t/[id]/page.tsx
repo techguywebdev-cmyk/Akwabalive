@@ -22,7 +22,7 @@ const time = (iso?: string | null) => (iso ? new Date(iso).toLocaleTimeString('e
  * organiser (signed in) gets a button to check it in, once.
  */
 export default function TicketScanPage({ params, searchParams }: { params: { id: string }; searchParams: { k?: string } }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const supabase = useMemo(() => createClient(), []);
   const [v, setV] = useState<Verify | null>(null);
   const [busy, setBusy] = useState(false);
@@ -87,6 +87,11 @@ export default function TicketScanPage({ params, searchParams }: { params: { id:
         )}
         {v?.valid && !v.can_check_in && !user && (
           <Link href={`/auth?next=${encodeURIComponent(`/t/${params.id}?k=${searchParams.k ?? ''}`)}`} style={{ ...BTN.secondary, width: '100%', marginTop: 20, boxSizing: 'border-box' }}>Organiser? Sign in to check in</Link>
+        )}
+        {v?.valid && !v.can_check_in && user && (
+          <p style={{ margin: '18px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2 }}>
+            Signed in as @{profile?.username ?? 'you'}. Only the event’s organiser can check tickets in.
+          </p>
         )}
         {msg && <p role="alert" style={{ margin: '14px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.danger }}>{msg}</p>}
       </main>
