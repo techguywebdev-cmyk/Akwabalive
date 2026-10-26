@@ -61,7 +61,7 @@ export default function ArtistPhotoSheet({ slug, name, current, onClose, onSaved
     onSaved({ url, credit: row.photo_credit, license: null, sourceUrl: null, source: 'upload' });
   }
 
-  /** Drop the uploaded photo; the free Wikimedia photo (if any) is looked up again on the next visit */
+  /** Drop the uploaded photo; the automatic one (Spotify, else Wikimedia) shows again */
   async function useFree() {
     setBusy(true); setErr('');
     const { error } = await supabase.from('artist_profiles').upsert({ slug, photo_url: null, photo_credit: null, photo_license: null, photo_source_url: null, photo_source: null, checked_at: null, updated_at: new Date().toISOString() });
@@ -103,7 +103,7 @@ export default function ArtistPhotoSheet({ slug, name, current, onClose, onSaved
         <button type="button" onClick={save} disabled={busy} style={{ ...BTN.primary, width: '100%', marginTop: 20, opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save photo'}</button>
         {current?.source === 'upload' && (
           <button type="button" onClick={useFree} disabled={busy} style={{ display: 'block', margin: '14px auto 0', padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.text2 }}>
-            Remove it and use the free Wikimedia photo
+            Remove it and use the automatic photo (Spotify or Wikimedia)
           </button>
         )}
       </div>
