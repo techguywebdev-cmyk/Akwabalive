@@ -63,7 +63,7 @@ export function HeaderIconButton({
  * and the profile/sign-in button. Phones also get a floating glass tab bar at the bottom.
  */
 export default function Nav({
-  active, actions, back, tabs = false,
+  active, actions, back, tabs = false, plain = false,
 }: {
   /** kept for older call sites */
   transparent?: boolean;
@@ -76,6 +76,8 @@ export default function Nav({
   back?: string;
   /** Show the bottom tab bar on phones */
   tabs?: boolean;
+  /** Pages with their own big title and search: no wordmark and no header search, just menu + profile */
+  plain?: boolean;
 }) {
   const { user, profile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -196,14 +198,14 @@ export default function Nav({
         </div>
 
         {/* Phones: wordmark on regular pages; none over full-screen flyers (feed, event pages) */}
-        {isMobile && !actions && (
+        {isMobile && !actions && !plain && (
           <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: 'calc(14px + env(safe-area-inset-top, 0px))', height: 44, display: 'flex', alignItems: 'center', pointerEvents: 'auto' }}>
             <Wordmark />
           </div>
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
-          {actions ?? <HeaderIconButton label="Search events" icon="search" href="/events?search=1" />}
+          {actions ?? (plain ? null : <HeaderIconButton label="Search events" icon="search" href="/events?search=1" />)}
           {(!isMobile || !actions) && avatar}
         </div>
       </header>

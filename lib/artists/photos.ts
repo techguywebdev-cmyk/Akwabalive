@@ -17,6 +17,7 @@ type Row = {
   slug: string; photo_url: string | null; photo_credit: string | null; photo_license: string | null;
   photo_source_url: string | null; photo_source: 'wikimedia' | 'upload' | null; checked_at: string | null;
   spotify_id?: string | null; spotify_url?: string | null; spotify_image?: string | null; spotify_checked_at?: string | null;
+  spotify_followers?: number | null; spotify_popularity?: number | null;
 };
 
 const noStore = { global: { fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, { ...init, cache: 'no-store' }) } };
@@ -160,7 +161,7 @@ async function refreshSpotify(db: SupabaseClient, artists: Artist[], bySlug: Map
   const stamp = new Date().toISOString();
   const updates = stale.filter((a) => found.has(a.slug)).map((a) => {
     const s = found.get(a.slug);
-    return { slug: a.slug, spotify_id: s?.id ?? null, spotify_url: s?.url ?? null, spotify_image: s?.image ?? null, spotify_checked_at: stamp };
+    return { slug: a.slug, spotify_id: s?.id ?? null, spotify_url: s?.url ?? null, spotify_image: s?.image ?? null, spotify_followers: s?.followers ?? null, spotify_popularity: s?.popularity ?? null, spotify_checked_at: stamp };
   });
   const { error } = await db.from('artist_profiles').upsert(updates.map((u) => ({ ...u, updated_at: stamp })));
   if (error) { console.warn('[artist photos] spotify save failed', error.message); return; }
@@ -169,19 +170,26 @@ async function refreshSpotify(db: SupabaseClient, artists: Artist[], bySlug: Map
 }
 
 /** Re-check artists not looked up in the last week (uploaded photos are never replaced) */
-async function refreshStale(artists: Artist[], rows: Row[], ms: number): Promise<Row[]> {
+async function refreshStale(artists: Artist[], rows: Row[], ms: number, spotify = true): Promise<Row[]> {
   const db = admin();
   if (!db) { console.warn('[artist photos] no service role key'); return rows; }
   const bySlug = new Map(rows.map((r) => [r.slug, r]));
-  await Promise.all([refreshWikimedia(db, artists, bySlug, ms), refreshSpotify(db, artists, bySlug, ms)]);
+  await Promise.all([refreshWikimedia(db, artists, bySlug, ms), spotify ? refreshSpotify(db, artists, bySlug, ms) : Promise.resolve()]);
   return Array.from(bySlug.values());
 }
 
+/** Spotify followers per artist slug (for ordering by popularity); reads what's stored, no lookups */
+export async function getArtistFollowers(): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+  for (const r of await readRows()) if (r.spotify_followers != null) out[r.slug] = r.spotify_followers;
+  return out;
+}
+
 /** Photos for these artists, refreshing stale Wikimedia lookups first (bounded by `ms`) */
-export async function getArtistPhotos(artists: Artist[], ms = 3000): Promise<Record<string, ArtistPhoto>> {
+export async function getArtistPhotos(artists: Artist[], ms = 3000, opts: { spotify?: boolean } = {}): Promise<Record<string, ArtistPhoto>> {
   let rows = await readRows();
   try {
-    rows = await Promise.race([refreshStale(artists, rows, ms), new Promise<Row[]>((res) => setTimeout(() => res(rows), ms * 2 + 500))]);
+    rows = await Promise.race([refreshStale(artists, rows, ms, opts.spotify !== false), new Promise<Row[]>((res) => setTimeout(() => res(rows), ms * 2 + 500))]);
   } catch { /* keep what we have */ }
   const out: Record<string, ArtistPhoto> = {};
   for (const r of rows) { const p = toPhoto(r); if (p) out[r.slug] = p; }

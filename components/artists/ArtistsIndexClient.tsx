@@ -7,7 +7,7 @@ import Nav from '@/components/layout/Nav';
 import type { ArtistGenre } from '@/lib/types';
 import { parseDay, shortDay } from '@/lib/dates';
 import { useMyFollows } from '@/components/follow/useFollow';
-import { Portrait, SectionTitle, type SeriesSummary } from '@/components/artists/parts';
+import { Portrait, SectionTitle } from '@/components/artists/parts';
 import { T, FONT, GROUND } from '@/lib/thiscene';
 
 export type ArtistCard = {
@@ -15,6 +15,8 @@ export type ArtistCard = {
   nextDate: string | null; nextTitle: string | null; image: string | null;
   /** The artist's own photo, when we have one */
   photo: string | null;
+  /** Spotify followers (popularity), when known */
+  fans: number | null;
 };
 
 const GENRES: ArtistGenre[] = ['Afrobeats', 'Hip-hop', 'Highlife', 'Dancehall', 'Alté', 'Gospel', 'DJ'];
@@ -44,7 +46,7 @@ function ArtistTile({ a, size }: { a: ArtistCard; size: number | string }) {
 
 const rail: React.CSSProperties = { display: 'flex', gap: 16, overflowX: 'auto', margin: '0 -20px', padding: '6px 20px 4px' };
 
-export default function ArtistsIndexClient({ artists, series = [] }: { artists: ArtistCard[]; series?: SeriesSummary[] }) {
+export default function ArtistsIndexClient({ artists }: { artists: ArtistCard[] }) {
   const [q, setQ] = useState('');
   const [genre, setGenre] = useState<ArtistGenre | null>(null);
   const mine = useMyFollows('artist');
@@ -52,14 +54,17 @@ export default function ArtistsIndexClient({ artists, series = [] }: { artists: 
   const query = q.trim().toLowerCase();
   const filtered = useMemo(() => artists.filter((a) => (!genre || a.genre === genre) && (!query || a.name.toLowerCase().includes(query))), [artists, genre, query]);
   const touring = filtered.filter((a) => a.upcoming > 0);
-  const az = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+  // Most popular first (Spotify followers), then our own ranking for anyone without a count
+  const byPopularity = (a: ArtistCard, b: ArtistCard) =>
+    (b.fans ?? -1) - (a.fans ?? -1) || a.priority - b.priority;
+  const az = [...filtered].sort(byPopularity);
   const yours = artists.filter((a) => mine.includes(a.slug));
   const genresHere = GENRES.filter((g) => artists.some((a) => a.genre === g));
   const browsing = !query && !genre;
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
-      <Nav active="Artists" tabs />
+      <Nav active="Artists" tabs plain />
       <main style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(80px + env(safe-area-inset-top, 0px)) 20px 120px' }}>
         <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 44, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, color: T.white }}>Artists</h1>
         <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.5, color: T.text2 }}>Follow the acts and the shows you never want to miss.</p>
@@ -104,7 +109,7 @@ export default function ArtistsIndexClient({ artists, series = [] }: { artists: 
         )}
 
         <section style={{ marginTop: 36 }}>
-          <SectionTitle>{query ? `Results for “${q.trim()}”` : genre ?? 'All artists'}</SectionTitle>
+          <SectionTitle>{query ? `Results for “${q.trim()}”` : genre ? `Top ${genre}` : 'Most popular'}</SectionTitle>
           {az.length ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '24px 14px' }}>
               {az.map((a) => <ArtistTile key={a.slug} a={a} size="100%" />)}

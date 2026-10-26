@@ -3,7 +3,7 @@ import ArtistPageClient, { type SimilarArtist } from '@/components/artists/Artis
 import { artists, getArtistBySlug, eventMatchesArtist } from '@/lib/data/artists';
 import { loadAllEvents } from '@/lib/data/allEvents';
 import { seriesForArtist } from '@/lib/data/series';
-import { summarizeSeries } from '@/lib/data/seriesSummary';
+import { summarizeSeries, seriesCovers } from '@/lib/data/seriesSummary';
 import { BRAND_NAME } from '@/lib/theme';
 import { momentsForArtist } from '@/lib/moments/matchArtist';
 import { fetchMoments } from '@/lib/moments/server';
@@ -33,7 +33,8 @@ export default async function ArtistPage({ params }: { params: { slug: string } 
     .filter((e) => eventMatchesArtist(e, artist))
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
   const moments = momentsForArtist(allMoments, artist, events);
-  const hosted = summarizeSeries(seriesForArtist(artist.slug), events);
+  const mySeries = seriesForArtist(artist.slug);
+  const hosted = summarizeSeries(mySeries, events, mySeries.length ? await seriesCovers(events, allMoments) : {});
 
   // Fans also like: acts they've shared a bill with first, then the same genre
   const coBilled = new Set(artists.filter((a) => a.slug !== artist.slug && matched.some((e) => eventMatchesArtist(e, a))).map((a) => a.slug));

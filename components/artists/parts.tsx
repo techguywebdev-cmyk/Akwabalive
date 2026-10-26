@@ -173,7 +173,7 @@ export function SeriesRow({ s, rating }: { s: SeriesSummary; rating?: RatingSumm
       <span style={{ width: 58, height: 58, borderRadius: 16, overflow: 'hidden', flexShrink: 0, background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 75%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {s.image
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={hiRes(s.image, 240) ?? s.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          ? <img src={hiRes(s.image, 240) ?? s.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={(e) => { const i = e.currentTarget; if (i.src.includes('/hq720.jpg')) i.src = i.src.replace('/hq720.jpg', '/hqdefault.jpg'); }} />
           : <span style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 800, color: 'rgba(214,251,230,0.55)' }}>{initials(s.name)}</span>}
       </span>
       <span style={{ minWidth: 0, flex: 1 }}>

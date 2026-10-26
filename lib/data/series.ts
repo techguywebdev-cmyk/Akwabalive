@@ -16,6 +16,8 @@ export interface EventSeries {
   /** When / where it usually happens */
   usually: string;
   blurb: string;
+  /** Wikipedia article, for a free cover photo when we have no flyer */
+  wiki?: string;
 }
 
 export const SERIES: EventSeries[] = [
@@ -23,9 +25,9 @@ export const SERIES: EventSeries[] = [
     blurb: 'Sarkodie’s yearly concert — one of the biggest nights in Ghanaian music, with surprise guests every edition.' },
   { slug: 'detty-rave', name: 'Detty Rave', keywords: ['detty rave'], hosts: ['mr-eazi'], usually: 'Every December · Accra',
     blurb: 'Mr Eazi’s December festival: Afrobeats, amapiano and the Choplife Soundsystem, running deep into the night.' },
-  { slug: 'tidal-rave', name: 'Tidal Rave', keywords: ['tidal rave'], hosts: [], organiser: 'Echo House', usually: 'Kokrobite Beach',
+  { slug: 'tidal-rave', name: 'Tidal Rave', keywords: ['tidal rave'], hosts: [], organiser: 'Echo House', usually: 'Kokrobite Beach', wiki: 'Tidal Rave Festival',
     blurb: 'The beach festival at Kokrobite: big Ghanaian line-ups, sand, sea and a crowd that doesn’t sleep.' },
-  { slug: 'afro-future', name: 'AfroFuture', keywords: ['afro future', 'afrofuture', 'afrochella'], hosts: [], usually: 'Every December · Accra',
+  { slug: 'afro-future', name: 'AfroFuture', keywords: ['afro future', 'afrofuture', 'afrochella'], hosts: [], usually: 'Every December · Accra', wiki: 'Afrochella',
     blurb: 'Accra’s December culture festival (formerly Afrochella): music, fashion, art and food from across the diaspora.' },
   { slug: 'bhim-concert', name: 'Bhim Concert', keywords: ['bhim concert'], hosts: ['stonebwoy'], usually: 'Accra',
     blurb: 'Stonebwoy’s own concert, with the Bhim Nation out in full.' },
@@ -43,9 +45,13 @@ const re = (k: string) => new RegExp(`(?:^|[^a-z0-9])${k.toLowerCase().replace(/
 
 export const getSeries = (slug: string) => SERIES.find((s) => s.slug === slug);
 
+/** Travel packages and tours that mention a show aren't editions of it */
+const NOT_AN_EDITION = /\b(tour|tours|package|trip|itinerary|vacation|holiday)\b/i;
+
+/** An edition names the show in its title (descriptions mention other shows too often) */
 export function eventInSeries(e: Pick<GhanaEvent, 'title' | 'description'>, s: EventSeries): boolean {
-  const hay = [e.title, e.description].filter(Boolean).join(' ');
-  return s.keywords.some((k) => re(k).test(hay));
+  const t = e.title ?? '';
+  return !NOT_AN_EDITION.test(t) && s.keywords.some((k) => re(k).test(t));
 }
 
 export const seriesForEvent = (e: Pick<GhanaEvent, 'title' | 'description'>) => SERIES.find((s) => eventInSeries(e, s));
