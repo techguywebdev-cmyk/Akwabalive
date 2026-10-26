@@ -30,8 +30,9 @@ export const T = {
 
 /** The base every screen sits on: deep green glows fading into black. */
 export const GROUND =
-  'radial-gradient(120% 55% at 15% 0%, rgba(15,61,42,0.85) 0%, rgba(10,44,30,0.35) 45%, rgba(3,8,6,0) 75%), ' +
-  'radial-gradient(100% 45% at 100% 100%, rgba(9,40,27,0.7) 0%, rgba(3,8,6,0) 70%), #030806';
+  'radial-gradient(90% 45% at 10% 0%, rgba(30,110,72,0.55) 0%, rgba(30,110,72,0) 70%), ' +
+  'radial-gradient(80% 40% at 100% 100%, rgba(20,84,55,0.5) 0%, rgba(20,84,55,0) 70%), ' +
+  'linear-gradient(180deg, #0D2E1F 0%, #082015 38%, #05130C 70%, #030806 100%)';
 
 /** Accent palette (tokens accent-*). Gold is the default. */
 export const ACCENTS = {
