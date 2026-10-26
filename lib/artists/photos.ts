@@ -34,7 +34,9 @@ const toPhoto = (r: Row): ArtistPhoto | null => {
   const spotifyUrl = r.spotify_url ?? null;
   if (r.photo_source === 'upload' && r.photo_url)
     return { url: r.photo_url, credit: r.photo_credit, license: null, sourceUrl: null, source: 'upload', spotifyUrl };
-  if (r.spotify_image)
+  // Spotify's artist image is sometimes just an album cover (…/ab67616d…); prefer a real Wikimedia photo then
+  const albumArt = !!r.spotify_image && r.spotify_image.includes('/ab67616d');
+  if (r.spotify_image && !(albumArt && r.photo_source === 'wikimedia' && r.photo_url))
     return { url: r.spotify_image, credit: 'Spotify', license: null, sourceUrl: spotifyUrl, source: 'spotify', spotifyUrl };
   if (r.photo_source === 'wikimedia' && r.photo_url)
     return { url: r.photo_url, credit: r.photo_credit, license: r.photo_license, sourceUrl: r.photo_source_url, source: 'wikimedia', spotifyUrl };
