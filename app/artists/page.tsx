@@ -4,6 +4,8 @@ import { loadAllEvents } from '@/lib/data/allEvents';
 import { parseDay } from '@/lib/dates';
 import { getArtistPhotos } from '@/lib/artists/photos';
 import { BRAND_NAME } from '@/lib/theme';
+import { SERIES } from '@/lib/data/series';
+import { summarizeSeries } from '@/lib/data/seriesSummary';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -25,7 +27,7 @@ export default async function ArtistsPage() {
     const next = upcoming[0]?.e;
     const latest = next ?? shows.sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
     return {
-      slug: artist.slug, name: artist.name, priority: artist.priority,
+      slug: artist.slug, name: artist.name, priority: artist.priority, genre: artist.genre ?? null,
       upcoming: upcoming.length,
       nextDate: next?.date ?? null, nextTitle: next?.title ?? null,
       image: latest?.image ?? null,
@@ -39,5 +41,11 @@ export default async function ArtistsPage() {
     || String(a.nextDate ?? '').localeCompare(String(b.nextDate ?? ''))
     || a.priority - b.priority);
 
-  return <ArtistsIndexClient artists={cards} />;
+  // Series with a date first (soonest first), then the rest in list order
+  const series = summarizeSeries(SERIES, events)
+    .map((x, i) => ({ x, i }))
+    .sort((a, b) => (a.x.nextDate ? 0 : 1) - (b.x.nextDate ? 0 : 1) || String(a.x.nextDate ?? '').localeCompare(String(b.x.nextDate ?? '')) || a.i - b.i)
+    .map(({ x }) => x);
+
+  return <ArtistsIndexClient artists={cards} series={series} />;
 }
