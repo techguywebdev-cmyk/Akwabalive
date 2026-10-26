@@ -44,6 +44,14 @@ const roundBtn: React.CSSProperties = {
   background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: T.white, cursor: 'pointer', textDecoration: 'none',
 };
 
+function SpotifyLogo({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden fill="currentColor">
+      <path d="M12 1.5a10.5 10.5 0 1 0 0 21 10.5 10.5 0 0 0 0-21zm4.82 15.15a.66.66 0 0 1-.9.22c-2.48-1.51-5.6-1.85-9.27-1.01a.65.65 0 1 1-.29-1.28c4.02-.92 7.47-.52 10.24 1.17.31.19.41.59.22.9zm1.29-2.86a.82.82 0 0 1-1.13.27c-2.83-1.74-7.15-2.25-10.5-1.23a.82.82 0 0 1-.48-1.57c3.83-1.16 8.59-.6 11.84 1.4.39.24.51.75.27 1.13zm.11-2.98C14.82 8.79 9.2 8.6 5.95 9.59a.98.98 0 1 1-.57-1.88c3.73-1.13 9.94-.91 13.85 1.41a.98.98 0 0 1-1.01 1.69z" />
+    </svg>
+  );
+}
+
 function XLogo({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden fill="currentColor">
@@ -184,6 +192,9 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
             <button type="button" onClick={toggleFollow} disabled={busy} style={{ ...(following ? BTN.secondary : BTN.primary), flex: 1, height: 46 }}>
               {following ? <><Check size={17} /> Following</> : 'Follow'}
             </button>
+            {photo?.spotifyUrl && (
+              <a href={photo.spotifyUrl} target="_blank" rel="noopener noreferrer" aria-label={`Listen to ${artist.name} on Spotify`} title="Listen on Spotify" style={{ ...roundBtn, color: '#1ED760' }}><SpotifyLogo size={20} /></a>
+            )}
             {artist.instagram && (
               <a href={`https://instagram.com/${artist.instagram}`} target="_blank" rel="noopener noreferrer" aria-label={`${artist.name} on Instagram`} style={roundBtn}><Instagram size={19} /></a>
             )}
@@ -194,14 +205,18 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
               <button type="button" onClick={() => setPhotoSheet(true)} aria-label="Change photo" title="Change photo" style={roundBtn}><Camera size={18} /></button>
             )}
           </div>
-          {photo && (photo.credit || photo.license) && (
+          {photo && (photo.source === 'spotify' ? (
+            <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 11, lineHeight: 1.4, color: T.text3 }}>
+              Photo: <a href={photo.sourceUrl ?? '#'} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>Spotify</a>
+            </p>
+          ) : (photo.credit || photo.license) && (
             <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 11, lineHeight: 1.4, color: T.text3 }}>
               Photo{photo.credit ? `: ${photo.credit.length > 60 ? `${photo.credit.slice(0, 58)}…` : photo.credit}` : ''}
               {photo.license && <> · {photo.sourceUrl
                 ? <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>{photo.license}, via Wikimedia Commons</a>
                 : photo.license}</>}
             </p>
-          )}
+          ))}
         </div>
       </header>
 
