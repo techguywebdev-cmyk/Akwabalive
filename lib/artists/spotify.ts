@@ -4,7 +4,7 @@
  * Spotify's terms let us show artist images as long as we credit and link back to Spotify.
  */
 
-export type SpotifyArtist = { id: string; url: string; image: string | null };
+export type SpotifyArtist = { id: string; url: string; image: string | null; followers: number | null; popularity: number | null };
 
 let token: { value: string; expires: number } | null = null;
 
@@ -30,13 +30,13 @@ async function findOne(name: string, auth: string, signal: AbortSignal): Promise
   const q = encodeURIComponent(`artist:"${name}"`);
   const r = await fetch(`https://api.spotify.com/v1/search?type=artist&limit=10&q=${q}`, { headers: { Authorization: `Bearer ${auth}` }, signal, cache: 'no-store' });
   if (!r.ok) { console.warn('[spotify] search failed', r.status, name); return null; }
-  const items: Array<{ id: string; name: string; external_urls?: { spotify?: string }; images?: { url: string; width?: number }[]; followers?: { total?: number } }> =
+  const items: Array<{ id: string; name: string; external_urls?: { spotify?: string }; images?: { url: string; width?: number }[]; followers?: { total?: number }; popularity?: number }> =
     (await r.json())?.artists?.items ?? [];
   const exact = items.filter((a) => norm(a.name) === norm(name)).sort((a, b) => (b.followers?.total ?? 0) - (a.followers?.total ?? 0));
   const a = exact[0];
   if (!a) return null;
   const img = [...(a.images ?? [])].sort((x, y) => (y.width ?? 0) - (x.width ?? 0))[0];
-  return { id: a.id, url: a.external_urls?.spotify ?? `https://open.spotify.com/artist/${a.id}`, image: img?.url ?? null };
+  return { id: a.id, url: a.external_urls?.spotify ?? `https://open.spotify.com/artist/${a.id}`, image: img?.url ?? null, followers: a.followers?.total ?? null, popularity: a.popularity ?? null };
 }
 
 /** Look up several artists by name. Returns null when Spotify isn't set up or the lookup failed. */

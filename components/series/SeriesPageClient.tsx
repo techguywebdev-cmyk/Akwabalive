@@ -19,8 +19,8 @@ import { ScoreChip } from '@/components/ratings/Stars';
 type Host = { slug: string; name: string; photo: string | null };
 
 /** A show that comes back every year: next edition, past editions, moments, and a Follow button */
-export default function SeriesPageClient({ series, upcoming, past, moments, hosts }: {
-  series: EventSeries; upcoming: GhanaEvent[]; past: GhanaEvent[]; moments: Moment[]; hosts: Host[];
+export default function SeriesPageClient({ series, upcoming, past, moments, hosts, cover: coverImage = null }: {
+  series: EventSeries; upcoming: GhanaEvent[]; past: GhanaEvent[]; moments: Moment[]; hosts: Host[]; cover?: string | null;
 }) {
   const { following, count, busy, toggle } = useFollow('series', series.slug);
   const [viewer, setViewer] = useState<number | null>(null);
@@ -29,7 +29,7 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
   const ratings = useRatingSummaries(past.map((e) => e.slug));
   const rated = past.map((e) => ratings[e.slug]).filter(Boolean);
   const lastRated = past.find((e) => ratings[e.slug]);
-  const cover = (next ?? past[0])?.image;
+  const cover = (next ?? past[0])?.image ?? coverImage;
 
   async function share() {
     const url = `${window.location.origin}/shows/${series.slug}`;
