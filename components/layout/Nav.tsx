@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { T, FONT } from '@/lib/thiscene';
 import { Icon, PAGE_ICONS, type IconName } from '@/components/ui/Icon';
-import Wordmark, { BrandGlyph } from '@/components/brand/Wordmark';
+import Wordmark from '@/components/brand/Wordmark';
 
 /** Main sections. On phones they live in the bottom tab bar; on desktop, in the header. */
 const SECTIONS: { href: string; label: string; icon: IconName }[] = [
@@ -195,11 +195,10 @@ export default function Nav({
           )}
         </div>
 
-        {isMobile && (
+        {/* Phones: wordmark on regular pages; none over full-screen flyers (feed, event pages) */}
+        {isMobile && !actions && (
           <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: 'calc(14px + env(safe-area-inset-top, 0px))', height: 44, display: 'flex', alignItems: 'center', pointerEvents: 'auto' }}>
-            {actions
-              ? <Link href="/" aria-label="Akwaaba home" style={{ display: 'flex' }}><BrandGlyph size={28} /></Link>
-              : <Wordmark />}
+            <Wordmark />
           </div>
         )}
 
