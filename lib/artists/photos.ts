@@ -128,7 +128,8 @@ const isStale = (at: string | null | undefined, now: number) => !at || now - new
 /** Wikimedia: free photo + credit, for artists without an uploaded photo */
 async function refreshWikimedia(db: SupabaseClient, artists: Artist[], bySlug: Map<string, Row>, ms: number) {
   const now = Date.now();
-  const stale = artists.filter((a) => { const r = bySlug.get(a.slug); return r?.photo_source !== 'upload' && isStale(r?.checked_at, now); });
+  // At most 45 per visit (Wikipedia takes 50 titles a request); the rest are picked up next time
+  const stale = artists.filter((a) => { const r = bySlug.get(a.slug); return r?.photo_source !== 'upload' && isStale(r?.checked_at, now); }).slice(0, 45);
   if (!stale.length) return;
   const found = await lookupWikimedia(stale, ms);
   if (!found.size) return; // lookup failed or timed out: try again next visit
@@ -150,7 +151,7 @@ async function refreshWikimedia(db: SupabaseClient, artists: Artist[], bySlug: M
 async function refreshSpotify(db: SupabaseClient, artists: Artist[], bySlug: Map<string, Row>, ms: number) {
   if (!spotifyConfigured()) return;
   const now = Date.now();
-  const stale = artists.filter((a) => isStale(bySlug.get(a.slug)?.spotify_checked_at, now));
+  const stale = artists.filter((a) => isStale(bySlug.get(a.slug)?.spotify_checked_at, now)).slice(0, 30);
   if (!stale.length) return;
   const found = await lookupSpotify(stale.map((a) => ({ slug: a.slug, name: a.name })), ms);
   if (!found?.size) return;

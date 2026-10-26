@@ -148,6 +148,60 @@ export const artists: Artist[] = [
   { id: 'fancy-gadam', slug: 'fancy-gadam', wiki: 'Fancy Gadam', name: 'Fancy Gadam', image: '', isMajor: true, priority: 14, keywords: ['fancy gadam', 'gadam nation', 'gadam concert'] },
   { id: 'kweku-smoke', slug: 'kweku-smoke', wiki: 'Kweku Smoke', name: 'Kweku Smoke', image: '', isMajor: true, priority: 15, keywords: ['kweku smoke'] },
   { id: 'essumann', slug: 'essumann', wiki: 'Essumann', name: 'Essumann', image: '', isMajor: true, priority: 16, keywords: ['essumann'] },
+  // ── More acts that regularly headline or tour (Oct 2026) ──────────────
+  ...([
+    ['manifest', 'M.anifest', ['m.anifest', 'manifest gh'], 'M.anifest'],
+    ['kuami-eugene', 'Kuami Eugene', ['kuami eugene'], 'Kuami Eugene'],
+    ['kofi-kinaata', 'Kofi Kinaata', ['kofi kinaata', 'made in taadi'], 'Kofi Kinaata'],
+    ['amerado', 'Amerado', ['amerado'], 'Amerado'],
+    ['lasmid', 'Lasmid', ['lasmid'], 'Lasmid'],
+    ['king-paluta', 'King Paluta', ['king paluta'], 'King Paluta'],
+    ['kelvyn-boy', 'Kelvyn Boy', ['kelvyn boy', 'kelvynboy', 'kelvyn colt'], 'Kelvyn Boy'],
+    ['kwesi-arthur', 'Kwesi Arthur', ['kwesi arthur'], 'Kwesi Arthur'],
+    ['joey-b', 'Joey B', ['joey b'], 'Joey B'],
+    ['darkovibes', 'Darkovibes', ['darkovibes', 'darko vibes'], 'Darkovibes'],
+    ['kojo-antwi', 'Kojo Antwi', ['kojo antwi', 'music man kojo antwi'], 'Kojo Antwi'],
+    ['amakye-dede', 'Amakye Dede', ['amakye dede'], 'Amakye Dede'],
+    ['akwaboah', 'Akwaboah', ['akwaboah'], 'Akwaboah'],
+    ['bisa-kdei', 'Bisa Kdei', ['bisa kdei', 'bisa k’dei', "bisa k'dei"], "Bisa K'dei"],
+    ['samini', 'Samini', ['samini'], 'Samini'],
+    ['obrafour', 'Obrafour', ['obrafour'], 'Obrafour'],
+    ['okyeame-kwame', 'Okyeame Kwame', ['okyeame kwame'], 'Okyeame Kwame'],
+    ['reggie-rockstone', 'Reggie Rockstone', ['reggie rockstone'], 'Reggie Rockstone'],
+    ['edem', 'Edem', ['edem vrayo', 'vrayo'], 'Edem (rapper)'],
+    ['efya', 'Efya', ['efya'], 'Efya'],
+    ['becca', 'Becca', ['becca gh'], 'Becca (singer)'],
+    ['adina', 'Adina Thembi', ['adina thembi'], 'Adina Thembi'],
+    ['cina-soul', 'Cina Soul', ['cina soul'], 'Cina Soul'],
+    ['amaarae', 'Amaarae', ['amaarae'], 'Amaarae'],
+    ['moliy', 'Moliy', ['moliy'], 'Moliy'],
+    ['sister-deborah', 'Sister Deborah', ['sister deborah'], 'Sister Deborah'],
+    ['sista-afia', 'Sista Afia', ['sista afia'], 'Sista Afia'],
+    ['mzvee', 'MzVee', ['mzvee', 'mz vee'], 'MzVee'],
+    ['eno-barony', 'Eno Barony', ['eno barony'], 'Eno Barony'],
+    ['strongman', 'Strongman', ['strongman burner'], 'Strongman (rapper)'],
+    ['teephlow', 'Teephlow', ['teephlow'], 'Teephlow'],
+    ['kofi-mole', 'Kofi Mole', ['kofi mole'], 'Kofi Mole'],
+    ['kweku-flick', 'Kweku Flick', ['kweku flick'], 'Kweku Flick'],
+    ['yaw-tog', 'Yaw Tog', ['yaw tog'], 'Yaw Tog'],
+    ['oseikrom-sikanii', 'Oseikrom Sikanii', ['oseikrom sikanii'], 'Oseikrom Sikanii'],
+    ['pappy-kojo', 'Pappy Kojo', ['pappy kojo'], 'Pappy Kojo'],
+    ['mr-drew', 'Mr Drew', ['mr drew', 'mr. drew'], 'Mr Drew'],
+    ['krymi', 'Krymi', ['krymi'], 'Krymi'],
+    ['wiyaala', 'Wiyaala', ['wiyaala'], 'Wiyaala'],
+    ['kojo-cue', 'Kojo Cue', ['kojo cue'], 'Kojo Cue'],
+    ['article-wan', 'Article Wan', ['article wan'], 'Article Wan'],
+    ['dj-switch', 'DJ Switch', ['dj switch'], 'DJ Switch (Ghanaian DJ)'],
+    // Gospel — big concert draws
+    ['diana-hamilton', 'Diana Hamilton', ['diana hamilton'], 'Diana Hamilton'],
+    ['joe-mettle', 'Joe Mettle', ['joe mettle'], 'Joe Mettle'],
+    ['piesie-esther', 'Piesie Esther', ['piesie esther'], 'Piesie Esther'],
+    ['celestine-donkor', 'Celestine Donkor', ['celestine donkor'], 'Celestine Donkor'],
+    ['nacee', 'Nacee', ['nacee'], 'Nacee'],
+    ['mogmusic', 'MOGmusic', ['mogmusic', 'mog music'], 'MOGmusic'],
+  ] as const).map(([slug, name, keywords, wiki], i): Artist => ({
+    id: slug, slug, name, wiki, image: '', isMajor: true, priority: 20 + i, keywords: [...keywords],
+  })),
 ];
 
 export const majorArtists = artists
@@ -208,6 +262,9 @@ export function eventMatchesArtist(
   if (event.lineup?.length) {
     const lineupText = event.lineup.join(' · ').toLowerCase();
     if (keywords.some((k) => keywordInText(k, lineupText))) return true;
+    // A billed name that is exactly the artist's name (works for short or common names too)
+    const plain = (x: string) => x.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (event.lineup.some((n) => plain(n) === plain(artist.name))) return true;
   }
 
   // 3) Title / badge / description
