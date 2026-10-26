@@ -1,572 +1,191 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import {
-  ArrowLeft, CheckCircle, XCircle, Loader2, ExternalLink, Link2, AlertCircle,
-} from 'lucide-react';
+import { ArrowLeft, Check, Pencil, Clock, X, RefreshCw, ExternalLink, Link2, ChevronDown } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
-import { C, G } from '@/lib/theme';
+import { card, ghs } from '@/components/organizer/ui';
+import { parseDay, shortDay } from '@/lib/dates';
+import { hiRes } from '@/lib/events/image';
+import { T, FONT } from '@/lib/thiscene';
 
-type ReviewEvent = {
-  id: string;
-  title: string;
-  slug: string;
-  date: string;
-  date_label: string | null;
-  venue: string;
-  city: string;
-  status: string;
-  image_url: string | null;
-  source_url: string | null;
-  ticket_url: string | null;
-  ticket_source: string | null;
-  description: string | null;
-  created_at: string;
-  lineup: string[] | null;
-  artist_slugs: string[] | null;
+type Item = {
+  id: string; title: string; date: string; time: string | null; venue: string; city: string; image_url: string | null;
+  source_url: string | null; ticket_url: string | null; ticket_source: string | null; description: string | null;
+  ticket_tiers: { name: string; price: number; is_available: boolean | null }[];
 };
+
+const pill: React.CSSProperties = { height: 44, padding: '0 16px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: T.white };
+const mint: React.CSSProperties = { ...pill, background: T.mint, color: T.onMint, border: 'none' };
+
+function ReviewCard({ ev, busy, onApprove, onLater, onReject }: { ev: Item; busy: boolean; onApprove: () => void; onLater: () => void; onReject: () => void }) {
+  const [confirmReject, setConfirmReject] = useState(false);
+  const d = parseDay(ev.date);
+  const tiers = ev.ticket_tiers.filter((t) => t.is_available !== false).sort((a, b) => a.price - b.price);
+  const prices = tiers.length ? tiers.map((t) => `${t.name} ${t.price === 0 ? 'Free' : ghs(t.price)}`).join(' · ') : 'No prices found';
+  return (
+    <article style={{ ...card, padding: 14, display: 'flex', flexDirection: 'column', gap: 14, opacity: busy ? 0.5 : 1, transition: 'opacity 200ms ease' }}>
+      <div style={{ display: 'flex', gap: 14 }}>
+        <a href={ev.image_url ?? undefined} target="_blank" rel="noopener noreferrer" aria-label="Open flyer" style={{ width: 92, height: 115, flexShrink: 0, borderRadius: 14, overflow: 'hidden', background: '#06120C', display: 'block' }}>
+          {ev.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={hiRes(ev.image_url, 300) ?? ev.image_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          )}
+        </a>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
+          <span style={{ fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 600, color: T.mintText }}>{d ? shortDay(d) : ev.date}{ev.time && !/tba/i.test(ev.time) ? ` · ${ev.time.toLowerCase()}` : ''}</span>
+          <h3 style={{ margin: 0, fontFamily: FONT.display, fontSize: 17, fontWeight: 700, letterSpacing: '-0.015em', lineHeight: 1.2, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{ev.title}</h3>
+          <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.venue}</span>
+          <span style={{ fontFamily: FONT.sans, fontSize: 13, color: tiers.length ? 'rgba(255,255,255,0.85)' : T.text3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{prices}</span>
+          {(ev.source_url || ev.ticket_url) && (
+            <a href={ev.source_url || ev.ticket_url!} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 600, color: T.mintText, textDecoration: 'none' }}>
+              From {ev.ticket_source || 'source'} <ExternalLink size={13} />
+            </a>
+          )}
+        </div>
+      </div>
+      {ev.description && <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, lineHeight: 1.45, color: T.text2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{ev.description}</p>}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button type="button" disabled={busy} onClick={onApprove} style={{ ...mint, flex: 1 }}><Check size={17} strokeWidth={2.4} /> Approve</button>
+        <Link href={`/organizer/events/${ev.id}`} style={pill} aria-label="Edit before approving"><Pencil size={16} /></Link>
+        <button type="button" disabled={busy} onClick={onLater} style={pill} aria-label="Keep as draft" title="Keep as draft"><Clock size={16} /></button>
+        {confirmReject ? (
+          <button type="button" disabled={busy} onClick={onReject} onBlur={() => setConfirmReject(false)} autoFocus style={{ ...pill, background: 'rgba(255,107,107,0.16)', borderColor: 'rgba(255,107,107,0.5)', color: '#FF8A8A' }}>Delete it</button>
+        ) : (
+          <button type="button" disabled={busy} onClick={() => setConfirmReject(true)} style={pill} aria-label="Reject"><X size={17} /></button>
+        )}
+      </div>
+    </article>
+  );
+}
 
 export default function ReviewQueuePage() {
   const { user, loading: authLoading } = useAuth();
-  const supabase = createClient();
-
-  const [items, setItems] = useState<ReviewEvent[]>([]);
+  const supabase = useMemo(() => createClient(), []);
+  const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [note, setNote] = useState('');
-  const [bulkUrls, setBulkUrls] = useState('');
-  const [ingesting, setIngesting] = useState(false);
-  const [ingestLog, setIngestLog] = useState('');
+  const [busy, setBusy] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
-  const [importLog, setImportLog] = useState('');
+  const [note, setNote] = useState('');
+  const [error, setError] = useState('');
+  const [showLinks, setShowLinks] = useState(false);
+  const [links, setLinks] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  const token = async () => (await supabase.auth.getSession()).data.session?.access_token;
+
+  const load = useCallback(async () => {
+    if (!user) return;
+    const { data, error: e } = await supabase.from('events')
+      .select('id, title, date, time, venue, city, image_url, source_url, ticket_url, ticket_source, description, ticket_tiers(name, price, is_available)')
+      .eq('organizer_id', user.id).eq('status', 'pending_review').order('date', { ascending: true });
+    if (e) setError(e.message); else setItems((data ?? []) as Item[]);
+    setLoading(false);
+  }, [user, supabase]);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-      return;
-    }
+    if (!user) { window.location.href = `/auth?next=${encodeURIComponent('/organizer/review')}`; return; }
     load();
-  }, [user, authLoading]);
+  }, [user, authLoading, load]);
 
-  async function load() {
-    setLoading(true);
-    setError('');
-    // pending_review = suggested / needs human check before going public
-    const { data, error: err } = await supabase
-      .from('events')
-      .select(
-        'id, title, slug, date, date_label, venue, city, status, image_url, source_url, ticket_url, ticket_source, description, created_at, lineup, artist_slugs',
-      )
-      .eq('organizer_id', user!.id)
-      .eq('status', 'pending_review')
-      .order('created_at', { ascending: false });
+  const flash = (m: string) => { setNote(m); setTimeout(() => setNote(''), 4000); };
 
-    if (err) {
-      setError(
-        err.message.includes('pending_review')
-          ? 'Your events.status check may need pending_review allowed. Use Save for review from Import link.'
-          : err.message,
-      );
-      setItems([]);
-    } else {
-      setItems((data ?? []) as ReviewEvent[]);
-    }
-    setLoading(false);
+  async function setStatus(id: string, status: 'published' | 'draft', msg: string) {
+    setBusy(id); setError('');
+    const { error: e } = await supabase.from('events').update({ status }).eq('id', id).eq('organizer_id', user!.id);
+    setBusy(null);
+    if (e) setError(e.message); else { setItems((l) => l.filter((x) => x.id !== id)); flash(msg); }
   }
-
-  async function approve(id: string) {
-    setBusyId(id);
-    setError('');
-    const { error: err } = await supabase
-      .from('events')
-      .update({ status: 'published' })
-      .eq('id', id)
-      .eq('organizer_id', user!.id);
-    if (err) setError(err.message);
-    else {
-      setItems((list) => list.filter((e) => e.id !== id));
-      setNote('Published.');
-      setTimeout(() => setNote(''), 2000);
-    }
-    setBusyId(null);
-  }
-
   async function reject(id: string) {
-    if (!confirm('Remove this suggestion? This cannot be undone.')) return;
-    setBusyId(id);
-    setError('');
-    const { error: err } = await supabase
-      .from('events')
-      .delete()
-      .eq('id', id)
-      .eq('organizer_id', user!.id);
-    if (err) setError(err.message);
-    else setItems((list) => list.filter((e) => e.id !== id));
-    setBusyId(null);
+    setBusy(id); setError('');
+    const { error: e } = await supabase.from('events').delete().eq('id', id).eq('organizer_id', user!.id);
+    setBusy(null);
+    if (e) setError(e.message); else { setItems((l) => l.filter((x) => x.id !== id)); flash('Removed'); }
   }
-
-  async function keepDraft(id: string) {
-    setBusyId(id);
-    const { error: err } = await supabase
-      .from('events')
-      .update({ status: 'draft' })
-      .eq('id', id)
-      .eq('organizer_id', user!.id);
-    if (err) setError(err.message);
-    else setItems((list) => list.filter((e) => e.id !== id));
-    setBusyId(null);
+  async function approveAll() {
+    setError('');
+    const { error: e } = await supabase.from('events').update({ status: 'published' }).in('id', items.map((x) => x.id)).eq('organizer_id', user!.id);
+    if (e) setError(e.message); else { flash(`${items.length} events published`); setItems([]); }
+  }
+  async function importNow() {
+    setImporting(true); setError('');
+    try {
+      const t = await token();
+      const res = await fetch('/api/events/cron/import-events', { method: 'POST', headers: t ? { Authorization: `Bearer ${t}` } : {} });
+      const j = await res.json();
+      if (!res.ok || !j.ok) throw new Error(j.error || 'Import failed');
+      flash(j.added.length ? `${j.added.length} new event${j.added.length === 1 ? '' : 's'} found` : 'No new events right now. Checked again tomorrow morning.');
+      await load();
+    } catch (e: any) { setError(e.message); } finally { setImporting(false); }
+  }
+  async function addLinks() {
+    const urls = links.split(/\s+/).map((s) => s.trim()).filter((s) => /^https?:\/\//.test(s));
+    if (!urls.length) { setError('Paste at least one link starting with https://'); return; }
+    setAdding(true); setError('');
+    try {
+      const t = await token();
+      const res = await fetch('/api/events/ingest/suggest', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) }, body: JSON.stringify({ urls, forceReview: true }) });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || 'Could not read those links');
+      const ok = (j.results || []).filter((r: any) => r.ok).length;
+      flash(`${ok} of ${urls.length} link${urls.length === 1 ? '' : 's'} added`);
+      setLinks('');
+      await load();
+    } catch (e: any) { setError(e.message); } finally { setAdding(false); }
   }
 
   return (
-    <div style={{ background: 'transparent', minHeight: '100vh' }}>
-      <Nav active="Events" />
-      <div style={{ paddingTop: 62, maxWidth: 720, margin: '0 auto', padding: '24px 16px 80px' }}>
-        <Link
-          href="/organizer/dashboard"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            fontFamily: 'var(--font-inter), sans-serif',
-            fontSize: 10,
-            letterSpacing: '1.5px',
-            textTransform: 'uppercase',
-            color: C.c3,
-            textDecoration: 'none',
-            marginBottom: 20,
-          }}
-        >
-          <ArrowLeft size={12} /> Dashboard
-        </Link>
-
-        <p
-          style={{
-            fontFamily: 'var(--font-inter), sans-serif',
-            fontSize: 10,
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            color: C.gold,
-            marginBottom: 8,
-          }}
-        >
-          Review queue
-        </p>
-        <h1
-          style={{
-            fontFamily: 'var(--font-display), sans-serif',
-            fontSize: 32,
-            fontWeight: 400,
-            color: C.cream,
-            margin: '0 0 8px',
-          }}
-        >
-          Suggested events
-        </h1>
-        <p
-          style={{
-            fontFamily: 'var(--font-inter,sans-serif)',
-            fontSize: 14,
-            color: C.c2,
-            lineHeight: 1.5,
-            marginBottom: 24,
-          }}
-        >
-          Events found on ticket sites and links you imported land here. Approve to publish,
-          keep as draft, or reject.
+    <div style={{ minHeight: '100vh' }}>
+      <Nav active="Dashboard" back="/organizer/dashboard" />
+      <main style={{ maxWidth: 680, margin: '0 auto', padding: 'calc(88px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
+        <Link href="/organizer/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 14, color: T.text2, textDecoration: 'none' }}><ArrowLeft size={16} /> Dashboard</Link>
+        <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(30px, 7vw, 40px)', fontWeight: 800, letterSpacing: '-0.035em', color: T.white }}>Review queue</h1>
+        <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.5, color: T.text2 }}>
+          Events found on Egotickets, AllEvents and Eventbrite wait here. Nothing goes on the site until you approve it.
         </p>
 
-        {/* Ticket-site importer (runs daily by itself; this runs it now) */}
-        <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, padding: 16, marginBottom: 16 }}>
-          <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, marginBottom: 8 }}>
-            Import from ticket sites
-          </p>
-          <p style={{ fontSize: 13, color: C.c2, lineHeight: 1.5, marginBottom: 12 }}>
-            Every morning Akwaaba checks Egotickets, AllEvents and Eventbrite for new events in Ghana and
-            puts them here for you to approve. Run it now to fetch the latest.
-          </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              disabled={importing}
-              onClick={async () => {
-                setImporting(true); setImportLog(''); setError('');
-                try {
-                  const { data: session } = await supabase.auth.getSession();
-                  const token = session.session?.access_token;
-                  const res = await fetch('/api/events/cron/import-events', { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {} });
-                  const json = await res.json();
-                  if (!res.ok || !json.ok) throw new Error(json.error || 'Import failed');
-                  const found = (json.sources || []).map((x: any) => `${x.name}: ${x.found} listed${x.errors?.length ? ' (some pages failed)' : ''}`).join(' · ');
-                  setImportLog(`${json.added.length} new event${json.added.length === 1 ? '' : 's'} to review · ${json.duplicates} already in Akwaaba · ${json.skipped.length} skipped\n${found}`);
-                  await load();
-                } catch (e: any) {
-                  setError(e.message);
-                } finally {
-                  setImporting(false);
-                }
-              }}
-              style={{ background: C.gold, color: C.onAccent, border: 'none', borderRadius: 999, padding: '12px 18px', fontFamily: 'var(--font-inter), sans-serif', fontSize: 13, fontWeight: 700, cursor: importing ? 'wait' : 'pointer' }}
-            >
-              {importing ? 'Importing… (up to a minute)' : 'Import now'}
-            </button>
-            {items.length > 1 && (
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!confirm(`Publish all ${items.length} events in the queue?`)) return;
-                  const { error: err } = await supabase.from('events').update({ status: 'published' }).in('id', items.map((x) => x.id)).eq('organizer_id', user!.id);
-                  if (err) setError(err.message); else { setItems([]); setNote('All published.'); setTimeout(() => setNote(''), 2500); }
-                }}
-                style={{ background: 'transparent', color: C.cream, border: `1px solid ${C.bd}`, borderRadius: 999, padding: '12px 18px', fontFamily: 'var(--font-inter), sans-serif', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Approve all ({items.length})
-              </button>
+        <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
+          <button type="button" onClick={importNow} disabled={importing} style={mint}><RefreshCw size={17} className={importing ? 'animate-spin' : undefined} /> {importing ? 'Checking sites…' : 'Find new events'}</button>
+          {items.length > 1 && <button type="button" onClick={approveAll} style={pill}><Check size={17} /> Approve all {items.length}</button>}
+        </div>
+        {(note || error) && <p role={error ? 'alert' : 'status'} style={{ margin: '12px 0 0', padding: '10px 14px', borderRadius: 14, background: error ? 'rgba(255,138,138,0.12)' : 'rgba(123,227,168,0.12)', color: error ? T.danger : T.mintText, fontFamily: FONT.sans, fontSize: 14 }}>{error || note}</p>}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20 }}>
+          {loading ? [0, 1].map((i) => <div key={i} style={{ ...card, height: 200 }} />)
+            : items.length ? items.map((ev) => (
+              <ReviewCard key={ev.id} ev={ev} busy={busy === ev.id}
+                onApprove={() => setStatus(ev.id, 'published', 'Published')}
+                onLater={() => setStatus(ev.id, 'draft', 'Moved to drafts')}
+                onReject={() => reject(ev.id)} />
+            )) : (
+              <div style={{ ...card, padding: '40px 20px', textAlign: 'center' }}>
+                <span style={{ display: 'inline-flex', width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.12)', color: T.mint }}><Check size={28} /></span>
+                <p style={{ margin: '14px 0 0', fontFamily: FONT.display, fontSize: 20, fontWeight: 700, color: T.white }}>All caught up</p>
+                <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>New events from ticket sites arrive every morning.</p>
+              </div>
             )}
-          </div>
-          {importLog && <pre style={{ marginTop: 12, fontSize: 12, color: C.c2, whiteSpace: 'pre-wrap', fontFamily: 'var(--font-inter), sans-serif', lineHeight: 1.5 }}>{importLog}</pre>}
         </div>
 
-        <div style={{
-          ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14,
-          padding: 16, marginBottom: 24,
-        }}>
-          <p style={{
-            fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px',
-            textTransform: 'uppercase', color: C.gold, marginBottom: 8,
-          }}>
-            Auto-discovery feed
-          </p>
-          <p style={{ fontSize: 13, color: C.c2, lineHeight: 1.5, marginBottom: 12 }}>
-            Paste public announcement or ticket links (one per line). The system parses them,
-            scores confidence, and drops medium ones here for Approve. High confidence can
-            auto-publish when cron + env are configured.
-          </p>
-          <textarea
-            value={bulkUrls}
-            onChange={(e) => setBulkUrls(e.target.value)}
-            rows={4}
-            placeholder={"https://x.com/...\nhttps://www.eventbrite.com/..."}
-            style={{
-              width: '100%', boxSizing: 'border-box', ...G.raised,
-              border: `1px solid ${C.bd}`, borderRadius: 8, padding: 12,
-              color: C.cream, fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13,
-              marginBottom: 10, resize: 'vertical',
-            }}
-          />
-          <button
-            type="button"
-            disabled={ingesting || !bulkUrls.trim()}
-            onClick={async () => {
-              setIngesting(true);
-              setIngestLog('');
-              setError('');
-              try {
-                const { data: session } = await supabase.auth.getSession();
-                const token = session.session?.access_token;
-                const urls = bulkUrls.split(/\n/).map(s => s.trim()).filter(Boolean);
-                const res = await fetch('/api/ingest/suggest', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                  },
-                  body: JSON.stringify({ urls, forceReview: true }),
-                });
-                const json = await res.json();
-                if (!res.ok) throw new Error(json.error || 'Ingest failed');
-                const lines = (json.results || []).map((r: any) =>
-                  `${r.ok ? '✓' : '✗'} ${r.title || r.url} — ${r.decision || r.error || r.status}`
-                );
-                setIngestLog(lines.join('\n'));
-                setBulkUrls('');
-                await load();
-              } catch (e: any) {
-                setError(e.message);
-              } finally {
-                setIngesting(false);
-              }
-            }}
-            style={{
-              background: C.gold, color: C.onAccent, border: 'none', borderRadius: 8,
-              padding: '12px 16px', fontFamily: 'var(--font-inter), sans-serif',
-              fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase',
-              fontWeight: 700, cursor: ingesting ? 'wait' : 'pointer',
-            }}
-          >
-            {ingesting ? 'Processing…' : 'Ingest links into queue'}
+        {/* Paste links */}
+        <section style={{ ...card, marginTop: 22, padding: 16 }}>
+          <button type="button" onClick={() => setShowLinks((v) => !v)} aria-expanded={showLinks} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: T.white, textAlign: 'left' }}>
+            <Link2 size={19} color={T.mint} />
+            <span style={{ flex: 1, fontFamily: FONT.display, fontSize: 16, fontWeight: 700 }}>Add events from links</span>
+            <ChevronDown size={19} style={{ transform: showLinks ? 'rotate(180deg)' : 'none', transition: 'transform 200ms ease' }} />
           </button>
-          {ingestLog && (
-            <pre style={{
-              marginTop: 12, fontSize: 11, color: C.c2, whiteSpace: 'pre-wrap',
-              fontFamily: 'var(--font-inter), sans-serif', lineHeight: 1.5,
-            }}>{ingestLog}</pre>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
-          <Link
-            href="/organizer/events/from-link"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              background: C.gold,
-              color: C.onAccent,
-              padding: '10px 14px',
-              borderRadius: 8,
-              fontFamily: 'var(--font-inter), sans-serif',
-              fontSize: 11,
-              letterSpacing: '1.5px',
-              textTransform: 'uppercase',
-              fontWeight: 700,
-              textDecoration: 'none',
-            }}
-          >
-            <Link2 size={14} /> Import from link
-          </Link>
-        </div>
-
-        {note && (
-          <p style={{ color: C.greenL, fontSize: 13, marginBottom: 12 }}>{note}</p>
-        )}
-        {error && (
-          <div
-            style={{
-              display: 'flex',
-              gap: 8,
-              background: 'rgba(206,17,38,0.1)',
-              border: '1px solid rgba(206,17,38,0.25)',
-              borderRadius: 8,
-              padding: 12,
-              marginBottom: 16,
-            }}
-          >
-            <AlertCircle size={14} style={{ color: C.red, flexShrink: 0 }} />
-            <p style={{ fontSize: 12, color: '#f87171', margin: 0 }}>{error}</p>
-          </div>
-        )}
-
-        {loading && (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
-            <Loader2 size={22} color={C.gold} className="animate-spin" />
-          </div>
-        )}
-
-        {!loading && items.length === 0 && (
-          <div
-            style={{
-              padding: 32,
-              textAlign: 'center',
-              border: `1px solid ${C.bd}`,
-              borderRadius: 12,
-              ...G.panel,
-              color: C.c2,
-              fontSize: 14,
-            }}
-          >
-            Queue is empty. Import a link and choose <em>Save for review</em>.
-          </div>
-        )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {items.map((ev) => (
-            <div
-              key={ev.id}
-              style={{
-                ...G.panel,
-                border: `1px solid ${C.bd}`,
-                borderRadius: 14,
-                overflow: 'hidden',
-              }}
-            >
-              <div style={{ display: 'flex', gap: 14, padding: 14 }}>
-                <div
-                  style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: 10,
-                    overflow: 'hidden',
-                    ...G.raised,
-                    flexShrink: 0,
-                  }}
-                >
-                  {ev.image_url && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={ev.image_url}
-                      alt=""
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  )}
-                </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <p
-                    style={{
-                      fontFamily: 'var(--font-inter), sans-serif',
-                      fontSize: 10,
-                      color: C.gold,
-                      letterSpacing: '1px',
-                      textTransform: 'uppercase',
-                      margin: '0 0 4px',
-                    }}
-                  >
-                    {ev.date_label || ev.date} · {ev.city}
-                  </p>
-                  <h3
-                    style={{
-                      fontFamily: 'var(--font-display), sans-serif',
-                      fontSize: 20,
-                      fontWeight: 400,
-                      color: C.cream,
-                      margin: '0 0 4px',
-                    }}
-                  >
-                    {ev.title}
-                  </h3>
-                  <p style={{ fontSize: 12, color: C.c3, margin: 0 }}>
-                    {ev.venue}
-                  </p>
-                  {ev.lineup && ev.lineup.length > 0 && (
-                    <p style={{ fontSize: 11, color: C.c2, margin: '6px 0 0' }}>
-                      Lineup: {ev.lineup.join(' · ')}
-                    </p>
-                  )}
-                  <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
-                    {ev.source_url && (
-                      <a
-                        href={ev.source_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          fontSize: 11,
-                          color: C.gold,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
-                      >
-                        <ExternalLink size={11} /> Source
-                      </a>
-                    )}
-                    {ev.ticket_url && (
-                      <a
-                        href={ev.ticket_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          fontSize: 11,
-                          color: C.c2,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
-                      >
-                        <ExternalLink size={11} /> Tickets
-                      </a>
-                    )}
-                    <Link
-                      href={`/organizer/events/${ev.id}`}
-                      style={{ fontSize: 11, color: C.c2 }}
-                    >
-                      Edit
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 8,
-                  padding: '12px 14px',
-                  borderTop: `1px solid ${C.bd}`,
-                }}
-              >
-                <button
-                  type="button"
-                  disabled={busyId === ev.id}
-                  onClick={() => approve(ev.id)}
-                  style={{
-                    flex: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    background: C.gold,
-                    color: C.onAccent,
-                    border: 'none',
-                    borderRadius: 8,
-                    padding: 12,
-                    fontFamily: 'var(--font-inter), sans-serif',
-                    fontSize: 11,
-                    letterSpacing: '1.5px',
-                    textTransform: 'uppercase',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {busyId === ev.id ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <CheckCircle size={14} />
-                  )}
-                  Approve
-                </button>
-                <button
-                  type="button"
-                  disabled={busyId === ev.id}
-                  onClick={() => keepDraft(ev.id)}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    color: C.c2,
-                    border: `1px solid ${C.bd}`,
-                    borderRadius: 8,
-                    padding: 12,
-                    fontFamily: 'var(--font-inter), sans-serif',
-                    fontSize: 10,
-                    letterSpacing: '1px',
-                    textTransform: 'uppercase',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Draft
-                </button>
-                <button
-                  type="button"
-                  disabled={busyId === ev.id}
-                  onClick={() => reject(ev.id)}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 4,
-                    background: 'transparent',
-                    color: '#f87171',
-                    border: '1px solid rgba(206,17,38,0.3)',
-                    borderRadius: 8,
-                    padding: 12,
-                    fontFamily: 'var(--font-inter), sans-serif',
-                    fontSize: 10,
-                    letterSpacing: '1px',
-                    textTransform: 'uppercase',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <XCircle size={13} /> Reject
-                </button>
-              </div>
+          {showLinks && (
+            <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, lineHeight: 1.45, color: T.text2 }}>Paste Instagram, X or ticket-site links, one per line. Akwaaba reads the flyer and details and adds them here.</p>
+              <textarea value={links} onChange={(e) => setLinks(e.target.value)} rows={4} placeholder={'https://www.instagram.com/p/…\nhttps://egotickets.com/events/…'} style={{ width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, outline: 'none', resize: 'vertical' }} />
+              <button type="button" onClick={addLinks} disabled={adding} style={{ ...mint, alignSelf: 'flex-start' }}>{adding ? 'Reading links…' : 'Add to queue'}</button>
             </div>
-          ))}
-        </div>
-      </div>
+          )}
+        </section>
+      </main>
       <Footer />
     </div>
   );
