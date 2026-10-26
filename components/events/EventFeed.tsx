@@ -16,7 +16,7 @@ import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { getTiers, type CheckoutTier } from '@/lib/events/tiers';
-import { CalendarDays, CalendarPlus, MapPin, Navigation, Ticket, Heart, Share2 } from 'lucide-react';
+import { CalendarDays, CalendarPlus, MapPin, Navigation, Ticket, ChevronDown, Heart, Share2 } from 'lucide-react';
 import { isListedEvent } from '@/lib/types';
 import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
@@ -131,6 +131,7 @@ function EventCard({
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
   const [more, setMore] = useState(false);
   const [watching, setWatching] = useState(false);
+  const [showTiers, setShowTiers] = useState(false);
   const moments = useEventMoments(event, near);
   const block = useRef<HTMLDivElement>(null);
   const [blockH, setBlockH] = useState(300);
@@ -165,7 +166,8 @@ function EventCard({
   const tierList = getTiers(event);
   const listed = isListedEvent(event);
   const ticketMain = label === 'See prices' ? 'Tickets available' : label === 'Free' ? 'Free entry' : `From ${label}`;
-  const ticketSub = listed ? `Sold on ${event.ticketSource || 'the official site'}` : label === 'Free' ? 'Reserve your spot on Akwaaba' : 'MoMo or card · QR ticket';
+  const typesNote = tierList.length >= 2 ? `${tierList.length} ticket types · ` : '';
+  const ticketSub = typesNote + (listed ? `Sold on ${event.ticketSource || 'the official site'}` : label === 'Free' ? 'Reserve your spot on Akwaaba' : 'MoMo or card · QR ticket');
   const calLink = (() => {
     const d = event.date?.slice(0, 10).replace(/-/g, '');
     return d ? `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${d}/${d}&location=${encodeURIComponent(`${event.venue}, Ghana`)}` : null;
@@ -235,12 +237,29 @@ function EventCard({
             sub={place || undefined}
             action={<a href={mapsLink(event)} target="_blank" rel="noopener noreferrer" aria-label="Directions" title="Directions" style={rowAction}><Navigation size={18} strokeWidth={2} /></a>}
           />
-          {label !== 'Ended' && tierList.length < 2 && (
-            <DetailRow accent={a} icon={<Ticket size={20} strokeWidth={2} />} main={ticketMain} sub={ticketSub} />
+          {label !== 'Ended' && (
+            <DetailRow
+              accent={a}
+              icon={<Ticket size={20} strokeWidth={2} />}
+              main={ticketMain}
+              sub={ticketSub}
+              action={tierList.length >= 2 ? (
+                <button type="button" onClick={() => setShowTiers((v) => !v)} aria-expanded={showTiers} aria-label={showTiers ? 'Hide ticket types' : 'Show ticket types'} title="Ticket types" style={{ ...rowAction, cursor: 'pointer', ...(showTiers ? { background: alpha(a, 0.2), borderColor: alpha(a, 0.5), color: a } : {}) }}>
+                  <ChevronDown size={20} strokeWidth={2} style={{ transform: showTiers ? 'rotate(180deg)' : 'none', transition: 'transform 220ms ease' }} />
+                </button>
+              ) : undefined}
+            />
           )}
         </div>
 
-        {label !== 'Ended' && tierList.length >= 2 && <TierChips event={event} accent={a} onOpen={() => onTickets(a)} />}
+        {/* Ticket types, revealed from the tickets row */}
+        {label !== 'Ended' && tierList.length >= 2 && (
+          <div style={{ display: 'grid', gridTemplateRows: showTiers ? '1fr' : '0fr', transition: 'grid-template-rows 260ms ease', margin: showTiers ? '0 -20px' : '-12px -20px 0' }}>
+            <div style={{ overflow: 'hidden', minHeight: 0 }}>
+              <div style={{ margin: '0 20px' }}><TierChips event={event} accent={a} onOpen={() => onTickets(a)} /></div>
+            </div>
+          </div>
+        )}
 
         {/* Tickets, plus save and share. The card itself opens the event. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, pointerEvents: 'auto' }}>
