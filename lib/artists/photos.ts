@@ -84,7 +84,11 @@ async function lookupWikimedia(list: Artist[], ms: number): Promise<Map<string, 
   const hop = new Map<string, string>();
   for (const n of [...(wp.query.normalized ?? []), ...(wp.query.redirects ?? [])]) hop.set(n.from, n.to);
   const fileByPage = new Map<string, string>();
-  for (const pg of wp.query.pages ?? []) if (pg?.pageprops?.page_image_free) fileByPage.set(pg.title, pg.pageprops.page_image_free);
+  // Photos only: skip drawings, logos and other vector images (.svg)
+  for (const pg of wp.query.pages ?? []) {
+    const f: string | undefined = pg?.pageprops?.page_image_free;
+    if (f && /\.(jpe?g|png|webp)$/i.test(f)) fileByPage.set(pg.title, f);
+  }
   const fileByTitle = new Map<string, string>();
   for (const a of withWiki) {
     let t = a.wiki!;
