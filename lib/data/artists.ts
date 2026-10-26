@@ -13,7 +13,7 @@ const p = (id: string) =>
 export const artists: Artist[] = [
   {
     id: 'sarkodie',
-    slug: 'sarkodie',
+    slug: 'sarkodie', wiki: 'Sarkodie (rapper)',
     name: 'Sarkodie',
     image: p('1507003211169-0a1dd7228f2d'),
     isMajor: true,
@@ -24,7 +24,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'shatta-wale',
-    slug: 'shatta-wale',
+    slug: 'shatta-wale', wiki: 'Shatta Wale',
     name: 'Shatta Wale',
     image: p('1500648767791-00dcc994a43e'),
     isMajor: true,
@@ -35,7 +35,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'black-sherif',
-    slug: 'black-sherif',
+    slug: 'black-sherif', wiki: 'Black Sherif',
     name: 'Black Sherif',
     image: p('1539571696357-a9f1b92b3b51'),
     isMajor: true,
@@ -46,7 +46,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'stonebwoy',
-    slug: 'stonebwoy',
+    slug: 'stonebwoy', wiki: 'Stonebwoy',
     name: 'Stonebwoy',
     image: p('1529626455594-4ff0802cfb7e'),
     isMajor: true,
@@ -57,7 +57,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'king-promise',
-    slug: 'king-promise',
+    slug: 'king-promise', wiki: 'King Promise',
     name: 'King Promise',
     image: p('1494790108377-be9c29b29330'),
     isMajor: true,
@@ -68,7 +68,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'gyakie',
-    slug: 'gyakie',
+    slug: 'gyakie', wiki: 'Gyakie',
     name: 'Gyakie',
     image: p('1544005313-94ddf0286df2'),
     isMajor: true,
@@ -79,7 +79,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'kidi',
-    slug: 'kidi',
+    slug: 'kidi', wiki: 'KiDi',
     name: 'KiDi',
     image: p('1506794778202-cad84cf45f1d'),
     isMajor: true,
@@ -90,7 +90,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'wendy-shay',
-    slug: 'wendy-shay',
+    slug: 'wendy-shay', wiki: 'Wendy Shay',
     name: 'Wendy Shay',
     image: p('1534528741775-53994a69daeb'),
     isMajor: true,
@@ -101,7 +101,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'medikal',
-    slug: 'medikal',
+    slug: 'medikal', wiki: 'Medikal',
     name: 'Medikal',
     image: p('1519085360753-af0119f7cbe7'),
     isMajor: true,
@@ -112,7 +112,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'camidoh',
-    slug: 'camidoh',
+    slug: 'camidoh', wiki: 'Camidoh',
     name: 'Camidoh',
     image: p('1488426862026-3ee34a7d66df'),
     isMajor: true,
@@ -123,7 +123,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'fameye',
-    slug: 'fameye',
+    slug: 'fameye', wiki: 'Fameye',
     name: 'Fameye',
     image: p('1463453091185-61582044d556'),
     isMajor: true,
@@ -134,7 +134,7 @@ export const artists: Artist[] = [
   },
   {
     id: 'r2bees',
-    slug: 'r2bees',
+    slug: 'r2bees', wiki: 'R2Bees',
     name: 'R2Bees',
     image: p('1472099645785-5658abf4ff4e'),
     isMajor: true,
@@ -144,10 +144,10 @@ export const artists: Artist[] = [
     xHandle: 'R2Bees',
   },
   // Acts with shows on Akwaaba right now (Oct 2026)
-  { id: 'kwabena-kwabena', slug: 'kwabena-kwabena', name: 'Kwabena Kwabena', image: '', isMajor: true, priority: 13, keywords: ['kwabena kwabena'] },
-  { id: 'fancy-gadam', slug: 'fancy-gadam', name: 'Fancy Gadam', image: '', isMajor: true, priority: 14, keywords: ['fancy gadam', 'gadam nation', 'gadam concert'] },
-  { id: 'kweku-smoke', slug: 'kweku-smoke', name: 'Kweku Smoke', image: '', isMajor: true, priority: 15, keywords: ['kweku smoke'] },
-  { id: 'essumann', slug: 'essumann', name: 'Essumann', image: '', isMajor: true, priority: 16, keywords: ['essumann'] },
+  { id: 'kwabena-kwabena', slug: 'kwabena-kwabena', wiki: 'Kwabena Kwabena', name: 'Kwabena Kwabena', image: '', isMajor: true, priority: 13, keywords: ['kwabena kwabena'] },
+  { id: 'fancy-gadam', slug: 'fancy-gadam', wiki: 'Fancy Gadam', name: 'Fancy Gadam', image: '', isMajor: true, priority: 14, keywords: ['fancy gadam', 'gadam nation', 'gadam concert'] },
+  { id: 'kweku-smoke', slug: 'kweku-smoke', wiki: 'Kweku Smoke', name: 'Kweku Smoke', image: '', isMajor: true, priority: 15, keywords: ['kweku smoke'] },
+  { id: 'essumann', slug: 'essumann', wiki: 'Essumann', name: 'Essumann', image: '', isMajor: true, priority: 16, keywords: ['essumann'] },
 ];
 
 export const majorArtists = artists

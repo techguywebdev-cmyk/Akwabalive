@@ -10,6 +10,8 @@ import { T, FONT, GROUND } from '@/lib/thiscene';
 export type ArtistCard = {
   slug: string; name: string; priority: number; upcoming: number;
   nextDate: string | null; nextTitle: string | null; image: string | null;
+  /** The artist's own photo, when we have one (preferred over a flyer) */
+  photo: string | null;
 };
 
 const initials = (n: string) => n.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -29,7 +31,10 @@ export default function ArtistsIndexClient({ artists }: { artists: ArtistCard[] 
         const d = parseDay(a.nextDate);
         return (
           <Link key={a.slug} href={`/artists/${a.slug}`} style={{ position: 'relative', display: 'block', aspectRatio: '4 / 5', borderRadius: 22, overflow: 'hidden', textDecoration: 'none', background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 70%)' }}>
-            {a.image ? (
+            {a.photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={a.photo} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 22%' }} />
+            ) : a.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={hiRes(a.image, 500) ?? a.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: a.upcoming ? 1 : 0.45 }} />
             ) : (
