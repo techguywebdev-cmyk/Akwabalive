@@ -63,7 +63,7 @@ export function HeaderIconButton({
  * and the profile/sign-in button. Phones also get a floating glass tab bar at the bottom.
  */
 export default function Nav({
-  active, actions, back, tabs = false, plain = false,
+  active, actions, back, tabs = false, plain = false, center,
 }: {
   /** kept for older call sites */
   transparent?: boolean;
@@ -78,6 +78,8 @@ export default function Nav({
   tabs?: boolean;
   /** Pages with their own big title and search: no wordmark and no header search, just menu + profile */
   plain?: boolean;
+  /** Something to show in the middle of the header instead of the wordmark (e.g. Artists | Shows switch) */
+  center?: ReactNode;
 }) {
   const { user, profile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -198,7 +200,12 @@ export default function Nav({
         </div>
 
         {/* Phones: wordmark on regular pages; none over full-screen flyers (feed, event pages) */}
-        {isMobile && !actions && !plain && (
+        {center && (
+          <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: 'calc(14px + env(safe-area-inset-top, 0px))', height: 44, display: 'flex', alignItems: 'center', pointerEvents: 'auto' }}>
+            {center}
+          </div>
+        )}
+        {isMobile && !actions && !plain && !center && (
           <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', top: 'calc(14px + env(safe-area-inset-top, 0px))', height: 44, display: 'flex', alignItems: 'center', pointerEvents: 'auto' }}>
             <Wordmark />
           </div>

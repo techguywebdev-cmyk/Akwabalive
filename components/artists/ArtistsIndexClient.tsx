@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
+import ExploreSwitch from '@/components/explore/ExploreSwitch';
 import type { ArtistGenre } from '@/lib/types';
 import { parseDay, shortDay } from '@/lib/dates';
 import { useMyFollows } from '@/components/follow/useFollow';
@@ -64,15 +65,13 @@ export default function ArtistsIndexClient({ artists }: { artists: ArtistCard[] 
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
-      <Nav active="Artists" tabs plain />
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(80px + env(safe-area-inset-top, 0px)) 20px 120px' }}>
-        <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 44, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, color: T.white }}>Artists</h1>
-        <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.5, color: T.text2 }}>Follow the acts and the shows you never want to miss.</p>
-
-        <label style={{ position: 'relative', display: 'block', marginTop: 20 }}>
-          <Search size={18} aria-hidden style={{ position: 'absolute', left: 18, top: 16, color: T.text3 }} />
+      <Nav active="Artists" tabs plain center={<ExploreSwitch active="artists" />} />
+      <main style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(78px + env(safe-area-inset-top, 0px)) 20px 120px' }}>
+        <h1 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Artists</h1>
+        <label style={{ position: 'relative', display: 'block', marginTop: 6 }}>
+          <Search size={17} aria-hidden style={{ position: 'absolute', left: 16, top: 13.5, color: T.text3 }} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${artists.length} artists`} aria-label="Search artists" type="search"
-            style={{ width: '100%', boxSizing: 'border-box', height: 50, padding: '0 18px 0 46px', borderRadius: 999, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 16, outline: 'none' }} />
+            style={{ width: '100%', boxSizing: 'border-box', height: 44, padding: '0 16px 0 42px', borderRadius: 999, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 16, outline: 'none' }} />
         </label>
 
         <div className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '14px -20px 0', padding: '0 20px' }}>
@@ -96,16 +95,6 @@ export default function ArtistsIndexClient({ artists }: { artists: ArtistCard[] 
               {touring.map((a) => <div key={a.slug} style={{ width: 112, flexShrink: 0 }}><ArtistTile a={a} size={112} /></div>)}
             </div>
           </section>
-        )}
-
-        {browsing && (
-          <Link href="/shows" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 30, padding: '14px 0', borderTop: `1px solid ${T.hairline}`, borderBottom: `1px solid ${T.hairline}`, textDecoration: 'none' }}>
-            <span>
-              <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 17, fontWeight: 700, color: T.white }}>Yearly shows</span>
-              <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>Rapperholic, Detty Rave, Tidal Rave and more</span>
-            </span>
-            <span aria-hidden style={{ fontFamily: FONT.sans, fontSize: 22, color: T.text3 }}>›</span>
-          </Link>
         )}
 
         <section style={{ marginTop: 36 }}>

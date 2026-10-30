@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Share2, Check, Repeat } from 'lucide-react';
+import { Share2, Check } from 'lucide-react';
 import type { GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
 import type { EventSeries } from '@/lib/data/series';
@@ -27,7 +27,6 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
   const [copied, setCopied] = useState(false);
   const [next, ...later] = upcoming;
   const ratings = useRatingSummaries(past.map((e) => e.slug));
-  const rated = past.map((e) => ratings[e.slug]).filter(Boolean);
   const lastRated = past.find((e) => ratings[e.slug]);
   const cover = (next ?? past[0])?.image ?? coverImage;
 
@@ -48,19 +47,23 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
         <button type="button" onClick={share} aria-label="Share" style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}>{copied ? <Check size={18} /> : <Share2 size={18} />}</button>
       } />
 
-      <header style={{ position: 'relative', overflow: 'hidden', padding: 'calc(110px + env(safe-area-inset-top, 0px)) 20px 6px' }}>
-        {cover && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={hiRes(cover, 800) ?? cover} alt="" aria-hidden style={{ position: 'absolute', inset: -60, width: 'calc(100% + 120px)', height: 'calc(100% + 120px)', objectFit: 'cover', filter: 'blur(44px) saturate(1.25)', opacity: 0.55 }} />
-        )}
-        <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,32,21,0.2) 0%, rgba(8,32,21,0.5) 50%, rgba(8,30,20,0.98) 100%)' }} />
-        <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
-          <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.mintText }}>
-            <Repeat size={14} /> {series.usually}
-          </p>
-          <h1 style={{ margin: '8px 0 0', fontFamily: FONT.display, fontSize: series.name.length > 14 ? 42 : 54, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, color: T.white }}>{series.name}</h1>
+      {/* Hero: the show's picture full width, fading into the page, with the name over it */}
+      <header style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', height: 'min(118vw, 560px)', overflow: 'hidden', background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 75%)' }}>
+          {cover && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={hiRes(cover, 1200) ?? cover} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 30%' }}
+              onError={(e) => { const i = e.currentTarget; if (i.src.includes('/hq720.jpg')) i.src = i.src.replace('/hq720.jpg', '/hqdefault.jpg'); }} />
+          )}
+          <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0.45) 0%, rgba(3,8,6,0) 22%, rgba(3,8,6,0) 42%, rgba(9,34,22,0.85) 74%, #0A2618 100%)' }} />
+          <div style={{ position: 'absolute', left: 20, right: 20, bottom: 18, maxWidth: 640, margin: '0 auto' }}>
+            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>{series.usually}</p>
+            <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: series.name.length > 14 ? 40 : 52, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.98, color: T.white, textShadow: '0 2px 24px rgba(0,0,0,0.35)' }}>{series.name}</h1>
+          </div>
+        </div>
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '14px 20px 0' }}>
           {by && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {hosts.length > 0 && (
                 <span style={{ display: 'flex' }}>
                   {hosts.map((h, i) => <span key={h.slug} style={{ marginLeft: i ? -10 : 0 }}><Portrait name={h.name} url={h.photo} size={34} /></span>)}
@@ -73,22 +76,22 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
               </span>
             </div>
           )}
-          <p style={{ margin: '14px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{series.blurb}</p>
-          {lastRated && ratings[lastRated.slug] && (
-            <a href={`/events/${lastRated.slug}#ratings`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 12, fontFamily: FONT.sans, fontSize: 14, color: T.text2, textDecoration: 'none' }}>
-              <ScoreChip score={ratings[lastRated.slug].overall} count={ratings[lastRated.slug].ratings} /> last edition{rated.length > 1 ? ` · ${rated.length} editions rated` : ''}
-            </a>
-          )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 16 }}>
             <button type="button" onClick={toggle} disabled={busy} style={{ ...(following ? BTN.secondary : BTN.primary), flex: 1, maxWidth: 260, height: 46 }}>
-              {following ? <><Check size={17} /> Following</> : `Follow ${series.name}`}
+              {following ? <><Check size={17} /> Following</> : 'Follow'}
             </button>
-            {!!count && <span style={{ fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}><b style={{ color: T.white }}>{compactCount(count)}</b> following</span>}
+            {lastRated && ratings[lastRated.slug] && (
+              <a href={`/events/${lastRated.slug}#ratings`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 13, color: T.text3, textDecoration: 'none' }}>
+                <ScoreChip score={ratings[lastRated.slug].overall} count={ratings[lastRated.slug].ratings} /> last edition
+              </a>
+            )}
+            {!lastRated && !!count && <span style={{ fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}><b style={{ color: T.white }}>{compactCount(count)}</b> following</span>}
           </div>
+          <p style={{ margin: '18px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.6, color: T.text2 }}>{series.blurb}</p>
         </div>
       </header>
 
-      <main style={{ maxWidth: 640, margin: '0 auto', padding: '30px 20px 120px' }}>
+      <main style={{ maxWidth: 640, margin: '0 auto', padding: '28px 20px 120px' }}>
         {next ? (
           <section>
             <SectionTitle>Next edition</SectionTitle>

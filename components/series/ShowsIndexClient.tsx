@@ -1,10 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import ExploreSwitch from '@/components/explore/ExploreSwitch';
 import Nav from '@/components/layout/Nav';
-import { parseDay, longDay, shortDay } from '@/lib/dates';
+import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { useMyFollows } from '@/components/follow/useFollow';
 import { useRatingSummaries, type RatingSummary } from '@/lib/ratings';
@@ -21,32 +20,6 @@ function Cover({ src, name, style }: { src: string | null; name: string; style?:
     // eslint-disable-next-line @next/next/no-img-element
     <img src={hiRes(src, 900) ?? src} alt="" loading="lazy" style={{ ...style, objectFit: 'cover', display: 'block' }}
       onError={(e) => { const i = e.currentTarget; if (i.src.includes('/hq720.jpg')) i.src = i.src.replace('/hq720.jpg', '/hqdefault.jpg'); }} />
-  );
-}
-
-/** Next edition announced: the flyer at full width, details underneath, whole thing tappable */
-function Feature({ s }: { s: SeriesSummary }) {
-  const d = parseDay(s.nextDate);
-  return (
-    <Link href={`/shows/${s.slug}`} style={{ display: 'block', textDecoration: 'none' }}>
-      <span style={{ position: 'relative', display: 'block', borderRadius: 24, overflow: 'hidden', background: 'rgba(255,255,255,0.05)' }}>
-        {s.image
-          // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={hiRes(s.image, 1200) ?? s.image} alt="" style={{ width: '100%', height: 'auto', display: 'block' }} />
-          : <Cover src={null} name={s.name} style={{ width: '100%', aspectRatio: '4 / 5' }} />}
-        <span style={{ position: 'absolute', top: 14, left: 14, padding: '6px 12px', borderRadius: 999, background: 'rgba(3,10,6,0.62)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, color: T.mintText }}>
-          {countdown(s.nextDate)}
-        </span>
-      </span>
-      <span style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginTop: 14 }}>
-        <span style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>{d ? longDay(d) : ''}</span>
-          <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.display, fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, color: T.white }}>{s.name}</span>
-          {s.hostNames.length > 0 && <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>By {s.hostNames.join(' & ')}</span>}
-        </span>
-        <span style={{ paddingTop: 4 }}><FollowPill kind="series" slug={s.slug} label={s.name} /></span>
-      </span>
-    </Link>
   );
 }
 
@@ -68,59 +41,80 @@ function Tile({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
   );
 }
 
-const grid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 };
+/** Big swipeable card for the top of the page */
+function HeroCard({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
+  const d = parseDay(s.nextDate);
+  return (
+    <Link href={`/shows/${s.slug}`} style={{ position: 'relative', display: 'block', aspectRatio: '4 / 5', borderRadius: 26, overflow: 'hidden', textDecoration: 'none', background: 'rgba(255,255,255,0.05)', boxShadow: '0 24px 60px rgba(0,0,0,0.45)' }}>
+      <Cover src={s.image} name={s.name} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+      <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,19,12,0.35) 0%, rgba(5,19,12,0) 22%, rgba(5,19,12,0) 45%, rgba(9,34,22,0.82) 72%, rgba(5,19,12,0.97) 100%)' }} />
+      <span style={{ position: 'absolute', top: 16, left: 16, right: 16, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+        <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(3,10,6,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, color: d ? T.mintText : T.white }}>
+          {d ? countdown(s.nextDate) : s.usually}
+        </span>
+        {rating && <span style={{ padding: '6px 10px', borderRadius: 999, background: 'rgba(3,10,6,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}><ScoreChip score={rating.overall} /></span>}
+      </span>
+      <span style={{ position: 'absolute', left: 20, right: 20, bottom: 20 }}>
+        {s.hostNames.length > 0 && <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>{s.hostNames.join(' & ')}</span>}
+        <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.display, fontSize: 34, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, color: T.white }}>{s.name}</span>
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 12 }}>
+          <span style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.text }}>{d ? shortDay(d) : 'Date to be announced'}</span>
+          <FollowPill kind="series" slug={s.slug} label={s.name} />
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+function Shelf({ title, items, rate }: { title: string; items: SeriesSummary[]; rate: (s: SeriesSummary) => RatingSummary | undefined }) {
+  if (!items.length) return null;
+  return (
+    <section style={{ marginTop: 36 }}>
+      <SectionTitle>{title}</SectionTitle>
+      <div className="no-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '0 -20px', padding: '0 20px', scrollSnapType: 'x mandatory' }}>
+        {items.map((s) => <div key={s.slug} style={{ width: 150, flexShrink: 0, scrollSnapAlign: 'start' }}><Tile s={s} rating={rate(s)} /></div>)}
+      </div>
+    </section>
+  );
+}
+
+/** Shows that matter most when nothing is announced yet */
+const MARQUEE = ['rapperholic', 'detty-rave', 'afro-future', 'tidal-rave'];
 
 export default function ShowsIndexClient({ series }: { series: SeriesSummary[] }) {
-  const [q, setQ] = useState('');
   const mine = useMyFollows('series');
   const ratings = useRatingSummaries(series.map((s) => s.lastSlug).filter(Boolean) as string[]);
   const rate = (s: SeriesSummary) => (s.lastSlug ? ratings[s.lastSlug] : undefined);
 
-  const query = q.trim().toLowerCase();
-  const list = useMemo(() => series.filter((s) => !query || [s.name, ...s.hostNames].join(' ').toLowerCase().includes(query)), [series, query]);
-  const coming = list.filter((s) => s.nextDate).sort((a, b) => String(a.nextDate).localeCompare(String(b.nextDate)));
+  const coming = series.filter((s) => s.nextDate).sort((a, b) => String(a.nextDate).localeCompare(String(b.nextDate)));
+  const hero = [...coming, ...MARQUEE.map((m) => series.find((s) => s.slug === m)).filter((s): s is SeriesSummary => !!s && !s.nextDate)].slice(0, 5);
   const yours = series.filter((s) => mine.includes(s.slug));
-  // Best rated first, then shows with a date, then the rest in our order
-  const all = list.map((s, i) => ({ s, i }))
-    .sort((a, b) => (rate(b.s)?.overall ?? 0) - (rate(a.s)?.overall ?? 0) || Number(!!b.s.nextDate) - Number(!!a.s.nextDate) || a.i - b.i)
-    .map(({ s }) => s);
+  const december = series.filter((s) => /december/i.test(s.usually));
+  const own = series.filter((s) => s.hostNames.length > 0);
+  const festivals = series.filter((s) => s.hostNames.length === 0);
+  const best = series.filter((s) => rate(s)).sort((a, b) => (rate(b)?.overall ?? 0) - (rate(a)?.overall ?? 0));
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
-      <Nav active="Shows" tabs plain />
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(80px + env(safe-area-inset-top, 0px)) 20px 120px' }}>
-        <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 44, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, color: T.white }}>Shows</h1>
-        <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.5, color: T.text2 }}>The nights that come back every year, rated by the people who went.</p>
-        <label style={{ position: 'relative', display: 'block', marginTop: 20 }}>
-          <Search size={18} aria-hidden style={{ position: 'absolute', left: 18, top: 16, color: T.text3 }} />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search shows or artists" aria-label="Search shows" type="search"
-            style={{ width: '100%', boxSizing: 'border-box', height: 50, padding: '0 18px 0 46px', borderRadius: 999, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 16, outline: 'none' }} />
-        </label>
+      <Nav active="Shows" tabs plain center={<ExploreSwitch active="shows" />} />
+      <main style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(78px + env(safe-area-inset-top, 0px)) 20px 120px' }}>
+        <h1 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Shows</h1>
 
-        {!query && yours.length > 0 && (
-          <section style={{ marginTop: 32 }}>
-            <SectionTitle>Your shows</SectionTitle>
-            <div className="no-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
-              {yours.map((s) => <div key={s.slug} style={{ width: 140, flexShrink: 0 }}><Tile s={s} rating={rate(s)} /></div>)}
-            </div>
-          </section>
+        {hero.length > 0 && (
+          <div className="no-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '6px -20px 0', padding: '0 20px 8px', scrollSnapType: 'x mandatory' }}>
+            {hero.map((s) => (
+              <div key={s.slug} style={{ flex: '0 0 calc(100% - 28px)', maxWidth: 420, scrollSnapAlign: 'center' }}>
+                <HeroCard s={s} rating={rate(s)} />
+              </div>
+            ))}
+          </div>
         )}
 
-        {coming.length > 0 && (
-          <section style={{ marginTop: 32 }}>
-            <SectionTitle>Coming up</SectionTitle>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
-              {coming.map((s) => <Feature key={s.slug} s={s} />)}
-            </div>
-          </section>
-        )}
-
-        <section style={{ marginTop: 40 }}>
-          <SectionTitle>{query ? `Results for “${q.trim()}”` : 'All shows'}</SectionTitle>
-          {all.length
-            ? <div style={grid}>{all.map((s) => <Tile key={s.slug} s={s} rating={rate(s)} />)}</div>
-            : <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15, color: T.text3 }}>No show matches “{q.trim()}” yet.</p>}
-        </section>
+        <Shelf title="Your shows" items={yours} rate={rate} />
+        <Shelf title="Best rated" items={best} rate={rate} />
+        <Shelf title="December in Accra" items={december} rate={rate} />
+        <Shelf title="Artists’ own concerts" items={own} rate={rate} />
+        <Shelf title="Festivals" items={festivals} rate={rate} />
       </main>
     </div>
   );
