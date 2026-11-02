@@ -56,7 +56,7 @@ const LIVE = /\b(live|concert|perform(s|ance|ed)?|festival|fest|tour|stage|show|
 const NOT_LIVE = /\b(official (music )?video|lyrics?|lyric video|audio|visuali[sz]er|teaser|trailer|reaction|interview|podcast|snippet)\b/i;
 
 /** Teasers, promos and stubs: never published on their own */
-const PROMO = /\b(is live|announcement|announc|tickets?|see you|tomorrow|tonight|countdown|coming soon|pre-?order|out now|stream now|date|save the date|loading|who'?s coming|link in bio)\b/i;
+const PROMO = /\b(ad|advert|commercial|up now|up on my channel|new single|newest single|run it|go stream|on audiomack|on spotify|vlog|day \d+ of|is live|announcement|announc|tickets?|see you|tomorrow|tonight|countdown|coming soon|pre-?order|out now|stream now|date|save the date|loading|who'?s coming|link in bio)\b/i;
 /** Clearly a performance or an event */
 const STRONG = /\b(live (at|in|from|on)|full (show|performance|set|concert)|concert|performance|performs?|performed|festival|fest|tour|highlights|on stage|stage performance|durbar|procession|celebrat\w*|carnival)\b/i;
 
@@ -144,7 +144,8 @@ async function searchTopic(db: SupabaseClient, topic: (typeof EVENT_TOPICS)[numb
     const raw = (sn.title ?? '').replace(/&amp;/g, '&').replace(/&#39;/g, '’').replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
     const official = (!!sn.channelId && officialIds.has(sn.channelId)) || isArtistChannel(sn.channelTitle ?? '');
     // The title already names the event and isn't a promo; an official or trusted source is enough
-    const ok = official || trusted(sn.channelTitle ?? '');
+    // ...but it must read like the event itself: a performance word, or the edition's year
+    const ok = (official || trusted(sn.channelTitle ?? '')) && (credible(raw) || /\b20\d\d\b/.test(raw));
     if (!ok && review >= 2) return [];
     if (!ok) review++;
     const when = sn.publishedAt ?? null;
