@@ -17,7 +17,10 @@ function shuffle<T>(arr: T[]): T[] {
 
 /** Shuffled, with videos from the artists' and events' own channels first; dead videos dropped */
 function arrange(list: Moment[]): Moment[] {
-  const ok = list.filter((m) => m.available !== false);
+  // One entry per video: the same clip is filed under several events, and it's only right for one
+  const seen = new Set<string>();
+  const ok = [...list].sort((a, b) => Number(!!b.official) - Number(!!a.official))
+    .filter((m) => m.available !== false && !seen.has(m.youtube_id) && seen.add(m.youtube_id));
   return [...shuffle(ok.filter((m) => m.official)), ...shuffle(ok.filter((m) => !m.official))];
 }
 
