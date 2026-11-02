@@ -40,6 +40,11 @@ interface CustomPlayerProps {
   hideMuteButton?: boolean;
   /** How the 16:9 video fills a tall screen */
   fit?: 'fill' | 'contain';
+  /**
+   * Only the slide on screen plays. Others load in the background (paused, muted) so they
+   * start instantly when scrolled to. Defaults to true.
+   */
+  active?: boolean;
 }
 
 /** Survives swipe — after the user unmutes once, later clips keep sound (swipe is a gesture). */
@@ -86,9 +91,12 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
       onMuteChange,
       hideMuteButton = false,
       fit = 'fill',
+      active = true,
     },
     ref,
   ) {
+    const activeRef = useRef(active);
+    activeRef.current = active;
     const onEndedRef = useRef(onEnded);
     onEndedRef.current = onEnded;
     const hostRef = useRef<HTMLDivElement>(null);
@@ -157,7 +165,7 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
 
     function kickPlay() {
       const p = playerRef.current;
-      if (!p || userPausedRef.current) return;
+      if (!p || userPausedRef.current || !activeRef.current) return;
       try {
         applySound(p);
         p.playVideo();
@@ -282,7 +290,11 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
                   /* ignore */
                 }
               }
-              kickPlay();
+              if (activeRef.current) kickPlay();
+              else {
+                // Warm up: start muted so the first frames buffer, then hold on the first frame
+                try { e.target.playVideo(); setTimeout(() => { if (!activeRef.current) { try { e.target.pauseVideo(); e.target.seekTo(start, true); } catch { /* ignore */ } } }, 700); } catch { /* ignore */ }
+              }
               startProgress();
               onReadyRef.current?.();
               if (playKick.current) clearInterval(playKick.current);
@@ -325,7 +337,7 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
                 }
               }
               /* iOS often lands on cued/paused instead of playing */
-              if ((state === 2 || state === 5 || state === -1) && !userPausedRef.current) {
+              if ((state === 2 || state === 5 || state === -1) && !userPausedRef.current && activeRef.current) {
                 setTimeout(kickPlay, 50);
               }
             },
@@ -359,6 +371,17 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    /* Becoming the slide on screen: play (with sound if it was unlocked); leaving: pause */
+    useEffect(() => {
+      const p = playerRef.current;
+      if (!p) return;
+      try {
+        if (active) { userPausedRef.current = false; kickPlay(); }
+        else { p.pauseVideo(); p.mute(); }
+      } catch { /* ignore */ }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [active]);
 
     /* Swap clip without tearing down the iframe */
     useEffect(() => {
@@ -530,8 +553,8 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
               alt={title}
               style={{ width: '100%', height: '100%', objectFit: fit === 'fill' ? 'cover' : 'contain' }}
               onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+                const img = e.target as HTMLImageElement;
+                if (img.src.includes('maxresdefault')) img.src = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
               }}
             />
           </div>
