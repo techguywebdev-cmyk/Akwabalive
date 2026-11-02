@@ -496,10 +496,9 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
 
         <div
           onClick={handleTap}
-          onTouchEnd={(e) => {
-            /* iOS: treat the swipe/tap as a play gesture */
+          onTouchEnd={() => {
+            /* iOS: treat the swipe/tap as a play gesture (no preventDefault — it kills scroll momentum) */
             if (!playing) {
-              e.preventDefault();
               userPausedRef.current = false;
               kickPlay();
             }

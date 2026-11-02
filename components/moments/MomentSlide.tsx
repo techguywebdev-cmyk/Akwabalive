@@ -2,7 +2,7 @@
 
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BadgeCheck, Bell, BellRing, Heart, MessageCircle, Send, Ticket, UserCheck, Users } from 'lucide-react';
+import { BadgeCheck, Bell, BellRing, CalendarDays, Check, Heart, MapPin, MessageCircle, Send, Ticket, UserCheck } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
 import CustomPlayer, { type CustomPlayerHandle } from '@/components/moments/CustomPlayer';
@@ -16,8 +16,9 @@ import { useMomentCrowd } from '@/hooks/useMomentCrowd';
 import { useFollow } from '@/components/follow/useFollow';
 import { SERIES, momentInSeries } from '@/lib/data/series';
 import { detectArtistsFromText, getArtistBySlug } from '@/lib/data/artists';
-import { countdown, priceLine } from '@/components/artists/parts';
-import { parseDay, shortDay } from '@/lib/dates';
+import { countdown, priceLine, Portrait } from '@/components/artists/parts';
+import { useMomentInfo } from '@/hooks/useMomentInfo';
+import { longDay, parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { T, FONT } from '@/lib/thiscene';
 import { useRatingSummaries } from '@/lib/ratings';
@@ -26,17 +27,14 @@ import { Stars } from '@/components/ratings/Stars';
 export type SlideHandle = { toggleMute: () => void };
 
 const still = (id: string) => `https://i.ytimg.com/vi/${id}/hq720.jpg`;
+const glow = (id: string) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
 
-/** Round action with its count under it */
-function Action({ label, on, onClick, children, count, color = T.white }: { label: string; on?: boolean; onClick: () => void; children: React.ReactNode; count?: string; color?: string }) {
+/** Plain icon button for the bottom bar */
+function BarButton({ label, on, onClick, children, count, color = T.white }: { label: string; on?: boolean; onClick: () => void; children: React.ReactNode; count?: string; color?: string }) {
   return (
-    <button type="button" aria-label={label} aria-pressed={on} onClick={onClick} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, padding: 0, border: 'none', background: 'none', cursor: 'pointer', minWidth: 56 }}>
-      <span style={{
-        width: 48, height: 48, borderRadius: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        background: on ? 'rgba(123,227,168,0.16)' : 'rgba(255,255,255,0.08)', border: `1px solid ${on ? 'rgba(123,227,168,0.4)' : 'rgba(255,255,255,0.12)'}`,
-        backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', color,
-      }}>{children}</span>
-      <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: on ? T.mintText : T.text2 }}>{count ?? label}</span>
+    <button type="button" aria-label={label} aria-pressed={on} onClick={onClick} style={{ height: 44, minWidth: 44, padding: '0 6px', display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', background: 'none', cursor: 'pointer', color }}>
+      {children}
+      {count != null && <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: on ? color : T.text }}>{count}</span>}
     </button>
   );
 }
@@ -64,7 +62,7 @@ const MomentSlide = forwardRef<SlideHandle, {
   moment: Moment; active: boolean; mounted: boolean; index: number; total: number;
   user: User | null; profile: Profile | null; onMuteChange: (m: boolean) => void; onEnded: () => void;
   initialSeek?: number | null; requireSignIn: () => boolean; flash: (m: string) => void;
-}>(function MomentSlide({ moment, active, mounted, index, total, user, profile, onMuteChange, onEnded, initialSeek, requireSignIn, flash }, ref) {
+}>(function MomentSlide({ moment, active, mounted, user, profile, onMuteChange, onEnded, initialSeek, requireSignIn, flash }, ref) {
   const playerRef = useRef<CustomPlayerHandle>(null);
   useImperativeHandle(ref, () => ({ toggleMute: () => playerRef.current?.toggleMute() }));
 
@@ -89,6 +87,8 @@ const MomentSlide = forwardRef<SlideHandle, {
     const slug = detectArtistsFromText(moment.title, moment.event_name, moment.description).artistSlugs[0];
     return slug ? getArtistBySlug(slug) : undefined;
   }, [moment]);
+  const info = useMomentInfo(moment, series, mounted);
+  const about = moment.description ?? series?.blurb ?? null;
   const canGift = Boolean(next?.tiers?.some((x) => x.price > 0 && x.quantity - x.sold > 0)) && !next?.ticketUrl;
 
   const share = useCallback(async () => {
@@ -107,88 +107,105 @@ const MomentSlide = forwardRef<SlideHandle, {
   const soon = next ? countdown(next.date) : null;
   const pct = dur ? Math.min(100, (t / dur) * 100) : 0;
 
+  const when = info.event?.date ? parseDay(info.event.date) : null;
+  const where = [info.event?.venue, info.event?.city ? info.event.city.charAt(0).toUpperCase() + info.event.city.slice(1) : null].filter(Boolean).join(', ');
+
   return (
     <section aria-label={moment.title} style={{ position: 'relative', height: '100svh', width: '100%', overflow: 'hidden', scrollSnapAlign: 'start', scrollSnapStop: 'always', background: '#050606' }}>
-      {/* Ambient glow from the video itself, so the screen is never empty */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={still(moment.youtube_id)} alt="" aria-hidden loading="lazy"
-        onError={(e) => { const i = e.currentTarget; if (i.src.includes('hq720')) i.src = i.src.replace('hq720', 'hqdefault'); }}
-        style={{ position: 'absolute', inset: '-10%', width: '120%', height: '120%', objectFit: 'cover', filter: 'blur(42px) saturate(1.3)', opacity: 0.55, transform: 'scale(1.1)' }} />
-      <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,6,6,0.55) 0%, rgba(5,6,6,0.25) 30%, rgba(5,6,6,0.6) 60%, rgba(5,6,6,0.94) 100%)' }} />
+      {/* A soft glow of the video behind everything — only for slides near the screen (blur is costly on phones) */}
+      {mounted && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={glow(moment.youtube_id)} alt="" aria-hidden
+          style={{ position: 'absolute', top: 0, left: '-10%', width: '120%', height: '55%', objectFit: 'cover', filter: 'blur(30px) saturate(1.25)', opacity: 0.4 }} />
+      )}
+      <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,6,6,0.2) 0%, rgba(5,6,6,0.75) 38%, #050606 58%)' }} />
 
-      <div style={{ position: 'relative', height: '100%', maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', paddingTop: 'calc(72px + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
-        {/* Video */}
-        <div style={{ position: 'relative', margin: '8px 0 0', width: '100%', aspectRatio: '16 / 9', background: '#000', boxShadow: '0 20px 60px rgba(0,0,0,0.55)' }}>
+      <div style={{ position: 'relative', height: '100%', maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', boxSizing: 'border-box' }}>
+        {/* Video, right at the top */}
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', background: '#000', flexShrink: 0 }}>
           {mounted ? (
             <CustomPlayer ref={playerRef} youtubeId={moment.youtube_id} title={moment.title} fit="contain" hideMuteButton active={active}
               onMuteChange={active ? onMuteChange : undefined} onEnded={onEnded} onDoubleTap={doubleTap}
               initialSeekSeconds={initialSeek ?? null} onTimeUpdate={(a, b) => { if (active) { setT(a); setDur(b); } }} />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={still(moment.youtube_id)} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={still(moment.youtube_id)} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           )}
           {burst && <span style={{ position: 'absolute', inset: 0, zIndex: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><Heart size={76} fill="#F87171" color="#F87171" /></span>}
-          <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, zIndex: 9, background: 'rgba(255,255,255,0.18)', pointerEvents: 'none' }}>
+          <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, zIndex: 9, background: 'rgba(255,255,255,0.16)', pointerEvents: 'none' }}>
             <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: T.mint, transition: 'width 250ms linear' }} />
           </span>
         </div>
 
-        {/* The story */}
-        <div style={{ padding: '16px 20px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {moment.channel_name && (
-              <a href={moment.channel_url ?? `https://www.youtube.com/watch?v=${moment.youtube_id}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px 5px 7px', borderRadius: 999, background: 'rgba(255,255,255,0.08)', textDecoration: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text }}>
-                <span aria-hidden style={{ width: 17, height: 12, borderRadius: 3.5, background: '#FF0033', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ width: 0, height: 0, borderLeft: '4.5px solid #fff', borderTop: '3px solid transparent', borderBottom: '3px solid transparent', marginLeft: 1 }} />
-                </span>
-                {moment.official ? <><BadgeCheck size={13} color={T.mint} />{moment.channel_name}</> : <>via {moment.channel_name}</>}
-              </a>
-            )}
-            <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3 }}>{index + 1} of {total}</span>
-          </div>
-          <p style={{ margin: '14px 0 0', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
+        {/* About the night */}
+        <div style={{ padding: '16px 20px 0', minHeight: 0, overflow: 'hidden' }}>
+          <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
             {series ? <Link href={`/shows/${series.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>{moment.event_name}</Link> : moment.event_name}
             {moment.year ? ` · ${moment.year}` : ''}
           </p>
-          <h2 style={{ margin: '5px 0 0', fontFamily: FONT.display, fontSize: 'clamp(24px, 6.6vw, 32px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.08, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <h2 style={{ margin: '5px 0 0', fontFamily: FONT.display, fontSize: 'clamp(22px, 6vw, 30px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.1, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {moment.title}
           </h2>
+
+          {(when || where) && (
+            <p style={{ margin: '9px 0 0', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>
+              {when && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><CalendarDays size={14} />{longDay(when)}</span>}
+              {where && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minWidth: 0 }}><MapPin size={14} /><span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{where}</span></span>}
+            </p>
+          )}
+
           {/* How the night was rated by people who went */}
-          <Link href={moment.event_slug ? `/events/${moment.event_slug}#ratings` : '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 8, textDecoration: 'none' }}>
+          <Link href={moment.event_slug ? `/events/${moment.event_slug}#ratings` : series ? `/shows/${series.slug}` : '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 9, textDecoration: 'none' }}>
             <Stars value={rating?.overall ?? 0} size={15} />
             <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: rating ? T.white : T.text3 }}>
               {rating ? <>{rating.overall.toFixed(1)} <span style={{ fontWeight: 500, color: T.text3 }}>· {formatCount(rating.ratings)} rating{rating.ratings === 1 ? '' : 's'}</span></> : 'Not rated yet'}
             </span>
           </Link>
-          {moment.description && (
+          {moment.channel_name && (
+            <a href={moment.channel_url ?? `https://www.youtube.com/watch?v=${moment.youtube_id}`} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 12, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3, verticalAlign: 'middle' }}>
+              {moment.official ? <BadgeCheck size={13} color={T.mint} /> : null}{moment.official ? moment.channel_name : `via ${moment.channel_name}`}
+            </a>
+          )}
+
+          {about && (
             <p onClick={() => setMore((x) => !x)} style={{
-              margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2, cursor: 'pointer',
-              ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
-            }}>{moment.description}</p>
+              margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2, cursor: 'pointer',
+              ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
+            }}>{about}</p>
           )}
-          {crowd.thereCount > 0 && (
-            <p style={{ margin: '8px 0 0', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>
-              <Users size={14} /> {formatCount(crowd.thereCount)} {crowd.thereCount === 1 ? 'person was' : 'people were'} there
-            </p>
+
+          {/* Who was on stage */}
+          {info.onStage.length > 0 && (
+            <div style={{ marginTop: 14 }}>
+              <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.text3 }}>On stage</p>
+              <div className="no-scrollbar" style={{ display: 'flex', gap: 14, marginTop: 9, overflowX: 'auto', marginRight: -20, paddingRight: 20 }}>
+                {info.onStage.map((a) => (
+                  <Link key={a.slug} href={`/artists/${a.slug}`} style={{ width: 62, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textDecoration: 'none' }}>
+                    <Portrait name={a.name} url={a.photo} size={54} ring={a.host} />
+                    <span style={{ width: '100%', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text }}>{a.name}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           )}
+
+          {/* Were you there? */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+            <button type="button" aria-pressed={crowd.iWasThere} onClick={() => { if (!requireSignIn()) crowd.toggleWasThere(); }} style={{
+              height: 34, padding: '0 13px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
+              ...(crowd.iWasThere ? { background: 'rgba(123,227,168,0.14)', color: T.mintText, border: '1px solid rgba(123,227,168,0.4)' } : { background: 'rgba(255,255,255,0.06)', color: T.white, border: '1px solid rgba(255,255,255,0.12)' }),
+            }}>
+              {crowd.iWasThere ? <Check size={15} /> : <UserCheck size={15} />}{crowd.iWasThere ? 'You were there' : 'I was there'}
+            </button>
+            {crowd.thereCount > 0 && <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{formatCount(crowd.thereCount)} {crowd.thereCount === 1 ? 'person was' : 'people were'} there</span>}
+          </div>
         </div>
 
-        {/* Actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px 0', maxWidth: 380 }}>
-          <Action label={liked ? 'Unlike' : 'Like'} on={liked} count={formatCount(likeCount)} onClick={() => { if (!requireSignIn()) toggleLike(); }} color={liked ? '#F87171' : T.white}>
-            <Heart size={21} fill={liked ? '#F87171' : 'none'} />
-          </Action>
-          <Action label="Comments" count={formatCount(comments.length)} onClick={() => setShowComments(true)}><MessageCircle size={21} /></Action>
-          <Action label="I was there" on={crowd.iWasThere} count={crowd.iWasThere ? 'You were there' : 'I was there'} onClick={() => { if (!requireSignIn()) crowd.toggleWasThere(); }}>
-            <UserCheck size={21} />
-          </Action>
-          <Action label="Share" onClick={share}><Send size={20} /></Action>
-        </div>
-
-        <div style={{ flex: 1, minHeight: 12 }} />
+        <div style={{ flex: 1, minHeight: 10 }} />
 
         {/* What next: tickets, or a reminder */}
-        <div style={{ margin: '0 16px', padding: 14, borderRadius: 24, background: 'rgba(14,17,16,0.72)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
+        <div style={{ margin: '0 16px', padding: 14, borderRadius: 22, background: 'rgba(17,21,19,0.96)', border: '1px solid rgba(255,255,255,0.09)', flexShrink: 0 }}>
           {next ? (
             <>
               <Link href={`/events/${next.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
@@ -231,6 +248,17 @@ const MomentSlide = forwardRef<SlideHandle, {
               Find what’s on next
             </Link>
           )}
+        </div>
+
+        {/* Comments on the left; like and share on the right */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px 4px', flexShrink: 0 }}>
+          <BarButton label="Comments" count={formatCount(comments.length)} onClick={() => setShowComments(true)}><MessageCircle size={22} /></BarButton>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <BarButton label={liked ? 'Unlike' : 'Like'} on={liked} count={formatCount(likeCount)} onClick={() => { if (!requireSignIn()) toggleLike(); }} color={liked ? '#F87171' : T.white}>
+              <Heart size={22} fill={liked ? '#F87171' : 'none'} />
+            </BarButton>
+            <BarButton label="Share" onClick={share}><Send size={21} /></BarButton>
+          </div>
         </div>
       </div>
 
