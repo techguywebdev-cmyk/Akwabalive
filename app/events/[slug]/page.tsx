@@ -48,6 +48,7 @@ async function findSeriesMoment(title: string): Promise<string | null> {
     const { data } = await supabase
       .from('moments')
       .select('id')
+      .eq('status', 'live')
       .or(`event_name.ilike.%${series}%,title.ilike.%${series}%,event_slug.ilike.%${series}%`)
       .order('year', { ascending: false })
       .limit(1)

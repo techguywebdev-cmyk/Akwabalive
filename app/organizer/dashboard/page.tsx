@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Link2, Inbox, ScanLine, ChevronRight } from 'lucide-react';
+import { Plus, Link2, Inbox, ScanLine, ChevronRight, Clapperboard } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
@@ -112,6 +112,7 @@ export default function OrganizerDashboard() {
           <QuickAction href="/organizer/scan" icon={<ScanLine size={22} strokeWidth={2} />} label="Scan tickets" />
           <QuickAction href="/organizer/events/from-link" icon={<Link2 size={22} strokeWidth={2} />} label="Add from a link" />
           <QuickAction href="/organizer/review" icon={<Inbox size={22} strokeWidth={2} />} label="Review queue" badge={review} />
+          <QuickAction href="/organizer/moments" icon={<Clapperboard size={22} strokeWidth={2} />} label="Moments review" />
         </div>
 
         <div role="tablist" aria-label="Your events" style={{ display: 'inline-flex', marginTop: 30, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>

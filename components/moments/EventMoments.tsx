@@ -14,7 +14,7 @@ import { T, FONT, EASE } from '@/lib/thiscene';
 let all: Promise<Moment[]> | null = null;
 export function loadAll(): Promise<Moment[]> {
   if (!all) {
-    all = Promise.resolve(createClient().from('moments').select(MOMENT_FIELDS).order('year', { ascending: false }).limit(500))
+    all = Promise.resolve(createClient().from('moments').select(MOMENT_FIELDS).eq('status', 'live').neq('available', false).order('year', { ascending: false }).limit(500))
       .then(({ data }) => (data ?? []) as Moment[])
       .catch(() => []);
   }
