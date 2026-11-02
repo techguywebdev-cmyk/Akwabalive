@@ -109,6 +109,13 @@ async function scanChannel(db: SupabaseClient, t: Target, channelId: string, cha
   return rows.length;
 }
 
+/** "Mr Eazi", "Black Sherif Music", "KiDi VEVO" — a channel named after one of our artists */
+const ARTIST_NAMES = new Set(artists.map((a) => norm(a.name)));
+const isArtistChannel = (channel: string) => {
+  const c = norm(channel).replace(/(official|music|vevo|tv)$/, '');
+  return c.length >= 3 && ARTIST_NAMES.has(c);
+};
+
 const trusted = (channel: string) => {
   const c = norm(channel);
   return TRUSTED_MEDIA.some((m) => { const n = norm(m); return n.length < 5 ? c === n : c === n || c.startsWith(n); });
@@ -135,8 +142,9 @@ async function searchTopic(db: SupabaseClient, topic: (typeof EVENT_TOPICS)[numb
   const rows = hits.filter((h) => !have.has(h.id!.videoId!)).flatMap((h) => {
     const sn = h.snippet!;
     const raw = (sn.title ?? '').replace(/&amp;/g, '&').replace(/&#39;/g, '’').replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
-    const official = !!sn.channelId && officialIds.has(sn.channelId);
-    const ok = (official || trusted(sn.channelTitle ?? '')) && (credible(raw) || topic.kind !== 'show');
+    const official = (!!sn.channelId && officialIds.has(sn.channelId)) || isArtistChannel(sn.channelTitle ?? '');
+    // The title already names the event and isn't a promo; an official or trusted source is enough
+    const ok = official || trusted(sn.channelTitle ?? '');
     if (!ok && review >= 2) return [];
     if (!ok) review++;
     const when = sn.publishedAt ?? null;
