@@ -20,6 +20,8 @@ import { countdown, priceLine } from '@/components/artists/parts';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { T, FONT } from '@/lib/thiscene';
+import { useRatingSummaries } from '@/lib/ratings';
+import { Stars } from '@/components/ratings/Stars';
 
 export type SlideHandle = { toggleMute: () => void };
 
@@ -76,6 +78,9 @@ const MomentSlide = forwardRef<SlideHandle, {
   const [showComments, setShowComments] = useState(false);
   const [giftTarget, setGiftTarget] = useState<Comment | null>(null);
   const [burst, setBurst] = useState(false);
+  const [more, setMore] = useState(false);
+  const ratings = useRatingSummaries(mounted && moment.event_slug ? [moment.event_slug] : []);
+  const rating = moment.event_slug ? ratings[moment.event_slug] : undefined;
   const [t, setT] = useState(0);
   const [dur, setDur] = useState(0);
 
@@ -145,9 +150,22 @@ const MomentSlide = forwardRef<SlideHandle, {
             {series ? <Link href={`/shows/${series.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>{moment.event_name}</Link> : moment.event_name}
             {moment.year ? ` · ${moment.year}` : ''}
           </p>
-          <h2 style={{ margin: '5px 0 0', fontFamily: FONT.display, fontSize: 'clamp(24px, 6.6vw, 32px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.08, color: T.white, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <h2 style={{ margin: '5px 0 0', fontFamily: FONT.display, fontSize: 'clamp(24px, 6.6vw, 32px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.08, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {moment.title}
           </h2>
+          {/* How the night was rated by people who went */}
+          <Link href={moment.event_slug ? `/events/${moment.event_slug}#ratings` : '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 8, textDecoration: 'none' }}>
+            <Stars value={rating?.overall ?? 0} size={15} />
+            <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: rating ? T.white : T.text3 }}>
+              {rating ? <>{rating.overall.toFixed(1)} <span style={{ fontWeight: 500, color: T.text3 }}>· {formatCount(rating.ratings)} rating{rating.ratings === 1 ? '' : 's'}</span></> : 'Not rated yet'}
+            </span>
+          </Link>
+          {moment.description && (
+            <p onClick={() => setMore((x) => !x)} style={{
+              margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2, cursor: 'pointer',
+              ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
+            }}>{moment.description}</p>
+          )}
           {crowd.thereCount > 0 && (
             <p style={{ margin: '8px 0 0', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>
               <Users size={14} /> {formatCount(crowd.thereCount)} {crowd.thereCount === 1 ? 'person was' : 'people were'} there
@@ -156,7 +174,7 @@ const MomentSlide = forwardRef<SlideHandle, {
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '20px 20px 0', maxWidth: 380 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px 0', maxWidth: 380 }}>
           <Action label={liked ? 'Unlike' : 'Like'} on={liked} count={formatCount(likeCount)} onClick={() => { if (!requireSignIn()) toggleLike(); }} color={liked ? '#F87171' : T.white}>
             <Heart size={21} fill={liked ? '#F87171' : 'none'} />
           </Action>
