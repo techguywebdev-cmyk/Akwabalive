@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { findOfficialVideos } from '@/lib/moments/finder';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 export const maxDuration = 60;
 
 /** "Find official videos now" from the admin page: a bigger round than the background one */

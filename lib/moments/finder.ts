@@ -98,7 +98,7 @@ async function scanChannel(db: SupabaseClient, t: Target, channelId: string, cha
 export async function findOfficialVideos(opts: { resolve?: number; scan?: number } = {}): Promise<{ resolved: number; scanned: number; found: number; enabled: boolean }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key || !process.env.YOUTUBE_API_KEY) return { resolved: 0, scanned: 0, found: 0, enabled: false };
-  const db = createClient(url, key, { auth: { persistSession: false } });
+  const db = createClient(url, key, { auth: { persistSession: false }, global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) } });
   const all = targets();
   const { data } = await db.from('official_channels').select('*');
   const rows = new Map((data ?? []).map((r: { slug: string }) => [r.slug, r as Record<string, unknown>]));
