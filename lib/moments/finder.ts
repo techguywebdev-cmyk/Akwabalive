@@ -72,6 +72,9 @@ export function credible(title: string): boolean {
   return STRONG.test(title) && !PROMO.test(title) && !NOT_LIVE.test(title) && hashtags < 3 && tidyTitle(title).length >= 12;
 }
 
+const EVENT_WORDS = Array.from(new Set([...EVENT_TOPICS.flatMap((t) => t.keywords), ...SERIES.flatMap((s) => s.keywords)])).filter((k) => k.length >= 5);
+const namesKnownEvent = (title: string) => { const t = title.toLowerCase(); return EVENT_WORDS.some((k) => t.includes(k)); };
+
 /** Read a channel's recent uploads and pick the live moments worth reviewing */
 async function scanChannel(db: SupabaseClient, t: Target, channelId: string, channelTitle: string): Promise<number> {
   const uploads = `UU${channelId.slice(2)}`;
@@ -82,7 +85,8 @@ async function scanChannel(db: SupabaseClient, t: Target, channelId: string, cha
     const title = i.snippet?.title ?? '';
     if (!i.contentDetails?.videoId || NOT_LIVE.test(title)) return false;
     if (t.kind === 'series') return t.keywords.some((k) => title.toLowerCase().includes(k.toLowerCase())) || LIVE.test(title);
-    return LIVE.test(title);
+    // An artist's clip titled with a known show ("Rapperholic Kumasi 🔥") counts even without "live" in it
+    return LIVE.test(title) || namesKnownEvent(title);
   }).slice(0, 8);
   if (!picks.length) return 0;
 
@@ -130,7 +134,14 @@ const trusted = (channel: string) => {
  */
 async function searchTopic(db: SupabaseClient, topic: (typeof EVENT_TOPICS)[number], officialIds: Set<string>): Promise<number> {
   const since = new Date(Date.now() - 3 * 365 * DAY).toISOString();
-  const s = await yt('search', { part: 'snippet', type: 'video', q: topic.name, maxResults: '25', regionCode: 'GH', relevanceLanguage: 'en', videoEmbeddable: 'true', publishedAfter: since });
+  const base = { part: 'snippet', type: 'video', q: topic.name, regionCode: 'GH', relevanceLanguage: 'en', videoEmbeddable: 'true' };
+  const [best, latest] = await Promise.all([
+    yt('search', { ...base, maxResults: '25', publishedAfter: since }),
+    // The newest edition: last week's show shouldn't lose out to three years of older uploads
+    yt('search', { ...base, maxResults: '15', order: 'date', publishedAfter: new Date(Date.now() - 120 * DAY).toISOString() }),
+  ]);
+  const seenIds = new Set<string>();
+  const s = { items: [...(latest?.items ?? []), ...(best?.items ?? [])].filter((h: { id?: { videoId?: string } }) => { const id = h.id?.videoId; if (!id || seenIds.has(id)) return false; seenIds.add(id); return true; }) };
   type Hit = { id?: { videoId?: string }; snippet?: { title?: string; description?: string; channelTitle?: string; channelId?: string; publishedAt?: string } };
   const hits: Hit[] = (s?.items ?? []).filter((h: Hit) => {
     const title = (h.snippet?.title ?? '').toLowerCase().replace(/&amp;/g, '&');
@@ -159,7 +170,7 @@ async function searchTopic(db: SupabaseClient, topic: (typeof EVENT_TOPICS)[numb
       available: true, source_checked_at: new Date().toISOString(), status: ok ? 'live' : 'pending', found_by: `search:${topic.slug}`, published_at: when,
       category: categorize({ title: raw, event_name: topic.name, found_by: `search:${topic.slug}` }),
     }];
-  }).slice(0, 8);
+  }).slice(0, 12);
   if (!rows.length) return 0;
   const { error } = await db.from('moments').insert(rows);
   if (error) { console.warn('[video finder] insert failed', error.message); return 0; }
@@ -204,10 +215,10 @@ export async function findOfficialVideos(opts: { resolve?: number; scan?: number
     found += await scanChannel(db, t, String(r!.channel_id), String(r!.channel_title ?? t.name));
     await db.from('official_channels').update({ scanned_at: new Date().toISOString() }).eq('slug', t.slug);
   }
-  // 3. Festivals and shows by search (each every 14 days; a search costs 100 quota units)
+  // 3. Festivals and shows by search (each every 7 days; two searches, 100 quota units each)
   const topicKey = (slug: string) => `topic:${slug}`;
   const topicsDue = EVENT_TOPICS
-    .filter((t) => { const r = rows.get(topicKey(t.slug)); return !r?.scanned_at || now - new Date(String(r.scanned_at)).getTime() > 14 * DAY; })
+    .filter((t) => { const r = rows.get(topicKey(t.slug)); return !r?.scanned_at || now - new Date(String(r.scanned_at)).getTime() > 7 * DAY; })
     .sort((a, b) => new Date(String(rows.get(topicKey(a.slug))?.scanned_at ?? 0)).getTime() - new Date(String(rows.get(topicKey(b.slug))?.scanned_at ?? 0)).getTime())
     .slice(0, opts.search ?? 1);
   const officialIds = new Set(Array.from(rows.values()).map((r) => r.channel_id).filter(Boolean).map(String));
