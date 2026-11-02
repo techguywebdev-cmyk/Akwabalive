@@ -56,7 +56,7 @@ const LIVE = /\b(live|concert|perform(s|ance|ed)?|festival|fest|tour|stage|show|
 const NOT_LIVE = /\b(official (music )?video|lyrics?|lyric video|audio|visuali[sz]er|teaser|trailer|reaction|interview|podcast|snippet)\b/i;
 
 /** Teasers, promos and stubs: never published on their own */
-const PROMO = /\b(ad|advert|commercial|up now|up on my channel|new single|newest single|run it|go stream|on audiomack|on spotify|vlog|day \d+ of|is live|announcement|announc|tickets?|see you|tomorrow|tonight|countdown|coming soon|pre-?order|out now|stream now|date|save the date|loading|who'?s coming|link in bio)\b/i;
+const PROMO = /\b(ad|advert|call us|join (us|our)|live conversation|commercial|up now|up on my channel|new single|newest single|run it|go stream|on audiomack|on spotify|vlog|day \d+ of|is live|announcement|announc|tickets?|see you|tomorrow|tonight|countdown|coming soon|pre-?order|out now|stream now|date|save the date|loading|who'?s coming|link in bio)\b/i;
 /** Clearly a performance or an event */
 const STRONG = /\b(live (at|in|from|on)|full (show|performance|set|concert)|concert|performance|performs?|performed|festival|fest|tour|highlights|on stage|stage performance|durbar|procession|celebrat\w*|carnival)\b/i;
 
