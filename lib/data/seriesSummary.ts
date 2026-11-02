@@ -37,7 +37,7 @@ export async function seriesCovers(events: GhanaEvent[], moments: Moment[]): Pro
 }
 
 /** What a show tile needs: next edition date, cover, hosts, and the last edition (for its rating) */
-export function summarizeSeries(list: EventSeries[], events: GhanaEvent[], covers: Record<string, string> = {}): SeriesSummary[] {
+export function summarizeSeries(list: EventSeries[], events: GhanaEvent[], covers: Record<string, string> = {}, hostPhotos: Record<string, string | null> = {}): SeriesSummary[] {
   return list.map((s) => {
     const { upcoming, past } = editionsOf(s, events);
     const show = upcoming[0] ?? past[0];
@@ -46,6 +46,8 @@ export function summarizeSeries(list: EventSeries[], events: GhanaEvent[], cover
       image: covers[s.slug] ?? show?.image ?? null, nextDate: upcoming[0]?.date ?? null,
       hostNames: s.hosts.map((h) => getArtistBySlug(h)?.name).filter(Boolean) as string[],
       lastSlug: past[0]?.slug ?? null,
+      hosts: s.hosts.map((h) => ({ slug: h, name: getArtistBySlug(h)?.name ?? h, photo: hostPhotos[h] ?? null })),
+      festival: s.hosts.length === 0,
     };
   });
 }
