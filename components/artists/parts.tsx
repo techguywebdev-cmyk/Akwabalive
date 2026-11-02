@@ -79,7 +79,7 @@ export function Portrait({ name, url, size, ring = false }: { name: string; url?
   return (
     <span style={{
       position: 'relative', display: 'block', width: size, aspectRatio: '1 / 1', borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
-      background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 75%)',
+      background: 'linear-gradient(150deg, #26302B 0%, #121715 75%)',
       boxShadow: ring ? `0 0 0 2px ${T.mint}, 0 0 0 5px rgba(3,8,6,0.9)` : '0 0 0 1px rgba(255,255,255,0.08)',
     }}>
       {url ? (
@@ -170,7 +170,7 @@ export function SeriesRow({ s, rating }: { s: SeriesSummary; rating?: RatingSumm
   const d = parseDay(s.nextDate);
   return (
     <Link href={`/shows/${s.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', textDecoration: 'none' }}>
-      <span style={{ width: 58, height: 58, borderRadius: 16, overflow: 'hidden', flexShrink: 0, background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 75%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ width: 58, height: 58, borderRadius: 16, overflow: 'hidden', flexShrink: 0, background: 'linear-gradient(150deg, #26302B 0%, #121715 75%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {s.image
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={hiRes(s.image, 240) ?? s.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} onError={(e) => { const i = e.currentTarget; if (i.src.includes('/hq720.jpg')) i.src = i.src.replace('/hq720.jpg', '/hqdefault.jpg'); }} />

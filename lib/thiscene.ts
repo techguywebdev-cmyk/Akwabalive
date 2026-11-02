@@ -9,7 +9,7 @@ import type { CSSProperties } from 'react';
 
 export const T = {
   /** Green-black ground (Oct 2026 rework) */
-  bg: '#030806',
+  bg: '#050606',
   surface: 'rgba(255,255,255,0.05)',
   surface2: 'rgba(255,255,255,0.025)',
   glass: 'rgba(3,10,6,0.42)',
@@ -28,11 +28,10 @@ export const T = {
   danger: '#FF8A8A',
 } as const;
 
-/** The base every screen sits on: deep green glows fading into black. */
+/** The base every screen sits on: near-black charcoal with a faint green light at the top (Nov 2026: calmer). */
 export const GROUND =
-  'radial-gradient(90% 45% at 10% 0%, rgba(30,110,72,0.55) 0%, rgba(30,110,72,0) 70%), ' +
-  'radial-gradient(80% 40% at 100% 100%, rgba(20,84,55,0.5) 0%, rgba(20,84,55,0) 70%), ' +
-  'linear-gradient(180deg, #0D2E1F 0%, #082015 38%, #05130C 70%, #030806 100%)';
+  'radial-gradient(60% 22% at 50% 0%, rgba(40,130,85,0.16) 0%, rgba(40,130,85,0) 80%), ' +
+  'linear-gradient(180deg, #0B0F0D 0%, #070908 50%, #050606 100%)';
 
 /** Accent palette (tokens accent-*). Gold is the default. */
 export const ACCENTS = {

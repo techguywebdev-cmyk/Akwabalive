@@ -36,7 +36,7 @@ const CAT_LABEL: Record<string, string> = {
   sports: 'Sports', tech: 'Tech', art: 'Art', fashion: 'Fashion', wellness: 'Wellness',
 };
 const MON = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-const AV_COLORS = ['#1F5A3F', '#3B2F5C', '#5C3A1F', '#1F3F5C', '#5C1F3A'];
+const AV_COLORS = ['#26302B', '#3B2F5C', '#5C3A1F', '#1F3F5C', '#5C1F3A'];
 
 const accentOf = (e: GhanaEvent) => CAT_ACCENT[e.category] ?? ACCENTS.gold;
 const cityName = (c: string) => CITY_LIST.find((x) => x.value === c)?.label ?? c;

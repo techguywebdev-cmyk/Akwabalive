@@ -153,7 +153,7 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
                 <div style={{ ...card, padding: '2px 16px' }}>
                   {shown.length ? shown.map((r, i) => (
                     <div key={r.ticket_id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: i ? `1px solid ${T.hairline}` : 'none' }}>
-                      <span style={{ width: 38, height: 38, borderRadius: 19, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1F5A3F', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 }}>
+                      <span style={{ width: 38, height: 38, borderRadius: 19, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#26302B', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 }}>
                         {r.avatar_url
                           // eslint-disable-next-line @next/next/no-img-element
                           ? <img src={r.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

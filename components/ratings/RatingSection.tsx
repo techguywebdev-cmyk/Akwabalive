@@ -59,7 +59,7 @@ function RateSheet({ slug, title, status, onClose, onSaved }: { slug: string; ti
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', opacity: shown ? 1 : 0, transition: 'opacity 280ms ease' }} />
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0, maxWidth: 560, margin: '0 auto', maxHeight: '92svh', overflowY: 'auto',
-        background: 'linear-gradient(180deg, #0B2619 0%, #05130C 100%)', borderRadius: '26px 26px 0 0', borderTop: `1px solid ${T.hairlineStrong}`,
+        background: 'linear-gradient(180deg, #0F1311 0%, #070908 100%)', borderRadius: '26px 26px 0 0', borderTop: `1px solid ${T.hairlineStrong}`,
         padding: '10px 20px calc(24px + env(safe-area-inset-bottom, 0px))', transform: shown ? 'none' : 'translateY(100%)', transition: `transform 420ms ${EASE.sheet}`,
       }}>
         <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', margin: '0 auto 14px' }} />
@@ -205,7 +205,7 @@ export default function RatingSection({ slug, title, past }: { slug: string; tit
           {reviews.filter((r) => r.review).map((r) => (
             <li key={r.id} style={{ padding: '14px 0', borderTop: `1px solid ${T.hairline}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ width: 32, height: 32, borderRadius: 16, overflow: 'hidden', flexShrink: 0, background: '#1F5A3F', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, color: '#D6FBE6' }}>
+                <span style={{ width: 32, height: 32, borderRadius: 16, overflow: 'hidden', flexShrink: 0, background: '#26302B', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, color: '#D6FBE6' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {r.avatar_url ? <img src={r.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (r.name ?? '?')[0]?.toUpperCase()}
                 </span>

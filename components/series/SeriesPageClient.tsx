@@ -49,13 +49,13 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
 
       {/* Hero: the show's picture full width, fading into the page, with the name over it */}
       <header style={{ position: 'relative' }}>
-        <div style={{ position: 'relative', height: 'min(118vw, 560px)', overflow: 'hidden', background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 75%)' }}>
+        <div style={{ position: 'relative', height: 'min(118vw, 560px)', overflow: 'hidden', background: 'linear-gradient(150deg, #26302B 0%, #121715 75%)' }}>
           {cover && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={hiRes(cover, 1200) ?? cover} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 30%' }}
               onError={(e) => { const i = e.currentTarget; if (i.src.includes('/hq720.jpg')) i.src = i.src.replace('/hq720.jpg', '/hqdefault.jpg'); }} />
           )}
-          <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0.45) 0%, rgba(3,8,6,0) 22%, rgba(3,8,6,0) 42%, rgba(9,34,22,0.85) 74%, #0A2618 100%)' }} />
+          <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0.45) 0%, rgba(3,8,6,0) 22%, rgba(3,8,6,0) 42%, rgba(10,13,12,0.85) 74%, #0A0D0C 100%)' }} />
           <div style={{ position: 'absolute', left: 20, right: 20, bottom: 18, maxWidth: 640, margin: '0 auto' }}>
             <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>{series.usually}</p>
             <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: series.name.length > 14 ? 40 : 52, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 0.98, color: T.white, textShadow: '0 2px 24px rgba(0,0,0,0.35)' }}>{series.name}</h1>

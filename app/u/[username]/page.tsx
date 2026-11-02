@@ -62,7 +62,7 @@ function Sheet({ title, onClose, children }: { title: string; onClose: () => voi
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', opacity: shown ? 1 : 0, transition: 'opacity 280ms ease' }} />
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0, maxWidth: 560, margin: '0 auto', maxHeight: '88svh', overflowY: 'auto',
-        background: 'linear-gradient(180deg, #0B2619 0%, #05130C 100%)', borderRadius: '26px 26px 0 0', borderTop: `1px solid ${T.hairlineStrong}`,
+        background: 'linear-gradient(180deg, #0F1311 0%, #070908 100%)', borderRadius: '26px 26px 0 0', borderTop: `1px solid ${T.hairlineStrong}`,
         padding: '10px 20px calc(24px + env(safe-area-inset-bottom, 0px))',
         transform: shown ? 'translateY(0)' : 'translateY(100%)', transition: `transform 420ms ${EASE.sheet}`,
       }}>
@@ -166,7 +166,7 @@ function EditSheet({ profile, onClose, onSaved }: { profile: Profile; onClose: (
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <button type="button" onClick={() => fileRef.current?.click()} aria-label="Change photo" style={{ position: 'relative', padding: 0, border: 'none', background: 'none', cursor: 'pointer', borderRadius: 40 }}>
           <Avatar p={{ ...profile, full_name: name || profile.full_name, avatar_url: avatar }} size={80} />
-          <span style={{ position: 'absolute', right: -2, bottom: -2, width: 30, height: 30, borderRadius: 15, background: T.mint, color: T.onMint, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px #0B2619' }}>
+          <span style={{ position: 'absolute', right: -2, bottom: -2, width: 30, height: 30, borderRadius: 15, background: T.mint, color: T.onMint, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px #0F1311' }}>
             <Camera size={15} strokeWidth={2.2} />
           </span>
         </button>
