@@ -32,7 +32,7 @@ export async function verifyMoments(limit = 40): Promise<{ checked: number; offi
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return { checked: 0, official: 0, gone: 0 };
   const db = createClient(url, key, { auth: { persistSession: false } });
-  const { data } = await db.from('moments').select('id, title, event_name, description, youtube_id').is('source_checked_at', null).limit(limit);
+  const { data } = await db.from('moments').select('id, title, event_name, description, youtube_id, found_by').or(`source_checked_at.is.null,source_checked_at.lt.${new Date(Date.now() - 14 * 86400000).toISOString()}`).limit(limit);
   const rows = (data ?? []) as Row[];
   let official = 0, gone = 0;
   await Promise.all(rows.map(async (m) => {
@@ -47,7 +47,9 @@ export async function verifyMoments(limit = 40): Promise<{ checked: number; offi
         const channel = String(j.author_name ?? '');
         const isOfficial = ownerNames(m).some((n) => norm(channel).includes(n) || n.includes(norm(channel)) && norm(channel).length >= 4);
         if (isOfficial) official++;
-        patch = { ...patch, channel_name: channel || null, channel_url: j.author_url ?? null, official: isOfficial, available: true };
+        patch = { ...patch, channel_name: channel || null, channel_url: j.author_url ?? null, available: true };
+        // Keep 'official' when the finder already knows it came from the official channel
+        if (!(m as Row & { found_by?: string | null }).found_by) patch.official = isOfficial;
       } else {
         return; // try again next time
       }

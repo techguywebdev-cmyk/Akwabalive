@@ -37,6 +37,7 @@ export function useMoments(initialMomentId?: string | null) {
     const { data, error } = await supabase
       .from('moments')
       .select('*')
+      .eq('status', 'live')
       .order('is_featured', { ascending: false })
       .order('year', { ascending: false })
       .range(0, PAGE_SIZE - 1);
@@ -86,6 +87,7 @@ export function useMoments(initialMomentId?: string | null) {
     const { data } = await supabase
       .from('moments')
       .select('*')
+      .eq('status', 'live')
       .order('is_featured', { ascending: false })
       .order('year', { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
