@@ -54,7 +54,7 @@ async function findChannel(name: string): Promise<{ id: string; title: string; s
 }
 
 const LIVE = /\b(live|concert|perform(s|ance|ed)?|festival|fest|tour|stage|show|crowd|highlights?|recap|night|rave|homecoming|o2|arena|stadium)\b/i;
-const NOT_LIVE = /\b(official (music )?video|lyrics?|lyric video|audio|visuali[sz]er|teaser|trailer|reaction|interview|podcast|snippet)\b/i;
+const NOT_LIVE = /(\(?\[?(official )?(live )?performance video\]?\)?|\(live performance\)|sky high|live session|studio session|cue live|colors show|tiny desk|\?\s*$)|\b(react(s|ion|ing)?|vlog|recap video|official (music )?video|lyrics?|lyric video|audio|visuali[sz]er|teaser|trailer|reaction|interview|podcast|snippet)\b/i;
 
 /** Teasers, promos and stubs: never published on their own */
 const PROMO = /\b(ad|advert|ready for|get ready|funeral|call us|join (us|our)|live conversation|commercial|up now|up on my channel|new single|newest single|run it|go stream|on audiomack|on spotify|vlog|day \d+ of|is live|announcement|announc|tickets?|see you|tomorrow|tonight|countdown|coming soon|pre-?order|out now|stream now|date|save the date|loading|who'?s coming|link in bio)\b/i;
