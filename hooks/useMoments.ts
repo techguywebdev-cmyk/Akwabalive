@@ -80,7 +80,20 @@ export function useMoments(initialMomentId?: string | null) {
   }, [loadInitial]);
 
   const loadMore = useCallback(async () => {
-    if (!hasMore || loadingMore) return;
+    if (loadingMore) return;
+    if (!hasMore) {
+      // Never run dry: when everything has been shown, start another lap, reshuffled
+      setMoments((prev) => {
+        const base = prev.filter((m) => !m._k);
+        if (base.length < 2) return prev;
+        const lap = Math.round(prev.length / base.length);
+        let next = arrange(base);
+        const last = prev[prev.length - 1];
+        if (next[0]?.youtube_id === last?.youtube_id) next = [...next.slice(1), next[0]];
+        return [...prev, ...next.map((m) => ({ ...m, _k: `${m.id}~${lap}` }))];
+      });
+      return;
+    }
     setLoadingMore(true);
     const from = moments.length;
     const { data } = await supabase

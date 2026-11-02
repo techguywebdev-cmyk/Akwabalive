@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { artists } from '@/lib/data/artists';
 import { SERIES } from '@/lib/data/series';
+import { EVENT_TOPICS, TRUSTED_MEDIA } from '@/lib/data/festivals';
 
 /**
  * Finds official videos for Moments automatically:
@@ -54,6 +55,22 @@ async function findChannel(name: string): Promise<{ id: string; title: string; s
 const LIVE = /\b(live|concert|perform(s|ance|ed)?|festival|fest|tour|stage|show|crowd|highlights?|recap|night|rave|homecoming|o2|arena|stadium)\b/i;
 const NOT_LIVE = /\b(official (music )?video|lyrics?|lyric video|audio|visuali[sz]er|teaser|trailer|reaction|interview|podcast|snippet)\b/i;
 
+/** Teasers, promos and stubs: never published on their own */
+const PROMO = /\b(is live|announcement|announc|tickets?|see you|tomorrow|tonight|countdown|coming soon|pre-?order|out now|stream now|date|save the date|loading|who'?s coming|link in bio)\b/i;
+/** Clearly a performance or an event */
+const STRONG = /\b(live (at|in|from|on)|full (show|performance|set|concert)|concert|performance|performs?|performed|festival|fest|tour|highlights|on stage|stage performance|durbar|procession|celebrat\w*|carnival)\b/i;
+
+/** "Song title #tag #tag 🔥" → "Song title" */
+export function tidyTitle(t: string): string {
+  return t.replace(/#[^\s#]+/g, '').replace(/\s*[|•]\s*$/g, '').replace(/\s{2,}/g, ' ').trim().replace(/[\s,.-]+$/, '').slice(0, 140);
+}
+
+/** Publish straight away when the title reads like a real performance, not a promo or a short */
+export function credible(title: string): boolean {
+  const hashtags = (title.match(/#/g) ?? []).length;
+  return STRONG.test(title) && !PROMO.test(title) && !NOT_LIVE.test(title) && hashtags < 3 && tidyTitle(title).length >= 12;
+}
+
 /** Read a channel's recent uploads and pick the live moments worth reviewing */
 async function scanChannel(db: SupabaseClient, t: Target, channelId: string, channelTitle: string): Promise<number> {
   const uploads = `UU${channelId.slice(2)}`;
@@ -74,7 +91,8 @@ async function scanChannel(db: SupabaseClient, t: Target, channelId: string, cha
   const series = t.kind === 'series' ? SERIES.find((s) => s.slug === t.slug) : SERIES.find((s) => picks.some((p) => s.keywords.some((k) => (p.snippet?.title ?? '').toLowerCase().includes(k))));
 
   const rows = picks.filter((p) => !have.has(p.contentDetails!.videoId!)).map((p) => {
-    const title = (p.snippet?.title ?? '').replace(/\s+/g, ' ').trim().slice(0, 140);
+    const raw = (p.snippet?.title ?? '').replace(/\s+/g, ' ').trim();
+    const title = tidyTitle(raw) || raw.slice(0, 140);
     const inSeries = series && series.keywords.some((k) => title.toLowerCase().includes(k));
     const when = p.contentDetails?.videoPublishedAt ?? p.snippet?.publishedAt ?? null;
     const firstLine = (p.snippet?.description ?? '').split('\n').map((x) => x.trim()).find((x) => x.length > 20 && !/https?:\/\//.test(x)) ?? null;
@@ -82,9 +100,54 @@ async function scanChannel(db: SupabaseClient, t: Target, channelId: string, cha
       title, youtube_id: p.contentDetails!.videoId!, event_name: inSeries ? series!.name : t.eventName, event_slug: null,
       description: firstLine ? firstLine.slice(0, 160) : null, year: when ? new Date(when).getFullYear() : null, is_featured: false,
       channel_name: channelTitle, channel_url: `https://www.youtube.com/channel/${channelId}`, official: true, available: true,
-      source_checked_at: new Date().toISOString(), status: 'pending', found_by: `youtube:${t.slug}`, published_at: when,
+      source_checked_at: new Date().toISOString(), status: credible(raw) ? 'live' : 'pending', found_by: `youtube:${t.slug}`, published_at: when,
     };
   });
+  if (!rows.length) return 0;
+  const { error } = await db.from('moments').insert(rows);
+  if (error) { console.warn('[video finder] insert failed', error.message); return 0; }
+  return rows.length;
+}
+
+const trusted = (channel: string) => {
+  const c = norm(channel);
+  return TRUSTED_MEDIA.some((m) => { const n = norm(m); return n.length < 5 ? c === n : c === n || c.startsWith(n); });
+};
+
+/**
+ * Festivals and shows rarely have their own channel, so search YouTube for them directly.
+ * Videos from the artists' official channels or trusted media go live; anything else that
+ * clearly matches waits for review (at most a couple per search, so the queue stays short).
+ */
+async function searchTopic(db: SupabaseClient, topic: (typeof EVENT_TOPICS)[number], officialIds: Set<string>): Promise<number> {
+  const since = new Date(Date.now() - 3 * 365 * DAY).toISOString();
+  const s = await yt('search', { part: 'snippet', type: 'video', q: topic.name, maxResults: '25', regionCode: 'GH', relevanceLanguage: 'en', videoEmbeddable: 'true', publishedAfter: since });
+  type Hit = { id?: { videoId?: string }; snippet?: { title?: string; description?: string; channelTitle?: string; channelId?: string; publishedAt?: string } };
+  const hits: Hit[] = (s?.items ?? []).filter((h: Hit) => {
+    const title = (h.snippet?.title ?? '').toLowerCase().replace(/&amp;/g, '&');
+    return h.id?.videoId && topic.keywords.some((k) => title.includes(k)) && !NOT_LIVE.test(title) && !PROMO.test(title);
+  });
+  if (!hits.length) return 0;
+  const ids = hits.map((h) => h.id!.videoId!);
+  const { data: known } = await db.from('moments').select('youtube_id').in('youtube_id', ids);
+  const have = new Set((known ?? []).map((k: { youtube_id: string }) => k.youtube_id));
+  let review = 0;
+  const rows = hits.filter((h) => !have.has(h.id!.videoId!)).flatMap((h) => {
+    const sn = h.snippet!;
+    const raw = (sn.title ?? '').replace(/&amp;/g, '&').replace(/&#39;/g, '’').replace(/&quot;/g, '"').replace(/\s+/g, ' ').trim();
+    const official = !!sn.channelId && officialIds.has(sn.channelId);
+    const ok = (official || trusted(sn.channelTitle ?? '')) && (credible(raw) || topic.kind !== 'show');
+    if (!ok && review >= 2) return [];
+    if (!ok) review++;
+    const when = sn.publishedAt ?? null;
+    const firstLine = (sn.description ?? '').split('\n').map((x) => x.trim()).find((x) => x.length > 20 && !/https?:\/\//.test(x)) ?? null;
+    return [{
+      title: tidyTitle(raw) || raw.slice(0, 140), youtube_id: h.id!.videoId!, event_name: topic.name, event_slug: null,
+      description: firstLine ? firstLine.slice(0, 160) : null, year: when ? new Date(when).getFullYear() : null, is_featured: false,
+      channel_name: sn.channelTitle ?? null, channel_url: sn.channelId ? `https://www.youtube.com/channel/${sn.channelId}` : null, official,
+      available: true, source_checked_at: new Date().toISOString(), status: ok ? 'live' : 'pending', found_by: `search:${topic.slug}`, published_at: when,
+    }];
+  }).slice(0, 8);
   if (!rows.length) return 0;
   const { error } = await db.from('moments').insert(rows);
   if (error) { console.warn('[video finder] insert failed', error.message); return 0; }
@@ -95,7 +158,7 @@ async function scanChannel(db: SupabaseClient, t: Target, channelId: string, cha
  * One round of work, small enough for a page load or a cron tick:
  * resolve a few channels we don't know yet, then scan a few channels due for a look.
  */
-export async function findOfficialVideos(opts: { resolve?: number; scan?: number } = {}): Promise<{ resolved: number; scanned: number; found: number; enabled: boolean }> {
+export async function findOfficialVideos(opts: { resolve?: number; scan?: number; search?: number } = {}): Promise<{ resolved: number; scanned: number; searched?: number; found: number; enabled: boolean }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key || !process.env.YOUTUBE_API_KEY) return { resolved: 0, scanned: 0, found: 0, enabled: false };
   const db = createClient(url, key, { auth: { persistSession: false }, global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) } });
@@ -129,5 +192,18 @@ export async function findOfficialVideos(opts: { resolve?: number; scan?: number
     found += await scanChannel(db, t, String(r!.channel_id), String(r!.channel_title ?? t.name));
     await db.from('official_channels').update({ scanned_at: new Date().toISOString() }).eq('slug', t.slug);
   }
-  return { resolved, scanned: due.length, found, enabled: true };
+  // 3. Festivals and shows by search (each every 14 days; a search costs 100 quota units)
+  const topicKey = (slug: string) => `topic:${slug}`;
+  const topicsDue = EVENT_TOPICS
+    .filter((t) => { const r = rows.get(topicKey(t.slug)); return !r?.scanned_at || now - new Date(String(r.scanned_at)).getTime() > 14 * DAY; })
+    .sort((a, b) => new Date(String(rows.get(topicKey(a.slug))?.scanned_at ?? 0)).getTime() - new Date(String(rows.get(topicKey(b.slug))?.scanned_at ?? 0)).getTime())
+    .slice(0, opts.search ?? 1);
+  const officialIds = new Set(Array.from(rows.values()).map((r) => r.channel_id).filter(Boolean).map(String));
+  for (const t of topicsDue) {
+    // Mark first, so a second visitor at the same moment doesn't search the same thing
+    await db.from('official_channels').upsert({ slug: topicKey(t.slug), kind: 'series', channel_id: null, channel_title: null, subscribers: null, confirmed: true, checked_at: new Date().toISOString(), scanned_at: new Date().toISOString() });
+    found += await searchTopic(db, t, officialIds);
+  }
+
+  return { resolved, scanned: due.length, searched: topicsDue.length, found, enabled: true };
 }

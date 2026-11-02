@@ -13,6 +13,6 @@ export const maxDuration = 30;
  */
 export async function GET() {
   const checked = await verifyMoments(40);
-  const finder = await findOfficialVideos({ resolve: 2, scan: 3 }).catch(() => null);
+  const finder = await findOfficialVideos({ resolve: 2, scan: 3, search: 1 }).catch(() => null);
   return NextResponse.json({ ...checked, finder });
 }
