@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyMoments } from '@/lib/moments/verify';
 import { findOfficialVideos } from '@/lib/moments/finder';
+import { confirmPerformers } from '@/lib/moments/performers';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -14,5 +15,6 @@ export const maxDuration = 30;
 export async function GET() {
   const checked = await verifyMoments(40);
   const finder = await findOfficialVideos({ resolve: 2, scan: 3, search: 1 }).catch(() => null);
-  return NextResponse.json({ ...checked, finder });
+  const performers = await confirmPerformers(30).catch(() => null);
+  return NextResponse.json({ ...checked, finder, performers });
 }

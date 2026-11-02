@@ -8,6 +8,10 @@ export interface Moment {
   id: string;
   /** Feed key when the same moment comes round again in a later lap */
   _k?: string;
+  /** concert | show | awards | culture */
+  category?: string | null;
+  /** Confirmed performers (artist slugs), biggest first; null until checked */
+  performers?: string[] | null;
   title: string;
   event_name: string;
   event_slug: string | null;

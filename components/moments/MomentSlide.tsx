@@ -15,6 +15,7 @@ import { useMomentCrowd } from '@/hooks/useMomentCrowd';
 import { SERIES, momentInSeries } from '@/lib/data/series';
 import { countdown, priceLine, Portrait } from '@/components/artists/parts';
 import { useMomentInfo } from '@/hooks/useMomentInfo';
+import { CATEGORIES } from '@/lib/moments/categorize';
 import { longDay, parseDay, shortDay } from '@/lib/dates';
 import { T, FONT } from '@/lib/thiscene';
 import { useRatingSummaries } from '@/lib/ratings';
@@ -41,8 +42,8 @@ const MomentSlide = forwardRef<SlideHandle, {
   moment: Moment; active: boolean; mounted: boolean; index: number; total: number;
   user: User | null; profile: Profile | null; onMuteChange: (m: boolean) => void; onEnded: () => void;
   initialSeek?: number | null; requireSignIn: () => boolean; flash: (m: string) => void;
-  upNext?: Moment | null; onNext?: () => void;
-}>(function MomentSlide({ moment, active, mounted, user, profile, onMuteChange, onEnded, initialSeek, requireSignIn, flash, upNext, onNext }, ref) {
+  upNext?: Moment | null; onNext?: () => void; onCategory?: (c: string) => void;
+}>(function MomentSlide({ moment, active, mounted, user, profile, onMuteChange, onEnded, initialSeek, requireSignIn, flash, upNext, onNext, onCategory }, ref) {
   const playerRef = useRef<CustomPlayerHandle>(null);
   useImperativeHandle(ref, () => ({ toggleMute: () => playerRef.current?.toggleMute() }));
 
@@ -63,6 +64,7 @@ const MomentSlide = forwardRef<SlideHandle, {
   const series = useMemo(() => SERIES.find((s) => momentInSeries(moment, s)), [moment]);
   const info = useMomentInfo(moment, series, mounted);
   const about = moment.description ?? series?.blurb ?? null;
+  const tag = CATEGORIES.find((c) => c.key === moment.category);
   const canGift = Boolean(next?.tiers?.some((x) => x.price > 0 && x.quantity - x.sold > 0)) && !next?.ticketUrl;
 
   const share = useCallback(async () => {
@@ -108,6 +110,12 @@ const MomentSlide = forwardRef<SlideHandle, {
         <div style={{ padding: '16px 20px 0', minHeight: 0, overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
+              {tag && (
+                <button type="button" onClick={() => onCategory?.(tag.key)} aria-label={`More ${tag.label.toLowerCase()}`} style={{
+                  display: 'inline-flex', alignItems: 'center', height: 24, padding: '0 10px', marginBottom: 8, borderRadius: 999, cursor: 'pointer',
+                  background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', color: T.text, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
+                }}>{tag.key === 'awards' ? 'Awards' : tag.label.replace(/s$/, '')}</button>
+              )}
               <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
                 {series ? <Link href={`/shows/${series.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>{moment.event_name}</Link> : moment.event_name}
                 {moment.year ? ` · ${moment.year}` : ''}
