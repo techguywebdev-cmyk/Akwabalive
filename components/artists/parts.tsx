@@ -164,7 +164,7 @@ export function ShowRow({ event, past, rating }: { event: GhanaEvent; past?: boo
 }
 
 /** A series in a list: last flyer as a thumbnail, name, next edition, follow */
-export type SeriesSummary = { slug: string; name: string; usually: string; image: string | null; nextDate: string | null; hostNames: string[]; lastSlug?: string | null };
+export type SeriesSummary = { slug: string; name: string; usually: string; image: string | null; nextDate: string | null; hostNames: string[]; lastSlug?: string | null; hosts?: { slug: string; name: string; photo: string | null }[]; festival?: boolean };
 
 export function SeriesRow({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
   const d = parseDay(s.nextDate);

@@ -1,20 +1,22 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import ExploreSwitch from '@/components/explore/ExploreSwitch';
+import { ToolsCapsule, SearchDrop, ChoiceSheet } from '@/components/explore/Tools';
 import Nav from '@/components/layout/Nav';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { useMyFollows } from '@/components/follow/useFollow';
 import { useRatingSummaries, type RatingSummary } from '@/lib/ratings';
 import { ScoreChip } from '@/components/ratings/Stars';
-import { SectionTitle, FollowPill, countdown, initials, type SeriesSummary } from '@/components/artists/parts';
+import { SectionTitle, FollowPill, Portrait, countdown, initials, type SeriesSummary } from '@/components/artists/parts';
 import { T, FONT, GROUND } from '@/lib/thiscene';
 
 /** Cover image; YouTube stills fall back to the always-available smaller still */
 function Cover({ src, name, style }: { src: string | null; name: string; style?: React.CSSProperties }) {
   if (!src) {
-    return <span aria-hidden style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(150deg, #26302B 0%, #121715 75%)', fontFamily: FONT.display, fontSize: 40, fontWeight: 800, color: 'rgba(214,251,230,0.45)' }}>{initials(name)}</span>;
+    return <span aria-hidden style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(150deg, #26302B 0%, #121715 75%)', fontFamily: FONT.display, fontSize: (style?.fontSize as number | undefined) ?? 40, fontWeight: 800, color: 'rgba(214,251,230,0.45)' }}>{initials(name)}</span>;
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -66,56 +68,195 @@ function HeroCard({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
   );
 }
 
-function Shelf({ title, items, rate }: { title: string; items: SeriesSummary[]; rate: (s: SeriesSummary) => RatingSummary | undefined }) {
-  if (!items.length) return null;
+/** December calendar row: big date, name and host, small cover */
+function CalendarRow({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
+  const d = parseDay(s.nextDate);
   return (
-    <section style={{ marginTop: 36 }}>
-      <SectionTitle>{title}</SectionTitle>
-      <div className="no-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '0 -20px', padding: '0 20px', scrollSnapType: 'x mandatory' }}>
-        {items.map((s) => <div key={s.slug} style={{ width: 150, flexShrink: 0, scrollSnapAlign: 'start' }}><Tile s={s} rating={rate(s)} /></div>)}
-      </div>
-    </section>
+    <Link href={`/shows/${s.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderTop: `1px solid ${T.hairline}`, textDecoration: 'none' }}>
+      <span style={{ width: 48, flexShrink: 0, textAlign: 'center' }}>
+        <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: d ? T.mintText : T.text3 }}>{d ? d.toLocaleDateString('en-GB', { month: 'short' }) : 'Dec'}</span>
+        <span style={{ display: 'block', fontFamily: FONT.display, fontSize: d ? 28 : 17, fontWeight: 800, lineHeight: 1.1, color: d ? T.white : T.text3 }}>{d ? d.getDate() : 'TBA'}</span>
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{s.name}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
+          {s.hostNames.length ? s.hostNames.join(' & ') : s.usually.replace(/^Every December · /, '')}
+          {rating && <ScoreChip score={rating.overall} />}
+        </span>
+      </span>
+      <span style={{ width: 56, height: 56, borderRadius: 14, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.05)' }}>
+        <Cover src={s.image} name={s.name} style={{ width: '100%', height: '100%', fontSize: 18 } as React.CSSProperties} />
+      </span>
+    </Link>
   );
 }
 
+/** A host's portrait with their show's name under it */
+function HostCard({ s }: { s: SeriesSummary }) {
+  const h = s.hosts?.[0];
+  if (!h) return null;
+  return (
+    <Link href={`/shows/${s.slug}`} style={{ width: 104, flexShrink: 0, textAlign: 'center', textDecoration: 'none', scrollSnapAlign: 'start' }}>
+      <Portrait name={h.name} url={h.photo} size={96} ring={!!s.nextDate} />
+      <span style={{ display: 'block', marginTop: 10, fontFamily: FONT.display, fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15, color: T.white }}>{s.name}</span>
+      <span style={{ display: 'block', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>{h.name}</span>
+    </Link>
+  );
+}
+
+/** Festival: wide cover with the name over it */
+function FestivalCard({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
+  const d = parseDay(s.nextDate);
+  return (
+    <Link href={`/shows/${s.slug}`} style={{ position: 'relative', display: 'block', aspectRatio: '16 / 9', borderRadius: 22, overflow: 'hidden', textDecoration: 'none', background: 'rgba(255,255,255,0.05)' }}>
+      <Cover src={s.image} name={s.name} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
+      <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,8,7,0) 35%, rgba(6,8,7,0.85) 100%)' }} />
+      {rating && <span style={{ position: 'absolute', top: 12, right: 12, padding: '4px 9px', borderRadius: 999, background: 'rgba(8,10,9,0.6)' }}><ScoreChip score={rating.overall} /></span>}
+      <span style={{ position: 'absolute', left: 16, right: 16, bottom: 14 }}>
+        <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>{s.name}</span>
+        <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: d ? T.mintText : T.text2 }}>{d ? `Next: ${shortDay(d)}` : s.usually}</span>
+      </span>
+    </Link>
+  );
+}
+
+type Kind = 'all' | 'artists' | 'festivals';
+type When = 'any' | 'dated' | 'december';
+
 /** Shows that matter most when nothing is announced yet */
 const MARQUEE = ['rapperholic', 'detty-rave', 'afro-future', 'tidal-rave'];
+const isDecember = (s: SeriesSummary) => /december/i.test(s.usually) || (!!s.nextDate && s.nextDate.slice(5, 7) === '12');
 
 export default function ShowsIndexClient({ series }: { series: SeriesSummary[] }) {
   const mine = useMyFollows('series');
   const ratings = useRatingSummaries(series.map((s) => s.lastSlug).filter(Boolean) as string[]);
   const rate = (s: SeriesSummary) => (s.lastSlug ? ratings[s.lastSlug] : undefined);
+  const [q, setQ] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [kind, setKind] = useState<Kind>('all');
+  const [when, setWhen] = useState<When>('any');
+  const [slide, setSlide] = useState(0);
+  const heroRef = useRef<HTMLDivElement>(null);
 
-  const coming = series.filter((s) => s.nextDate).sort((a, b) => String(a.nextDate).localeCompare(String(b.nextDate)));
-  const hero = [...coming, ...MARQUEE.map((m) => series.find((s) => s.slug === m)).filter((s): s is SeriesSummary => !!s && !s.nextDate)].slice(0, 5);
-  const yours = series.filter((s) => mine.includes(s.slug));
-  const december = series.filter((s) => /december/i.test(s.usually));
-  const own = series.filter((s) => s.hostNames.length > 0);
-  const festivals = series.filter((s) => s.hostNames.length === 0);
-  const best = series.filter((s) => rate(s)).sort((a, b) => (rate(b)?.overall ?? 0) - (rate(a)?.overall ?? 0));
+  const query = q.trim().toLowerCase();
+  const list = series.filter((s) =>
+    (kind === 'all' || (kind === 'festivals') === !!s.festival)
+    && (when === 'any' || (when === 'dated' ? !!s.nextDate : isDecember(s)))
+    && (!query || [s.name, ...s.hostNames, s.usually].join(' ').toLowerCase().includes(query)));
+  const filtersOn = kind !== 'all' || when !== 'any';
+
+  const coming = list.filter((s) => s.nextDate).sort((a, b) => String(a.nextDate).localeCompare(String(b.nextDate)));
+  const hero = [...coming, ...MARQUEE.map((m) => list.find((s) => s.slug === m)).filter((s): s is SeriesSummary => !!s && !s.nextDate)].slice(0, 5);
+  const yours = list.filter((s) => mine.includes(s.slug));
+  const december = list.filter(isDecember).sort((a, b) => (a.nextDate ? 0 : 1) - (b.nextDate ? 0 : 1) || String(a.nextDate ?? '').localeCompare(String(b.nextDate ?? '')));
+  const hosted = list.filter((s) => !s.festival);
+  const festivals = list.filter((s) => s.festival);
+  const best = list.filter((s) => rate(s)).sort((a, b) => (rate(b)?.overall ?? 0) - (rate(a)?.overall ?? 0)).slice(0, 5);
+
+  function onHeroScroll() {
+    const el = heroRef.current;
+    if (!el) return;
+    const w = el.firstElementChild ? (el.firstElementChild as HTMLElement).offsetWidth + 12 : el.clientWidth;
+    setSlide(Math.round(el.scrollLeft / w));
+  }
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
-      <Nav active="Shows" tabs plain center={<ExploreSwitch active="shows" />} />
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(78px + env(safe-area-inset-top, 0px)) 20px 120px' }}>
+      <Nav active="Shows" tabs plain center={<ExploreSwitch active="shows" />}
+        actions={<ToolsCapsule searchOn={searchOpen || !!query} filtersOn={filtersOn} onSearch={() => setSearchOpen((x) => !x)} onFilter={() => setFilterOpen(true)} />} />
+      <SearchDrop open={searchOpen} value={q} onChange={setQ} onClose={() => setSearchOpen(false)} placeholder="Search shows or artists" />
+      <main style={{ maxWidth: 720, margin: '0 auto', padding: `calc(${searchOpen ? 140 : 80}px + env(safe-area-inset-top, 0px)) 20px 120px`, transition: 'padding 200ms ease' }}>
         <h1 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Shows</h1>
 
-        {hero.length > 0 && (
-          <div className="no-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '6px -20px 0', padding: '0 20px 8px', scrollSnapType: 'x mandatory' }}>
-            {hero.map((s) => (
-              <div key={s.slug} style={{ flex: '0 0 calc(100% - 28px)', maxWidth: 420, scrollSnapAlign: 'center' }}>
-                <HeroCard s={s} rating={rate(s)} />
-              </div>
-            ))}
-          </div>
-        )}
+        {query ? (
+          <section>
+            <SectionTitle>Results for “{q.trim()}”</SectionTitle>
+            {list.length
+              ? <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }}>{list.map((s) => <Tile key={s.slug} s={s} rating={rate(s)} />)}</div>
+              : <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15, color: T.text3 }}>No show matches “{q.trim()}” yet.</p>}
+          </section>
+        ) : (
+          <>
+            {hero.length > 0 && (
+              <>
+                <div ref={heroRef} onScroll={onHeroScroll} className="no-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '0 -20px', padding: '0 20px 4px', scrollSnapType: 'x mandatory' }}>
+                  {hero.map((s) => (
+                    <div key={s.slug} style={{ flex: '0 0 calc(100% - 28px)', maxWidth: 420, scrollSnapAlign: 'center' }}>
+                      <HeroCard s={s} rating={rate(s)} />
+                    </div>
+                  ))}
+                </div>
+                {hero.length > 1 && (
+                  <div aria-hidden style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 12 }}>
+                    {hero.map((s, i) => <span key={s.slug} style={{ width: i === slide ? 18 : 6, height: 6, borderRadius: 3, background: i === slide ? T.mint : 'rgba(255,255,255,0.22)', transition: 'width 200ms ease, background 200ms ease' }} />)}
+                  </div>
+                )}
+              </>
+            )}
 
-        <Shelf title="Your shows" items={yours} rate={rate} />
-        <Shelf title="Best rated" items={best} rate={rate} />
-        <Shelf title="December in Accra" items={december} rate={rate} />
-        <Shelf title="Artists’ own concerts" items={own} rate={rate} />
-        <Shelf title="Festivals" items={festivals} rate={rate} />
+            {yours.length > 0 && (
+              <section style={{ marginTop: 36 }}>
+                <SectionTitle>Your shows</SectionTitle>
+                <div className="no-scrollbar" style={{ display: 'flex', gap: 12, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
+                  {yours.map((s) => <div key={s.slug} style={{ width: 140, flexShrink: 0 }}><Tile s={s} rating={rate(s)} /></div>)}
+                </div>
+              </section>
+            )}
+
+            {december.length > 0 && (
+              <section style={{ marginTop: 38 }}>
+                <SectionTitle>The December calendar</SectionTitle>
+                <div style={{ borderBottom: `1px solid ${T.hairline}` }}>
+                  {december.map((s) => <CalendarRow key={s.slug} s={s} rating={rate(s)} />)}
+                </div>
+              </section>
+            )}
+
+            {hosted.length > 0 && (
+              <section style={{ marginTop: 38 }}>
+                <SectionTitle>Hosted by the artists</SectionTitle>
+                <div className="no-scrollbar" style={{ display: 'flex', gap: 14, overflowX: 'auto', margin: '0 -20px', padding: '6px 20px 2px', scrollSnapType: 'x mandatory' }}>
+                  {hosted.map((s) => <HostCard key={s.slug} s={s} />)}
+                </div>
+              </section>
+            )}
+
+            {festivals.length > 0 && (
+              <section style={{ marginTop: 38 }}>
+                <SectionTitle>Festivals</SectionTitle>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {festivals.map((s) => <FestivalCard key={s.slug} s={s} rating={rate(s)} />)}
+                </div>
+              </section>
+            )}
+
+            {best.length > 0 && (
+              <section style={{ marginTop: 38 }}>
+                <SectionTitle>Best rated</SectionTitle>
+                {best.map((s, i) => (
+                  <Link key={s.slug} href={`/shows/${s.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', textDecoration: 'none' }}>
+                    <span style={{ width: 28, fontFamily: FONT.display, fontSize: 26, fontWeight: 800, color: T.text3 }}>{i + 1}</span>
+                    <span style={{ flex: 1, fontFamily: FONT.display, fontSize: 17, fontWeight: 700, color: T.white }}>{s.name}</span>
+                    <ScoreChip score={rate(s)!.overall} count={rate(s)!.ratings} />
+                  </Link>
+                ))}
+              </section>
+            )}
+
+            {!list.length && <p style={{ marginTop: 10, fontFamily: FONT.sans, fontSize: 15, color: T.text3 }}>No shows match these filters.</p>}
+          </>
+        )}
       </main>
+
+      {filterOpen && (
+        <ChoiceSheet title="Filter shows" onClose={() => setFilterOpen(false)} onReset={() => { setKind('all'); setWhen('any'); }}
+          resultLabel={`Show ${list.length} show${list.length === 1 ? '' : 's'}`}
+          groups={[
+            { label: 'Type', value: kind, onChange: setKind, options: [{ value: 'all', label: 'All' }, { value: 'artists', label: 'Artist concerts' }, { value: 'festivals', label: 'Festivals' }] },
+            { label: 'When', value: when, onChange: setWhen, options: [{ value: 'any', label: 'Any time' }, { value: 'dated', label: 'Date announced' }, { value: 'december', label: 'December' }] },
+          ]} />
+      )}
     </div>
   );
 }

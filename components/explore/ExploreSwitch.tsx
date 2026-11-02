@@ -9,8 +9,8 @@ export default function ExploreSwitch({ active }: { active: 'artists' | 'shows' 
     const on = active === key;
     return (
       <Link href={`/${key}`} aria-current={on ? 'page' : undefined} style={{
-        height: 36, padding: '0 18px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', textDecoration: 'none',
-        fontFamily: FONT.display, fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em',
+        height: 36, padding: '0 14px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', textDecoration: 'none',
+        fontFamily: FONT.display, fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em',
         color: on ? T.onMint : 'rgba(255,255,255,0.72)', background: on ? T.mint : 'transparent', transition: 'background 200ms ease, color 200ms ease',
       }}>{label}</Link>
     );
