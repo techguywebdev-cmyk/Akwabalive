@@ -15,8 +15,9 @@ export default function MomentsClient() {
   const { user, profile } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialId = searchParams.get('id');
-  const initialT = Number(searchParams.get('t') || 0);
+  // Read once: swiping rewrites the address to the moment on screen, which must not reload the feed
+  const [initialId] = useState(() => searchParams.get('id'));
+  const [initialT] = useState(() => Number(searchParams.get('t') || 0));
   const fromPath = searchParams.get('from');
   const backHref = fromPath && fromPath.startsWith('/events/') ? fromPath : '/';
 
@@ -123,7 +124,7 @@ export default function MomentsClient() {
     </div>
   );
 
-  if (feed.loading || !moment) {
+  if (!moment) {
     return (
       <div style={{ position: 'fixed', inset: 0, background: '#050606', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, padding: 24, textAlign: 'center' }}>
         {topBar}
@@ -158,6 +159,8 @@ export default function MomentsClient() {
             profile={profile}
             onMuteChange={setMuted}
             onEnded={() => { if (i === idx) goNext(); }}
+            upNext={list[i + 1] ?? null}
+            onNext={() => scrollTo(i + 1)}
             initialSeek={m.id === initialId && initialT > 0 ? initialT : null}
             requireSignIn={requireSignIn}
             flash={flash}

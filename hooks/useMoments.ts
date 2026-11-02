@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Moment } from '@/components/moments/types';
 
@@ -25,7 +25,7 @@ function arrange(list: Moment[]): Moment[] {
 }
 
 export function useMoments(initialMomentId?: string | null) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [moments, setMoments] = useState<Moment[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -33,7 +33,6 @@ export function useMoments(initialMomentId?: string | null) {
   const [loadingMore, setLoadingMore] = useState(false);
 
   const loadInitial = useCallback(async () => {
-    setLoading(true);
     const { data, error } = await supabase
       .from('moments')
       .select('*')
