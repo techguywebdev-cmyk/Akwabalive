@@ -131,6 +131,13 @@ const MomentSlide = forwardRef<SlideHandle, {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={still(moment.youtube_id)} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           )}
+          {/* Comments sit on the video, bottom-right corner */}
+          <button type="button" aria-label={`Comments (${comments.length})`} onClick={() => setShowComments(true)} style={{
+            position: 'absolute', right: 10, bottom: 10, zIndex: 10, height: 36, padding: '0 12px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.16)', color: T.white, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
+          }}>
+            <MessageCircle size={17} />{formatCount(comments.length)}
+          </button>
           {burst && <span style={{ position: 'absolute', inset: 0, zIndex: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><Heart size={76} fill="#F87171" color="#F87171" /></span>}
           <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, zIndex: 9, background: 'rgba(255,255,255,0.16)', pointerEvents: 'none' }}>
             <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: T.mint, transition: 'width 250ms linear' }} />
@@ -250,9 +257,8 @@ const MomentSlide = forwardRef<SlideHandle, {
           )}
         </div>
 
-        {/* Comments on the left; like and share on the right */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px 4px', flexShrink: 0 }}>
-          <BarButton label="Comments" count={formatCount(comments.length)} onClick={() => setShowComments(true)}><MessageCircle size={22} /></BarButton>
+        {/* Like and share */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px 4px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <BarButton label={liked ? 'Unlike' : 'Like'} on={liked} count={formatCount(likeCount)} onClick={() => { if (!requireSignIn()) toggleLike(); }} color={liked ? '#F87171' : T.white}>
               <Heart size={22} fill={liked ? '#F87171' : 'none'} />
