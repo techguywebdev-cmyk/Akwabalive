@@ -13,8 +13,9 @@ import { categorize } from '@/lib/moments/categorize';
  *  - lineup:      billed on the Akwaaba event the moment belongs to
  *  - host:        hosts the show series the moment belongs to
  *
- * An artist is confirmed with channel, title or description evidence on its own, or with lineup and host
- * together. Lineup or host alone isn't enough: a clip from a festival doesn't show everyone on the bill.
+ * An artist is confirmed by their own channel or by being named in the title. Otherwise it takes two signals,
+ * one of them the event's lineup or the show's host: descriptions often name other artists in song credits or
+ * links, and a festival clip doesn't show everyone on the bill.
  */
 
 type Evidence = 'channel' | 'title' | 'description' | 'lineup' | 'host';
@@ -90,7 +91,7 @@ export async function confirmPerformers(limit = 40): Promise<{ checked: number; 
     series?.hosts.forEach((s) => add(s, 'host'));
 
     const confirmed = Array.from(ev.entries())
-      .filter(([, how]) => how.has('channel') || how.has('title') || how.has('description') || (how.has('lineup') && how.has('host')))
+      .filter(([, how]) => how.has('channel') || how.has('title') || ((how.has('description') || how.has('lineup')) && (how.has('lineup') || how.has('host')) && how.size >= 2))
       .map(([slug]) => slug)
       .sort((a, b) => rank(a) - rank(b))
       .slice(0, 12);
