@@ -48,7 +48,6 @@ export type ChoiceGroup<V extends string> = { label: string; value: V; options: 
 
 /** Bottom sheet of choice chips (filters and sort) */
 export function ChoiceSheet({ title, groups, onClose, onReset, resultLabel }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   title: string; groups: ChoiceGroup<any>[]; onClose: () => void; onReset: () => void; resultLabel: string;
 }) {
   const [shown, setShown] = useState(false);
