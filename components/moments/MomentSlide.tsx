@@ -19,7 +19,6 @@ import { detectArtistsFromText, getArtistBySlug } from '@/lib/data/artists';
 import { countdown, priceLine, Portrait } from '@/components/artists/parts';
 import { useMomentInfo } from '@/hooks/useMomentInfo';
 import { longDay, parseDay, shortDay } from '@/lib/dates';
-import { hiRes } from '@/lib/events/image';
 import { T, FONT } from '@/lib/thiscene';
 import { useRatingSummaries } from '@/lib/ratings';
 import { Stars } from '@/components/ratings/Stars';
@@ -29,29 +28,29 @@ export type SlideHandle = { toggleMute: () => void };
 const still = (id: string) => `https://i.ytimg.com/vi/${id}/hq720.jpg`;
 const glow = (id: string) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
 
-/** Plain icon button for the bottom bar */
-function BarButton({ label, on, onClick, children, count, color = T.white }: { label: string; on?: boolean; onClick: () => void; children: React.ReactNode; count?: string; color?: string }) {
+const iconBtn = (on: boolean, mint = false): React.CSSProperties => ({
+  width: 38, height: 38, borderRadius: 19, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, textDecoration: 'none',
+  ...(mint ? { background: T.mint, color: T.onMint, border: 'none' }
+    : on ? { background: 'rgba(123,227,168,0.14)', color: T.mintText, border: '1px solid rgba(123,227,168,0.4)' }
+      : { background: 'rgba(255,255,255,0.07)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' }),
+});
+
+/** Bell for a show or artist when there's no next edition on sale yet */
+function FollowBell({ kind, slug, label, flash }: { kind: 'series' | 'artist'; slug: string; label: string; flash: (m: string) => void }) {
+  const { following, busy, toggle } = useFollow(kind, slug);
   return (
-    <button type="button" aria-label={label} aria-pressed={on} onClick={onClick} style={{ height: 44, minWidth: 44, padding: '0 6px', display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', background: 'none', cursor: 'pointer', color }}>
-      {children}
-      {count != null && <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: on ? color : T.text }}>{count}</span>}
+    <button type="button" aria-pressed={following} aria-label={following ? `Stop reminders for ${label}` : `Remind me about ${label}`} disabled={busy}
+      onClick={() => { toggle(); flash(following ? 'Reminder removed' : `We’ll tell you when ${label} is back`); }} style={iconBtn(following)}>
+      {following ? <BellRing size={17} /> : <Bell size={17} />}
     </button>
   );
 }
 
-/** "Remind me" for a show or artist when there's no next edition on sale yet */
-function FollowReminder({ kind, slug, label }: { kind: 'series' | 'artist'; slug: string; label: string }) {
-  const { following, busy, toggle } = useFollow(kind, slug);
-  return (
-    <button type="button" onClick={toggle} disabled={busy} style={{
-      width: '100%', height: 50, borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer',
-      fontFamily: FONT.display, fontSize: 15, fontWeight: 700,
-      ...(following ? { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' } : { background: T.mint, color: T.onMint, border: 'none' }),
-    }}>
-      {following ? <BellRing size={18} /> : <Bell size={18} />}{following ? `You’ll hear about ${label}` : `Remind me about ${label}`}
-    </button>
-  );
-}
+/** Small glass button sitting on the video */
+const onVideo: React.CSSProperties = {
+  height: 36, minWidth: 36, padding: '0 10px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5, cursor: 'pointer',
+  background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.16)', color: T.white, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
+};
 
 /**
  * One moment, filling the screen: the video sharp at its real shape over a soft glow of itself,
@@ -111,7 +110,7 @@ const MomentSlide = forwardRef<SlideHandle, {
   const where = [info.event?.venue, info.event?.city ? info.event.city.charAt(0).toUpperCase() + info.event.city.slice(1) : null].filter(Boolean).join(', ');
 
   return (
-    <section aria-label={moment.title} style={{ position: 'relative', height: '100svh', width: '100%', overflow: 'hidden', scrollSnapAlign: 'start', scrollSnapStop: 'always', background: '#050606' }}>
+    <section aria-label={moment.title} style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden', scrollSnapAlign: 'start', scrollSnapStop: 'always', background: '#050606' }}>
       {/* A soft glow of the video behind everything — only for slides near the screen (blur is costly on phones) */}
       {mounted && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -131,13 +130,16 @@ const MomentSlide = forwardRef<SlideHandle, {
             // eslint-disable-next-line @next/next/no-img-element
             <img src={still(moment.youtube_id)} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           )}
-          {/* Comments sit on the video, bottom-right corner */}
-          <button type="button" aria-label={`Comments (${comments.length})`} onClick={() => setShowComments(true)} style={{
-            position: 'absolute', right: 10, bottom: 10, zIndex: 10, height: 36, padding: '0 12px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.16)', color: T.white, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
-          }}>
-            <MessageCircle size={17} />{formatCount(comments.length)}
-          </button>
+          {/* Like, comments and share sit on the video, bottom-right corner */}
+          <div style={{ position: 'absolute', right: 10, bottom: 10, zIndex: 10, display: 'flex', gap: 8 }}>
+            <button type="button" aria-label={liked ? 'Unlike' : 'Like'} aria-pressed={liked} onClick={() => { if (!requireSignIn()) toggleLike(); }} style={onVideo}>
+              <Heart size={17} color={liked ? '#F87171' : T.white} fill={liked ? '#F87171' : 'none'} />{formatCount(likeCount)}
+            </button>
+            <button type="button" aria-label={`Comments (${comments.length})`} onClick={() => setShowComments(true)} style={onVideo}>
+              <MessageCircle size={17} />{formatCount(comments.length)}
+            </button>
+            <button type="button" aria-label="Share" onClick={share} style={{ ...onVideo, padding: 0, width: 36 }}><Send size={16} /></button>
+          </div>
           {burst && <span style={{ position: 'absolute', inset: 0, zIndex: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><Heart size={76} fill="#F87171" color="#F87171" /></span>}
           <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, zIndex: 9, background: 'rgba(255,255,255,0.16)', pointerEvents: 'none' }}>
             <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: T.mint, transition: 'width 250ms linear' }} />
@@ -146,19 +148,50 @@ const MomentSlide = forwardRef<SlideHandle, {
 
         {/* About the night */}
         <div style={{ padding: '16px 20px 0', minHeight: 0, overflow: 'hidden' }}>
-          <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
-            {series ? <Link href={`/shows/${series.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>{moment.event_name}</Link> : moment.event_name}
-            {moment.year ? ` · ${moment.year}` : ''}
-          </p>
-          <h2 style={{ margin: '5px 0 0', fontFamily: FONT.display, fontSize: 'clamp(22px, 6vw, 30px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.1, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-            {moment.title}
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
+                {series ? <Link href={`/shows/${series.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>{moment.event_name}</Link> : moment.event_name}
+                {moment.year ? ` · ${moment.year}` : ''}
+              </p>
+              <h2 style={{ margin: '5px 0 0', fontFamily: FONT.display, fontSize: 'clamp(22px, 6vw, 30px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.1, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {moment.title}
+              </h2>
+            </div>
+            {/* Tickets and reminders, kept small */}
+            <div style={{ display: 'flex', gap: 8, paddingTop: 2 }}>
+              {next ? (
+                <>
+                  <button type="button" aria-pressed={crowd.reminded} aria-label={crowd.reminded ? 'Reminder on' : 'Remind me about the next edition'}
+                    onClick={() => { if (requireSignIn()) return; crowd.toggleReminder(); flash(crowd.reminded ? 'Reminder removed' : 'We’ll remind you'); }} style={iconBtn(crowd.reminded)}>
+                    {crowd.reminded ? <BellRing size={17} /> : <Bell size={17} />}
+                  </button>
+                  <a href={next.ticketUrl ?? `/events/${next.slug}?tickets=1`} aria-label="Get tickets for the next edition" {...(next.ticketUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})} style={iconBtn(false, true)}>
+                    <Ticket size={17} />
+                  </a>
+                </>
+              ) : series ? (
+                <FollowBell kind="series" slug={series.slug} label={series.name} flash={flash} />
+              ) : artist ? (
+                <FollowBell kind="artist" slug={artist.slug} label={artist.name} flash={flash} />
+              ) : null}
+            </div>
+          </div>
 
           {(when || where) && (
             <p style={{ margin: '9px 0 0', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>
               {when && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><CalendarDays size={14} />{longDay(when)}</span>}
               {where && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minWidth: 0 }}><MapPin size={14} /><span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{where}</span></span>}
             </p>
+          )}
+
+          {next && (
+            <Link href={`/events/${next.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 9, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText }}>
+              <Ticket size={14} style={{ flexShrink: 0 }} />
+              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Next edition {[nextDay ? shortDay(nextDay) : null, soon, priceLine(next), crowd.goingCount ? `${formatCount(crowd.goingCount)} going` : null].filter(Boolean).join(' · ')}
+              </span>
+            </Link>
           )}
 
           {/* How the night was rated by people who went */}
@@ -206,64 +239,6 @@ const MomentSlide = forwardRef<SlideHandle, {
               {crowd.iWasThere ? <Check size={15} /> : <UserCheck size={15} />}{crowd.iWasThere ? 'You were there' : 'I was there'}
             </button>
             {crowd.thereCount > 0 && <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{formatCount(crowd.thereCount)} {crowd.thereCount === 1 ? 'person was' : 'people were'} there</span>}
-          </div>
-        </div>
-
-        <div style={{ flex: 1, minHeight: 10 }} />
-
-        {/* What next: tickets, or a reminder */}
-        <div style={{ margin: '0 16px', padding: 14, borderRadius: 22, background: 'rgba(17,21,19,0.96)', border: '1px solid rgba(255,255,255,0.09)', flexShrink: 0 }}>
-          {next ? (
-            <>
-              <Link href={`/events/${next.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-                <span style={{ width: 52, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)' }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {next.image && <img src={hiRes(next.image, 240) ?? next.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
-                </span>
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.mintText }}>Next edition{soon ? ` · ${soon}` : ''}</span>
-                  <span style={{ display: 'block', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.display, fontSize: 17, fontWeight: 800, color: T.white }}>{next.title}</span>
-                  <span style={{ display: 'block', marginTop: 1, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>{[nextDay ? shortDay(nextDay) : null, priceLine(next), crowd.goingCount ? `${formatCount(crowd.goingCount)} going` : null].filter(Boolean).join(' · ')}</span>
-                </span>
-              </Link>
-              <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                <a href={next.ticketUrl ?? `/events/${next.slug}?tickets=1`} {...(next.ticketUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                  style={{ flex: 1, height: 50, borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: T.mint, color: T.onMint, textDecoration: 'none', fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>
-                  <Ticket size={18} /> Get tickets
-                </a>
-                <button type="button" aria-pressed={crowd.reminded} onClick={() => { if (requireSignIn()) return; crowd.toggleReminder(); flash(crowd.reminded ? 'Reminder removed' : 'We’ll remind you'); }}
-                  style={{ height: 50, padding: '0 16px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 7, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 700,
-                    ...(crowd.reminded ? { background: 'rgba(123,227,168,0.14)', color: T.mintText, border: '1px solid rgba(123,227,168,0.4)' } : { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' }) }}>
-                  {crowd.reminded ? <BellRing size={17} /> : <Bell size={17} />}{crowd.reminded ? 'Reminder on' : 'Remind me'}
-                </button>
-              </div>
-            </>
-          ) : series ? (
-            <>
-              <p style={{ margin: '0 0 10px', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.45, color: T.text2 }}>
-                <b style={{ color: T.white }}>{series.name}</b> comes back {series.usually.toLowerCase().startsWith('every') ? series.usually.split(' · ')[0].toLowerCase() : 'again'}. The next edition isn’t announced yet.
-              </p>
-              <FollowReminder kind="series" slug={series.slug} label={series.name} />
-            </>
-          ) : artist ? (
-            <>
-              <p style={{ margin: '0 0 10px', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.45, color: T.text2 }}>Catch <b style={{ color: T.white }}>{artist.name}</b> live next time.</p>
-              <FollowReminder kind="artist" slug={artist.slug} label={artist.name} />
-            </>
-          ) : (
-            <Link href="/" style={{ width: '100%', height: 50, borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint, textDecoration: 'none', fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>
-              Find what’s on next
-            </Link>
-          )}
-        </div>
-
-        {/* Like and share */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px 4px', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <BarButton label={liked ? 'Unlike' : 'Like'} on={liked} count={formatCount(likeCount)} onClick={() => { if (!requireSignIn()) toggleLike(); }} color={liked ? '#F87171' : T.white}>
-              <Heart size={22} fill={liked ? '#F87171' : 'none'} />
-            </BarButton>
-            <BarButton label="Share" onClick={share}><Send size={21} /></BarButton>
           </div>
         </div>
       </div>
