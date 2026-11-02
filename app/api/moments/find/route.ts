@@ -6,6 +6,13 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const maxDuration = 60;
 
+/** Daily cron (Vercel sends Authorization: Bearer $CRON_SECRET): a big round */
+export async function GET(req: Request) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || req.headers.get('authorization') !== `Bearer ${secret}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  return NextResponse.json(await findOfficialVideos({ resolve: 15, scan: 20, search: 8 }));
+}
+
 /** "Find official videos now" from the admin page: a bigger round than the background one */
 export async function POST(req: Request) {
   const token = (req.headers.get('authorization') || '').replace(/^Bearer /, '');
