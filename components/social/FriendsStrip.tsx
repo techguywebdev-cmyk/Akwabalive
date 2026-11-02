@@ -22,7 +22,7 @@ function load(slug: string, token: string) {
   return cache.get(slug)!;
 }
 
-const COLORS = ['#1F5A3F', '#3B2F5C', '#5C3A1F', '#1F3F5C', '#5C1F3A'];
+const COLORS = ['#26302B', '#3B2F5C', '#5C3A1F', '#1F3F5C', '#5C1F3A'];
 
 function Avatar({ f, size, ring }: { f: Friend; size: number; ring: string }) {
   return (

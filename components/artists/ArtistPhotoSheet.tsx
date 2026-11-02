@@ -75,7 +75,7 @@ export default function ArtistPhotoSheet({ slug, name, current, onClose, onSaved
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', opacity: shown ? 1 : 0, transition: 'opacity 280ms ease' }} />
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0, maxWidth: 560, margin: '0 auto', maxHeight: '90svh', overflowY: 'auto',
-        background: 'linear-gradient(180deg, #0B2619 0%, #05130C 100%)', borderRadius: '26px 26px 0 0', borderTop: `1px solid ${T.hairlineStrong}`,
+        background: 'linear-gradient(180deg, #0F1311 0%, #070908 100%)', borderRadius: '26px 26px 0 0', borderTop: `1px solid ${T.hairlineStrong}`,
         padding: '10px 20px calc(24px + env(safe-area-inset-bottom, 0px))', transform: shown ? 'none' : 'translateY(100%)', transition: `transform 420ms ${EASE.sheet}`,
       }}>
         <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', margin: '0 auto 14px' }} />

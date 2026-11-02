@@ -22,7 +22,7 @@ export const C = {
   /** Page base (opaque) — the green-black ground */
   bg: '#030806',
   /** Glass panel — cards, bars, sidebars */
-  bg2: 'rgba(6, 22, 14, 0.5)',
+  bg2: 'rgba(10, 13, 12, 0.5)',
   /** Raised / inset surface on top of a panel — inputs, tiles, chips */
   bg3: 'rgba(255, 255, 255, 0.05)',
   /** Hover / pressed */
@@ -43,9 +43,9 @@ export const C = {
   bd2: 'rgba(255, 255, 255, 0.13)',
 
   red: '#FF6B6B',
-  green: '#1F5A3F',
+  green: '#26302B',
   greenL: '#7BE3A8',
-  greenSolid: '#1F5A3F',
+  greenSolid: '#26302B',
   greenDim: 'rgba(123, 227, 168, 0.12)',
   greenBd: 'rgba(123, 227, 168, 0.32)',
 
@@ -78,13 +78,13 @@ export const G = {
   },
   /** Dense glass for sheets, modals and menus — stays legible over anything */
   sheet: {
-    background: 'rgba(5, 16, 10, 0.86)',
+    background: 'rgba(9, 11, 10, 0.86)',
     backdropFilter: blur(32, 160),
     WebkitBackdropFilter: blur(32, 160),
   },
   /** Navigation bar */
   bar: {
-    background: 'rgba(4, 14, 9, 0.66)',
+    background: 'rgba(8, 10, 9, 0.66)',
     backdropFilter: blur(24, 160),
     WebkitBackdropFilter: blur(24, 160),
   },

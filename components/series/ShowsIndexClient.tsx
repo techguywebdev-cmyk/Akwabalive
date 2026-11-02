@@ -14,7 +14,7 @@ import { T, FONT, GROUND } from '@/lib/thiscene';
 /** Cover image; YouTube stills fall back to the always-available smaller still */
 function Cover({ src, name, style }: { src: string | null; name: string; style?: React.CSSProperties }) {
   if (!src) {
-    return <span aria-hidden style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(150deg, #1E6E48 0%, #0B2A1C 75%)', fontFamily: FONT.display, fontSize: 40, fontWeight: 800, color: 'rgba(214,251,230,0.45)' }}>{initials(name)}</span>;
+    return <span aria-hidden style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(150deg, #26302B 0%, #121715 75%)', fontFamily: FONT.display, fontSize: 40, fontWeight: 800, color: 'rgba(214,251,230,0.45)' }}>{initials(name)}</span>;
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -29,7 +29,7 @@ function Tile({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
   return (
     <Link href={`/shows/${s.slug}`} style={{ position: 'relative', display: 'block', aspectRatio: '4 / 5', borderRadius: 20, overflow: 'hidden', textDecoration: 'none', background: 'rgba(255,255,255,0.05)' }}>
       <Cover src={s.image} name={s.name} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-      <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,19,12,0) 40%, rgba(5,19,12,0.75) 72%, rgba(5,19,12,0.96) 100%)' }} />
+      <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,8,7,0) 40%, rgba(6,8,7,0.75) 72%, rgba(6,8,7,0.96) 100%)' }} />
       {rating && <span style={{ position: 'absolute', top: 10, left: 10, padding: '4px 9px', borderRadius: 999, background: 'rgba(3,10,6,0.62)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}><ScoreChip score={rating.overall} /></span>}
       <span style={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
         <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15, color: T.white }}>{s.name}</span>
@@ -47,7 +47,7 @@ function HeroCard({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
   return (
     <Link href={`/shows/${s.slug}`} style={{ position: 'relative', display: 'block', aspectRatio: '4 / 5', borderRadius: 26, overflow: 'hidden', textDecoration: 'none', background: 'rgba(255,255,255,0.05)', boxShadow: '0 24px 60px rgba(0,0,0,0.45)' }}>
       <Cover src={s.image} name={s.name} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />
-      <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(5,19,12,0.35) 0%, rgba(5,19,12,0) 22%, rgba(5,19,12,0) 45%, rgba(9,34,22,0.82) 72%, rgba(5,19,12,0.97) 100%)' }} />
+      <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,8,7,0.35) 0%, rgba(6,8,7,0) 22%, rgba(6,8,7,0) 45%, rgba(10,13,12,0.82) 72%, rgba(6,8,7,0.97) 100%)' }} />
       <span style={{ position: 'absolute', top: 16, left: 16, right: 16, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
         <span style={{ padding: '6px 12px', borderRadius: 999, background: 'rgba(3,10,6,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, color: d ? T.mintText : T.white }}>
           {d ? countdown(s.nextDate) : s.usually}

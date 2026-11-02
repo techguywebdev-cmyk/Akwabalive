@@ -295,7 +295,7 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
 
       {searchOpen && (
         <div style={{ position: 'fixed', zIndex: 195, top: `calc(${headerH}px + env(safe-area-inset-top, 0px))`, left: 16, right: 16, maxWidth: 720, margin: '0 auto' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, height: 50, padding: '0 8px 0 16px', borderRadius: 25, background: 'rgba(5,18,11,0.82)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', color: T.text2 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 10, height: 50, padding: '0 8px 0 16px', borderRadius: 25, background: 'rgba(9,11,10,0.82)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', color: T.text2 }}>
             <Icon name="search" size={19} />
             <span className="sr-only" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Search events</span>
             <input

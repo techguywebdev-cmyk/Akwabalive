@@ -17,12 +17,12 @@ html {
 }
 
 /*
- * The ground: deep green glows fading into black, on every page.
+ * The ground: near-black charcoal with a faint green light at the top, on every page.
  * Event colours never wash the page; they only tint an event's tags, title glow
  * and main button.
  */
 body {
-  background-color: #030806;
+  background-color: #050606;
   color: #F1F4F2;
   font-family: var(--font-inter), sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -35,14 +35,13 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(90% 45% at 10% 0%, rgba(30, 110, 72, 0.55) 0%, rgba(30, 110, 72, 0) 70%),
-    radial-gradient(80% 40% at 100% 100%, rgba(20, 84, 55, 0.5) 0%, rgba(20, 84, 55, 0) 70%),
-    linear-gradient(180deg, #0D2E1F 0%, #082015 38%, #05130C 70%, #030806 100%);
+    radial-gradient(60% 22% at 50% 0%, rgba(40, 130, 85, 0.16) 0%, rgba(40, 130, 85, 0) 80%),
+    linear-gradient(180deg, #0B0F0D 0%, #070908 50%, #050606 100%);
 }
 
 /* ── Glass utilities (for className use; inline styles use G from lib/theme) ── */
 .glass {
-  background: rgba(6, 22, 14, 0.5);
+  background: rgba(10, 13, 12, 0.5);
   -webkit-backdrop-filter: blur(22px) saturate(150%);
   backdrop-filter: blur(22px) saturate(150%);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -54,7 +53,7 @@ body::before {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .glass-sheet {
-  background: rgba(5, 16, 10, 0.86);
+  background: rgba(9, 11, 10, 0.86);
   -webkit-backdrop-filter: blur(32px) saturate(160%);
   backdrop-filter: blur(32px) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -68,8 +67,8 @@ body::before {
 
 /* Browsers without backdrop-filter get a denser, still-readable fill */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass, .glass-raised { background: rgba(5, 18, 11, 0.94); }
-  .glass-sheet, .glass-overlay { background: rgba(4, 14, 9, 0.96); }
+  .glass, .glass-raised { background: rgba(9, 11, 10, 0.94); }
+  .glass-sheet, .glass-overlay { background: rgba(8, 10, 9, 0.96); }
 }
 
 :focus-visible {

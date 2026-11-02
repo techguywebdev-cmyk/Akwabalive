@@ -142,7 +142,7 @@ export default function Nav({
     : [];
 
   const avatar = user ? (
-    <Link href={profileHref} aria-label="My profile" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 22, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: '#1F5A3F', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
+    <Link href={profileHref} aria-label="My profile" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 22, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: '#26302B', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
       {profile?.avatar_url
         // eslint-disable-next-line @next/next/no-img-element
         ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -269,7 +269,7 @@ export default function Nav({
             style={{
               position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(400px, 88vw)', display: 'flex', flexDirection: 'column',
               padding: 'calc(14px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))',
-              background: 'radial-gradient(120% 50% at 0% 0%, rgba(20,78,52,0.9) 0%, rgba(6,22,14,0) 70%), linear-gradient(180deg, #071A10 0%, #030806 100%)',
+              background: 'radial-gradient(120% 50% at 0% 0%, rgba(20,78,52,0.9) 0%, rgba(10,13,12,0) 70%), linear-gradient(180deg, #071A10 0%, #030806 100%)',
               borderRight: '1px solid rgba(255,255,255,0.08)', boxShadow: '30px 0 80px rgba(0,0,0,0.5)',
               transform: menuShown ? 'translateX(0)' : 'translateX(-104%)', transition: 'transform 420ms cubic-bezier(0.22,1,0.36,1)',
               overflowY: 'auto',
@@ -282,7 +282,7 @@ export default function Nav({
 
             {user && (
               <Link href={profileHref} onClick={() => setMenuOpen(false)} style={{ ...stagger(0), display: 'flex', alignItems: 'center', gap: 12, marginTop: 28, textDecoration: 'none' }}>
-                <span style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', background: '#1F5A3F', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
+                <span style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', background: '#26302B', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
                   {profile?.avatar_url
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

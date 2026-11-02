@@ -83,7 +83,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
           // eslint-disable-next-line @next/next/no-img-element
           <img src={backdrop} alt="" aria-hidden style={{ position: 'absolute', inset: -60, width: 'calc(100% + 120px)', height: 'calc(100% + 120px)', objectFit: 'cover', filter: 'blur(48px) saturate(1.25)', opacity: 0.5 }} />
         )}
-        <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,32,21,0.25) 0%, rgba(8,32,21,0.5) 50%, rgba(8,30,20,0.98) 100%)' }} />
+        <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,12,11,0.25) 0%, rgba(10,12,11,0.5) 50%, rgba(9,11,10,0.98) 100%)' }} />
         <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
           <span style={{ display: 'block', width: 168, margin: '0 auto 20px', borderRadius: '50%', boxShadow: '0 18px 50px rgba(0,0,0,0.45)' }}>
             <Portrait name={artist.name} url={photo?.url} size={168} ring={upcoming.length > 0} />

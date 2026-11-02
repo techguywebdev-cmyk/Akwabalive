@@ -212,7 +212,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       />
 
       {(dreamToast || ticketSuccess) && (
-        <div role="status" style={{ position: 'fixed', top: 'calc(80px + env(safe-area-inset-top, 0px))', left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: 'rgba(5,18,11,0.92)', border: '1px solid rgba(123,227,168,0.35)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 999, padding: '10px 18px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div role="status" style={{ position: 'fixed', top: 'calc(80px + env(safe-area-inset-top, 0px))', left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: 'rgba(9,11,10,0.92)', border: '1px solid rgba(123,227,168,0.35)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 999, padding: '10px 18px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
           {ticketSuccess ? <><Icon name="check" size={16} /> Ticket confirmed — it&apos;s in My tickets</> : dreamToast}
         </div>
       )}
@@ -357,7 +357,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           <section style={{ marginTop: 34 }}>
             <h2 style={eyebrow}>Presented by</h2>
             <Link href={`/organizer/${event.organizerUsername}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', textDecoration: 'none', color: T.white }}>
-              <span style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1F5A3F', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
+              <span style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#26302B', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
                 {event.organizerAvatar
                   // eslint-disable-next-line @next/next/no-img-element
                   ? <img src={event.organizerAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
