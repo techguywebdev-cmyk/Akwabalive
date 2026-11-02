@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, Volume2, VolumeX } from 'lucide-react';
+import { ChevronLeft, SlidersHorizontal, Volume2, VolumeX } from 'lucide-react';
+import { ChoiceSheet } from '@/components/explore/Tools';
+import { CATEGORIES } from '@/lib/moments/categorize';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import MomentSlide, { type SlideHandle } from '@/components/moments/MomentSlide';
 import { GlassIcon } from '@/components/moments/parts';
@@ -21,7 +23,14 @@ export default function MomentsClient() {
   const fromPath = searchParams.get('from');
   const backHref = fromPath && fromPath.startsWith('/events/') ? fromPath : '/';
 
-  const feed = useMoments(initialId);
+  // Concerts, Shows, Awards, Culture — or everything
+  const [category, setCategory] = useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const feed = useMoments(initialId, category);
+  const pickCategory = useCallback((c: string | null) => {
+    setCategory(c);
+    if (scroller.current) scroller.current.scrollTop = 0;
+  }, []);
   // Quietly check new videos' YouTube channels (official or not, still playing)
   useEffect(() => { fetch('/api/moments/verify').catch(() => {}); }, []);
 
@@ -115,7 +124,10 @@ export default function MomentsClient() {
         <GlassIcon label={fromPath ? 'Back to event' : 'Home'} href={backHref}><ChevronLeft size={20} /></GlassIcon>
       </span>
       {moment && (
-        <span style={{ pointerEvents: 'auto' }}>
+        <span style={{ pointerEvents: 'auto', display: 'flex', gap: 8 }}>
+          <GlassIcon label="Filter moments" onClick={() => setFilterOpen(true)} active={!!category} activeColor={T.mint}>
+            <SlidersHorizontal size={18} />
+          </GlassIcon>
           <GlassIcon label={muted ? 'Turn sound on' : 'Mute'} onClick={() => slides.current[moment._k ?? moment.id]?.toggleMute()}>
             {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
           </GlassIcon>
@@ -164,9 +176,17 @@ export default function MomentsClient() {
             initialSeek={m.id === initialId && initialT > 0 ? initialT : null}
             requireSignIn={requireSignIn}
             flash={flash}
+            onCategory={pickCategory}
           />
         ))}
       </div>
+
+      {filterOpen && (
+        <ChoiceSheet title="Moments" onClose={() => setFilterOpen(false)} onReset={() => { pickCategory(null); setFilterOpen(false); }}
+          resultLabel="Done"
+          groups={[{ label: 'Show me', value: category ?? 'all', onChange: (v: string) => { pickCategory(v === 'all' ? null : v); setFilterOpen(false); },
+            options: [{ value: 'all', label: 'Everything' }, ...CATEGORIES.map((c) => ({ value: c.key, label: c.label }))] }]} />
+      )}
 
       {toast && (
         <div role="status" style={{ position: 'absolute', zIndex: 70, left: '50%', bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))', transform: 'translateX(-50%)', background: 'rgba(14,17,16,0.94)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 999, padding: '10px 16px', fontFamily: FONT.sans, fontSize: 13, color: T.white, whiteSpace: 'nowrap' }}>

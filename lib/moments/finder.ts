@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { artists } from '@/lib/data/artists';
 import { SERIES } from '@/lib/data/series';
 import { EVENT_TOPICS, TRUSTED_MEDIA } from '@/lib/data/festivals';
+import { categorize } from '@/lib/moments/categorize';
 
 /**
  * Finds official videos for Moments automatically:
@@ -101,6 +102,7 @@ async function scanChannel(db: SupabaseClient, t: Target, channelId: string, cha
       description: firstLine ? firstLine.slice(0, 160) : null, year: when ? new Date(when).getFullYear() : null, is_featured: false,
       channel_name: channelTitle, channel_url: `https://www.youtube.com/channel/${channelId}`, official: true, available: true,
       source_checked_at: new Date().toISOString(), status: credible(raw) ? 'live' : 'pending', found_by: `youtube:${t.slug}`, published_at: when,
+      category: categorize({ title, event_name: inSeries ? series!.name : t.eventName, found_by: `youtube:${t.slug}` }),
     };
   });
   if (!rows.length) return 0;
@@ -155,6 +157,7 @@ async function searchTopic(db: SupabaseClient, topic: (typeof EVENT_TOPICS)[numb
       description: firstLine ? firstLine.slice(0, 160) : null, year: when ? new Date(when).getFullYear() : null, is_featured: false,
       channel_name: sn.channelTitle ?? null, channel_url: sn.channelId ? `https://www.youtube.com/channel/${sn.channelId}` : null, official,
       available: true, source_checked_at: new Date().toISOString(), status: ok ? 'live' : 'pending', found_by: `search:${topic.slug}`, published_at: when,
+      category: categorize({ title: raw, event_name: topic.name, found_by: `search:${topic.slug}` }),
     }];
   }).slice(0, 8);
   if (!rows.length) return 0;

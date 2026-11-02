@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { events as staticEvents } from '@/lib/data/events';
-import { artistForName, detectArtistsFromText, getArtistBySlug } from '@/lib/data/artists';
+import { detectArtistsFromText, getArtistBySlug } from '@/lib/data/artists';
 import type { Artist } from '@/lib/types';
 import type { EventSeries as Series } from '@/lib/data/series';
 import type { Moment } from '@/components/moments/types';
@@ -52,20 +52,16 @@ export function useMomentInfo(moment: Moment, series: Series | undefined, enable
     return () => { cancelled = true; };
   }, [enabled, slug]);
 
+  // Only people confirmed to have performed (see lib/moments/performers.ts), biggest acts first.
+  // Until a moment has been checked, fall back to artists named in its title.
   const acts = useMemo(() => {
-    const out: { artist: Artist; host: boolean }[] = [];
-    const add = (a: Artist | undefined, host = false) => {
-      if (!a) return;
-      const have = out.find((x) => x.artist.slug === a.slug);
-      if (have) { have.host ||= host; return; }
-      out.push({ artist: a, host });
-    };
-    series?.hosts.forEach((s) => add(getArtistBySlug(s), true));
-    detectArtistsFromText(moment.title, moment.event_name, moment.description).artistSlugs.forEach((s) => add(getArtistBySlug(s)));
-    event?.artistSlugs.forEach((s) => add(getArtistBySlug(s)));
-    event?.lineup.forEach((n) => add(artistForName(n)));
-    return out.slice(0, 10);
-  }, [moment, series, event]);
+    const hosts = new Set(series?.hosts ?? []);
+    const slugs = moment.performers ?? detectArtistsFromText(moment.title, moment.event_name).artistSlugs;
+    return slugs.map((s) => getArtistBySlug(s)).filter((a): a is Artist => !!a)
+      .sort((a, b) => a.priority - b.priority)
+      .slice(0, 12)
+      .map((artist) => ({ artist, host: hosts.has(artist.slug) }));
+  }, [moment, series]);
 
   const key = acts.map((a) => a.artist.slug).join(',');
   useEffect(() => {

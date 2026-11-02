@@ -1,7 +1,7 @@
 import type { Moment } from '@/components/moments/types';
 
 /** Fields every Moments query on event pages selects */
-export const MOMENT_FIELDS = 'id, title, event_name, event_slug, youtube_id, description, year, is_featured, view_count, duration_label, channel_name, official';
+export const MOMENT_FIELDS = 'id, title, event_name, event_slug, youtube_id, description, year, is_featured, view_count, duration_label, channel_name, official, category, performers';
 
 /**
  * The word that names an event series ("Afrochella 2025 Accra" → "afrochella"), so this

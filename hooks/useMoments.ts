@@ -24,7 +24,7 @@ function arrange(list: Moment[]): Moment[] {
   return [...shuffle(ok.filter((m) => m.official)), ...shuffle(ok.filter((m) => !m.official))];
 }
 
-export function useMoments(initialMomentId?: string | null) {
+export function useMoments(initialMomentId?: string | null, category?: string | null) {
   const supabase = useMemo(() => createClient(), []);
   const [moments, setMoments] = useState<Moment[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -37,6 +37,7 @@ export function useMoments(initialMomentId?: string | null) {
       .from('moments')
       .select('*')
       .eq('status', 'live')
+      .match(category ? { category } : {})
       .order('is_featured', { ascending: false })
       .order('year', { ascending: false })
       .range(0, PAGE_SIZE - 1);
@@ -44,7 +45,7 @@ export function useMoments(initialMomentId?: string | null) {
     if (!error && data) {
       let list = data as Moment[];
 
-      if (initialMomentId) {
+      if (initialMomentId && !category) {
         const idx = list.findIndex((m) => m.id === initialMomentId);
         if (idx >= 0) {
           list = list.filter((m) => m.available !== false || m.id === initialMomentId);
@@ -73,7 +74,7 @@ export function useMoments(initialMomentId?: string | null) {
       setHasMore(list.length === PAGE_SIZE);
     }
     setLoading(false);
-  }, [supabase, initialMomentId]);
+  }, [supabase, initialMomentId, category]);
 
   useEffect(() => {
     loadInitial();
@@ -100,6 +101,7 @@ export function useMoments(initialMomentId?: string | null) {
       .from('moments')
       .select('*')
       .eq('status', 'live')
+      .match(category ? { category } : {})
       .order('is_featured', { ascending: false })
       .order('year', { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
@@ -116,7 +118,7 @@ export function useMoments(initialMomentId?: string | null) {
       setHasMore(false);
     }
     setLoadingMore(false);
-  }, [supabase, moments.length, hasMore, loadingMore]);
+  }, [supabase, moments.length, hasMore, loadingMore, category]);
 
   const goNext = useCallback(() => {
     setActiveIdx((i) => {
