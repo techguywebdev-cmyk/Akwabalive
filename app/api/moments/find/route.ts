@@ -12,6 +12,6 @@ export async function POST(req: Request) {
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
   const { data } = await sb.auth.getUser(token);
   if (!data?.user || data.user.id !== process.env.INGEST_ORGANIZER_ID) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const result = await findOfficialVideos({ resolve: 12, scan: 15 });
+  const result = await findOfficialVideos({ resolve: 12, scan: 15, search: 6 });
   return NextResponse.json(result);
 }

@@ -6,6 +6,8 @@ export interface MomentChapter {
 
 export interface Moment {
   id: string;
+  /** Feed key when the same moment comes round again in a later lap */
+  _k?: string;
   title: string;
   event_name: string;
   event_slug: string | null;

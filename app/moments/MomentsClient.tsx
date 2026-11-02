@@ -116,7 +116,7 @@ export default function MomentsClient() {
       </span>
       {moment && (
         <span style={{ pointerEvents: 'auto' }}>
-          <GlassIcon label={muted ? 'Turn sound on' : 'Mute'} onClick={() => slides.current[moment.id]?.toggleMute()}>
+          <GlassIcon label={muted ? 'Turn sound on' : 'Mute'} onClick={() => slides.current[moment._k ?? moment.id]?.toggleMute()}>
             {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
           </GlassIcon>
         </span>
@@ -148,8 +148,8 @@ export default function MomentsClient() {
         style={{ position: 'absolute', inset: 0, overflowY: 'scroll', scrollSnapType: 'y mandatory', overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}>
         {list.map((m, i) => (
           <MomentSlide
-            key={m.id}
-            ref={(h) => { slides.current[m.id] = h; }}
+            key={m._k ?? m.id}
+            ref={(h) => { slides.current[m._k ?? m.id] = h; }}
             moment={m}
             index={i}
             total={list.length}
