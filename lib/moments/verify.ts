@@ -31,7 +31,7 @@ function ownerNames(m: Row): string[] {
 export async function verifyMoments(limit = 40): Promise<{ checked: number; official: number; gone: number }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return { checked: 0, official: 0, gone: 0 };
-  const db = createClient(url, key, { auth: { persistSession: false } });
+  const db = createClient(url, key, { auth: { persistSession: false }, global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) } });
   const { data } = await db.from('moments').select('id, title, event_name, description, youtube_id, found_by').or(`source_checked_at.is.null,source_checked_at.lt.${new Date(Date.now() - 14 * 86400000).toISOString()}`).limit(limit);
   const rows = (data ?? []) as Row[];
   let official = 0, gone = 0;

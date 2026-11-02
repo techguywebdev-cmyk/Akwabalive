@@ -3,6 +3,7 @@ import { verifyMoments } from '@/lib/moments/verify';
 import { findOfficialVideos } from '@/lib/moments/finder';
 
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 export const maxDuration = 30;
 
 /**
