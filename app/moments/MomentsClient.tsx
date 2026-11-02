@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Bookmark, ChevronLeft, Heart, MessageCircle, Share2, Volume2, VolumeX } from 'lucide-react';
+import { BadgeCheck, Bookmark, ChevronLeft, Heart, MessageCircle, Share2, Volume2, VolumeX } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { C, G, R } from '@/lib/theme';
@@ -11,7 +11,7 @@ import CustomPlayer, { type CustomPlayerHandle } from '@/components/moments/Cust
 import CommentsSheet from '@/components/moments/CommentsSheet';
 import GiftSheet from '@/components/moments/GiftSheet';
 import EndCard from '@/components/moments/EndCard';
-import { ChapterBar, CrowdLine, GlassIcon, NextEditionCard, RailItem, mono, sans, serif } from '@/components/moments/parts';
+import { ChapterBar, CrowdLine, GlassIcon, mono, sans, serif } from '@/components/moments/parts';
 import { formatCount, getChapters, type Comment, type Moment } from '@/components/moments/types';
 import { useMoments } from '@/hooks/useMoments';
 import { useMomentComments } from '@/hooks/useMomentComments';
@@ -19,8 +19,23 @@ import { useMomentLikes } from '@/hooks/useMomentLikes';
 import { useNextEdition } from '@/hooks/useNextEdition';
 import { useMomentCrowd } from '@/hooks/useMomentCrowd';
 import { events as staticEvents } from '@/lib/data/events';
+import { T, FONT, GROUND } from '@/lib/thiscene';
+import { BTN } from '@/components/events/CardParts';
+import { countdown, priceLine } from '@/components/artists/parts';
+import { parseDay, shortDay } from '@/lib/dates';
+import { hiRes } from '@/lib/events/image';
 
 type Tab = 'foryou' | 'following';
+
+function ActionChip({ label, on = false, onClick, children }: { label: string; on?: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" aria-label={label} aria-pressed={on} onClick={onClick} style={{
+      height: 40, padding: '0 14px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 7, cursor: 'pointer',
+      background: on ? 'rgba(123,227,168,0.12)' : 'rgba(255,255,255,0.07)', border: `1px solid ${on ? 'rgba(123,227,168,0.35)' : 'rgba(255,255,255,0.1)'}`,
+      color: on ? T.mintText : T.white, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
+    }}>{children}</button>
+  );
+}
 
 /** Event slugs that people the viewer follows attended or are going to. */
 function useFollowingSlugs(userId: string | undefined, enabled: boolean) {
@@ -51,6 +66,8 @@ export default function MomentsClient() {
   const backHref = fromPath && fromPath.startsWith('/events/') ? fromPath : '/';
 
   const feed = useMoments(initialId);
+  // Quietly check new videos' YouTube channels (official or not, still playing)
+  useEffect(() => { fetch('/api/moments/verify').catch(() => {}); }, []);
   const [tab, setTab] = useState<Tab>('foryou');
   const [followIdx, setFollowIdx] = useState(0);
   const followingSlugs = useFollowingSlugs(user?.id, tab === 'following');
@@ -191,8 +208,8 @@ export default function MomentsClient() {
                 onClick={() => { setTab(k); setFollowIdx(0); setShowComments(false); }}
                 style={{
                   height: 36, padding: '0 14px', borderRadius: R.chip, border: 'none', cursor: 'pointer',
-                  fontFamily: sans, fontSize: 13, fontWeight: on ? 700 : 600,
-                  background: on ? C.cream : 'transparent', color: on ? C.onAccent : 'rgba(245,236,215,0.8)',
+                  fontFamily: FONT.sans, fontSize: 13, fontWeight: on ? 700 : 600,
+                  background: on ? T.mint : 'transparent', color: on ? T.onMint : 'rgba(255,255,255,0.75)',
                 }}
               >
                 {label}
@@ -245,42 +262,112 @@ export default function MomentsClient() {
 
   /* ── Feed ─────────────────────────────────────────────────────────── */
   const meta = [
-    staticMeta?.dateLabel ?? (moment.year ? String(moment.year) : null),
+    staticMeta?.dateLabel ?? null,
     staticMeta?.venue ?? null,
     moment.duration_label ?? null,
   ].filter(Boolean).join(' · ');
 
+  const nextDay = next ? parseDay(next.date) : null;
+  const nextSoon = next ? countdown(next.date) : null;
+  const nextPrice = next ? priceLine(next) : '';
+
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: '#000', overflow: 'hidden' }}
+      style={{ position: 'fixed', inset: 0, background: GROUND, overflow: 'hidden' }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <CustomPlayer
-        key={moment.id}
-        ref={playerRef}
-        youtubeId={moment.youtube_id}
-        title={moment.title}
-        hideMuteButton
-        onMuteChange={setMuted}
-        onEnded={() => setEnded(true)}
-        onDoubleTap={handleDoubleTap}
-        initialSeekSeconds={moment.id === initialId && initialT > 0 ? initialT : null}
-        onTimeUpdate={(t, d) => { setCurrentSeconds(t); setDurationSeconds(d); }}
-      />
-
       {topBar}
-      <span style={{ position: 'absolute', zIndex: 25, top: 'calc(64px + env(safe-area-inset-top, 0px))', right: 18, fontFamily: mono, fontSize: 10, letterSpacing: '1.5px', color: 'rgba(245,236,215,0.85)', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-        {String(idx + 1).padStart(2, '0')} / {String(list.length).padStart(2, '0')}
-      </span>
 
-      {heartBurst && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <Heart size={84} fill={C.red} color={C.red} />
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', paddingTop: 'calc(68px + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))', maxWidth: 720, margin: '0 auto' }}>
+        {/* The video at its real shape: sharp, nothing cropped */}
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', background: '#000', flexShrink: 0 }}>
+          <CustomPlayer
+            key={moment.id}
+            ref={playerRef}
+            youtubeId={moment.youtube_id}
+            title={moment.title}
+            fit="contain"
+            hideMuteButton
+            onMuteChange={setMuted}
+            onEnded={() => setEnded(true)}
+            onDoubleTap={handleDoubleTap}
+            initialSeekSeconds={moment.id === initialId && initialT > 0 ? initialT : null}
+            onTimeUpdate={(t, d) => { setCurrentSeconds(t); setDurationSeconds(d); }}
+          />
+          {heartBurst && (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+              <Heart size={72} fill="#F87171" color="#F87171" />
+            </div>
+          )}
+          <span style={{ position: 'absolute', zIndex: 8, top: 10, right: 12, padding: '3px 8px', borderRadius: 999, background: 'rgba(0,0,0,0.55)', fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.85)', pointerEvents: 'none' }}>
+            {idx + 1} / {list.length}
+          </span>
         </div>
-      )}
+        <div style={{ padding: '0 16px' }}>
+          <ChapterBar chapters={chapters} current={currentSeconds} duration={durationSeconds} onSeek={handleSeek} />
+        </div>
 
-      {ended ? (
+        <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
+          {moment.channel_name && (
+            <a href={moment.channel_url ?? `https://www.youtube.com/watch?v=${moment.youtube_id}`} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 11px 5px 7px', borderRadius: 999, background: 'rgba(255,255,255,0.07)', textDecoration: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text }}>
+              <span aria-hidden style={{ width: 18, height: 13, borderRadius: 4, background: '#FF0033', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ width: 0, height: 0, borderLeft: '5px solid #fff', borderTop: '3.5px solid transparent', borderBottom: '3.5px solid transparent', marginLeft: 1 }} />
+              </span>
+              {moment.official ? <><BadgeCheck size={13} color={T.mint} /> Official · {moment.channel_name}</> : <>via {moment.channel_name}</>}
+            </a>
+          )}
+          <p style={{ margin: moment.channel_name ? '12px 0 0' : 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
+            {moment.event_name}{moment.year ? ` · ${moment.year} edition` : ''}
+          </p>
+          <h1 style={{ margin: '4px 0 0', fontFamily: FONT.display, fontSize: 25, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.12, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {moment.title}
+          </h1>
+          {meta && <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{meta}</p>}
+          <div style={{ marginTop: 8 }}><CrowdLine faces={crowd.faces} count={crowd.thereCount} iWasThere={crowd.iWasThere} /></div>
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+            <ActionChip label={liked ? 'Unlike' : 'Like'} on={liked} onClick={() => { if (!requireSignIn()) toggleLike(); }}>
+              <Heart size={18} fill={liked ? '#F87171' : 'none'} color={liked ? '#F87171' : T.white} /> {formatCount(likeCount)}
+            </ActionChip>
+            <ActionChip label="Comments" onClick={() => setShowComments(true)}><MessageCircle size={18} /> {formatCount(comments.length)}</ActionChip>
+            <ActionChip label="Share this moment" onClick={handleShare}><Share2 size={17} /> Share</ActionChip>
+            {next && (
+              <ActionChip label={crowd.reminded ? 'Saved' : 'Save next edition'} on={crowd.reminded} onClick={() => {
+                if (requireSignIn()) return;
+                crowd.toggleReminder();
+                flash(crowd.reminded ? 'Removed from saved' : `${next.title} saved`);
+              }}><Bookmark size={17} fill={crowd.reminded ? T.mintText : 'none'} /></ActionChip>
+            )}
+          </div>
+        </div>
+
+        {/* The flyer of the next edition, with the button */}
+        {next ? (
+          <Link href={`/events/${next.slug}`} style={{ position: 'relative', flex: 1, minHeight: 150, margin: '16px 20px 0', borderRadius: 22, overflow: 'hidden', textDecoration: 'none', background: 'rgba(255,255,255,0.05)', display: 'block' }}>
+            {next.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={hiRes(next.image, 900) ?? next.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }} />
+            )}
+            <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,8,7,0.1) 0%, rgba(6,8,7,0.15) 35%, rgba(6,8,7,0.9) 100%)' }} />
+            <span style={{ position: 'absolute', left: 16, right: 16, bottom: 14 }}>
+              <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.mintText }}>Next edition{nextSoon ? ` · ${nextSoon}` : ''}</span>
+              <span style={{ display: 'block', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.display, fontSize: 19, fontWeight: 800, color: T.white }}>
+                {next.title}{nextDay ? ` · ${shortDay(nextDay)}` : ''}
+              </span>
+              <span style={{ ...BTN.primary, width: '100%', height: 46, marginTop: 10, boxSizing: 'border-box' }}>
+                {next.price === 0 && !next.priceUnknown && next.listingType !== 'listed' ? 'Reserve a spot' : 'Get tickets'}
+                <span style={{ opacity: 0.65, fontWeight: 600 }}>· {nextPrice}</span>
+              </span>
+            </span>
+          </Link>
+        ) : (
+          <Link href="/events" style={{ ...BTN.secondary, margin: '18px 20px 0', boxSizing: 'border-box', flexShrink: 0 }}>Find what’s on next</Link>
+        )}
+      </div>
+
+      {ended && (
         <EndCard
           moment={moment}
           next={next}
@@ -295,69 +382,6 @@ export default function MomentsClient() {
           onToggleRemind={crowd.toggleReminder}
           onNext={goNext}
         />
-      ) : (
-        <div
-          style={{
-            position: 'absolute', zIndex: 20, left: 12, right: 12,
-            bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
-            display: 'flex', flexDirection: 'column', gap: 12, pointerEvents: 'none',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
-            <div style={{ flex: 1, minWidth: 0, maxWidth: 600, display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'auto' }}>
-              <span style={{ fontFamily: mono, fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.goldText, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
-                {moment.event_name}{moment.year ? ` · ${moment.year} edition` : ''}
-              </span>
-              <h1 style={{ fontFamily: serif, fontSize: 'clamp(28px, 7vw, 40px)', fontWeight: 500, lineHeight: 1.05, color: '#FFFDF6', textShadow: '0 2px 16px rgba(0,0,0,0.6)' }}>
-                {moment.title}
-              </h1>
-              {meta && <span style={{ fontFamily: sans, fontSize: 13, fontWeight: 500, color: 'rgba(245,236,215,0.88)', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{meta}</span>}
-              <CrowdLine faces={crowd.faces} count={crowd.thereCount} iWasThere={crowd.iWasThere} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, pointerEvents: 'auto', marginLeft: 'auto' }}>
-              <RailItem
-                label={liked ? 'Unlike' : 'Like'}
-                caption={formatCount(likeCount)}
-                onClick={() => { if (!requireSignIn()) toggleLike(); }}
-                active={liked}
-                activeColor="#F87171"
-              >
-                <Heart size={22} fill={liked ? C.red : 'none'} color={liked ? C.red : C.cream} />
-              </RailItem>
-              <RailItem label="Comments" caption={formatCount(comments.length)} onClick={() => setShowComments(true)}>
-                <MessageCircle size={22} />
-              </RailItem>
-              <RailItem label="Share this moment" caption="Share" onClick={handleShare}>
-                <Share2 size={21} />
-              </RailItem>
-              {next && (
-                <RailItem
-                  label={crowd.reminded ? 'Saved' : 'Save next edition'}
-                  caption={crowd.reminded ? 'Saved' : 'Save'}
-                  onClick={() => {
-                    if (requireSignIn()) return;
-                    crowd.toggleReminder();
-                    flash(crowd.reminded ? 'Removed from dream events' : `${next.title} saved to dream events`);
-                  }}
-                  active={crowd.reminded}
-                  activeColor={C.goldText}
-                >
-                  <Bookmark size={20} fill={crowd.reminded ? C.goldText : 'none'} />
-                </RailItem>
-              )}
-            </div>
-          </div>
-
-          <div style={{ pointerEvents: 'auto', maxWidth: 600 }}>
-            <ChapterBar chapters={chapters} current={currentSeconds} duration={durationSeconds} onSeek={handleSeek} />
-          </div>
-
-          {next && (
-            <div style={{ pointerEvents: 'auto', maxWidth: 600 }}>
-              <NextEditionCard next={next} goingCount={crowd.goingCount} />
-            </div>
-          )}
-        </div>
       )}
 
       {showComments && (

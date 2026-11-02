@@ -15,6 +15,12 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+/** Shuffled, with videos from the artists' and events' own channels first; dead videos dropped */
+function arrange(list: Moment[]): Moment[] {
+  const ok = list.filter((m) => m.available !== false);
+  return [...shuffle(ok.filter((m) => m.official)), ...shuffle(ok.filter((m) => !m.official))];
+}
+
 export function useMoments(initialMomentId?: string | null) {
   const supabase = createClient();
   const [moments, setMoments] = useState<Moment[]>([]);
@@ -38,8 +44,9 @@ export function useMoments(initialMomentId?: string | null) {
       if (initialMomentId) {
         const idx = list.findIndex((m) => m.id === initialMomentId);
         if (idx >= 0) {
+          list = list.filter((m) => m.available !== false || m.id === initialMomentId);
           setMoments(list);
-          setActiveIdx(idx);
+          setActiveIdx(list.findIndex((m) => m.id === initialMomentId));
         } else {
           const { data: one } = await supabase
             .from('moments')
@@ -51,13 +58,13 @@ export function useMoments(initialMomentId?: string | null) {
             setMoments(list);
             setActiveIdx(0);
           } else {
-            setMoments(shuffle(list));
+            setMoments(arrange(list));
             setActiveIdx(0);
           }
         }
       } else {
-        // Random order each visit so the feed feels fresh
-        setMoments(shuffle(list));
+        // Random order each visit so the feed feels fresh (official videos first)
+        setMoments(arrange(list));
         setActiveIdx(0);
       }
       setHasMore(list.length === PAGE_SIZE);
@@ -83,9 +90,7 @@ export function useMoments(initialMomentId?: string | null) {
     if (data && data.length) {
       setMoments((prev) => {
         const ids = new Set(prev.map((m) => m.id));
-        const next = shuffle(
-          (data as Moment[]).filter((m) => !ids.has(m.id)),
-        );
+        const next = arrange((data as Moment[]).filter((m) => !ids.has(m.id)));
         return [...prev, ...next];
       });
       setHasMore(data.length === PAGE_SIZE);
