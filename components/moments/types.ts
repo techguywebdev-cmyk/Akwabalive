@@ -18,6 +18,12 @@ export interface Moment {
   duration_label?: string | null;
   /** Optional chapters from DB (jsonb). Falls back to CHAPTERS_BY_SLUG. */
   chapters?: MomentChapter[] | null;
+  /** YouTube channel that posted it, and whether that's the artist's or event's own channel */
+  channel_name?: string | null;
+  channel_url?: string | null;
+  official?: boolean | null;
+  /** False when YouTube says the video is gone or can't be embedded */
+  available?: boolean;
 }
 
 export interface Comment {
