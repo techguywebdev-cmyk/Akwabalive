@@ -2,7 +2,7 @@
 
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BadgeCheck, Bell, BellRing, CalendarDays, Check, Heart, MapPin, MessageCircle, Send, Ticket, UserCheck } from 'lucide-react';
+import { BadgeCheck, CalendarDays, Check, MapPin, MessageCircle, Send, Ticket, UserCheck } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
 import CustomPlayer, { type CustomPlayerHandle } from '@/components/moments/CustomPlayer';
@@ -10,12 +10,9 @@ import CommentsSheet from '@/components/moments/CommentsSheet';
 import GiftSheet from '@/components/moments/GiftSheet';
 import { formatCount, type Comment, type Moment } from '@/components/moments/types';
 import { useMomentComments } from '@/hooks/useMomentComments';
-import { useMomentLikes } from '@/hooks/useMomentLikes';
 import { useNextEdition } from '@/hooks/useNextEdition';
 import { useMomentCrowd } from '@/hooks/useMomentCrowd';
-import { useFollow } from '@/components/follow/useFollow';
 import { SERIES, momentInSeries } from '@/lib/data/series';
-import { detectArtistsFromText, getArtistBySlug } from '@/lib/data/artists';
 import { countdown, priceLine, Portrait } from '@/components/artists/parts';
 import { useMomentInfo } from '@/hooks/useMomentInfo';
 import { longDay, parseDay, shortDay } from '@/lib/dates';
@@ -35,23 +32,6 @@ const iconBtn = (on: boolean, mint = false): React.CSSProperties => ({
       : { background: 'rgba(255,255,255,0.07)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' }),
 });
 
-/** Bell for a show or artist when there's no next edition on sale yet */
-function FollowBell({ kind, slug, label, flash }: { kind: 'series' | 'artist'; slug: string; label: string; flash: (m: string) => void }) {
-  const { following, busy, toggle } = useFollow(kind, slug);
-  return (
-    <button type="button" aria-pressed={following} aria-label={following ? `Stop reminders for ${label}` : `Remind me about ${label}`} disabled={busy}
-      onClick={() => { toggle(); flash(following ? 'Reminder removed' : `We’ll tell you when ${label} is back`); }} style={iconBtn(following)}>
-      {following ? <BellRing size={17} /> : <Bell size={17} />}
-    </button>
-  );
-}
-
-/** Small glass button sitting on the video */
-const onVideo: React.CSSProperties = {
-  height: 36, minWidth: 36, padding: '0 10px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5, cursor: 'pointer',
-  background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.16)', color: T.white, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
-};
-
 /**
  * One moment, filling the screen: the video sharp at its real shape over a soft glow of itself,
  * the story of the night, then what to do next — tickets for the next edition, or a reminder.
@@ -67,14 +47,12 @@ const MomentSlide = forwardRef<SlideHandle, {
 
   // Data only for slides near the screen
   const { comments, send } = useMomentComments(mounted ? moment.id : undefined);
-  const { liked, likeCount, toggle: toggleLike } = useMomentLikes(mounted ? moment.id : undefined, user?.id);
   const { next } = useNextEdition(mounted ? moment : null);
   const commenterIds = useMemo(() => comments.map((c) => c.user_id), [comments]);
   const crowd = useMomentCrowd(mounted ? moment.event_slug : undefined, next, commenterIds, user?.id);
 
   const [showComments, setShowComments] = useState(false);
   const [giftTarget, setGiftTarget] = useState<Comment | null>(null);
-  const [burst, setBurst] = useState(false);
   const [more, setMore] = useState(false);
   const ratings = useRatingSummaries(mounted && moment.event_slug ? [moment.event_slug] : []);
   const rating = moment.event_slug ? ratings[moment.event_slug] : undefined;
@@ -82,10 +60,6 @@ const MomentSlide = forwardRef<SlideHandle, {
   const [dur, setDur] = useState(0);
 
   const series = useMemo(() => SERIES.find((s) => momentInSeries(moment, s)), [moment]);
-  const artist = useMemo(() => {
-    const slug = detectArtistsFromText(moment.title, moment.event_name, moment.description).artistSlugs[0];
-    return slug ? getArtistBySlug(slug) : undefined;
-  }, [moment]);
   const info = useMomentInfo(moment, series, mounted);
   const about = moment.description ?? series?.blurb ?? null;
   const canGift = Boolean(next?.tiers?.some((x) => x.price > 0 && x.quantity - x.sold > 0)) && !next?.ticketUrl;
@@ -95,12 +69,6 @@ const MomentSlide = forwardRef<SlideHandle, {
     try { if (navigator.share) { await navigator.share({ title: moment.title, text: `${moment.title} — ${moment.event_name} on Akwaaba`, url }); return; } } catch { /* fall back */ }
     try { await navigator.clipboard.writeText(url); flash('Link copied'); } catch { /* ignore */ }
   }, [moment, flash]);
-
-  const doubleTap = useCallback(() => {
-    if (requireSignIn()) return;
-    if (!liked) toggleLike();
-    setBurst(true); setTimeout(() => setBurst(false), 700);
-  }, [requireSignIn, liked, toggleLike]);
 
   const nextDay = next ? parseDay(next.date) : null;
   const soon = next ? countdown(next.date) : null;
@@ -124,23 +92,12 @@ const MomentSlide = forwardRef<SlideHandle, {
         <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', background: '#000', flexShrink: 0 }}>
           {mounted ? (
             <CustomPlayer ref={playerRef} youtubeId={moment.youtube_id} title={moment.title} fit="contain" hideMuteButton active={active}
-              onMuteChange={active ? onMuteChange : undefined} onEnded={onEnded} onDoubleTap={doubleTap}
+              onMuteChange={active ? onMuteChange : undefined} onEnded={onEnded}
               initialSeekSeconds={initialSeek ?? null} onTimeUpdate={(a, b) => { if (active) { setT(a); setDur(b); } }} />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={still(moment.youtube_id)} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
           )}
-          {/* Like, comments and share sit on the video, bottom-right corner */}
-          <div style={{ position: 'absolute', right: 10, bottom: 10, zIndex: 10, display: 'flex', gap: 8 }}>
-            <button type="button" aria-label={liked ? 'Unlike' : 'Like'} aria-pressed={liked} onClick={() => { if (!requireSignIn()) toggleLike(); }} style={onVideo}>
-              <Heart size={17} color={liked ? '#F87171' : T.white} fill={liked ? '#F87171' : 'none'} />{formatCount(likeCount)}
-            </button>
-            <button type="button" aria-label={`Comments (${comments.length})`} onClick={() => setShowComments(true)} style={onVideo}>
-              <MessageCircle size={17} />{formatCount(comments.length)}
-            </button>
-            <button type="button" aria-label="Share" onClick={share} style={{ ...onVideo, padding: 0, width: 36 }}><Send size={16} /></button>
-          </div>
-          {burst && <span style={{ position: 'absolute', inset: 0, zIndex: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}><Heart size={76} fill="#F87171" color="#F87171" /></span>}
           <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, zIndex: 9, background: 'rgba(255,255,255,0.16)', pointerEvents: 'none' }}>
             <span style={{ display: 'block', height: '100%', width: `${pct}%`, background: T.mint, transition: 'width 250ms linear' }} />
           </span>
@@ -158,23 +115,22 @@ const MomentSlide = forwardRef<SlideHandle, {
                 {moment.title}
               </h2>
             </div>
-            {/* Tickets and reminders, kept small */}
+            {/* Comments, share and tickets, kept small */}
             <div style={{ display: 'flex', gap: 8, paddingTop: 2 }}>
-              {next ? (
-                <>
-                  <button type="button" aria-pressed={crowd.reminded} aria-label={crowd.reminded ? 'Reminder on' : 'Remind me about the next edition'}
-                    onClick={() => { if (requireSignIn()) return; crowd.toggleReminder(); flash(crowd.reminded ? 'Reminder removed' : 'We’ll remind you'); }} style={iconBtn(crowd.reminded)}>
-                    {crowd.reminded ? <BellRing size={17} /> : <Bell size={17} />}
-                  </button>
-                  <a href={next.ticketUrl ?? `/events/${next.slug}?tickets=1`} aria-label="Get tickets for the next edition" {...(next.ticketUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})} style={iconBtn(false, true)}>
-                    <Ticket size={17} />
-                  </a>
-                </>
-              ) : series ? (
-                <FollowBell kind="series" slug={series.slug} label={series.name} flash={flash} />
-              ) : artist ? (
-                <FollowBell kind="artist" slug={artist.slug} label={artist.name} flash={flash} />
-              ) : null}
+              <button type="button" aria-label={`Comments (${comments.length})`} onClick={() => setShowComments(true)} style={{ ...iconBtn(false), position: 'relative' }}>
+                <MessageCircle size={17} />
+                {comments.length > 0 && (
+                  <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 17, height: 17, padding: '0 4px', boxSizing: 'border-box', borderRadius: 9, background: T.white, color: '#050606', fontFamily: FONT.sans, fontSize: 10, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {formatCount(comments.length)}
+                  </span>
+                )}
+              </button>
+              <button type="button" aria-label="Share" onClick={share} style={iconBtn(false)}><Send size={16} /></button>
+              {next && (
+                <a href={next.ticketUrl ?? `/events/${next.slug}?tickets=1`} aria-label="Get tickets for the next edition" {...(next.ticketUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})} style={iconBtn(false, true)}>
+                  <Ticket size={17} />
+                </a>
+              )}
             </div>
           </div>
 
