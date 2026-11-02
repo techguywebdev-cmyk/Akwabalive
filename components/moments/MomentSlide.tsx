@@ -2,7 +2,7 @@
 
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BadgeCheck, CalendarDays, Check, MapPin, MessageCircle, Send, Ticket, UserCheck } from 'lucide-react';
+import { BadgeCheck, CalendarDays, Check, ChevronDown, MapPin, MessageCircle, Send, Ticket, UserCheck } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
 import CustomPlayer, { type CustomPlayerHandle } from '@/components/moments/CustomPlayer';
@@ -41,7 +41,8 @@ const MomentSlide = forwardRef<SlideHandle, {
   moment: Moment; active: boolean; mounted: boolean; index: number; total: number;
   user: User | null; profile: Profile | null; onMuteChange: (m: boolean) => void; onEnded: () => void;
   initialSeek?: number | null; requireSignIn: () => boolean; flash: (m: string) => void;
-}>(function MomentSlide({ moment, active, mounted, user, profile, onMuteChange, onEnded, initialSeek, requireSignIn, flash }, ref) {
+  upNext?: Moment | null; onNext?: () => void;
+}>(function MomentSlide({ moment, active, mounted, user, profile, onMuteChange, onEnded, initialSeek, requireSignIn, flash, upNext, onNext }, ref) {
   const playerRef = useRef<CustomPlayerHandle>(null);
   useImperativeHandle(ref, () => ({ toggleMute: () => playerRef.current?.toggleMute() }));
 
@@ -167,7 +168,7 @@ const MomentSlide = forwardRef<SlideHandle, {
           {about && (
             <p onClick={() => setMore((x) => !x)} style={{
               margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2, cursor: 'pointer',
-              ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
+              ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 5, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
             }}>{about}</p>
           )}
 
@@ -197,6 +198,28 @@ const MomentSlide = forwardRef<SlideHandle, {
             {crowd.thereCount > 0 && <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{formatCount(crowd.thereCount)} {crowd.thereCount === 1 ? 'person was' : 'people were'} there</span>}
           </div>
         </div>
+
+        <div style={{ flex: 1, minHeight: 16 }} />
+
+        {/* Up next — fills the bottom and invites the swipe */}
+        {upNext ? (
+          <button type="button" onClick={onNext} style={{ margin: '0 16px 12px', padding: 10, borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', cursor: 'pointer', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+            <span style={{ position: 'relative', width: 104, aspectRatio: '16 / 9', borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: '#000' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {mounted && <img src={glow(upNext.youtube_id)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+            </span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.text3 }}>Up next</span>
+              <span style={{ marginTop: 3, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, lineHeight: 1.25, color: T.white, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } as React.CSSProperties}>{upNext.title}</span>
+              <span style={{ display: 'block', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>{upNext.event_name}{upNext.year ? ` · ${upNext.year}` : ''}</span>
+            </span>
+            <ChevronDown size={20} color={T.text3} style={{ flexShrink: 0 }} />
+          </button>
+        ) : (
+          <Link href="/" style={{ margin: '0 16px 12px', height: 50, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.white, flexShrink: 0 }}>
+            You’re all caught up · See what’s on
+          </Link>
+        )}
       </div>
 
       {showComments && (
