@@ -93,7 +93,8 @@ export function useMoments(initialMomentId?: string | null) {
     if (data && data.length) {
       setMoments((prev) => {
         const ids = new Set(prev.map((m) => m.id));
-        const next = arrange((data as Moment[]).filter((m) => !ids.has(m.id)));
+        const vids = new Set(prev.map((m) => m.youtube_id));
+        const next = arrange((data as Moment[]).filter((m) => !ids.has(m.id) && !vids.has(m.youtube_id)));
         return [...prev, ...next];
       });
       setHasMore(data.length === PAGE_SIZE);
