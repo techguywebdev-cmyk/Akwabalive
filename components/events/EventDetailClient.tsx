@@ -15,8 +15,10 @@ import { EventTags } from '@/components/events/CardParts';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments, MomentsViewer } from '@/components/moments/EventMoments';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
+import { useEventComments } from '@/hooks/useEventComments';
+import CommentsSheet from '@/components/moments/CommentsSheet';
 import { Portrait } from '@/components/artists/parts';
-import { Bookmark, BookmarkCheck, CalendarPlus, Check, Navigation, Play, Share2, UserPlus } from 'lucide-react';
+import { Bookmark, BookmarkCheck, CalendarPlus, Check, MessageSquareText, Navigation, Play, Share2, UserPlus } from 'lucide-react';
 import { TicketsSheet } from '@/components/events/EventActions';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { parseDay, longDay, shortDay } from '@/lib/dates';
@@ -46,7 +48,7 @@ function getDescription(event: GhanaEvent): string {
 }
 
 export default function EventDetailClient({ event, related, seriesMomentId }: { event: GhanaEvent; related: GhanaEvent[]; seriesMomentId?: string | null }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const supabase = createClient();
 
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
@@ -60,6 +62,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [showPromoVideo, setShowPromoVideo] = useState(false);
   const [watchAt,        setWatchAt]        = useState<number | null>(null);
   const moments = useEventMoments(event);
+  const chat = useEventComments(event.slug);
+  const [chatOpen, setChatOpen] = useState(false);
   const [wantSound, setWantSound] = useState(false);
 
   useEffect(() => {
@@ -373,6 +377,35 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
         <PartOfSeries event={event} />
 
+        {/* The chat: questions and plans before the night, memories after */}
+        <section style={{ marginTop: 34 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <h2 style={eyebrowMint}>The chat{chat.comments.length ? ` · ${chat.comments.length}` : ''}</h2>
+            {chat.comments.length > 2 && (
+              <button type="button" onClick={() => setChatOpen(true)} style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText }}>See all</button>
+            )}
+          </div>
+          {chat.comments.slice(-2).map((c) => {
+            const name = c.profiles?.full_name || c.profiles?.username || 'Someone';
+            return (
+              <button key={c.id} type="button" onClick={() => setChatOpen(true)} style={{ display: 'flex', gap: 12, width: '100%', padding: '10px 0', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                <span style={{ width: 32, height: 32, flexShrink: 0, borderRadius: 16, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(150deg, #2C3631 0%, #151A17 100%)', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {c.profiles?.avatar_url ? <img src={c.profiles.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : name[0]?.toUpperCase()}
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, color: T.white }}>{name}{chat.goingIds.has(c.user_id) ? <span style={{ marginLeft: 6, fontWeight: 600, color: T.mintText }}>· {daysAway != null && daysAway < 0 ? 'was there' : 'going'}</span> : null}</span>
+                  <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginTop: 2, fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.45, color: T.text } as CSSProperties}>{c.content}</span>
+                </span>
+              </button>
+            );
+          })}
+          <button type="button" onClick={() => setChatOpen(true)} style={{ marginTop: chat.comments.length ? 8 : 4, width: '100%', height: 48, borderRadius: 999, display: 'flex', alignItems: 'center', gap: 10, padding: '0 18px', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: T.text3, fontFamily: FONT.sans, fontSize: 14, textAlign: 'left' }}>
+            <MessageSquareText size={17} color={T.text2} />
+            {chat.comments.length ? 'Join the conversation…' : daysAway != null && daysAway < 0 ? 'Were you there? Say something…' : 'Ask about tickets, gates, dress code…'}
+          </button>
+        </section>
+
         <RatingSection slug={event.slug} title={event.title} past={(() => { const d = parseDay(event.date); return !!d && d.getTime() <= new Date(new Date().toDateString()).getTime(); })()} />
 
         <section id="tickets" style={{ marginTop: 34 }}>
@@ -467,6 +500,16 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           )}
         </div>
       </div>
+
+      {chatOpen && (
+        <CommentsSheet fixed heading="The chat" moment={{ event_name: short.title, year: null } as unknown as Parameters<typeof CommentsSheet>[0]['moment']}
+          comments={chat.comments} user={user} profile={profile} currentSeconds={0}
+          wasThereIds={new Set()} goingIds={chat.goingIds} nextLabel={null} canGift={false} tint={`${r}, ${g}, ${b}`}
+          goingLabel={daysAway != null && daysAway < 0 ? 'Was there' : 'Going'}
+          prompts={daysAway != null && daysAway < 0 ? ['Best moment:', 'Who else was there?', 'Next year I want'] : ['Who’s going?', 'What time do gates open?', 'Dress code?', 'Looking for people to go with']}
+          emptyHint={daysAway != null && daysAway < 0 ? 'Were you there? Share the best moment.' : 'Ask a question or find people to go with.'}
+          onClose={() => setChatOpen(false)} onSend={(text) => { if (user) chat.send(user.id, text); }} onSeek={() => {}} onGift={() => {}} />
+      )}
 
       {ticketsOpen && (
         <TicketsSheet
