@@ -22,6 +22,9 @@ import { isListedEvent } from '@/lib/types';
 import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
 
+/** The card last on screen, kept for the whole visit so Back returns to it */
+let lastSeen: string | null = null;
+
 export interface FeedItem { event: GhanaEvent; dist: number | null }
 
 /** "Sat 14 Dec" */
@@ -247,8 +250,19 @@ export default function EventFeed({
     return () => { if (t) clearTimeout(t); el.removeEventListener('scroll', onScroll); el.removeEventListener('scrollend', onEnd); };
   }, [hasItems]);
 
+  // Coming back from an event: return to the card you were on. Any other list change starts at the top.
   const listKey = items.map((i) => i.event.slug).join('|');
-  useEffect(() => { scroller.current?.scrollTo({ top: 0 }); setActive(0); }, [listKey]);
+  const [returnTo] = useState(() => lastSeen); // read once on mount
+  const firstKey = useRef<string | null>(null);
+  useEffect(() => {
+    const el = scroller.current;
+    if (!items.length) return;
+    if (firstKey.current === null) firstKey.current = listKey;
+    const back = listKey === firstKey.current && returnTo ? items.findIndex((i) => i.event.slug === returnTo) : -1;
+    if (el && back > 0) { el.scrollTo({ top: back * el.clientHeight, behavior: 'instant' as ScrollBehavior }); setActive(back); return; }
+    el?.scrollTo({ top: 0 }); setActive(0);
+  }, [listKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const slug = items[active]?.event.slug; if (slug) lastSeen = slug; }, [active, items]);
 
   // The live accent follows the active card
   const current = items[Math.min(active, items.length - 1)]?.event;
