@@ -120,7 +120,9 @@ function sample(url: string): Promise<RGB | null> {
       }
     };
     img.onerror = () => resolve(null);
-    img.src = url;
+    // Read a same-origin copy: most flyers live on sites that don't let other pages read their pixels
+    const sameOrigin = url.startsWith('/') || (typeof window !== 'undefined' && url.startsWith(window.location.origin));
+    img.src = sameOrigin || url.startsWith('data:') ? url : `/api/img?src=${encodeURIComponent(url)}`;
   });
 }
 
