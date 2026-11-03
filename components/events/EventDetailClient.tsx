@@ -222,7 +222,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       {/* The page washed in the flyer's colour, settling into near-black further down */}
       <span aria-hidden style={{
         position: 'absolute', left: 0, right: 0, top: 0, height: '100%', maxHeight: 2200, pointerEvents: 'none', transition: 'background 900ms ease',
-        background: `linear-gradient(180deg, ${washAt(0.34)} 0%, ${washAt(0.3)} 30%, ${washAt(0.16)} 55%, rgba(3,8,6,0) 100%)`,
+        background: `linear-gradient(180deg, ${washAt(0.6)} 0%, ${washAt(0.42)} 28%, ${washAt(0.22)} 55%, ${washAt(0.08)} 82%, rgba(3,8,6,0) 100%)`,
       }} />
       <Nav
         active="Events"
@@ -264,7 +264,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         {showPromoVideo && isMp4 && event.promoVideoUrl && (
           <video key={wantSound ? 'vs' : 'vm'} src={event.promoVideoUrl} autoPlay muted={!wantSound} loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         )}
-        <div aria-hidden style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, rgba(3,8,6,0.45) 0%, rgba(3,8,6,0) 18%, rgba(3,8,6,0) 80%, ${washAt(0.34)} 100%)`, pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, rgba(3,8,6,0.45) 0%, rgba(3,8,6,0) 18%, rgba(3,8,6,0) 80%, ${washAt(0.6)} 100%)`, pointerEvents: 'none' }} />
       </div>
 
       <main style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '8px auto 0', padding: '0 20px' }}>
