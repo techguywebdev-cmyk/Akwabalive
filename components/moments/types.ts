@@ -16,6 +16,8 @@ export interface Moment {
   source?: string | null;
   /** The original post (for X moments) */
   source_url?: string | null;
+  /** Posted by the event's organiser (their account id) */
+  posted_by?: string | null;
   /** How the night went, written from news coverage */
   recap?: string | null;
   recap_sources?: { title: string; url: string }[] | null;
