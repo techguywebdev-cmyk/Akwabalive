@@ -13,8 +13,11 @@ import { getTiers } from '@/lib/events/tiers';
 import { hiRes } from '@/lib/events/image';
 import { EventTags } from '@/components/events/CardParts';
 import FriendsStrip from '@/components/social/FriendsStrip';
-import { useEventMoments, MomentsRail, MomentsViewer } from '@/components/moments/EventMoments';
-import { ActionBar, TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
+import { useEventMoments, MomentsViewer } from '@/components/moments/EventMoments';
+import { useArtistPhotos } from '@/hooks/useArtistPhotos';
+import { Portrait } from '@/components/artists/parts';
+import { Bookmark, BookmarkCheck, CalendarPlus, Check, MapPin, Navigation, Play, Share2, UserPlus } from 'lucide-react';
+import { TicketsSheet } from '@/components/events/EventActions';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { parseDay, longDay } from '@/lib/dates';
 import type { GhanaEvent } from '@/lib/types';
@@ -159,6 +162,11 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const a = toHex(rgb);
   const lineup = resolveLineupNames(event);
   const short = splitEventTitle(event.title);
+  const acts = lineup.map((name) => ({ name, artist: artistForName(name) }));
+  const photos = useArtistPhotos(acts.map((x) => x.artist?.slug).filter((x): x is string => !!x));
+  const [r, g, b] = rgb;
+  // The flyer's colour mixed into near-black: the hero fades into exactly this, then the wash carries on down
+  const washAt = (k: number) => `rgb(${Math.round(r * k + 3 * (1 - k))}, ${Math.round(g * k + 8 * (1 - k))}, ${Math.round(b * k + 6 * (1 - k))})`;
   const parsed = parseDay(event.date);
   const eventDate = parsed ?? new Date(0);
   const validDate = !!parsed;
@@ -191,7 +199,13 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   }
 
   const eyebrow: CSSProperties = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 6px' };
-  const infoRow: CSSProperties = { display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0', borderTop: `1px solid ${T.hairline}` };
+  const eyebrowMint: CSSProperties = { ...eyebrow, color: T.mintText };
+  const roundBtn = (on: boolean): CSSProperties => ({
+    width: 44, height: 44, borderRadius: 22, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0,
+    ...(on ? { background: 'rgba(123,227,168,0.16)', color: T.mintText, border: '1px solid rgba(123,227,168,0.4)' } : { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' }),
+  });
+  const pillBtn = (on: boolean): CSSProperties => ({ ...roundBtn(on), width: 'auto', padding: '0 16px', gap: 7, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 });
+  const linkBtn: CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText, textDecoration: 'none' };
   const primary: CSSProperties = {
     height: 52, padding: '0 28px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
     color: T.onMint, background: T.mint, border: 'none', boxShadow: '0 8px 24px rgba(123,227,168,0.22)',
@@ -199,7 +213,12 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   };
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
+    <div style={{ position: 'relative', minHeight: '100vh', paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
+      {/* The page washed in the flyer's colour, settling into near-black further down */}
+      <span aria-hidden style={{
+        position: 'absolute', left: 0, right: 0, top: 0, height: 2200, pointerEvents: 'none', transition: 'background 900ms ease',
+        background: `linear-gradient(180deg, ${washAt(0.34)} 0%, ${washAt(0.3)} 30%, ${washAt(0.16)} 55%, rgba(3,8,6,0) 100%)`,
+      }} />
       <Nav
         active="Events"
         back="/events"
@@ -240,10 +259,10 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         {showPromoVideo && isMp4 && event.promoVideoUrl && (
           <video key={wantSound ? 'vs' : 'vm'} src={event.promoVideoUrl} autoPlay muted={!wantSound} loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         )}
-        <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,8,6,0.45) 0%, rgba(3,8,6,0) 18%, rgba(3,8,6,0) 85%, #030806 100%)', pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, rgba(3,8,6,0.45) 0%, rgba(3,8,6,0) 18%, rgba(3,8,6,0) 80%, ${washAt(0.34)} 100%)`, pointerEvents: 'none' }} />
       </div>
 
-      <main style={{ position: 'relative', maxWidth: 720, margin: '8px auto 0', padding: '0 20px' }}>
+      <main style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '8px auto 0', padding: '0 20px' }}>
         <EventTags event={event} accent={a} />
         <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: short.title.length > 22 ? 'clamp(34px, 8vw, 56px)' : 'clamp(40px, 10vw, 68px)', fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.035em', color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
           {short.title}
@@ -253,45 +272,96 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         )}
         <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{eventBlurb(event, 160)}</p>
 
-        <div style={{ marginTop: 24 }}>
-          <ActionBar
-            accent={a}
-            maxWidth={520}
-            actions={[
-              { key: 'tickets', icon: 'tickets', label: ticketsLabel(event), aria: `Tickets, ${ticketsLabel(event)}`, primary: ticketsLabel(event) !== 'Ended', onClick: () => setTicketsOpen(true) },
-              { key: 'going', icon: 'goingUser', label: isGoing ? 'Going' : "I'm going", on: isGoing, onClick: toggleGoing },
-              { key: 'save', icon: 'saveTag', label: inDreamList ? 'Saved' : 'Save', on: inDreamList, onClick: toggleDreamList },
-              { key: 'share', icon: 'share', label: 'Share', onClick: share },
-              ...(calendar && daysAway != null && daysAway >= 0
-                ? [{ key: 'cal', icon: 'calendarAdd' as const, label: 'Calendar', href: calendar, external: true }]
-                : [{ key: 'map', icon: 'directions' as const, label: 'Directions', href: maps, external: true }]),
-            ]}
-          />
+        {/* Small actions: the big one (tickets) lives in the bottom bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 20 }}>
+          <button type="button" onClick={toggleGoing} aria-pressed={isGoing} style={pillBtn(isGoing)}>
+            {isGoing ? <Check size={16} /> : <UserPlus size={16} />}{isGoing ? 'Going' : 'I’m going'}
+          </button>
+          <span style={{ flex: 1 }} />
+          <button type="button" onClick={toggleDreamList} aria-label={inDreamList ? 'Saved' : 'Save'} aria-pressed={inDreamList} disabled={dreamLoading} style={roundBtn(inDreamList)}>
+            {inDreamList ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+          </button>
+          <button type="button" onClick={share} aria-label="Share" style={roundBtn(false)}><Share2 size={17} /></button>
         </div>
 
         <FriendsStrip slug={event.slug} variant="full" />
 
-        <MomentsRail list={moments} onOpen={setWatchAt} />
+        {/* When: a big countdown, with where and the two useful links */}
+        <section style={{ marginTop: 22, padding: 16, borderRadius: 22, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: 16, alignItems: 'stretch' }}>
+          {daysAway != null && daysAway >= 0 ? (
+            <span style={{ width: 92, flexShrink: 0, borderRadius: 16, background: `rgba(${r}, ${g}, ${b}, 0.22)`, border: `1px solid rgba(${r}, ${g}, ${b}, 0.4)`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px 6px' }}>
+              <span style={{ fontFamily: FONT.display, fontSize: daysAway > 99 ? 32 : 40, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1, color: T.white }}>{daysAway === 0 ? 'Today' : daysAway}</span>
+              {daysAway > 0 && <span style={{ marginTop: 4, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)' }}>{daysAway === 1 ? 'day to go' : 'days to go'}</span>}
+            </span>
+          ) : null}
+          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
+            <span>
+              <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 700, color: T.white }}>{longDate}</span>
+              <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>{[event.time, daysAway != null && daysAway < 0 ? 'Past event' : null].filter(Boolean).join(' · ') || ' '}</span>
+            </span>
+            <span style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+              <MapPin size={15} color={T.text2} style={{ marginTop: 2, flexShrink: 0 }} />
+              <span style={{ minWidth: 0, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.white }}>
+                {event.venue}<span style={{ fontWeight: 400, color: T.text2 }}>{[event.area, cityLabel(event.city)].filter(Boolean).length ? ` · ${[event.area, cityLabel(event.city)].filter(Boolean).join(', ')}` : ''}</span>
+              </span>
+            </span>
+            <span style={{ display: 'flex', gap: 14 }}>
+              <a href={maps} target="_blank" rel="noopener noreferrer" style={linkBtn}><Navigation size={14} /> Directions</a>
+              {calendar && daysAway != null && daysAway >= 0 && <a href={calendar} target="_blank" rel="noopener noreferrer" style={linkBtn}><CalendarPlus size={14} /> Calendar</a>}
+            </span>
+          </span>
+        </section>
+
+        {acts.length > 0 && (
+          <section style={{ marginTop: 28 }}>
+            <h2 style={eyebrowMint}>Line-up</h2>
+            <div className="no-scrollbar" style={{ display: 'flex', gap: 16, overflowX: 'auto', margin: '8px -20px 0', padding: '4px 20px 4px' }}>
+              {acts.map(({ name, artist }, i) => {
+                const face = (
+                  <span style={{ width: i === 0 ? 96 : 72, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                    <Portrait name={name} url={artist ? photos[artist.slug] : null} size={i === 0 ? 92 : 68} ring={i === 0} />
+                    <span style={{ width: '100%', textAlign: 'center', fontFamily: FONT.sans, fontSize: i === 0 ? 14 : 13, fontWeight: i === 0 ? 700 : 600, lineHeight: 1.2, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name}</span>
+                    {i === 0 && <span style={{ marginTop: -4, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.mintText }}>Headliner</span>}
+                  </span>
+                );
+                return artist
+                  ? <Link key={name} href={`/artists/${artist.slug}`} style={{ textDecoration: 'none', alignSelf: 'flex-start' }}>{face}</Link>
+                  : <span key={name} style={{ alignSelf: 'flex-start' }}>{face}</span>;
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Relive the last edition: one big moment, the rest underneath */}
+        {moments.length > 0 && (
+          <section style={{ marginTop: 30 }}>
+            <h2 style={eyebrowMint}>{daysAway != null && daysAway < 0 ? 'Relive the night' : 'Relive the last edition'}</h2>
+            <button type="button" onClick={() => setWatchAt(0)} style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '16 / 9', marginTop: 4, padding: 0, border: 'none', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', background: '#000', boxShadow: `0 20px 60px rgba(${r}, ${g}, ${b}, 0.25)` }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`https://i.ytimg.com/vi/${moments[0].youtube_id}/hq720.jpg`} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%)' }} />
+              <span style={{ position: 'absolute', left: '50%', top: '42%', transform: 'translate(-50%, -50%)', width: 64, height: 64, borderRadius: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.92)', color: '#050606' }}>
+                <Play size={26} fill="#050606" style={{ marginLeft: 3 }} />
+              </span>
+              <span style={{ position: 'absolute', left: 16, right: 16, bottom: 14, textAlign: 'left' }}>
+                <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{moments[0].title}</span>
+                <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{[moments[0].event_name, moments[0].year].filter(Boolean).join(' · ')}{moments.length > 1 ? ` · ${moments.length} moments` : ''}</span>
+              </span>
+            </button>
+            {moments.length > 1 && (
+              <div className="no-scrollbar" style={{ display: 'flex', gap: 10, overflowX: 'auto', margin: '10px -20px 0', padding: '0 20px' }}>
+                {moments.slice(1, 8).map((m, i) => (
+                  <button key={m.id} type="button" onClick={() => setWatchAt(i + 1)} aria-label={`Play ${m.title}`} style={{ position: 'relative', width: 128, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, border: 'none', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`https://i.ytimg.com/vi/${m.youtube_id}/mqdefault.jpg`} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <span style={{ position: 'absolute', left: 8, bottom: 8, width: 24, height: 24, borderRadius: 12, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.white }}><Play size={11} fill={T.white} /></span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
         {watchAt !== null && <MomentsViewer list={moments} start={watchAt} eventTitle={event.title} onClose={() => setWatchAt(null)} />}
-
-        <div style={{ marginTop: 28 }}>
-          <div style={infoRow}>
-            <Icon name="calendar" size={22} color="rgba(255,255,255,0.7)" />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>{longDate}</p>
-              <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>{[event.time, countdown].filter(Boolean).join(' · ')}</p>
-            </div>
-          </div>
-          <div style={{ ...infoRow, borderBottom: `1px solid ${T.hairline}` }}>
-            <Icon name="mapPin" size={22} color="rgba(255,255,255,0.7)" />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>{event.venue}</p>
-              <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>{[event.area, cityLabel(event.city)].filter(Boolean).join(', ')}</p>
-            </div>
-            <a href={maps} target="_blank" rel="noopener noreferrer" style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>Directions</a>
-          </div>
-        </div>
-
 
         <section style={{ marginTop: 36 }}>
           <h2 style={eyebrow}>About</h2>
@@ -301,26 +371,6 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         </section>
 
         <PartOfSeries event={event} />
-
-        {lineup.length > 0 && (
-          <section style={{ marginTop: 34 }}>
-            <h2 style={eyebrow}>Line-up</h2>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-              {lineup.map((name, i) => (
-                <li key={name} style={{ padding: '12px 0', borderBottom: i === lineup.length - 1 ? 'none' : `1px solid ${T.hairline}`, fontFamily: FONT.display, fontSize: i === 0 ? 22 : 18, fontWeight: i === 0 ? 700 : 600, letterSpacing: '-0.02em', color: i === 0 ? T.white : 'rgba(255,255,255,0.85)' }}>
-                  {(() => {
-                    const a = artistForName(name);
-                    return a ? (
-                      <Link href={`/artists/${a.slug}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, color: 'inherit', textDecoration: 'none' }}>
-                        {name}<Icon name="arrowRight" size={18} color="rgba(255,255,255,0.35)" />
-                      </Link>
-                    ) : name;
-                  })()}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
 
         <RatingSection slug={event.slug} title={event.title} past={(() => { const d = parseDay(event.date); return !!d && d.getTime() <= new Date(new Date().toDateString()).getTime(); })()} />
 
