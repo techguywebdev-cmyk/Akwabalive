@@ -28,12 +28,14 @@ export function hypeTags(e: GhanaEvent, opts: { returning?: boolean; max?: numbe
     else if (tiers.some((t) => t.quantity > 0 && t.sold / t.quantity >= 0.7)) out.push({ kind: 'fast', text: 'Selling fast' });
   }
 
+  // Marked hot by Akwaaba: always in demand
+  if (e.hot && !e.isFeatured && !out.some((h) => WARM.includes(h.kind))) out.push({ kind: 'hot', text: 'Hot' });
+
   // The organiser's own line ("Surprise guests", "Album launch")
   if (e.highlight?.trim()) out.push({ kind: 'special', text: e.highlight.trim() });
 
-  // Admin picks
+  // Admin pick
   if (e.isFeatured) out.push({ kind: 'pick', text: 'Akwaaba pick' });
-  else if (e.hot && !out.some((h) => WARM.includes(h.kind))) out.push({ kind: 'hot', text: 'Hot' });
 
   // Big names on the bill
   const stars = (() => { try { return artistsForEvent(e).length; } catch { return 0; } })();
