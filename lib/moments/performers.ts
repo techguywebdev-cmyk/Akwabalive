@@ -106,6 +106,12 @@ export async function confirmPerformers(limit = 40): Promise<{ checked: number; 
       // A fuller excerpt from the uploader's description, when what we have is short or missing
       ...(() => {
         const ex = cleanExcerpt(d?.description);
+        // Found automatically: always use the cleaned excerpt (or drop text that's only links and notices)
+        if (m.found_by) {
+          const keep = ex ?? cleanExcerpt(m.description, 200);
+          return keep !== m.description ? { description: keep } : {};
+        }
+        // Written by hand: only fill in when ours is short
         return ex && ex.length > (m.description?.length ?? 0) + 20 && (m.description?.length ?? 0) < 140 ? { description: ex } : {};
       })(),
     }).eq('id', m.id);

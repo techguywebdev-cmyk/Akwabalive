@@ -3,14 +3,18 @@
  * drop links, hashtags, credits, "subscribe/stream/follow" lines, bookings and contact details.
  * Returns null when nothing worth showing is left.
  */
-const JUNK = /(https?:\/\/|www\.|@\w|#\w|subscribe|follow (me|us)|stream|spotify|apple music|audiomack|boomplay|booking|bookings|contact|enquir|e-?mail|whats ?app|\+?\d[\d\s-]{7,}|all rights|©|copyright|prod(uced)? by|directed by|dop\b|shot by|edited by|video by|mixed by|mastered by|management|mgt|label|distributed|lyrics|turn on notifications|like and share|merch|available (now|on)|out now|click|link)/i;
+const JUNK = /(support (our|us|the)|donat|account (name|number)|bank|momo|mobile money|unauthori[sz]ed|prohibited|taken down|please note|channel (managed|owned)|managed by|producer|creative director|thank(s| you) for watching|don.t forget|partner|sponsor(ed)? by|powered by|keep(ing)? the show alive|help us|your support|https?:\/\/|www\.|@\w|#\w|subscribe|follow (me|us)|stream|spotify|apple music|audiomack|boomplay|booking|bookings|contact|enquir|e-?mail|whats ?app|\+?\d[\d\s-]{7,}|all rights|©|copyright|prod(uced)? by|directed by|dop\b|shot by|edited by|video by|mixed by|mastered by|management|mgt|label|distributed|lyrics|turn on notifications|like and share|merch|available (now|on)|out now|click|link)/i;
 
 export function cleanExcerpt(desc: string | null | undefined, max = 420): string | null {
   if (!desc) return null;
   const lines = desc.split('\n').map((l) => l.replace(/[\uD800-\uDFFF\u2600-\u27BF\uFE0F]/g, '').replace(/\s+/g, ' ').trim())
     .filter((l) => l.length >= 25 && !JUNK.test(l) && /[a-z]/i.test(l) && (l.match(/[A-Z]/g) ?? []).length < l.length * 0.6);
   let out = '';
+  const seen = new Set<string>();
   for (const l of lines) {
+    const key = l.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
     const next = out ? `${out} ${/[.!?]$/.test(out) ? '' : '· '}${l}` : l;
     if (next.length > max) {
       if (!out) out = l.slice(0, max).replace(/\s+\S*$/, '') + '…';
