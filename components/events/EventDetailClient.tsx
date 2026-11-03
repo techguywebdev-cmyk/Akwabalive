@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Nav, { HeaderIconButton } from '@/components/layout/Nav';
 import { Icon } from '@/components/ui/Icon';
 import { T, FONT, alpha } from '@/lib/thiscene';
-import { type RGB, categoryAccent, eventAccent, toHex } from '@/lib/events/accent';
+import { type RGB, categoryAccent, eventColours, NEUTRAL_ACCENT, toHex } from '@/lib/events/accent';
 import { resolveLineupNames } from '@/components/ui/LineupChips';
 import { artistForName } from '@/lib/data/artists';
 import PartOfSeries from '@/components/series/PartOfSeries';
@@ -54,6 +54,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const supabase = createClient();
 
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
+  const [wash, setWash] = useState<RGB>([14, 17, 16]);
   const [ticketOpen,     setTicketOpen]     = useState(false);
   const [inDreamList,    setInDreamList]    = useState(false);
   const [isGoing,        setIsGoing]        = useState(false);
@@ -71,7 +72,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
   useEffect(() => {
     let live = true;
-    eventAccent(event.image, event.category).then((c) => { if (live) setRgb(c); });
+    eventColours(event.image, event.category).then((c) => { if (live) { setRgb(c.accent ?? NEUTRAL_ACCENT); setWash(c.wash); } });
     return () => { live = false; };
   }, [event.image, event.category]);
 
@@ -173,7 +174,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const photos = useArtistPhotos(acts.map((x) => x.artist?.slug).filter((x): x is string => !!x));
   const [r, g, b] = rgb;
   // The flyer's colour mixed into near-black: the hero fades into exactly this, then the wash carries on down
-  const washAt = (k: number) => `rgb(${Math.round(r * k + 3 * (1 - k))}, ${Math.round(g * k + 8 * (1 - k))}, ${Math.round(b * k + 6 * (1 - k))})`;
+  // The flyer's own deep ground colour, fading into near-black further down
+  const washAt = (k: number) => `rgb(${Math.round(wash[0] * k + 5 * (1 - k))}, ${Math.round(wash[1] * k + 6 * (1 - k))}, ${Math.round(wash[2] * k + 6 * (1 - k))})`;
   const parsed = parseDay(event.date);
   const eventDate = parsed ?? new Date(0);
   const validDate = !!parsed;
@@ -224,7 +226,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       {/* The page washed in the flyer's colour, settling into near-black further down */}
       <span aria-hidden style={{
         position: 'absolute', left: 0, right: 0, top: 0, height: '100%', maxHeight: 2200, pointerEvents: 'none', transition: 'background 900ms ease',
-        background: `linear-gradient(180deg, ${washAt(0.44)} 0%, ${washAt(0.3)} 30%, ${washAt(0.16)} 58%, ${washAt(0.06)} 85%, rgba(3,8,6,0) 100%)`,
+        background: `linear-gradient(180deg, ${washAt(1)} 0%, ${washAt(0.8)} 25%, ${washAt(0.45)} 55%, ${washAt(0.15)} 82%, rgba(3,8,6,0) 100%)`,
       }} />
       <Nav
         active="Events"
