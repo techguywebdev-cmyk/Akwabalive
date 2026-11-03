@@ -11,14 +11,14 @@ import { ASPECTS, fmtScore, type AspectKey, type RatingSummary } from '@/lib/rat
 import { Stars, StarInput } from '@/components/ratings/Stars';
 import { T, FONT, EASE } from '@/lib/thiscene';
 
-type Status = { can_rate: boolean; reason?: string; verified?: boolean; event_date?: string; rating?: Record<string, unknown> | null };
+export type RateStatus = { can_rate: boolean; reason?: string; verified?: boolean; event_date?: string; rating?: Record<string, unknown> | null };
 type Review = { id: string; username: string | null; name: string | null; avatar_url: string | null; overall: number; review: string | null; verified: boolean; created_at: string };
 
 const OVERALL_WORDS = ['', 'Poor', 'Not great', 'Good', 'Great', 'Unforgettable'];
 
 /* ── Rate sheet ─────────────────────────────────────────────────────── */
 
-function RateSheet({ slug, title, status, onClose, onSaved }: { slug: string; title: string; status: Status; onClose: () => void; onSaved: () => void }) {
+export function RateSheet({ slug, title, status, onClose, onSaved }: { slug: string; title: string; status: RateStatus; onClose: () => void; onSaved: () => void }) {
   const supabase = useMemo(() => createClient(), []);
   const prev = (status.rating ?? {}) as Record<string, number | string | null>;
   const [overall, setOverall] = useState(Number(prev.overall ?? 0));
@@ -118,7 +118,7 @@ export default function RatingSection({ slug, title, past }: { slug: string; tit
   const supabase = useMemo(() => createClient(), []);
   const [sum, setSum] = useState<RatingSummary | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [status, setStatus] = useState<Status | null>(null);
+  const [status, setStatus] = useState<RateStatus | null>(null);
   const [open, setOpen] = useState(false);
   const [thanks, setThanks] = useState(false);
 
@@ -132,7 +132,7 @@ export default function RatingSection({ slug, title, past }: { slug: string; tit
     setReviews((r ?? []) as Review[]);
     if (user) {
       const { data: st } = await supabase.rpc('my_rating_status', { p_slug: slug });
-      setStatus(st as Status);
+      setStatus(st as RateStatus);
     } else setStatus({ can_rate: false, reason: 'signed_out' });
   }, [supabase, slug, user]);
 
