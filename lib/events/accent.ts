@@ -75,12 +75,16 @@ export type FlyerColours = {
   wash: RGB;
 };
 
+/** Skin and skin-like tones (faces, a tan suit): people are on most flyers, but they aren't the flyer's colour */
+const isSkin = (h: number, s: number, l: number) => h >= 0.025 && h <= 0.115 && s >= 0.15 && s <= 0.75 && l >= 0.12 && l <= 0.8;
+
 /**
- * Read a flyer's colours from a small copy:
- * - accent: the strongest colour family, weighted by how much of the flyer it covers.
- *   A flyer that's mostly black, white or grey gets none (a small pink heart shouldn't paint the page red).
- * - wash: the average of the flyer's bottom edge (where the page continues), weighted with the rest,
- *   darkened into a deep tone. Neutral flyers get a near-black wash.
+ * Read a flyer's colours from a small copy.
+ * Colourful pixels vote by hue (24 families), weighted by area and a little by saturation; the border counts double,
+ * since that's usually the background. Skin tones are left out of the vote whenever the flyer has enough other colour,
+ * so a purple flyer with people on it reads as purple, not orange. The winning family (with its neighbours) gives:
+ * - accent: that colour, bright enough for tags and glows (none when under 12% of the flyer is colourful)
+ * - wash: the same hue as a deep tone for the page ground (near-black for black-and-white flyers)
  */
 function sample(url: string): Promise<FlyerColours | null> {
   return new Promise((resolve) => {
@@ -89,40 +93,52 @@ function sample(url: string): Promise<FlyerColours | null> {
     img.decoding = 'async';
     img.onload = () => {
       try {
-        const size = 36;
+        const N = 36;
         const canvas = document.createElement('canvas');
-        canvas.width = size; canvas.height = size;
+        canvas.width = N; canvas.height = N;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (!ctx) return resolve(null);
-        ctx.drawImage(img, 0, 0, size, size);
-        const { data } = ctx.getImageData(0, 0, size, size);
-        const buckets = new Array(12).fill(0).map(() => ({ w: 0, r: 0, g: 0, b: 0 }));
-        let colourful = 0, total = 0;
-        let wr = 0, wg = 0, wb = 0, ww = 0;
+        ctx.drawImage(img, 0, 0, N, N);
+        const { data } = ctx.getImageData(0, 0, N, N);
+        type Bucket = [number, number, number, number]; // weight, r, g, b
+        const all: Bucket[] = Array.from({ length: 24 }, () => [0, 0, 0, 0] as Bucket);
+        const noSkin: Bucket[] = Array.from({ length: 24 }, () => [0, 0, 0, 0] as Bucket);
+        let neutral = 0, total = 0;
         for (let i = 0; i < data.length; i += 4) {
-          const row = Math.floor(i / 4 / size);
+          const x = (i / 4) % N, y = Math.floor(i / 4 / N);
+          const frame = x < N * 0.15 || x >= N * 0.85 || y < N * 0.15 || y >= N * 0.85 ? 2 : 1;
           const px: RGB = [data[i], data[i + 1], data[i + 2]];
           const [h, s, l] = rgbToHsl(px);
-          total += 1;
-          // Wash: everything counts, the bottom quarter counts most
-          const edge = row >= size * 0.75 ? 4 : 1;
-          wr += px[0] * edge; wg += px[1] * edge; wb += px[2] * edge; ww += edge;
-          // Accent: real colour only
-          if (l < 0.12 || l > 0.92 || s < 0.22) continue;
-          colourful += 1;
-          const w = s * (1 - Math.abs(l - 0.5));
-          const bk = buckets[Math.floor(h * 12) % 12];
-          bk.w += w; bk.r += px[0] * w; bk.g += px[1] * w; bk.b += px[2] * w;
+          total += frame;
+          if (l < 0.1 || l > 0.94 || s < 0.2) { neutral += frame; continue; }
+          const w = frame * (0.5 + s);
+          const k = Math.floor(h * 24) % 24;
+          const add = (t: Bucket[]) => { t[k][0] += w; t[k][1] += px[0] * w; t[k][2] += px[1] * w; t[k][3] += px[2] * w; };
+          add(all);
+          if (!isSkin(h, s, l)) add(noSkin);
         }
-        const share = colourful / Math.max(1, total); // how much of the flyer is actually colourful
-        const best = buckets.reduce((x, y) => (y.w > x.w ? y : x));
-        const accent = share >= 0.1 && best.w > 0 ? tune([best.r / best.w, best.g / best.w, best.b / best.w].map(Math.round) as RGB) : null;
-
-        const [wh, ws, wl] = rgbToHsl([wr / ww, wg / ww, wb / ww].map(Math.round) as RGB);
-        // Deep, never muddy: colourful flyers keep their hue; black-and-white ones stay near-black
-        const sat = share < 0.1 ? Math.min(ws, 0.08) : Math.min(0.7, Math.max(ws * 1.25, 0.25));
-        const light = share < 0.1 ? Math.min(0.09, Math.max(0.05, wl * 0.5)) : Math.min(0.22, Math.max(0.1, wl * 0.6));
-        resolve({ accent, wash: hslToRgb(wh, sat, light) });
+        const share = 1 - neutral / Math.max(1, total); // how much of the flyer is actually colourful
+        const sumAll = all.reduce((n, b) => n + b[0], 0);
+        const sumNo = noSkin.reduce((n, b) => n + b[0], 0);
+        const votes = sumNo >= sumAll * 0.3 ? noSkin : all;
+        // Strongest colour family, counted with its two neighbours
+        let best = 0, bestW = -1;
+        for (let k = 0; k < 24; k++) {
+          const w = votes[(k + 23) % 24][0] + votes[k][0] + votes[(k + 1) % 24][0];
+          if (w > bestW) { bestW = w; best = k; }
+        }
+        const agg = [0, 0, 0, 0];
+        [(best + 23) % 24, best, (best + 1) % 24].forEach((k) => { for (let q = 0; q < 4; q++) agg[q] += votes[k][q]; });
+        if (share < 0.12 || agg[0] <= 0) {
+          // Black, white or grey flyer: no accent, a near-black ground
+          resolve({ accent: null, wash: [16, 16, 17] });
+          return;
+        }
+        const [h, sat] = rgbToHsl([agg[1] / agg[0], agg[2] / agg[0], agg[3] / agg[0]].map(Math.round) as RGB);
+        resolve({
+          accent: tune([agg[1] / agg[0], agg[2] / agg[0], agg[3] / agg[0]].map(Math.round) as RGB),
+          wash: hslToRgb(h, Math.min(0.75, Math.max(sat, 0.3)), 0.13),
+        });
       } catch {
         resolve(null); // tainted canvas (no CORS) etc.
       }
@@ -148,10 +164,9 @@ export const NEUTRAL_ACCENT: RGB = [123, 227, 168];
 /** Both colours for a flyer; cached per image URL */
 export async function eventColours(image: string | null | undefined, category?: string | null): Promise<FlyerColours> {
   const fallback = categoryAccent(category);
-  const deep = (c: RGB): RGB => { const [h, s] = rgbToHsl(c); return hslToRgb(h, Math.min(s, 0.6), 0.14); };
-  if (!image || typeof window === 'undefined') return { accent: fallback, wash: deep(fallback) };
+    if (!image || typeof window === 'undefined') return { accent: fallback, wash: [16, 16, 17] };
   const c = cache.has(image) ? cache.get(image) : await load(image);
-  if (!c) return { accent: fallback, wash: deep(fallback) };
+  if (!c) return { accent: fallback, wash: [16, 16, 17] };
   return c;
 }
 
