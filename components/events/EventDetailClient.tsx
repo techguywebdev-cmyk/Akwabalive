@@ -16,10 +16,10 @@ import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments, MomentsViewer } from '@/components/moments/EventMoments';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import { Portrait } from '@/components/artists/parts';
-import { Bookmark, BookmarkCheck, CalendarPlus, Check, MapPin, Navigation, Play, Share2, UserPlus } from 'lucide-react';
+import { Bookmark, BookmarkCheck, CalendarPlus, Check, Navigation, Play, Share2, UserPlus } from 'lucide-react';
 import { TicketsSheet } from '@/components/events/EventActions';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
-import { parseDay, longDay } from '@/lib/dates';
+import { parseDay, longDay, shortDay } from '@/lib/dates';
 import type { GhanaEvent } from '@/lib/types';
 import { isListedEvent } from '@/lib/types';
 import { extractYoutubeId } from '@/lib/events/rank';
@@ -205,7 +205,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
     ...(on ? { background: 'rgba(123,227,168,0.16)', color: T.mintText, border: '1px solid rgba(123,227,168,0.4)' } : { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' }),
   });
   const pillBtn = (on: boolean): CSSProperties => ({ ...roundBtn(on), width: 'auto', padding: '0 16px', gap: 7, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 });
-  const linkBtn: CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText, textDecoration: 'none' };
+  const cardAction: CSSProperties = { flex: 1, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.white, textDecoration: 'none' };
   const primary: CSSProperties = {
     height: 52, padding: '0 28px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
     color: T.onMint, background: T.mint, border: 'none', boxShadow: '0 8px 24px rgba(123,227,168,0.22)',
@@ -286,30 +286,31 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
         <FriendsStrip slug={event.slug} variant="full" />
 
-        {/* When: a big countdown, with where and the two useful links */}
-        <section style={{ marginTop: 22, padding: 16, borderRadius: 22, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: 16, alignItems: 'stretch' }}>
-          {daysAway != null && daysAway >= 0 ? (
-            <span style={{ width: 92, flexShrink: 0, borderRadius: 16, background: `rgba(${r}, ${g}, ${b}, 0.22)`, border: `1px solid rgba(${r}, ${g}, ${b}, 0.4)`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '10px 6px' }}>
-              <span style={{ fontFamily: FONT.display, fontSize: daysAway > 99 ? 32 : 40, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1, color: T.white }}>{daysAway === 0 ? 'Today' : daysAway}</span>
-              {daysAway > 0 && <span style={{ marginTop: 4, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)' }}>{daysAway === 1 ? 'day to go' : 'days to go'}</span>}
-            </span>
-          ) : null}
-          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
-            <span>
-              <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 700, color: T.white }}>{longDate}</span>
-              <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>{[event.time, daysAway != null && daysAway < 0 ? 'Past event' : null].filter(Boolean).join(' · ') || ' '}</span>
-            </span>
-            <span style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-              <MapPin size={15} color={T.text2} style={{ marginTop: 2, flexShrink: 0 }} />
-              <span style={{ minWidth: 0, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.white }}>
-                {event.venue}<span style={{ fontWeight: 400, color: T.text2 }}>{[event.area, cityLabel(event.city)].filter(Boolean).length ? ` · ${[event.area, cityLabel(event.city)].filter(Boolean).join(', ')}` : ''}</span>
+        {/* When and where: one clean card — countdown, date, venue, then two even actions */}
+        <section style={{ marginTop: 22, borderRadius: 22, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>
+            {daysAway != null && daysAway >= 0 && (
+              <span style={{ width: 68, height: 68, flexShrink: 0, borderRadius: 18, background: `rgba(${r}, ${g}, ${b}, 0.28)`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontFamily: FONT.display, fontSize: daysAway === 0 ? 17 : daysAway > 99 ? 24 : 30, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1, color: T.white }}>{daysAway === 0 ? 'Today' : daysAway}</span>
+                {daysAway > 0 && <span style={{ marginTop: 3, fontFamily: FONT.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>{daysAway === 1 ? 'day' : 'days'}</span>}
+              </span>
+            )}
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 16, fontWeight: 700, color: T.white }}>
+                {parsed ? shortDay(parsed) : event.dateLabel}{event.time ? ` · ${event.time}` : ''}
+              </span>
+              <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.venue}</span>
+              <span style={{ display: 'block', marginTop: 1, fontFamily: FONT.sans, fontSize: 13, color: T.text2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {[event.area, cityLabel(event.city)].filter(Boolean).join(', ')}{daysAway != null && daysAway < 0 ? ' · Past event' : ''}
               </span>
             </span>
-            <span style={{ display: 'flex', gap: 14 }}>
-              <a href={maps} target="_blank" rel="noopener noreferrer" style={linkBtn}><Navigation size={14} /> Directions</a>
-              {calendar && daysAway != null && daysAway >= 0 && <a href={calendar} target="_blank" rel="noopener noreferrer" style={linkBtn}><CalendarPlus size={14} /> Calendar</a>}
-            </span>
-          </span>
+          </div>
+          <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+            <a href={maps} target="_blank" rel="noopener noreferrer" style={cardAction}><Navigation size={15} /> Directions</a>
+            {calendar && daysAway != null && daysAway >= 0 && (
+              <a href={calendar} target="_blank" rel="noopener noreferrer" style={{ ...cardAction, borderLeft: '1px solid rgba(255,255,255,0.08)' }}><CalendarPlus size={15} /> Add to calendar</a>
+            )}
+          </div>
         </section>
 
         {acts.length > 0 && (
