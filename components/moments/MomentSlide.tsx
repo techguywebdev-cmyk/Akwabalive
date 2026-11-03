@@ -316,21 +316,18 @@ const MomentSlide = forwardRef<SlideHandle, {
             </a>
           )}
 
+          {recapClip?.recap && (
+            <p style={{ margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
+              <span aria-hidden style={{ width: 6, height: 6, borderRadius: 3, background: T.mint }} />The night, by Akwaaba
+            </p>
+          )}
           {about && (
             <p onClick={() => setMore((x) => !x)} style={{
-              margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2, cursor: 'pointer',
+              margin: recapClip?.recap ? '5px 0 0' : '10px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: recapClip?.recap ? T.text : T.text2, cursor: 'pointer',
               ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
             }}>{about}</p>
           )}
-          {recapClip?.recap_sources?.length ? (
-            <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 12, color: T.text3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Source: {recapClip.recap_sources.map((src, i) => (
-                <a key={src.url} href={src.url} target="_blank" rel="noopener noreferrer" style={{ color: T.text2, textDecoration: 'underline', textUnderlineOffset: 2 }}>
-                  {i ? ', ' : ''}{src.title.split(' — ').pop()}
-                </a>
-              ))}
-            </p>
-          ) : null}
+
 
           {/* Who was on stage — tap a face for a quick look */}
           {info.onStage.length > 0 && (
