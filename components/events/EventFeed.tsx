@@ -11,12 +11,12 @@ import FlyerCanvas from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments, MomentsPill, MomentsViewer } from '@/components/moments/EventMoments';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
-import { EventTags, BTN, whenTag } from '@/components/events/CardParts';
+import { EventTags, BTN } from '@/components/events/CardParts';
 import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
-import { getTiers, type CheckoutTier } from '@/lib/events/tiers';
-import { CalendarDays, CalendarPlus, MapPin, Navigation, Ticket, ChevronDown, Heart, Share2 } from 'lucide-react';
+import { type CheckoutTier } from '@/lib/events/tiers';
+import { Heart, Share2 } from 'lucide-react';
 import { isListedEvent } from '@/lib/types';
 import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
@@ -61,62 +61,6 @@ const roundBtn: React.CSSProperties = {
   transition: 'background 200ms ease, color 200ms ease, border-color 200ms ease',
 };
 
-/* ── Details: when, where, tickets ─────────────────────────────────── */
-function DetailRow({ icon, accent, main, sub, action }: { icon: React.ReactNode; accent: string; main: string; sub?: React.ReactNode; action?: React.ReactNode }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-      <span aria-hidden style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: alpha(accent, 0.18), border: `1px solid ${alpha(accent, 0.28)}`, color: accent, }}>
-        {icon}
-      </span>
-      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <span style={{ fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{main}</span>
-        {sub && <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</span>}
-      </span>
-      {action}
-    </div>
-  );
-}
-
-/** Small round icon button at the end of a detail row (Add to calendar, Directions) */
-const rowAction: React.CSSProperties = {
-  pointerEvents: 'auto', flexShrink: 0, width: 40, height: 40, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  background: 'rgba(20,24,22,0.55)', border: '1px solid rgba(255,255,255,0.14)', color: T.white, textDecoration: 'none',
-};
-
-/* ── Ticket packages, right on the card ───────────────────────────── */
-function TierChips({ event, accent, onOpen }: { event: GhanaEvent; accent: string; onOpen: () => void }) {
-  const tiers = getTiers(event);
-  if (!tiers.length) {
-    return isListedEvent(event)
-      ? <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>Tickets sold on {event.ticketSource || 'the official site'}</p>
-      : null;
-  }
-  return (
-    <div className="no-scrollbar" role="list" aria-label="Ticket types" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px', pointerEvents: 'auto' }}>
-      {tiers.map((t) => {
-        const low = t.available && t.spots <= 20;
-        return (
-          <button
-            key={t.name}
-            type="button"
-            role="listitem"
-            onClick={onOpen}
-            aria-label={`${t.name}, ${t.price === 0 ? 'free' : `GH₵ ${t.price}`}${!t.available ? ', sold out' : low ? `, only ${t.spots} left` : ''}`}
-            style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, padding: '8px 14px', borderRadius: 16, cursor: 'pointer', textAlign: 'left', background: 'rgba(3,10,6,0.45)', border: `1px solid ${low ? alpha(accent, 0.55) : 'rgba(255,255,255,0.12)'}`, color: t.available ? T.white : 'rgba(255,255,255,0.4)' }}
-          >
-            <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 500, color: t.available ? 'rgba(255,255,255,0.7)' : undefined, whiteSpace: 'nowrap' }}>{t.name}</span>
-            <span style={{ fontFamily: FONT.display, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', textDecoration: t.available ? 'none' : 'line-through' }}>
-              {t.price === 0 ? 'Free' : `GH₵ ${t.price.toLocaleString()}`}
-              {!t.available && <span style={{ marginLeft: 6, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 600, textDecoration: 'none', display: 'inline-block' }}>Sold out</span>}
-              {low && <span style={{ marginLeft: 6, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 600, color: accent }}>{t.spots} left</span>}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 /* ── One event, full screen ────────────────────────────────────────── */
 function EventCard({
   item, active, near, wide, saved, going, onSave, onGoing, onShare, onTickets, topInset,
@@ -130,7 +74,6 @@ function EventCard({
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
   const [more, setMore] = useState(false);
   const [watching, setWatching] = useState(false);
-  const [showTiers, setShowTiers] = useState(false);
   const moments = useEventMoments(event, near);
   const block = useRef<HTMLDivElement>(null);
   const [blockH, setBlockH] = useState(300);
@@ -162,15 +105,8 @@ function EventCard({
   const when = [shortDate(event), event.time && !/tba/i.test(event.time) ? event.time.toLowerCase() : 'time TBA'].filter(Boolean).join(' · ');
   const place = [event.area && !event.venue.toLowerCase().includes(event.area.toLowerCase()) ? event.area : '', event.venue.toLowerCase().includes(cityLabel(event.city).toLowerCase()) ? '' : cityLabel(event.city), dist != null ? `${formatDistance(dist)} away` : ''].filter(Boolean).join(' · ');
   const label = ticketsLabel(event);
-  const tierList = getTiers(event);
   const listed = isListedEvent(event);
-  const ticketMain = label === 'See prices' ? 'Tickets available' : label === 'Free' ? 'Free entry' : `From ${label}`;
-  const typesNote = tierList.length >= 2 ? `${tierList.length} ticket types · ` : '';
-  const ticketSub = typesNote + (listed ? `Sold on ${event.ticketSource || 'the official site'}` : label === 'Free' ? 'Reserve your spot on Akwaaba' : 'MoMo or card · QR ticket');
-  const calLink = (() => {
-    const d = event.date?.slice(0, 10).replace(/-/g, '');
-    return d ? `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${d}/${d}&location=${encodeURIComponent(`${event.venue}, Ghana`)}` : null;
-  })();
+  const priceNote = label === 'See prices' || label === 'Free' || label === 'Ended' ? '' : `from ${label}`;
   const bottom = wide ? 40 : 28;
   // Long titles get smaller so the text block stays short and the flyer gets the room
   const titleSize = wide ? 'clamp(44px, 4.6vw, 68px)' : title.length > 34 ? 28 : title.length > 22 ? 32 : title.length > 14 ? 38 : 44;
@@ -220,51 +156,18 @@ function EventCard({
 
         <div style={{ pointerEvents: 'auto' }}><FriendsStrip slug={event.slug} enabled={near} /></div>
 
-        {/* When, where, tickets */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 2 }}>
-          <DetailRow
-            accent={a}
-            icon={<CalendarDays size={20} strokeWidth={2} />}
-            main={when}
-            sub={label === 'Ended' ? 'This event has ended' : whenTag(event)?.text}
-            action={label !== 'Ended' && calLink ? <a href={calLink} target="_blank" rel="noopener noreferrer" aria-label="Add to calendar" title="Add to calendar" style={rowAction}><CalendarPlus size={19} strokeWidth={2} /></a> : undefined}
-          />
-          <DetailRow
-            accent={a}
-            icon={<MapPin size={20} strokeWidth={2} />}
-            main={event.venue}
-            sub={place || undefined}
-            action={<a href={mapsLink(event)} target="_blank" rel="noopener noreferrer" aria-label="Directions" title="Directions" style={rowAction}><Navigation size={18} strokeWidth={2} /></a>}
-          />
-          {label !== 'Ended' && (
-            <DetailRow
-              accent={a}
-              icon={<Ticket size={20} strokeWidth={2} />}
-              main={ticketMain}
-              sub={ticketSub}
-              action={tierList.length >= 2 ? (
-                <button type="button" onClick={() => setShowTiers((v) => !v)} aria-expanded={showTiers} aria-label={showTiers ? 'Hide ticket types' : 'Show ticket types'} title="Ticket types" style={{ ...rowAction, cursor: 'pointer', ...(showTiers ? { background: alpha(a, 0.2), borderColor: alpha(a, 0.5), color: a } : {}) }}>
-                  <ChevronDown size={20} strokeWidth={2} style={{ transform: showTiers ? 'rotate(180deg)' : 'none', transition: 'transform 220ms ease' }} />
-                </button>
-              ) : undefined}
-            />
-          )}
+        {/* When and where: two quiet lines, no boxes */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 2 }}>
+          <span style={{ fontFamily: FONT.sans, fontSize: 15.5, fontWeight: 600, color: T.white }}>{label === 'Ended' ? `${when} · ended` : when}</span>
+          <span style={{ fontFamily: FONT.sans, fontSize: 14, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[event.venue, place].filter(Boolean).join(' · ')}</span>
         </div>
-
-        {/* Ticket types, revealed from the tickets row */}
-        {label !== 'Ended' && tierList.length >= 2 && (
-          <div style={{ display: 'grid', gridTemplateRows: showTiers ? '1fr' : '0fr', transition: 'grid-template-rows 260ms ease', margin: showTiers ? '0 -20px' : '-12px -20px 0' }}>
-            <div style={{ overflow: 'hidden', minHeight: 0 }}>
-              <div style={{ margin: '0 20px' }}><TierChips event={event} accent={a} onOpen={() => onTickets(a)} /></div>
-            </div>
-          </div>
-        )}
 
         {/* Tickets, plus save and share. The card itself opens the event. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, pointerEvents: 'auto' }}>
           {label !== 'Ended' ? (
-            <button type="button" onClick={() => onTickets(a)} style={{ ...BTN.primary, flex: wide ? undefined : 1, minWidth: wide ? 240 : undefined }}>
+            <button type="button" onClick={() => onTickets(a)} style={{ ...BTN.primary, flex: wide ? undefined : 1, minWidth: wide ? 240 : 0, paddingLeft: 16, paddingRight: 16, whiteSpace: 'nowrap', overflow: 'hidden' }}>
               {label === 'Free' && !listed ? 'Reserve a free spot' : 'Get tickets'}
+              {priceNote && <span style={{ fontWeight: 500, opacity: 0.62, marginLeft: 8 }}>{priceNote}</span>}
             </button>
           ) : (
             <Link href={`/events/${event.slug}`} style={{ ...BTN.secondary, flex: wide ? undefined : 1 }}>See photos & details</Link>

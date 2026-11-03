@@ -56,9 +56,8 @@ function dayHeading(e: GhanaEvent) {
 
 const priceText = (e: GhanaEvent) => (e.priceUnknown ? 'Tickets' : e.price === 0 ? 'Free' : `GH₵ ${e.price.toLocaleString()}`);
 
-/** One borderless row in the list view: picture, category in the event's colour, title, time · venue, price. */
+/** One borderless row in the list view: picture, quiet category, title, time · venue, price. */
 function Row({ event, last }: { event: GhanaEvent; last: boolean }) {
-  const accent = toHex(categoryAccent(event.category));
   return (
     <Link
       href={`/events/${event.slug}`}
@@ -71,7 +70,7 @@ function Row({ event, last }: { event: GhanaEvent; last: boolean }) {
         )}
       </span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontFamily: FONT.display, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: accent }}>
+        <span style={{ fontFamily: FONT.display, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
           {event.category}
         </span>
         <span style={{ fontFamily: FONT.sans, fontSize: 16, fontWeight: 600, lineHeight: 1.25, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
