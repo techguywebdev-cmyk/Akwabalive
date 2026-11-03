@@ -12,6 +12,10 @@ export interface Moment {
   category?: string | null;
   /** Confirmed performers (artist slugs), biggest first; null until checked */
   performers?: string[] | null;
+  /** When the video went up on YouTube */
+  published_at?: string | null;
+  /** All clips from the same night (this one first); set by the feed */
+  _clips?: Moment[];
   title: string;
   event_name: string;
   event_slug: string | null;
