@@ -2,7 +2,7 @@
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BadgeCheck, Bell, BellRing, CalendarDays, Check, MapPin, MessageCircle, Send, Ticket, UserCheck } from 'lucide-react';
+import { BadgeCheck, Bell, BellRing, CalendarDays, MapPin, MessageCircle, Send, Ticket } from 'lucide-react';
 import { useFollow } from '@/components/follow/useFollow';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
@@ -44,26 +44,33 @@ const pill: React.CSSProperties = {
   fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
 };
 
-/** No next edition on sale yet: follow the show (or the headline act) to hear when it's back */
-function ShowFollowCard({ slug, name, usually, artist, photo, tint, flash }: { slug: string; name: string; usually?: string; artist?: boolean; photo?: string | null; tint: string; flash: (m: string) => void }) {
-  const { following, busy, toggle } = useFollow(artist ? 'artist' : 'series', slug);
-  const when = usually && usually.toLowerCase().startsWith('every') ? usually.split(' · ')[0].toLowerCase() : null;
+/** Placeholder for a post on X (no thumbnail to show) */
+function XTile({ small = false }: { small?: boolean }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, background: `linear-gradient(120deg, rgba(${tint}, 0.28) 0%, rgba(255,255,255,0.05) 70%)`, border: '1px solid rgba(255,255,255,0.12)' }}>
-      {artist && <Portrait name={name} url={photo ?? null} size={46} />}
+    <span aria-hidden style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0b0b0b', color: '#fff', fontFamily: FONT.display, fontWeight: 800, fontSize: small ? 16 : 44 }}>𝕏</span>
+  );
+}
+
+/** No next edition on sale yet: follow the show (or the headline act) to hear when it's back.
+ *  Same shape as the ticket card: label, name, one short line, one button. */
+function ShowFollowCard({ slug, name, artist, photo, tint, flash }: { slug: string; name: string; usually?: string; artist?: boolean; photo?: string | null; tint: string; flash: (m: string) => void }) {
+  const { following, busy, toggle } = useFollow(artist ? 'artist' : 'series', slug);
+  const one: React.CSSProperties = { display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 12, borderRadius: 20, background: `linear-gradient(120deg, rgba(${tint}, 0.32) 0%, rgba(255,255,255,0.05) 70%)`, border: '1px solid rgba(255,255,255,0.12)' }}>
+      {artist ? <Portrait name={name} url={photo ?? null} size={46} /> : (
+        <span aria-hidden style={{ width: 46, height: 46, borderRadius: 23, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', color: T.mintText }}><Bell size={19} /></span>
+      )}
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {artist ? `See ${name} live` : when ? `${name} is back ${when}` : `${name} comes back`}
-        </span>
-        <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>
-          {following ? 'We’ll tell you the moment tickets drop' : 'Get told the moment tickets drop'}
-        </span>
+        <span style={{ ...one, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.mintText }}>{artist ? 'Next show' : 'Next edition'}</span>
+        <span style={{ ...one, marginTop: 3, fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{name}</span>
+        <span style={{ ...one, marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>{following ? 'You’ll hear first' : 'Not announced yet'}</span>
       </span>
       <button type="button" disabled={busy} aria-pressed={following} onClick={() => { toggle(); flash(following ? 'Reminder removed' : 'We’ll let you know'); }} style={{
-        height: 40, padding: '0 16px', borderRadius: 999, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 700,
+        height: 38, padding: '0 14px', borderRadius: 999, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
         ...(following ? { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.16)' } : { background: T.mint, color: T.onMint, border: 'none' }),
       }}>
-        {following ? <BellRing size={16} /> : <Bell size={16} />}{following ? 'On' : 'Remind me'}
+        {following ? <BellRing size={15} /> : <Bell size={15} />}{following ? 'On' : 'Remind me'}
       </button>
     </div>
   );
@@ -134,7 +141,9 @@ const MomentSlide = forwardRef<SlideHandle, {
   const tag = CATEGORIES.find((c) => c.key === night.category);
   const fresh = justHappened(night);
   const canGift = Boolean(next?.tiers?.some((x) => x.price > 0 && x.quantity - x.sold > 0)) && !next?.ticketUrl;
-  const colour = useVideoColour(clip.youtube_id, mounted);
+  const isX = clip.source === 'x';
+  const tweetId = isX ? clip.source_url?.match(/status\/(\d+)/)?.[1] ?? null : null;
+  const colour = useVideoColour(isX ? undefined : clip.youtube_id, mounted);
 
   const share = useCallback(async () => {
     const url = `${window.location.origin}/moments?id=${clip.id}`;
@@ -149,7 +158,7 @@ const MomentSlide = forwardRef<SlideHandle, {
     const { data } = await createClient().rpc('my_rating_status', { p_slug: night.event_slug });
     const st = data as RateStatus | null;
     if (st?.can_rate) setRate(st);
-    else flash(st?.reason === 'not_yet' ? 'You can rate it once the show has happened' : 'Only people with an Akwaaba ticket can rate this night');
+    else flash(st?.reason === 'not_yet' ? 'You can rate it once the show has happened' : 'Couldn’t open ratings — try again');
   }, [night.event_slug, requireSignIn, flash]);
 
   const swallowClick = useRef(false);
@@ -186,9 +195,15 @@ const MomentSlide = forwardRef<SlideHandle, {
       <div style={{ position: 'relative', height: '100%', maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', boxSizing: 'border-box' }}>
         {/* Video, right at the top */}
         <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{
-          position: 'relative', zIndex: 2, width: '100%', aspectRatio: '16 / 9', background: '#000', flexShrink: 0,
+          position: 'relative', zIndex: 2, width: '100%', background: '#000', flexShrink: 0,
+          ...(isX ? { height: 'min(62svh, 620px)' } : { aspectRatio: '16 / 9' }),
         }}>
-          {mounted ? (
+          {isX ? (
+            mounted && tweetId ? (
+              <iframe key={tweetId} title={clip.title} src={`https://platform.twitter.com/embed/Tweet.html?id=${tweetId}&theme=dark&dnt=true&hideThread=true&lang=en`}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0, background: '#000' }} allow="autoplay; encrypted-media; fullscreen" />
+            ) : <XTile />
+          ) : mounted ? (
             <CustomPlayer key={clip.youtube_id} ref={playerRef} youtubeId={clip.youtube_id} title={clip.title} fit="contain" hideMuteButton active={active}
               onMuteChange={active ? onMuteChange : undefined}
               onEnded={() => { if (ci < clips.length - 1) goClip(ci + 1); else onEnded(); }}
@@ -220,7 +235,7 @@ const MomentSlide = forwardRef<SlideHandle, {
                 border: 'none', outline: i === ci ? `2px solid ${T.mint}` : '1px solid rgba(255,255,255,0.12)', outlineOffset: i === ci ? 1 : 0, opacity: i === ci ? 1 : 0.7,
               }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {mounted && <img src={thumb(c.youtube_id)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+                {c.source === 'x' ? <XTile small /> : mounted && <img src={thumb(c.youtube_id)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
               </button>
             ))}
           </div>
@@ -293,9 +308,9 @@ const MomentSlide = forwardRef<SlideHandle, {
             </Link>
           )}
           {clip.channel_name && (
-            <a href={clip.channel_url ?? `https://www.youtube.com/watch?v=${clip.youtube_id}`} target="_blank" rel="noopener noreferrer"
+            <a href={isX ? clip.source_url ?? '#' : clip.channel_url ?? `https://www.youtube.com/watch?v=${clip.youtube_id}`} target="_blank" rel="noopener noreferrer"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 12, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3, verticalAlign: 'middle' }}>
-              {clip.official ? <BadgeCheck size={13} color={T.mint} /> : null}{clip.official ? clip.channel_name : `via ${clip.channel_name}`}
+              {clip.official ? <BadgeCheck size={13} color={T.mint} /> : null}{clip.official ? clip.channel_name : `via ${clip.channel_name}`}{isX ? ' on X' : ''}
             </a>
           )}
 
@@ -321,16 +336,6 @@ const MomentSlide = forwardRef<SlideHandle, {
             </div>
           )}
 
-          {/* Were you there? */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
-            <button type="button" aria-pressed={crowd.iWasThere} onClick={() => { if (!requireSignIn()) crowd.toggleWasThere(); }} style={{
-              height: 34, padding: '0 13px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
-              ...(crowd.iWasThere ? { background: 'rgba(123,227,168,0.14)', color: T.mintText, border: '1px solid rgba(123,227,168,0.4)' } : { background: 'rgba(255,255,255,0.06)', color: T.white, border: '1px solid rgba(255,255,255,0.12)' }),
-            }}>
-              {crowd.iWasThere ? <Check size={15} /> : <UserCheck size={15} />}{crowd.iWasThere ? 'You were there' : 'I was there'}
-            </button>
-            {crowd.thereCount > 0 && <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{formatCount(crowd.thereCount)} {crowd.thereCount === 1 ? 'person was' : 'people were'} there</span>}
-          </div>
         </div>
 
         <div style={{ flex: 1, minHeight: 16 }} />

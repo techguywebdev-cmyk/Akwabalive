@@ -12,6 +12,10 @@ export interface Moment {
   category?: string | null;
   /** Confirmed performers (artist slugs), biggest first; null until checked */
   performers?: string[] | null;
+  /** 'youtube' (default) or 'x' — a video posted on X, played with X's own embed */
+  source?: string | null;
+  /** The original post (for X moments) */
+  source_url?: string | null;
   /** When the video went up on YouTube */
   published_at?: string | null;
   /** All clips from the same night (this one first); set by the feed */

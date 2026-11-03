@@ -44,7 +44,7 @@ export default function ArtistQuickSheet({ slug, name, photo, currentId, onClose
     (async () => {
       const [{ data: evs }, { data: ms }] = await Promise.all([
         supabase.from('events').select('slug, title, date, venue, city, lineup, artist_slugs').eq('status', 'published').gte('date', today()).order('date').limit(120),
-        supabase.from('moments').select('id, title, youtube_id, event_name, year').eq('status', 'live').contains('performers', [slug])
+        supabase.from('moments').select('id, title, youtube_id, event_name, year').eq('status', 'live').eq('source', 'youtube').contains('performers', [slug])
           .order('published_at', { ascending: false, nullsFirst: false }).limit(12),
       ]);
       if (cancelled) return;
