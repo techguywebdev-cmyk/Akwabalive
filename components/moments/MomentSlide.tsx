@@ -1,5 +1,6 @@
 'use client';
 
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { BadgeCheck, Bell, BellRing, CalendarDays, MapPin, MessageSquareText, Share2, Ticket } from 'lucide-react';
@@ -103,7 +104,8 @@ const MomentSlide = forwardRef<SlideHandle, {
   }, [night, clips]);
 
   // Data only for slides near the screen
-  const { comments, send } = useMomentComments(mounted ? clip.id : undefined);
+  const { comments, send, remove, report } = useMomentComments(mounted ? clip.id : undefined);
+  const isAdmin = useIsAdmin();
   const { next } = useNextEdition(mounted ? night : null);
   const commenterIds = useMemo(() => comments.map((c) => c.user_id), [comments]);
   const crowd = useMomentCrowd(mounted ? night.event_slug : undefined, next, commenterIds, user?.id);
@@ -386,7 +388,8 @@ const MomentSlide = forwardRef<SlideHandle, {
         <CommentsSheet moment={clip} comments={comments} user={user} profile={profile} currentSeconds={t}
           wasThereIds={crowd.wasThereIds} goingIds={crowd.goingIds} nextLabel={next?.date?.slice(0, 4) ?? null} canGift={canGift} tint={tint}
           onClose={() => setShowComments(false)} onSend={(text) => { if (user) send(user.id, text); }}
-          onSeek={(s) => { playerRef.current?.seekTo(s); setShowComments(false); }} onGift={(c) => setGiftTarget(c)} />
+          onSeek={(s) => { playerRef.current?.seekTo(s); setShowComments(false); }} onGift={(c) => setGiftTarget(c)}
+          onDelete={(c) => remove(c.id)} onReport={(c) => report(c.id)} isAdmin={isAdmin} />
       )}
       {giftTarget && next && user && <GiftSheet comment={giftTarget} next={next} user={user} onClose={() => setGiftTarget(null)} />}
       {artistOpen && <ArtistQuickSheet slug={artistOpen.slug} name={artistOpen.name} photo={artistOpen.photo} currentId={clip.id} onClose={() => setArtistOpen(null)} />}

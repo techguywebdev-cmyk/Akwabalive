@@ -136,6 +136,7 @@ export default function Nav({
     ? [
         { label: 'My profile', href: profileHref },
         { label: 'My tickets', href: '/account/tickets' },
+        { label: 'Find friends', href: '/people' },
         { label: 'Dream events', href: '/account/dream-events' },
         { label: 'Organizer dashboard', href: '/organizer/dashboard' },
       ]

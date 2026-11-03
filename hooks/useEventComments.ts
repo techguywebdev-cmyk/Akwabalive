@@ -36,5 +36,13 @@ export function useEventComments(slug: string | undefined) {
     if (data) setComments((prev) => (prev.some((c) => c.id === data.id) ? prev : [...prev, data as unknown as Comment]));
   }
 
-  return { comments, goingIds, send };
+  async function remove(id: string) {
+    setComments((prev) => prev.filter((c) => c.id !== id));
+    await supabase.from('event_comments').delete().eq('id', id);
+  }
+  async function report(id: string) {
+    await supabase.from('comment_reports').insert({ kind: 'event', comment_id: id });
+  }
+
+  return { comments, goingIds, send, remove, report };
 }
