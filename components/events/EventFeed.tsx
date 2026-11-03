@@ -12,6 +12,7 @@ import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments, MomentsPill, MomentsViewer } from '@/components/moments/EventMoments';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { EventTags, BTN } from '@/components/events/CardParts';
+import { hypeTags, eventExcerpt } from '@/lib/events/hype';
 import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
@@ -98,6 +99,8 @@ function EventCard({
   const split = splitEventTitle(event.title);
   const title = shorten(calmCase(split.title));
   const subtitle = shorten(calmCase(split.subtitle), 60);
+  const hype = hypeTags(event, { returning: moments.length > 0 });
+  const excerpt = eventExcerpt(event.description, event.title);
   const goingCount = (event.attending ?? 0) + (going ? 1 : 0);
   const tags = [event.category, statusText(event)]
     .filter(Boolean)
@@ -145,13 +148,14 @@ function EventCard({
       >
         <span style={{ display: 'flex', pointerEvents: 'auto' }}><MomentsPill list={moments} slug={event.slug} onOpen={() => setWatching(true)} /></span>
 
-        <EventTags event={event} accent={a} />
+        <EventTags event={event} accent={a} hype={hype} />
 
         <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6, pointerEvents: 'auto' }}>
           <h2 style={{ margin: 0, fontFamily: FONT.display, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', fontSize: titleSize, color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
             {title}
           </h2>
           {subtitle && <span style={{ fontFamily: FONT.display, fontSize: wide ? 20 : 16, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</span>}
+          {excerpt && <span style={{ marginTop: 4, fontFamily: FONT.sans, fontSize: wide ? 16 : 14.5, lineHeight: 1.45, color: 'rgba(255,255,255,0.72)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{excerpt}</span>}
         </Link>
 
         <div style={{ pointerEvents: 'auto' }}><FriendsStrip slug={event.slug} enabled={near} /></div>

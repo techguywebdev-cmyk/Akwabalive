@@ -26,7 +26,7 @@ export type TierDraft = { id?: string; name: string; price: string; quantity: st
 export type EventDraft = {
   id?: string;
   status: string;
-  title: string; description: string; category: string;
+  title: string; description: string; category: string; highlight: string;
   city: string; venue: string; area: string;
   date: string; start: string; end: string; // HH:MM (24h) in the inputs
   image: string;
@@ -35,8 +35,10 @@ export type EventDraft = {
   tiers: TierDraft[];
 };
 
+const HIGHLIGHT_IDEAS = ['Surprise guests', 'Album launch', 'First time in Ghana', 'Live band', 'Last show of the year', 'All night long', 'Early bird on sale', '18+ only'];
+
 export const emptyDraft = (): EventDraft => ({
-  status: 'draft', title: '', description: '', category: '', city: 'accra', venue: '', area: '',
+  status: 'draft', title: '', description: '', category: '', highlight: '', city: 'accra', venue: '', area: '',
   date: '', start: '20:00', end: '', image: '', listing: 'hosted', ticketUrl: '', ticketSource: '',
   lineup: { enabled: false, artistSlugs: [], extraNames: '' },
   tiers: [{ name: 'Regular', price: '', quantity: '200', description: '', sold: 0 }],
@@ -196,7 +198,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
     try {
       const bill = lineupPayload(d.lineup);
       const row = {
-        title: d.title.trim(), description: d.description.trim() || null, category: d.category || 'concert',
+        title: d.title.trim(), description: d.description.trim() || null, highlight: d.highlight.trim().slice(0, 32) || null, category: d.category || 'concert',
         city: d.city, region: REGIONS[d.city] ?? d.city, venue: d.venue.trim() || 'Venue to be announced', area: d.area.trim() || null,
         date: d.date || null, date_label: d.date ? dayLabel(d.date) : null, time: d.start ? to12h(d.start) : 'Time TBA', end_time: d.end ? to12h(d.end) : null,
         image_url: d.image.trim() || null, status: target,
@@ -265,6 +267,14 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
           <Field label="Description" hint="What to expect, dress code, age limit, who’s performing.">
             <textarea value={d.description} onChange={(e) => set('description', e.target.value)} rows={4} placeholder="Tell people why they should come." style={{ ...field, height: 'auto', padding: '14px 16px', lineHeight: 1.5, resize: 'vertical' }} />
           </Field>
+          <div>
+            <Field label="Special tag (optional)" hint="One short line that makes your event stand out. It shows as a highlighted tag on the event.">
+              <input value={d.highlight} onChange={(e) => set('highlight', e.target.value)} placeholder="e.g. Surprise guests" maxLength={32} style={field} />
+            </Field>
+            <div className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '10px -18px 0', padding: '0 18px' }}>
+              {HIGHLIGHT_IDEAS.map((h) => <Chip key={h} on={d.highlight === h} onClick={() => set('highlight', d.highlight === h ? '' : h)}>{h}</Chip>)}
+            </div>
+          </div>
         </Section>
 
         <Section title="When">

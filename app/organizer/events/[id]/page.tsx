@@ -25,7 +25,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
       const extras = (Array.isArray(e.lineup) ? e.lineup : []).filter((n: string) => !majorNames.has(n.toLowerCase()));
       setDraft({
         id: e.id, status: e.status ?? 'draft',
-        title: e.title ?? '', description: e.description ?? '', category: e.category ?? '',
+        title: e.title ?? '', description: e.description ?? '', category: e.category ?? '', highlight: e.highlight ?? '',
         city: e.city ?? 'accra', venue: e.venue ?? '', area: e.area ?? '',
         date: (e.date ?? '').slice(0, 10), start: to24h(e.time), end: to24h(e.end_time),
         image: e.image_url ?? '',
