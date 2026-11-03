@@ -1,14 +1,13 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Ticket, ExternalLink, Calendar } from 'lucide-react';
 import type { GhanaEvent } from '@/lib/types';
-import { isListedEvent } from '@/lib/types';
-import { C, BRAND_NAME, G } from '@/lib/theme';
 import { cityLabel } from '@/lib/utils';
+import { parseDay, shortDay } from '@/lib/dates';
+import { T, FONT, GROUND } from '@/lib/thiscene';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
+import { PersonAvatar } from '@/components/social/PersonRow';
 
 export type OrganizerPublic = {
   id: string;
@@ -18,324 +17,64 @@ export type OrganizerPublic = {
   bio: string | null;
 };
 
-function TicketCta({ event }: { event: GhanaEvent }) {
-  if (isListedEvent(event) && event.ticketUrl) {
-    return (
-      <a
-        href={event.ticketUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        style={ctaStyle}
-      >
-        <ExternalLink size={12} />
-        {event.ticketSource || 'Tickets'}
-      </a>
-    );
-  }
-  return (
-    <Link href={`/events/${event.slug}?tickets=1`} onClick={(e) => e.stopPropagation()} style={ctaStyle}>
-      <Ticket size={12} />
-      {event.price === 0 ? 'RSVP' : 'Get Tickets'}
-    </Link>
-  );
-}
+const eyebrow: React.CSSProperties = { margin: '34px 0 4px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' };
 
-const ctaStyle = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-  background: C.gold,
-  color: C.onAccent,
-  padding: '8px 12px',
-  borderRadius: 6,
-  fontFamily: 'var(--font-inter), sans-serif',
-  fontSize: 10,
-  letterSpacing: '1.5px',
-  textTransform: 'uppercase',
-  fontWeight: 700,
-  textDecoration: 'none' as const,
-};
+const priceText = (e: GhanaEvent) => (e.priceUnknown ? 'Tickets' : e.price === 0 ? 'Free' : `GH₵ ${e.price.toLocaleString()}`);
 
-export default function OrganizerPageClient({
-  organizer,
-  events,
-}: {
-  organizer: OrganizerPublic;
-  events: GhanaEvent[];
-}) {
-  const display = organizer.fullName || organizer.username;
-  const upcoming = events.filter((e) => {
-    if (!e.date) return true;
-    const d = new Date(e.date);
-    if (Number.isNaN(d.getTime())) return true;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return d >= today;
-  });
-  const past = events.filter((e) => !upcoming.includes(e));
+/** An organiser's public page: who they are, then their upcoming and past events */
+export default function OrganizerPageClient({ organizer, events }: { organizer: OrganizerPublic; events: GhanaEvent[] }) {
+  const name = organizer.fullName?.trim() || organizer.username;
+  const today = new Date(new Date().toDateString()).getTime();
+  const upcoming = events.filter((e) => { const d = parseDay(e.date); return !d || d.getTime() >= today; });
+  const past = events.filter((e) => !upcoming.includes(e)).reverse();
 
   return (
-    <div style={{ background: 'transparent', minHeight: '100vh' }}>
-      <Nav active="Events" />
-      <div
-        style={{
-          paddingTop: 62,
-          maxWidth: 720,
-          margin: '0 auto',
-          paddingLeft: 16,
-          paddingRight: 16,
-          paddingBottom: 80,
-        }}
-      >
-        <Link
-          href="/events"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            marginTop: 16,
-            marginBottom: 24,
-            fontFamily: 'var(--font-inter), sans-serif',
-            fontSize: 10,
-            letterSpacing: '1.5px',
-            textTransform: 'uppercase',
-            color: C.c3,
-            textDecoration: 'none',
-          }}
-        >
-          <ArrowLeft size={12} /> All events
-        </Link>
-
-        <div style={{ display: 'flex', gap: 18, alignItems: 'center', marginBottom: 28 }}>
-          <div
-            style={{
-              width: 88,
-              height: 88,
-              borderRadius: '50%',
-              overflow: 'hidden',
-              border: `2px solid ${C.goldBd}`,
-              ...G.raised,
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'var(--font-display), sans-serif',
-              fontSize: 32,
-              color: C.gold,
-            }}
-          >
-            {organizer.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={organizer.avatarUrl}
-                alt=""
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              (display[0] || 'O').toUpperCase()
-            )}
-          </div>
-          <div>
-            <p
-              style={{
-                fontFamily: 'var(--font-inter), sans-serif',
-                fontSize: 10,
-                letterSpacing: '2px',
-                textTransform: 'uppercase',
-                color: C.gold,
-                marginBottom: 6,
-              }}
-            >
-              Organizer
+    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
+      <Nav back="/" tabs />
+      <main style={{ maxWidth: 640, margin: '0 auto', padding: 'calc(76px + env(safe-area-inset-top, 0px)) 20px 60px' }}>
+        <header style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <PersonAvatar p={{ name, avatar: organizer.avatarUrl }} size={84} />
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>Organiser</p>
+            <h1 style={{ margin: '4px 0 0', fontFamily: FONT.display, fontSize: 30, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, color: T.white }}>{name}</h1>
+            <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>
+              <Link href={`/u/${organizer.username}`} style={{ color: T.text2, textDecoration: 'none' }}>@{organizer.username}</Link> · {events.length} {events.length === 1 ? 'event' : 'events'} on Akwaaba
             </p>
-            <h1
-              style={{
-                fontFamily: 'var(--font-display), sans-serif',
-                fontSize: 32,
-                fontWeight: 400,
-                color: C.cream,
-                margin: 0,
-                lineHeight: 1.1,
-              }}
-            >
-              {display}
-            </h1>
-            <p
-              style={{
-                fontFamily: 'var(--font-inter,sans-serif)',
-                fontSize: 13,
-                color: C.c3,
-                marginTop: 6,
-              }}
-            >
-              @{organizer.username} · {events.length} event
-              {events.length === 1 ? '' : 's'} on {BRAND_NAME}
-            </p>
-            {organizer.bio && (
-              <p
-                style={{
-                  fontFamily: 'var(--font-inter,sans-serif)',
-                  fontSize: 14,
-                  color: C.c2,
-                  marginTop: 10,
-                  lineHeight: 1.5,
-                }}
-              >
-                {organizer.bio}
-              </p>
-            )}
           </div>
-        </div>
+        </header>
+        {organizer.bio && <p style={{ margin: '18px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text }}>{organizer.bio}</p>}
 
         {events.length === 0 && (
-          <div
-            style={{
-              padding: 32,
-              textAlign: 'center',
-              border: `1px solid ${C.bd}`,
-              borderRadius: 12,
-              ...G.panel,
-              color: C.c2,
-              fontSize: 14,
-            }}
-          >
-            No published events yet.
+          <div style={{ marginTop: 30, padding: '28px 20px', borderRadius: 20, background: T.surface, border: `1px solid ${T.hairline}`, textAlign: 'center' }}>
+            <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 17, fontWeight: 700, color: T.white }}>No events yet</p>
+            <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>New shows from {name} will show up here.</p>
           </div>
         )}
 
-        {upcoming.length > 0 && (
-          <Section title="Upcoming">
-            {upcoming.map((e) => (
-              <EventRow key={e.id} event={e} />
-            ))}
-          </Section>
-        )}
-        {past.length > 0 && (
-          <Section title="Past" muted>
-            {past.map((e) => (
-              <EventRow key={e.id} event={e} />
-            ))}
-          </Section>
-        )}
-      </div>
+        {upcoming.length > 0 && <><p style={eyebrow}>Upcoming</p><ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>{upcoming.map((e, i) => <Row key={e.slug} event={e} last={i === upcoming.length - 1} />)}</ul></>}
+        {past.length > 0 && <><p style={eyebrow}>Past</p><ul style={{ listStyle: 'none', margin: 0, padding: 0, opacity: 0.7 }}>{past.map((e, i) => <Row key={e.slug} event={e} last={i === past.length - 1} />)}</ul></>}
+      </main>
       <Footer />
     </div>
   );
 }
 
-function Section({
-  title,
-  children,
-  muted,
-}: {
-  title: string;
-  children: ReactNode;
-  muted?: boolean;
-}) {
+function Row({ event, last }: { event: GhanaEvent; last: boolean }) {
+  const d = parseDay(event.date);
   return (
-    <section style={{ marginBottom: 36, opacity: muted ? 0.75 : 1 }}>
-      <p
-        style={{
-          fontFamily: 'var(--font-inter), sans-serif',
-          fontSize: 10,
-          letterSpacing: '2px',
-          textTransform: 'uppercase',
-          color: muted ? C.c3 : C.gold,
-          opacity: muted ? 1 : 0.85,
-          marginBottom: 14,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        <Calendar size={11} /> {title}
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>{children}</div>
-    </section>
-  );
-}
-
-function EventRow({ event }: { event: GhanaEvent }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        gap: 14,
-        alignItems: 'center',
-        padding: 12,
-        ...G.panel,
-        border: `1px solid ${C.bd}`,
-        borderRadius: 12,
-      }}
-    >
-      <Link
-        href={`/events/${event.slug}`}
-        style={{
-          display: 'flex',
-          gap: 14,
-          alignItems: 'center',
-          flex: 1,
-          textDecoration: 'none',
-          minWidth: 0,
-        }}
-      >
-        <div
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 8,
-            overflow: 'hidden',
-            ...G.raised,
-            flexShrink: 0,
-          }}
-        >
+    <li>
+      <Link href={`/events/${event.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0', borderBottom: last ? 'none' : `1px solid ${T.hairline}`, textDecoration: 'none' }}>
+        <span style={{ width: 64, height: 80, borderRadius: 12, flex: 'none', overflow: 'hidden', background: 'rgba(255,255,255,0.05)' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={event.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-        <div style={{ minWidth: 0 }}>
-          <p
-            style={{
-              fontFamily: 'var(--font-inter), sans-serif',
-              fontSize: 10,
-              color: C.gold,
-              letterSpacing: '1px',
-              textTransform: 'uppercase',
-              margin: '0 0 4px',
-            }}
-          >
-            {event.dateLabel} · {event.time}
-          </p>
-          <h3
-            style={{
-              fontFamily: 'var(--font-display), sans-serif',
-              fontSize: 18,
-              fontWeight: 400,
-              color: C.cream,
-              margin: 0,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {event.title}
-          </h3>
-          <p
-            style={{
-              fontFamily: 'var(--font-inter,sans-serif)',
-              fontSize: 12,
-              color: C.c3,
-              margin: '4px 0 0',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {cityLabel(event.city)} · {event.venue}
-          </p>
-        </div>
+          {event.image && <img src={event.image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+        </span>
+        <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText }}>{[d ? shortDay(d) : event.dateLabel, event.time].filter(Boolean).join(' · ')}</span>
+          <span style={{ fontFamily: FONT.sans, fontSize: 16, fontWeight: 600, lineHeight: 1.25, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{event.title}</span>
+          <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[event.venue, cityLabel(event.city)].filter(Boolean).join(' · ')}</span>
+        </span>
+        <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: event.price === 0 && !event.priceUnknown ? T.mintText : 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap' }}>{priceText(event)}</span>
       </Link>
-      <TicketCta event={event} />
-    </div>
+    </li>
   );
 }
