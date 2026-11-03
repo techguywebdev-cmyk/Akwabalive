@@ -2,7 +2,7 @@
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BadgeCheck, Bell, BellRing, CalendarDays, MapPin, MessageCircle, Send, Ticket } from 'lucide-react';
+import { BadgeCheck, Bell, BellRing, CalendarDays, MapPin, MessageSquareText, Share2, Ticket } from 'lucide-react';
 import { useFollow } from '@/components/follow/useFollow';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
@@ -272,14 +272,14 @@ const MomentSlide = forwardRef<SlideHandle, {
             {/* Comments, share and tickets, kept small */}
             <div style={{ display: 'flex', gap: 8, paddingTop: 2 }}>
               <button type="button" aria-label={`Comments (${comments.length})`} onClick={() => setShowComments(true)} style={{ ...iconBtn(false), position: 'relative' }}>
-                <MessageCircle size={17} />
+                <MessageSquareText size={17} />
                 {comments.length > 0 && (
                   <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 17, height: 17, padding: '0 4px', boxSizing: 'border-box', borderRadius: 9, background: T.white, color: '#050606', fontFamily: FONT.sans, fontSize: 10, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                     {formatCount(comments.length)}
                   </span>
                 )}
               </button>
-              <button type="button" aria-label="Share" onClick={share} style={iconBtn(false)}><Send size={16} /></button>
+              <button type="button" aria-label="Share" onClick={share} style={iconBtn(false)}><Share2 size={16} /></button>
               {next && (
                 <a href={next.ticketUrl ?? `/events/${next.slug}?tickets=1`} aria-label="Get tickets for the next edition" {...(next.ticketUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})} style={iconBtn(false, true)}>
                   <Ticket size={17} />
@@ -383,7 +383,7 @@ const MomentSlide = forwardRef<SlideHandle, {
 
       {showComments && (
         <CommentsSheet moment={clip} comments={comments} user={user} profile={profile} currentSeconds={t}
-          wasThereIds={crowd.wasThereIds} goingIds={crowd.goingIds} nextLabel={next?.date?.slice(0, 4) ?? null} canGift={canGift}
+          wasThereIds={crowd.wasThereIds} goingIds={crowd.goingIds} nextLabel={next?.date?.slice(0, 4) ?? null} canGift={canGift} tint={tint}
           onClose={() => setShowComments(false)} onSend={(text) => { if (user) send(user.id, text); }}
           onSeek={(s) => { playerRef.current?.seekTo(s); setShowComments(false); }} onGift={(c) => setGiftTarget(c)} />
       )}
