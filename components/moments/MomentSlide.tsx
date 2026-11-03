@@ -113,7 +113,24 @@ const MomentSlide = forwardRef<SlideHandle, {
 
   const series = useMemo(() => SERIES.find((s) => momentInSeries(night, s)), [night]);
   const info = useMomentInfo(nightMoment, series, mounted);
-  const about = clip.description ?? night.description ?? series?.blurb ?? null;
+  // The best words about the night: this clip's description, else the fullest from the night's other clips,
+  // else a line built from what we've confirmed (who was on stage, where), else the show's blurb
+  const about = useMemo(() => {
+    const best = [clip, ...clips].map((c) => c.description?.trim()).filter((x): x is string => !!x && x.length >= 40)
+      .sort((a, b) => b.length - a.length)[0];
+    if (clip.description && clip.description.length >= 100) return clip.description;
+    if (best) return best;
+    const acts = info.onStage.map((a) => a.name);
+    if (acts.length) {
+      const where = info.event?.venue ? ` at ${info.event.venue}` : '';
+      const lead = acts[0], rest = acts.slice(1, 4);
+      const guests = rest.length ? `, joined by ${rest.length > 1 ? `${rest.slice(0, -1).join(', ')} and ${rest[rest.length - 1]}` : rest[0]}` : '';
+      const catchAll = / live( in .+)?$/i.test(night.event_name); // "Kelvyn Boy Live" is a stand-in, not a show name
+      const what = catchAll ? `${lead} live${night.year ? ` in ${night.year}` : ''}` : `${lead} on stage at ${night.event_name}${night.year ? ` ${night.year}` : ''}`;
+      return `${what}${where}${guests}.${series?.blurb ? ` ${series.blurb}` : ''}`;
+    }
+    return series?.blurb ?? null;
+  }, [clip, clips, info.onStage, info.event, night.event_name, night.year, series]);
   const tag = CATEGORIES.find((c) => c.key === night.category);
   const fresh = justHappened(night);
   const canGift = Boolean(next?.tiers?.some((x) => x.price > 0 && x.quantity - x.sold > 0)) && !next?.ticketUrl;
@@ -285,7 +302,7 @@ const MomentSlide = forwardRef<SlideHandle, {
           {about && (
             <p onClick={() => setMore((x) => !x)} style={{
               margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2, cursor: 'pointer',
-              ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
+              ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
             }}>{about}</p>
           )}
 
