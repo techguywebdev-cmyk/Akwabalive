@@ -2,7 +2,8 @@
 
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BadgeCheck, CalendarDays, Check, ChevronDown, MapPin, MessageCircle, Send, Ticket, UserCheck } from 'lucide-react';
+import { BadgeCheck, Bell, BellRing, CalendarDays, Check, MapPin, MessageCircle, Send, Ticket, UserCheck } from 'lucide-react';
+import { useFollow } from '@/components/follow/useFollow';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
 import CustomPlayer, { type CustomPlayerHandle } from '@/components/moments/CustomPlayer';
@@ -19,7 +20,7 @@ import { SERIES, momentInSeries } from '@/lib/data/series';
 import { countdown, priceLine, Portrait } from '@/components/artists/parts';
 import { useMomentInfo, type OnStage } from '@/hooks/useMomentInfo';
 import { CATEGORIES } from '@/lib/moments/categorize';
-import { longDay, parseDay, shortDay } from '@/lib/dates';
+import { parseDay, shortDay } from '@/lib/dates';
 import { T, FONT } from '@/lib/thiscene';
 import { useRatingSummaries } from '@/lib/ratings';
 import { Stars } from '@/components/ratings/Stars';
@@ -30,7 +31,6 @@ export type SlideHandle = { toggleMute: () => void };
 
 const still = (id: string) => `https://i.ytimg.com/vi/${id}/hq720.jpg`;
 const thumb = (id: string) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
-const LEAN_AFTER = 4000; // ms of untouched playback before the info steps back
 
 const iconBtn = (on: boolean, mint = false): React.CSSProperties => ({
   width: 38, height: 38, borderRadius: 19, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, textDecoration: 'none',
@@ -44,18 +44,42 @@ const pill: React.CSSProperties = {
   fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.04em',
 };
 
+/** No next edition on sale yet: follow the show (or the headline act) to hear when it's back */
+function ShowFollowCard({ slug, name, usually, artist, photo, tint, flash }: { slug: string; name: string; usually?: string; artist?: boolean; photo?: string | null; tint: string; flash: (m: string) => void }) {
+  const { following, busy, toggle } = useFollow(artist ? 'artist' : 'series', slug);
+  const when = usually && usually.toLowerCase().startsWith('every') ? usually.split(' · ')[0].toLowerCase() : null;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, background: `linear-gradient(120deg, rgba(${tint}, 0.28) 0%, rgba(255,255,255,0.05) 70%)`, border: '1px solid rgba(255,255,255,0.12)' }}>
+      {artist && <Portrait name={name} url={photo ?? null} size={46} />}
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {artist ? `See ${name} live` : when ? `${name} is back ${when}` : `${name} comes back`}
+        </span>
+        <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>
+          {following ? 'We’ll tell you the moment tickets drop' : 'Get told the moment tickets drop'}
+        </span>
+      </span>
+      <button type="button" disabled={busy} aria-pressed={following} onClick={() => { toggle(); flash(following ? 'Reminder removed' : 'We’ll let you know'); }} style={{
+        height: 40, padding: '0 16px', borderRadius: 999, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 700,
+        ...(following ? { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.16)' } : { background: T.mint, color: T.onMint, border: 'none' }),
+      }}>
+        {following ? <BellRing size={16} /> : <Bell size={16} />}{following ? 'On' : 'Remind me'}
+      </button>
+    </div>
+  );
+}
+
 /**
  * One night, filling the screen. The video sits sharp at the top (swipe it sideways for the night's other clips),
  * tinted in its own colours; below it, the story of the night, who was on stage, and what to do next.
- * While it plays untouched, everything else steps back so the video has the screen (lean-back).
  * Only the slide on screen plays; its neighbours load in the background.
  */
 const MomentSlide = forwardRef<SlideHandle, {
   moment: Moment; active: boolean; mounted: boolean; index: number; total: number;
   user: User | null; profile: Profile | null; onMuteChange: (m: boolean) => void; onEnded: () => void;
   initialSeek?: number | null; requireSignIn: () => boolean; flash: (m: string) => void;
-  upNext?: Moment | null; onNext?: () => void; onCategory?: (c: string) => void;
-}>(function MomentSlide({ moment: night, active, mounted, user, profile, onMuteChange, onEnded, initialSeek, requireSignIn, flash, upNext, onNext, onCategory }, ref) {
+  upNext?: Moment | null; onNext?: () => void; onCategory?: (c: string) => void; // upNext/onNext kept for the feed's API
+}>(function MomentSlide({ moment: night, active, mounted, user, profile, onMuteChange, onEnded, initialSeek, requireSignIn, flash, onCategory }, ref) {
   const playerRef = useRef<CustomPlayerHandle>(null);
   useImperativeHandle(ref, () => ({ toggleMute: () => playerRef.current?.toggleMute() }));
 
@@ -111,26 +135,7 @@ const MomentSlide = forwardRef<SlideHandle, {
     else flash(st?.reason === 'not_yet' ? 'You can rate it once the show has happened' : 'Only people with an Akwaaba ticket can rate this night');
   }, [night.event_slug, requireSignIn, flash]);
 
-  // ── Lean-back: untouched playback lets the video have the screen ──
-  const [lean, setLean] = useState(false);
-  const touchedAt = useRef(Date.now());
-  const playingAt = useRef(0);
-  const lastT = useRef(0);
   const swallowClick = useRef(false);
-  useEffect(() => {
-    if (!active) { setLean(false); return; }
-    touchedAt.current = Date.now();
-    const id = setInterval(() => {
-      const now = Date.now();
-      if (now - touchedAt.current > LEAN_AFTER && now - playingAt.current < 1500) setLean(true);
-    }, 600);
-    return () => clearInterval(id);
-  }, [active]);
-  useEffect(() => { if (showComments || artistOpen || rate) setLean(false); }, [showComments, artistOpen, rate]);
-  const wake = useCallback(() => {
-    touchedAt.current = Date.now();
-    if (lean) { setLean(false); swallowClick.current = true; }
-  }, [lean]);
 
   // ── Swipe the video sideways for the night's other clips ──────────
   const swipe = useRef<{ x: number; y: number } | null>(null);
@@ -148,26 +153,23 @@ const MomentSlide = forwardRef<SlideHandle, {
   const pct = dur ? Math.min(100, (t / dur) * 100) : 0;
   const when = info.event?.date ? parseDay(info.event.date) : null;
   const where = [info.event?.venue, info.event?.city ? info.event.city.charAt(0).toUpperCase() + info.event.city.slice(1) : null].filter(Boolean).join(', ');
-  const tint = colour ?? '40, 130, 85';
-  const fade: React.CSSProperties = { opacity: lean ? 0 : 1, pointerEvents: lean ? 'none' : 'auto', transition: 'opacity 600ms ease' };
+  const tint = colour ?? '34, 96, 66';
 
   return (
     <section aria-label={clip.title}
-      onPointerDownCapture={wake}
       onClickCapture={(e) => { if (swallowClick.current) { swallowClick.current = false; e.stopPropagation(); e.preventDefault(); } }}
       style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden', scrollSnapAlign: 'start', scrollSnapStop: 'always', background: '#050606' }}>
-      {/* The video's own colour, glowing behind everything */}
+      {/* The whole screen washed in the video's own colours, fading to black at the bottom */}
       <span aria-hidden style={{
-        position: 'absolute', inset: 0, transition: 'background 800ms ease',
-        background: `radial-gradient(130% 55% at 50% ${lean ? '50%' : '8%'}, rgba(${tint}, ${colour ? 0.42 : 0.2}) 0%, rgba(${tint}, 0.1) 45%, rgba(5,6,6,0) 72%)`,
+        position: 'absolute', inset: 0, transition: 'background 900ms ease',
+        background: `linear-gradient(180deg, rgba(${tint}, 0.62) 0%, rgba(${tint}, 0.36) 30%, rgba(${tint}, 0.18) 62%, rgba(${tint}, 0.06) 85%, rgba(5,6,6,0) 100%)`,
       }} />
+      <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 70% at 50% 110%, rgba(5,6,6,0.85) 0%, rgba(5,6,6,0) 60%)' }} />
 
       <div style={{ position: 'relative', height: '100%', maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', paddingTop: 'env(safe-area-inset-top, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)', boxSizing: 'border-box' }}>
-        {/* Video, right at the top — centred on the screen in lean-back */}
+        {/* Video, right at the top */}
         <div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{
           position: 'relative', zIndex: 2, width: '100%', aspectRatio: '16 / 9', background: '#000', flexShrink: 0,
-          transform: lean ? 'translateY(calc(50svh - 50% - env(safe-area-inset-top, 0px)))' : 'none', transition: 'transform 700ms cubic-bezier(0.22, 1, 0.36, 1)',
-          boxShadow: lean ? `0 30px 120px rgba(${tint}, 0.35)` : 'none',
         }}>
           {mounted ? (
             <CustomPlayer key={clip.youtube_id} ref={playerRef} youtubeId={clip.youtube_id} title={clip.title} fit="contain" hideMuteButton active={active}
@@ -176,7 +178,6 @@ const MomentSlide = forwardRef<SlideHandle, {
               initialSeekSeconds={ci === 0 ? initialSeek ?? null : null}
               onTimeUpdate={(a, b) => {
                 if (!active) return;
-                if (a !== lastT.current) { lastT.current = a; playingAt.current = Date.now(); }
                 setT(a); setDur(b);
               }} />
           ) : (
@@ -195,7 +196,7 @@ const MomentSlide = forwardRef<SlideHandle, {
 
         {/* Clips from this night */}
         {clips.length > 1 && (
-          <div className="no-scrollbar" style={{ ...fade, display: 'flex', gap: 8, padding: '10px 20px 0', overflowX: 'auto' }}>
+          <div className="no-scrollbar" style={{ display: 'flex', gap: 8, padding: '10px 20px 0', overflowX: 'auto' }}>
             {clips.map((c, i) => (
               <button key={c.id} type="button" onClick={() => goClip(i)} aria-label={`Play ${c.title}`} aria-current={i === ci} style={{
                 position: 'relative', width: 64, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, borderRadius: 8, overflow: 'hidden', cursor: 'pointer', background: '#000',
@@ -209,7 +210,7 @@ const MomentSlide = forwardRef<SlideHandle, {
         )}
 
         {/* About the night */}
-        <div style={{ ...fade, padding: '14px 20px 0', minHeight: 0, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 20px 0', minHeight: 0, overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               {(fresh || tag) && (
@@ -254,19 +255,10 @@ const MomentSlide = forwardRef<SlideHandle, {
           </div>
 
           {(when || where) && (
-            <p style={{ margin: '9px 0 0', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>
-              {when && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><CalendarDays size={14} />{longDay(when)}</span>}
+            <p style={{ margin: '9px 0 0', display: 'flex', alignItems: 'center', gap: 12, fontFamily: FONT.sans, fontSize: 13, color: T.text2, minWidth: 0 }}>
+              {when && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', flexShrink: 0 }}><CalendarDays size={14} />{shortDay(when)} {when.getFullYear()}</span>}
               {where && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minWidth: 0 }}><MapPin size={14} /><span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{where}</span></span>}
             </p>
-          )}
-
-          {next && (
-            <Link href={`/events/${next.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 9, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText }}>
-              <Ticket size={14} style={{ flexShrink: 0 }} />
-              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                Next edition {[nextDay ? shortDay(nextDay) : null, soon, priceLine(next), crowd.goingCount ? `${formatCount(crowd.goingCount)} going` : null].filter(Boolean).join(' · ')}
-              </span>
-            </Link>
           )}
 
           {/* How the night was rated — tap to rate it (ticket holders) */}
@@ -293,7 +285,7 @@ const MomentSlide = forwardRef<SlideHandle, {
           {about && (
             <p onClick={() => setMore((x) => !x)} style={{
               margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2, cursor: 'pointer',
-              ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
+              ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
             }}>{about}</p>
           )}
 
@@ -326,30 +318,34 @@ const MomentSlide = forwardRef<SlideHandle, {
 
         <div style={{ flex: 1, minHeight: 16 }} />
 
-        {/* Up next — fills the bottom and invites the swipe */}
-        {upNext ? (
-          <button type="button" onClick={onNext} style={{ ...fade, margin: '0 16px 12px', padding: 10, borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', cursor: 'pointer', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
-            <span style={{ position: 'relative', width: 104, aspectRatio: '16 / 9', borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: '#000' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {mounted && <img src={thumb(upNext.youtube_id)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
-            </span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.text3 }}>Up next</span>
-              <span style={{ marginTop: 3, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, lineHeight: 1.25, color: T.white, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } as React.CSSProperties}>{upNext.title}</span>
-              <span style={{ display: 'block', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>{upNext.event_name}{upNext.year ? ` · ${upNext.year}` : ''}</span>
-            </span>
-            <ChevronDown size={20} color={T.text3} style={{ flexShrink: 0 }} />
-          </button>
-        ) : (
-          <Link href="/" style={{ ...fade, margin: '0 16px 12px', height: 50, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.white, flexShrink: 0 }}>
-            You’re all caught up · See what’s on
-          </Link>
-        )}
-
-        {/* In lean-back, a quiet hint at the bottom */}
-        <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))', textAlign: 'center', fontFamily: FONT.sans, fontSize: 12, color: T.text3, opacity: lean ? 0.8 : 0, transition: 'opacity 600ms ease', pointerEvents: 'none' }}>
-          Tap for details{clips.length > 1 ? ' · swipe the video for more clips' : ''}
-        </span>
+        {/* What's next for this show, full width: tickets for the next edition, or a reminder */}
+        <div style={{ margin: '0 16px 14px', flexShrink: 0 }}>
+          {next ? (
+            <Link href={`/events/${next.slug}`} style={{
+              position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: 12, borderRadius: 20, overflow: 'hidden', textDecoration: 'none',
+              background: `linear-gradient(120deg, rgba(${tint}, 0.32) 0%, rgba(255,255,255,0.05) 70%)`, border: '1px solid rgba(255,255,255,0.12)',
+            }}>
+              <span style={{ width: 46, height: 58, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.08)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {next.image && <img src={next.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.mintText, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Next edition</span>
+                <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{next.title}</span>
+                <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {[nextDay ? shortDay(nextDay) : null, soon, crowd.goingCount ? `${formatCount(crowd.goingCount)} going` : priceLine(next)].filter(Boolean).join(' · ')}
+                </span>
+              </span>
+              <span style={{ height: 38, padding: '0 14px', borderRadius: 999, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, background: T.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>
+                <Ticket size={16} /> Tickets
+              </span>
+            </Link>
+          ) : series ? (
+            <ShowFollowCard slug={series.slug} name={series.name} usually={series.usually} tint={tint} flash={flash} />
+          ) : info.onStage[0] ? (
+            <ShowFollowCard slug={info.onStage[0].slug} name={info.onStage[0].name} artist photo={info.onStage[0].photo} tint={tint} flash={flash} />
+          ) : null}
+        </div>
       </div>
 
       {showComments && (

@@ -15,7 +15,6 @@ export function useVideoColour(youtubeId: string | undefined, enabled: boolean):
     if (cache.has(youtubeId)) { setRgb(cache.get(youtubeId) ?? null); return; }
     let cancelled = false;
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     img.onload = () => {
       try {
         const c = document.createElement('canvas');
@@ -37,7 +36,7 @@ export function useVideoColour(youtubeId: string | undefined, enabled: boolean):
         r /= w; g /= w; b /= w;
         // Push it a little brighter and more saturated so it reads as a glow on near-black
         const max = Math.max(r, g, b, 1);
-        const k = Math.min(1.6, 200 / max);
+        const k = Math.min(1.8, 215 / max);
         const out = [r, g, b].map((v) => Math.round(Math.min(255, v * k))).join(', ');
         cache.set(youtubeId, out);
         if (!cancelled) setRgb(out);
@@ -46,7 +45,8 @@ export function useVideoColour(youtubeId: string | undefined, enabled: boolean):
       }
     };
     img.onerror = () => cache.set(youtubeId, null);
-    img.src = `https://i.ytimg.com/vi/${youtubeId}/mqdefault.jpg`;
+    // Same-origin copy: a cross-origin image can't be read by the canvas
+    img.src = `/api/moments/thumb?id=${encodeURIComponent(youtubeId)}`;
     return () => { cancelled = true; };
   }, [youtubeId, enabled]);
   return rgb;
