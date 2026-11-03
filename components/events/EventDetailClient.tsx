@@ -220,7 +220,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
     <div style={{ position: 'relative', minHeight: '100vh', paddingBottom: 40 }}>
       {/* The page washed in the flyer's colour, settling into near-black further down */}
       <span aria-hidden style={{
-        position: 'absolute', left: 0, right: 0, top: 0, height: 2200, pointerEvents: 'none', transition: 'background 900ms ease',
+        position: 'absolute', left: 0, right: 0, top: 0, height: '100%', maxHeight: 2200, pointerEvents: 'none', transition: 'background 900ms ease',
         background: `linear-gradient(180deg, ${washAt(0.34)} 0%, ${washAt(0.3)} 30%, ${washAt(0.16)} 55%, rgba(3,8,6,0) 100%)`,
       }} />
       <Nav
