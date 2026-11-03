@@ -29,7 +29,6 @@ export function whenTag(e: GhanaEvent): { text: string; soon: boolean; past: boo
 const chip: CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, height: 28, padding: '0 11px', borderRadius: 999,
   fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 600, letterSpacing: '0.01em', whiteSpace: 'nowrap',
-  backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
 };
 
 /**
@@ -80,8 +79,8 @@ export const BTN = {
   } as CSSProperties,
   secondary: {
     height: 50, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    background: 'rgba(255,255,255,0.1)', color: T.white, border: '1px solid rgba(255,255,255,0.14)', cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
-    backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', fontFamily: FONT.display, fontSize: 15, fontWeight: 600,
+    background: 'rgba(20,24,22,0.6)', color: T.white, border: '1px solid rgba(255,255,255,0.14)', cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
+    fontFamily: FONT.display, fontSize: 15, fontWeight: 600,
   } as CSSProperties,
 };
 
