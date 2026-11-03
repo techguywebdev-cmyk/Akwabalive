@@ -1,14 +1,13 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Gift, Send, X } from 'lucide-react';
+import { ArrowUp, Gift, MessageSquareText, Play, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
-import { C, G, R } from '@/lib/theme';
 import type { Profile } from '@/lib/supabase/types';
 import type { Comment, Moment } from './types';
 import { formatTime } from './types';
-import { mono, sans, serif } from './parts';
+import { T, FONT, EASE } from '@/lib/thiscene';
 
 interface Props {
   moment: Moment;
@@ -22,6 +21,8 @@ interface Props {
   nextLabel: string | null;
   /** Gifting is possible only when the next edition sells tickets on Akwaaba */
   canGift: boolean;
+  /** "r, g, b" — the video's colour, so the sheet carries the same glow as the slide */
+  tint?: string;
   onClose: () => void;
   onSend: (text: string) => void;
   onSeek: (seconds: number) => void;
@@ -30,7 +31,7 @@ interface Props {
 
 const STAMP = /(\d{1,2}):([0-5]\d)/g;
 
-/** Renders comment text with mm:ss timestamps as buttons that jump the video. */
+/** Comment text with mm:ss timestamps as small chips that jump the video */
 function CommentText({ text, onSeek }: { text: string; onSeek: (s: number) => void }) {
   const parts: React.ReactNode[] = [];
   let last = 0;
@@ -39,13 +40,11 @@ function CommentText({ text, onSeek }: { text: string; onSeek: (s: number) => vo
     if (i > last) parts.push(text.slice(last, i).replace(/▸\s*$/, ''));
     const secs = Number(m[1]) * 60 + Number(m[2]);
     parts.push(
-      <button
-        key={i}
-        type="button"
-        onClick={() => onSeek(secs)}
-        style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', fontFamily: mono, fontSize: 13, color: C.goldText }}
-      >
-        ▸ {m[0]}
+      <button key={i} type="button" onClick={() => onSeek(secs)} style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4, height: 22, padding: '0 8px', margin: '0 2px', borderRadius: 999, verticalAlign: 'middle',
+        border: 'none', cursor: 'pointer', background: 'rgba(123,227,168,0.14)', color: T.mintText, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700,
+      }}>
+        <Play size={10} fill={T.mintText} /> {m[0]}
       </button>,
     );
     last = i + m[0].length;
@@ -56,28 +55,40 @@ function CommentText({ text, onSeek }: { text: string; onSeek: (s: number) => vo
 
 function timeAgo(iso: string) {
   const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  if (s < 60) return `${s}s`;
+  if (s < 60) return 'now';
   const m = Math.floor(s / 60); if (m < 60) return `${m}m`;
   const h = Math.floor(m / 60); if (h < 24) return `${h}h`;
   const d = Math.floor(h / 24); if (d < 7) return `${d}d`;
   return `${Math.floor(d / 7)}w`;
 }
 
-const AVATAR_BG = [C.gold, C.green, '#8E1B24', '#3B3226', '#5A4A2A'];
+function Avatar({ url, name, size = 34 }: { url?: string | null; name: string; size?: number }) {
+  return (
+    <span style={{
+      width: size, height: size, flexShrink: 0, borderRadius: size / 2, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'linear-gradient(150deg, #2C3631 0%, #151A17 100%)', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: size * 0.38, fontWeight: 700,
+    }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {url ? <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : name[0]?.toUpperCase()}
+    </span>
+  );
+}
 
 export default function CommentsSheet({
-  moment, comments, user, profile, currentSeconds, wasThereIds, goingIds, nextLabel, canGift,
+  moment, comments, user, profile, currentSeconds, goingIds, nextLabel, canGift, tint = '34, 96, 66',
   onClose, onSend, onSeek, onGift,
 }: Props) {
-  const [filter, setFilter] = useState<'all' | 'there' | 'new'>('all');
+  const [order, setOrder] = useState<'top' | 'new'>('top');
   const [draft, setDraft] = useState('');
+  const [shown, setShown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const list = useMemo(() => {
-    if (filter === 'there') return comments.filter((c) => wasThereIds.has(c.user_id));
-    if (filter === 'new') return [...comments].reverse();
-    return comments;
-  }, [comments, filter, wasThereIds]);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const list = useMemo(() => (order === 'new' ? [...comments].reverse() : comments), [comments, order]);
 
   function submit(e?: React.FormEvent) {
     e?.preventDefault();
@@ -93,99 +104,92 @@ export default function CommentsSheet({
   }
 
   const year = moment.year ? String(moment.year) : null;
+  const me = profile?.full_name || profile?.username || 'You';
 
   return (
     <>
-      <button type="button" aria-label="Close comments" onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(8,6,4,0.35)', border: 'none', cursor: 'pointer' }} />
-      <section
-        aria-label="Comments"
-        style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 41, height: '72%', maxHeight: 640,
-          display: 'flex', flexDirection: 'column', margin: '0 auto', maxWidth: 640,
-          ...G.sheet, border: `1px solid ${C.bd2}`, borderBottom: 'none', borderRadius: `${R.sheet}px ${R.sheet}px 0 0`,
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 2px' }}>
-          <span style={{ width: 40, height: 4, borderRadius: 2, background: C.bd2 }} />
+      <button type="button" aria-label="Close comments" onClick={onClose} style={{
+        position: 'absolute', inset: 0, zIndex: 40, border: 'none', cursor: 'pointer',
+        background: 'rgba(0,0,0,0.45)', opacity: shown ? 1 : 0, transition: 'opacity 280ms ease',
+      }} />
+      <section aria-label="Comments" style={{
+        position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 41, height: '74%', maxHeight: 680, maxWidth: 640, margin: '0 auto',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        borderRadius: '26px 26px 0 0', borderTop: '1px solid rgba(255,255,255,0.14)',
+        // The video's colour at the top, settling into near-black
+        background: `linear-gradient(180deg, rgba(${tint}, 0.42) 0%, rgba(${tint}, 0.16) 26%, rgba(11,13,12,0) 60%), #0B0D0C`,
+        boxShadow: '0 -20px 60px rgba(0,0,0,0.45)',
+        transform: shown ? 'none' : 'translateY(100%)', transition: `transform 420ms ${EASE.sheet}`,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 0' }}>
+          <span style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.25)' }} />
         </div>
 
-        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px 10px 20px' }}>
-          <div>
-            <h2 style={{ fontFamily: serif, fontSize: 24, fontWeight: 500, color: C.cream }}>
-              {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
+        <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px 0 20px' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>
+              Comments <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>{comments.length || ''}</span>
             </h2>
-            <p style={{ fontFamily: mono, fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.c3 }}>
+            <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {moment.event_name}{year ? ` · ${year}` : ''}
             </p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" style={{ width: 44, height: 44, borderRadius: 22, ...G.raised, border: `1px solid ${C.bd}`, color: C.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={onClose} aria-label="Close" style={{
+            width: 38, height: 38, borderRadius: 19, flexShrink: 0, border: 'none', cursor: 'pointer',
+            background: 'rgba(255,255,255,0.1)', color: T.white, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
             <X size={18} />
           </button>
         </header>
 
-        <div style={{ display: 'flex', gap: 8, padding: '0 20px 12px', borderBottom: `1px solid ${C.bd}` }}>
-          {([['all', 'Top'], ['new', 'Newest'], ['there', 'Was there']] as const).map(([k, label]) => {
-            const on = filter === k;
-            return (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setFilter(k)}
-                aria-pressed={on}
-                style={{
-                  height: 36, padding: '0 14px', borderRadius: R.chip, cursor: 'pointer', fontFamily: sans, fontSize: 13, fontWeight: 600,
-                  ...(on
-                    ? { background: C.goldDim, color: C.goldText, border: `1px solid ${C.goldBd}` }
-                    : { background: 'transparent', color: C.c2, border: `1px solid ${C.bd2}` }),
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        {comments.length > 1 && (
+          <div style={{ display: 'inline-flex', alignSelf: 'flex-start', gap: 2, margin: '14px 20px 0', padding: 3, borderRadius: 999, background: 'rgba(255,255,255,0.07)' }}>
+            {([['top', 'Top'], ['new', 'Newest']] as const).map(([k, label]) => (
+              <button key={k} type="button" aria-pressed={order === k} onClick={() => setOrder(k)} style={{
+                height: 30, padding: '0 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
+                background: order === k ? 'rgba(255,255,255,0.16)' : 'transparent', color: order === k ? T.white : T.text2,
+              }}>{label}</button>
+            ))}
+          </div>
+        )}
 
-        <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
+        <div className="no-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '6px 20px 12px' }}>
           {list.length === 0 && (
-            <p style={{ fontFamily: sans, fontSize: 14, color: C.c3, textAlign: 'center', padding: '40px 10px' }}>
-              {filter === 'there' ? 'Nobody who was there has commented yet.' : 'Be the first to say something.'}
-            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '48px 20px' }}>
+              <span style={{ width: 56, height: 56, borderRadius: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.07)', color: T.text2 }}>
+                <MessageSquareText size={24} />
+              </span>
+              <p style={{ margin: '14px 0 0', fontFamily: FONT.display, fontSize: 17, fontWeight: 700, color: T.white }}>No comments yet</p>
+              <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>Were you there? Start the conversation.</p>
+            </div>
           )}
-          {list.map((c, i) => {
+          {list.map((c) => {
             const name = c.profiles?.full_name || c.profiles?.username || 'Someone';
-            const there = wasThereIds.has(c.user_id);
             const going = goingIds.has(c.user_id);
             const mine = user?.id === c.user_id;
             return (
-              <article key={c.id} style={{ display: 'flex', gap: 12, padding: '14px 0', borderBottom: `1px solid ${C.bd}` }}>
-                <span style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 18, overflow: 'hidden', background: AVATAR_BG[i % AVATAR_BG.length], color: i % 5 === 0 ? C.onAccent : C.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: sans, fontSize: 13, fontWeight: 700 }}>
-                  {c.profiles?.avatar_url
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={c.profiles.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : name[0]?.toUpperCase()}
-                </span>
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <article key={c.id} style={{ display: 'flex', gap: 12, padding: '12px 0' }}>
+                <Avatar url={c.profiles?.avatar_url} name={name} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
                     {c.profiles?.username
-                      ? <Link href={`/u/${c.profiles.username}`} style={{ fontFamily: sans, fontSize: 13, fontWeight: 700, color: C.cream, textDecoration: 'none' }}>{name}</Link>
-                      : <span style={{ fontFamily: sans, fontSize: 13, fontWeight: 700, color: C.cream }}>{name}</span>}
-                    {there && <Badge tone="gold">Was there</Badge>}
-                    {going && nextLabel && <Badge tone="green">Going {nextLabel}</Badge>}
-                    <span style={{ fontFamily: mono, fontSize: 10, color: C.c3 }}>{timeAgo(c.created_at)}</span>
+                      ? <Link href={`/u/${c.profiles.username}`} style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 700, color: T.white, textDecoration: 'none' }}>{name}</Link>
+                      : <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 700, color: T.white }}>{name}</span>}
+                    {going && nextLabel && (
+                      <span style={{ padding: '2px 7px', borderRadius: 999, background: 'rgba(123,227,168,0.14)', color: T.mintText, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700 }}>Going {nextLabel}</span>
+                    )}
+                    <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>{timeAgo(c.created_at)}</span>
                   </div>
-                  <p style={{ fontFamily: sans, fontSize: 14, lineHeight: 1.45, color: 'rgba(245,236,215,0.92)', wordBreak: 'break-word' }}>
+                  <p style={{ margin: '3px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.45, color: T.text, wordBreak: 'break-word' }}>
                     <CommentText text={c.content} onSeek={onSeek} />
                   </p>
                   {canGift && user && !mine && (
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => onGift(c)}
-                        style={{ height: 34, padding: 0, border: 'none', background: 'none', color: C.goldText, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: sans, fontSize: 12, fontWeight: 600 }}
-                      >
-                        <Gift size={14} /> Gift a ticket
-                      </button>
-                    </div>
+                    <button type="button" onClick={() => onGift(c)} style={{
+                      marginTop: 4, height: 28, padding: 0, border: 'none', background: 'none', cursor: 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.mintText,
+                    }}>
+                      <Gift size={13} /> Gift a ticket
+                    </button>
                   )}
                 </div>
               </article>
@@ -193,44 +197,32 @@ export default function CommentsSheet({
           })}
         </div>
 
-        <div style={{ padding: '10px 12px calc(14px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${C.bd}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ padding: '10px 14px calc(14px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(11,13,12,0.92)' }}>
           {user ? (
             <>
-              <div className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
-                <PromptChip onClick={() => prompt('I was there! ')}>I was there</PromptChip>
-                {nextLabel && <PromptChip onClick={() => prompt(`Who's going in ${nextLabel}? `)}>Who&apos;s going in {nextLabel}?</PromptChip>}
-                <PromptChip onClick={() => prompt(`▸ ${formatTime(currentSeconds)} `, true)}>Add timestamp {formatTime(currentSeconds)}</PromptChip>
+              <div className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 10 }}>
+                <PromptChip onClick={() => prompt(`▸ ${formatTime(currentSeconds)} `, true)}><Play size={11} fill="currentColor" /> {formatTime(currentSeconds)}</PromptChip>
+                {nextLabel && <PromptChip onClick={() => prompt(`Who’s going in ${nextLabel}? `)}>Who’s going in {nextLabel}?</PromptChip>}
+                <PromptChip onClick={() => prompt('Best moment: ')}>Best moment</PromptChip>
               </div>
               <form onSubmit={submit} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 18, overflow: 'hidden', background: C.gold, color: C.onAccent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: sans, fontSize: 13, fontWeight: 700 }}>
-                  {profile?.avatar_url
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : (profile?.username?.[0] ?? 'U').toUpperCase()}
-                </span>
-                <label style={{ flex: 1, display: 'flex', alignItems: 'center', height: 46, borderRadius: 23, ...G.raised, border: `1px solid ${C.bd2}`, padding: '0 5px 0 16px' }}>
+                <Avatar url={profile?.avatar_url} name={me} size={36} />
+                <label style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', height: 46, borderRadius: 23, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', padding: '0 5px 0 16px' }}>
                   <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Add a comment</span>
-                  <input
-                    ref={inputRef}
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    placeholder="Add a comment…"
-                    maxLength={500}
-                    style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: C.cream, fontFamily: sans, fontSize: 15 }}
-                  />
-                  <button
-                    type="submit"
-                    aria-label="Post comment"
-                    disabled={!draft.trim()}
-                    style={{ width: 36, height: 36, borderRadius: 18, border: 'none', flexShrink: 0, cursor: draft.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', background: draft.trim() ? C.gold : C.bg4, color: draft.trim() ? C.onAccent : C.c3 }}
-                  >
-                    <Send size={16} />
+                  <input ref={inputRef} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Add a comment…" maxLength={500}
+                    style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15 }} />
+                  <button type="submit" aria-label="Post comment" disabled={!draft.trim()} style={{
+                    width: 36, height: 36, borderRadius: 18, border: 'none', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: draft.trim() ? 'pointer' : 'default', transition: 'background 200ms ease',
+                    background: draft.trim() ? T.mint : 'rgba(255,255,255,0.08)', color: draft.trim() ? T.onMint : T.text3,
+                  }}>
+                    <ArrowUp size={18} strokeWidth={2.5} />
                   </button>
                 </label>
               </form>
             </>
           ) : (
-            <Link href="/auth" style={{ height: 48, borderRadius: R.btn, background: C.gold, color: C.onAccent, fontFamily: sans, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+            <Link href="/auth" style={{ height: 48, borderRadius: 999, background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
               Sign in to comment
             </Link>
           )}
@@ -240,25 +232,13 @@ export default function CommentsSheet({
   );
 }
 
-function Badge({ tone, children }: { tone: 'gold' | 'green'; children: React.ReactNode }) {
-  const gold = tone === 'gold';
-  return (
-    <span style={{
-      fontFamily: mono, fontSize: 9, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 7px', borderRadius: 6,
-      background: gold ? C.goldDim : C.greenDim, color: gold ? C.goldText : '#86EFAC', border: `1px solid ${gold ? C.goldBd : C.greenBd}`,
-    }}>
-      {children}
-    </span>
-  );
-}
-
 function PromptChip({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{ flexShrink: 0, height: 36, padding: '0 12px', borderRadius: R.chip, ...G.raised, border: `1px solid ${C.bd2}`, color: C.c2, fontFamily: sans, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}
-    >
+    <button type="button" onClick={onClick} style={{
+      flexShrink: 0, height: 32, padding: '0 12px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap',
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
+    }}>
       {children}
     </button>
   );
