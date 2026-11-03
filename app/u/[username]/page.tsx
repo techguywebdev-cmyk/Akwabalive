@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Share2, Lock, Camera, Play, X, CalendarDays, Ticket, Heart, Check } from 'lucide-react';
+import { Share2, Lock, Camera, Play, X, CalendarDays, Ticket, Heart, Check, UserPlus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import type { Profile, DreamEvent } from '@/lib/supabase/types';
@@ -155,7 +155,7 @@ function EditSheet({ profile, onClose, onSaved }: { profile: Profile; onClose: (
   async function save() {
     setSaving(true); setErr('');
     const patch = { full_name: name.trim() || null, bio: bio.trim() || null, is_public: isPublic, avatar_url: avatar };
-    const { data, error } = await supabase.from('profiles').update(patch).eq('id', profile.id).select('*').single();
+    const { data, error } = await supabase.from('profiles').update(patch).eq('id', profile.id).select('id, username, full_name, avatar_url, bio, is_public, created_at').single();
     setSaving(false);
     if (error) { setErr('Could not save. Try again.'); return; }
     onSaved(data as Profile);
@@ -281,7 +281,7 @@ export default function UserProfilePage() {
   const hidden = !!profile && !profile.is_public && !own;
 
   const load = useCallback(async () => {
-    const { data: prof } = await supabase.from('profiles').select('*').eq('username', username).maybeSingle();
+    const { data: prof } = await supabase.from('profiles').select('id, username, full_name, avatar_url, bio, is_public, created_at').eq('username', username).maybeSingle();
     if (!prof) { setMissing(true); return; }
     const p = prof as Profile;
     setProfile(p);
@@ -425,6 +425,7 @@ export default function UserProfilePage() {
                   </button>
                 )}
                 {own && <Link href="/account/tickets" style={{ ...BTN.secondary, flex: 1, height: 46 }}><Ticket size={17} /> My tickets</Link>}
+                {own && <Link href="/people" aria-label="Find friends" title="Find friends" style={{ ...BTN.secondary, width: 46, height: 46, padding: 0, flexShrink: 0 }}><UserPlus size={18} /></Link>}
               </div>
             </header>
 

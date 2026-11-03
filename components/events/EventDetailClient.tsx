@@ -13,6 +13,7 @@ import { getTiers } from '@/lib/events/tiers';
 import { hiRes } from '@/lib/events/image';
 import { EventTags } from '@/components/events/CardParts';
 import { hypeTags } from '@/lib/events/hype';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments, MomentsViewer } from '@/components/moments/EventMoments';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
@@ -64,6 +65,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [watchAt,        setWatchAt]        = useState<number | null>(null);
   const moments = useEventMoments(event);
   const chat = useEventComments(event.slug);
+  const isAdmin = useIsAdmin();
   const [chatOpen, setChatOpen] = useState(false);
   const [wantSound, setWantSound] = useState(false);
 
@@ -511,7 +513,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           goingLabel={daysAway != null && daysAway < 0 ? 'Was there' : 'Going'}
           prompts={daysAway != null && daysAway < 0 ? ['Best moment:', 'Who else was there?', 'Next year I want'] : ['Who’s going?', 'What time do gates open?', 'Dress code?', 'Looking for people to go with']}
           emptyHint={daysAway != null && daysAway < 0 ? 'Were you there? Share the best moment.' : 'Ask a question or find people to go with.'}
-          onClose={() => setChatOpen(false)} onSend={(text) => { if (user) chat.send(user.id, text); }} onSeek={() => {}} onGift={() => {}} />
+          onClose={() => setChatOpen(false)} onSend={(text) => { if (user) chat.send(user.id, text); }} onSeek={() => {}} onGift={() => {}}
+          onDelete={(c) => chat.remove(c.id)} onReport={(c) => chat.report(c.id)} isAdmin={isAdmin} />
       )}
 
       {ticketsOpen && (

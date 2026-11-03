@@ -48,7 +48,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
       const ids = attendees.map(a => a.user_id).slice(0, 8);
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, username, full_name, avatar_url, bio, is_public, created_at')
         .in('id', ids);
       setGoingProfiles((profiles ?? []) as Profile[]);
     }
@@ -73,7 +73,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
         const followingIds = followData.map(f => f.following_id);
         const { data: followingProfiles } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, username, full_name, avatar_url, bio, is_public, created_at')
           .in('id', followingIds);
         setFollowers((followingProfiles ?? []) as Profile[]);
       }

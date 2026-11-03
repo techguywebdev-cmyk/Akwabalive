@@ -34,6 +34,10 @@ interface Props {
   onSend: (text: string) => void;
   onSeek: (seconds: number) => void;
   onGift: (c: Comment) => void;
+  /** Moderation: authors (and the admin) delete, everyone else reports */
+  onDelete?: (c: Comment) => void;
+  onReport?: (c: Comment) => void;
+  isAdmin?: boolean;
 }
 
 const STAMP = /(\d{1,2}):([0-5]\d)/g;
@@ -83,8 +87,9 @@ function Avatar({ url, name, size = 34 }: { url?: string | null; name: string; s
 
 export default function CommentsSheet({
   moment, comments, user, profile, currentSeconds, goingIds, nextLabel, canGift, tint = '34, 96, 66',
-  onClose, onSend, onSeek, onGift, prompts, goingLabel, emptyHint, fixed, heading = 'Comments',
+  onClose, onSend, onSeek, onGift, prompts, goingLabel, emptyHint, fixed, heading = 'Comments', onDelete, onReport, isAdmin = false,
 }: Props) {
+  const [reported, setReported] = useState<Set<string>>(new Set());
   const [order, setOrder] = useState<'top' | 'new'>('top');
   const [draft, setDraft] = useState('');
   const [shown, setShown] = useState(false);
@@ -191,6 +196,7 @@ export default function CommentsSheet({
                   <p style={{ margin: '3px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.45, color: T.text, wordBreak: 'break-word' }}>
                     <CommentText text={c.content} onSeek={onSeek} />
                   </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                   {canGift && user && !mine && (
                     <button type="button" onClick={() => onGift(c)} style={{
                       marginTop: 4, height: 28, padding: 0, border: 'none', background: 'none', cursor: 'pointer',
@@ -199,6 +205,15 @@ export default function CommentsSheet({
                       <Gift size={13} /> Gift a ticket
                     </button>
                   )}
+                  {user && (mine || isAdmin) && onDelete && (
+                    <button type="button" onClick={() => { if (window.confirm('Delete this comment?')) onDelete(c); }} style={miniBtn}>Delete</button>
+                  )}
+                  {user && !mine && onReport && (
+                    reported.has(c.id)
+                      ? <span style={{ ...miniBtn, cursor: 'default' }}>Reported · thanks</span>
+                      : <button type="button" onClick={() => { setReported((r) => new Set(r).add(c.id)); onReport(c); }} style={miniBtn}>Report</button>
+                  )}
+                  </div>
                 </div>
               </article>
             );
@@ -244,6 +259,8 @@ export default function CommentsSheet({
   );
   return fixed ? <div style={{ position: 'fixed', inset: 0, zIndex: 400 }}>{sheet}</div> : sheet;
 }
+
+const miniBtn: React.CSSProperties = { marginTop: 4, height: 28, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3 };
 
 function PromptChip({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (

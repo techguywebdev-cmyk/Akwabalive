@@ -69,5 +69,13 @@ export function useMomentComments(momentId: string | undefined) {
     });
   }
 
-  return { comments, loading, send };
+  async function remove(id: string) {
+    setComments((prev) => prev.filter((c) => c.id !== id));
+    await supabase.from('moment_comments').delete().eq('id', id);
+  }
+  async function report(id: string) {
+    await supabase.from('comment_reports').insert({ kind: 'moment', comment_id: id });
+  }
+
+  return { comments, loading, send, remove, report };
 }
