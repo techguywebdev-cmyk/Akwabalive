@@ -309,7 +309,11 @@ const MomentSlide = forwardRef<SlideHandle, {
               <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text3 }}>Not rated yet</span>
             </Link>
           )}
-          {clip.channel_name && (
+          {clip.posted_by ? (
+            <Link href={clip.channel_url ?? '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 12, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3, verticalAlign: 'middle' }}>
+              <BadgeCheck size={13} color={T.mint} />From the organiser{clip.channel_name ? ` · ${clip.channel_name}` : ''}
+            </Link>
+          ) : clip.channel_name && (
             <a href={isX ? clip.source_url ?? '#' : clip.channel_url ?? `https://www.youtube.com/watch?v=${clip.youtube_id}`} target="_blank" rel="noopener noreferrer"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 12, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3, verticalAlign: 'middle' }}>
               {clip.official ? <BadgeCheck size={13} color={T.mint} /> : null}{clip.official ? clip.channel_name : `via ${clip.channel_name}`}{isX ? ' on X' : ''}
