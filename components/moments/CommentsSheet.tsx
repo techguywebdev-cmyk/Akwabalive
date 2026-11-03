@@ -23,6 +23,13 @@ interface Props {
   canGift: boolean;
   /** "r, g, b" — the video's colour, so the sheet carries the same glow as the slide */
   tint?: string;
+  /** Used on event pages: quick prompts instead of the video ones, a "Going" badge, its own empty state */
+  prompts?: string[];
+  goingLabel?: string;
+  emptyHint?: string;
+  /** Render inside a fixed layer (event pages) instead of over a slide */
+  fixed?: boolean;
+  heading?: string;
   onClose: () => void;
   onSend: (text: string) => void;
   onSeek: (seconds: number) => void;
@@ -76,7 +83,7 @@ function Avatar({ url, name, size = 34 }: { url?: string | null; name: string; s
 
 export default function CommentsSheet({
   moment, comments, user, profile, currentSeconds, goingIds, nextLabel, canGift, tint = '34, 96, 66',
-  onClose, onSend, onSeek, onGift,
+  onClose, onSend, onSeek, onGift, prompts, goingLabel, emptyHint, fixed, heading = 'Comments',
 }: Props) {
   const [order, setOrder] = useState<'top' | 'new'>('top');
   const [draft, setDraft] = useState('');
@@ -106,7 +113,8 @@ export default function CommentsSheet({
   const year = moment.year ? String(moment.year) : null;
   const me = profile?.full_name || profile?.username || 'You';
 
-  return (
+  // Not a nested component: that would remount the input on every keystroke
+  const sheet = (
     <>
       <button type="button" aria-label="Close comments" onClick={onClose} style={{
         position: 'absolute', inset: 0, zIndex: 40, border: 'none', cursor: 'pointer',
@@ -128,7 +136,7 @@ export default function CommentsSheet({
         <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px 0 20px' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>
-              Comments <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>{comments.length || ''}</span>
+              {heading} <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>{comments.length || ''}</span>
             </h2>
             <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {moment.event_name}{year ? ` · ${year}` : ''}
@@ -160,7 +168,7 @@ export default function CommentsSheet({
                 <MessageSquareText size={24} />
               </span>
               <p style={{ margin: '14px 0 0', fontFamily: FONT.display, fontSize: 17, fontWeight: 700, color: T.white }}>No comments yet</p>
-              <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>Were you there? Start the conversation.</p>
+              <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>{emptyHint ?? 'Were you there? Start the conversation.'}</p>
             </div>
           )}
           {list.map((c) => {
@@ -175,8 +183,8 @@ export default function CommentsSheet({
                     {c.profiles?.username
                       ? <Link href={`/u/${c.profiles.username}`} style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 700, color: T.white, textDecoration: 'none' }}>{name}</Link>
                       : <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 700, color: T.white }}>{name}</span>}
-                    {going && nextLabel && (
-                      <span style={{ padding: '2px 7px', borderRadius: 999, background: 'rgba(123,227,168,0.14)', color: T.mintText, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700 }}>Going {nextLabel}</span>
+                    {going && (goingLabel || nextLabel) && (
+                      <span style={{ padding: '2px 7px', borderRadius: 999, background: 'rgba(123,227,168,0.14)', color: T.mintText, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700 }}>{goingLabel ?? `Going ${nextLabel}`}</span>
                     )}
                     <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>{timeAgo(c.created_at)}</span>
                   </div>
@@ -201,9 +209,13 @@ export default function CommentsSheet({
           {user ? (
             <>
               <div className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 10 }}>
-                <PromptChip onClick={() => prompt(`▸ ${formatTime(currentSeconds)} `, true)}><Play size={11} fill="currentColor" /> {formatTime(currentSeconds)}</PromptChip>
-                {nextLabel && <PromptChip onClick={() => prompt(`Who’s going in ${nextLabel}? `)}>Who’s going in {nextLabel}?</PromptChip>}
-                <PromptChip onClick={() => prompt('Best moment: ')}>Best moment</PromptChip>
+                {prompts ? prompts.map((p) => <PromptChip key={p} onClick={() => prompt(`${p} `)}>{p}</PromptChip>) : (
+                  <>
+                    <PromptChip onClick={() => prompt(`▸ ${formatTime(currentSeconds)} `, true)}><Play size={11} fill="currentColor" /> {formatTime(currentSeconds)}</PromptChip>
+                    {nextLabel && <PromptChip onClick={() => prompt(`Who’s going in ${nextLabel}? `)}>Who’s going in {nextLabel}?</PromptChip>}
+                    <PromptChip onClick={() => prompt('Best moment: ')}>Best moment</PromptChip>
+                  </>
+                )}
               </div>
               <form onSubmit={submit} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Avatar url={profile?.avatar_url} name={me} size={36} />
@@ -230,6 +242,7 @@ export default function CommentsSheet({
       </section>
     </>
   );
+  return fixed ? <div style={{ position: 'fixed', inset: 0, zIndex: 400 }}>{sheet}</div> : sheet;
 }
 
 function PromptChip({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
