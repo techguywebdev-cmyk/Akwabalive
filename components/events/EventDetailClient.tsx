@@ -217,7 +217,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   };
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
+    <div style={{ position: 'relative', minHeight: '100vh', paddingBottom: 40 }}>
       {/* The page washed in the flyer's colour, settling into near-black further down */}
       <span aria-hidden style={{
         position: 'absolute', left: 0, right: 0, top: 0, height: 2200, pointerEvents: 'none', transition: 'background 900ms ease',
@@ -463,14 +463,16 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
               <Link href="/events?view=list" style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.mintText, textDecoration: 'none' }}>See all</Link>
             </div>
             <div className="no-scrollbar" style={{ display: 'flex', gap: 14, overflowX: 'auto', marginRight: -20, paddingRight: 20 }}>
-              {related.slice(0, 6).map((ev) => (
+              {related.slice(0, 8).map((ev) => (
                 <Link key={ev.slug} href={`/events/${ev.slug}`} style={{ flex: '0 0 150px', display: 'flex', flexDirection: 'column', gap: 10, textDecoration: 'none', color: T.white }}>
                   <span style={{ width: 150, height: 188, borderRadius: 16, overflow: 'hidden', background: 'rgba(255,255,255,0.05)' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ev.image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <img src={hiRes(ev.image, 400) ?? ev.image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                   </span>
                   <span style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{ev.title}</span>
-                  <span style={{ marginTop: -6, fontFamily: FONT.sans, fontSize: 12.5, color: T.text2 }}>{ev.priceUnknown ? 'See prices' : ev.price === 0 ? 'Free' : `GH₵ ${ev.price.toLocaleString()}`}</span>
+                  <span style={{ marginTop: -6, fontFamily: FONT.sans, fontSize: 12.5, color: T.text2 }}>
+                    {[(() => { const d = parseDay(ev.date); return d ? shortDay(d) : null; })(), ev.priceUnknown ? null : ev.price === 0 ? 'Free' : `GH₵ ${ev.price.toLocaleString()}`].filter(Boolean).join(' · ')}
+                  </span>
                 </Link>
               ))}
             </div>

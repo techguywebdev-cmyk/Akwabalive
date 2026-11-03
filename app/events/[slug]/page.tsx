@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import Footer from '@/components/layout/Footer';
 import EventDetailClient from '@/components/events/EventDetailClient';
 import { events as staticEvents } from '@/lib/data/events';
-import { fetchEventBySlug, supabaseToGhanaEvent } from '@/lib/supabase/events';
+import { fetchEventBySlug, fetchPublishedEvents, supabaseToGhanaEvent } from '@/lib/supabase/events';
+import type { GhanaEvent } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -59,17 +60,29 @@ async function findSeriesMoment(title: string): Promise<string | null> {
   }
 }
 
+/** Real upcoming events like this one: same kind of event first, then same city, soonest first */
+async function relatedEvents(current: { slug: string; city: string; category: string }): Promise<GhanaEvent[]> {
+  const today = new Date().toISOString().slice(0, 10);
+  const all = (await fetchPublishedEvents()).map((e) => supabaseToGhanaEvent(e));
+  return all
+    .filter((e) => e.slug !== current.slug && e.date >= today && e.image)
+    .map((e) => ({ e, score: (e.category === current.category ? 2 : 0) + (e.city === current.city ? 1 : 0) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || a.e.date.localeCompare(b.e.date))
+    .slice(0, 8)
+    .map((x) => x.e);
+}
+
 export default async function EventPage({ params }: { params: { slug: string } }) {
   const staticEvent = staticEvents.find(e => e.slug === params.slug);
   if (staticEvent) {
-    const related = staticEvents
-      .filter(e => e.id !== staticEvent.id && (e.city === staticEvent.city || e.category === staticEvent.category))
-      .slice(0, 4);
+    const related = await relatedEvents(staticEvent);
     const seriesMomentId = await findSeriesMoment(staticEvent.title);
     return (
       <div style={{ background: 'transparent', minHeight: '100vh' }}>
         <EventDetailClient event={staticEvent} related={related} seriesMomentId={seriesMomentId} />
         <Footer />
+        <div aria-hidden style={{ height: 'calc(96px + env(safe-area-inset-bottom, 0px))' }} />
       </div>
     );
   }
@@ -81,7 +94,7 @@ export default async function EventPage({ params }: { params: { slug: string } }
   let event = supabaseToGhanaEvent(dbEvent);
 
   // Attach organizer public profile when available
-  if (dbEvent.organizer_id) {
+  if (dbEvent.organizer_id && dbEvent.organizer_id !== process.env.INGEST_ORGANIZER_ID) {
     try {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -107,15 +120,14 @@ export default async function EventPage({ params }: { params: { slug: string } }
     }
   }
 
-  const related = staticEvents
-    .filter(e => e.city === event.city || e.category === event.category)
-    .slice(0, 4);
+  const related = await relatedEvents(event);
   const seriesMomentId = await findSeriesMoment(event.title);
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
       <EventDetailClient event={event} related={related} seriesMomentId={seriesMomentId} />
       <Footer />
+      <div aria-hidden style={{ height: 'calc(96px + env(safe-area-inset-bottom, 0px))' }} />
     </div>
   );
 }
