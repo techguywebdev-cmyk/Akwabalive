@@ -33,6 +33,7 @@ export interface SupabaseEvent {
   is_featured?: boolean;
   featured_order?: number;
   is_hot?: boolean;
+  highlight?: string | null;
   promo_video_url?: string | null;
   lat?: number | null;
   lng?: number | null;
@@ -120,6 +121,7 @@ export function supabaseToGhanaEvent(raw: SupabaseEvent): GhanaEvent {
     artistSlugs: Array.isArray(ev.artist_slugs) ? ev.artist_slugs : undefined,
     lineup: Array.isArray(ev.lineup) ? ev.lineup : undefined,
     description: ev.description ?? null,
+    highlight: ev.highlight ?? null,
     organizerId: ev.organizer_id ?? null,
     tiers: (ev.ticket_tiers ?? [])
       .map((t) => ({

@@ -12,6 +12,7 @@ import RatingSection from '@/components/ratings/RatingSection';
 import { getTiers } from '@/lib/events/tiers';
 import { hiRes } from '@/lib/events/image';
 import { EventTags } from '@/components/events/CardParts';
+import { hypeTags } from '@/lib/events/hype';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments, MomentsViewer } from '@/components/moments/EventMoments';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
@@ -267,7 +268,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       </div>
 
       <main style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '8px auto 0', padding: '0 20px' }}>
-        <EventTags event={event} accent={a} />
+        <EventTags event={event} accent={a} hype={hypeTags(event, { returning: moments.length > 0 })} />
         <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: short.title.length > 22 ? 'clamp(34px, 8vw, 56px)' : 'clamp(40px, 10vw, 68px)', fontWeight: 800, lineHeight: 0.96, letterSpacing: '-0.035em', color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
           {short.title}
         </h1>

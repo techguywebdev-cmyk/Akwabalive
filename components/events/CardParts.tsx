@@ -5,6 +5,8 @@ import type { GhanaEvent } from '@/lib/types';
 import { Icon, CATEGORY_ICONS } from '@/components/ui/Icon';
 import { T, FONT, alpha } from '@/lib/thiscene';
 import { parseDay } from '@/lib/dates';
+import type { Hype, HypeKind } from '@/lib/events/hype';
+import { Flame, Sparkles, Star, RotateCcw, Zap, PartyPopper, Mic2 } from 'lucide-react';
 
 /** Shared pieces for event cards (feed, home hero) so they stay identical. */
 
@@ -35,17 +37,38 @@ const chip: CSSProperties = {
  * Tags as small frosted chips: the category with its icon in the event's colour,
  * then how soon it is, then Free when it's free. Optional brand chip in front.
  */
-export function EventTags({ event, accent, lead }: { event: GhanaEvent; accent: string; lead?: string }) {
+const WARM_BG = 'linear-gradient(100deg, #FF6A3D 0%, #FFA53D 100%)';
+const HYPE_STYLE: Record<HypeKind, { style: CSSProperties; icon: React.ReactNode }> = {
+  fast: { style: { background: WARM_BG, color: '#1C0B03', boxShadow: '0 0 18px rgba(255,120,60,0.35)' }, icon: <Flame size={14} strokeWidth={2.4} fill="currentColor" /> },
+  hot: { style: { background: WARM_BG, color: '#1C0B03', boxShadow: '0 0 18px rgba(255,120,60,0.35)' }, icon: <Flame size={14} strokeWidth={2.4} fill="currentColor" /> },
+  last: { style: { background: WARM_BG, color: '#1C0B03', boxShadow: '0 0 18px rgba(255,120,60,0.35)' }, icon: <Zap size={14} strokeWidth={2.4} fill="currentColor" /> },
+  soldout: { style: { background: 'rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.85)' }, icon: null },
+  pick: { style: { background: T.mint, color: '#06140C' }, icon: <Sparkles size={14} strokeWidth={2.4} /> },
+  special: { style: { background: 'rgba(255,255,255,0.94)', color: '#0B0F0D' }, icon: <Star size={13} strokeWidth={2.4} fill="currentColor" /> },
+  stars: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <Mic2 size={14} strokeWidth={2.2} /> },
+  returning: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <RotateCcw size={13} strokeWidth={2.4} /> },
+  new: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <Zap size={13} strokeWidth={2.4} /> },
+  detty: { style: { background: 'rgba(255,209,102,0.16)', color: '#FFD98A' }, icon: <PartyPopper size={14} strokeWidth={2.2} /> },
+};
+
+/** A special tag: selling fast, the organiser's own line, an Akwaaba pick… */
+export function HypeChip({ hype }: { hype: Hype }) {
+  const h = HYPE_STYLE[hype.kind];
+  return <span style={{ ...chip, fontWeight: 700, ...h.style }}>{h.icon}{hype.text}</span>;
+}
+
+export function EventTags({ event, accent, lead, hype = [] }: { event: GhanaEvent; accent: string; lead?: string; hype?: Hype[] }) {
   const when = whenTag(event);
   return (
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
       {lead && (
         <span style={{ ...chip, background: 'rgba(123,227,168,0.16)', color: T.mintText }}>{lead}</span>
       )}
-      <span style={{ ...chip, background: alpha(accent, 0.18), color: T.white }}>
+      {hype.map((h) => <HypeChip key={h.kind} hype={h} />)}
+      {hype.length < 2 && <span style={{ ...chip, background: alpha(accent, 0.18), color: T.white }}>
         <Icon name={CATEGORY_ICONS[event.category] ?? 'sparkle'} size={14} color={accent} strokeWidth={2} />
         {CATEGORY_LABEL[event.category] ?? event.category}
-      </span>
+      </span>}
       {when && (
         <span style={{ ...chip, background: 'rgba(255,255,255,0.09)', color: when.past ? 'rgba(255,255,255,0.6)' : T.white }}>
           {when.soon && <span aria-hidden style={{ width: 6, height: 6, borderRadius: 3, background: T.mint, boxShadow: `0 0 8px ${T.mint}` }} />}
