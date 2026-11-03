@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { artists, detectArtistsFromText, getArtistBySlug } from '@/lib/data/artists';
 import { SERIES, momentInSeries } from '@/lib/data/series';
 import { categorize } from '@/lib/moments/categorize';
+import { cleanExcerpt } from '@/lib/moments/excerpt';
 
 /**
  * Confirms who performed in each moment, so "On stage" only lists people who were really there.
@@ -102,6 +103,11 @@ export async function confirmPerformers(limit = 40): Promise<{ checked: number; 
       performer_evidence: Object.fromEntries(Array.from(ev.entries()).map(([s, how]) => [s, Array.from(how)])),
       performers_checked_at: new Date().toISOString(),
       ...(m.category ? {} : { category: categorize(m) }),
+      // A fuller excerpt from the uploader's description, when what we have is short or missing
+      ...(() => {
+        const ex = cleanExcerpt(d?.description);
+        return ex && ex.length > (m.description?.length ?? 0) + 20 && (m.description?.length ?? 0) < 140 ? { description: ex } : {};
+      })(),
     }).eq('id', m.id);
   }
   return { checked: rows.length, withPerformers };
