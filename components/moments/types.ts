@@ -16,6 +16,9 @@ export interface Moment {
   source?: string | null;
   /** The original post (for X moments) */
   source_url?: string | null;
+  /** How the night went, written from news coverage */
+  recap?: string | null;
+  recap_sources?: { title: string; url: string }[] | null;
   /** When the video went up on YouTube */
   published_at?: string | null;
   /** All clips from the same night (this one first); set by the feed */
