@@ -89,7 +89,8 @@ export default function FlyerCanvas({
       {/* Backdrop: the flyer itself, blurred, so any spare room takes its colours */}
       <div aria-hidden style={{ ...fill, overflow: 'hidden' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt="" style={{ position: 'absolute', inset: '-8%', width: '116%', height: '116%', objectFit: 'cover', filter: 'blur(38px) saturate(1.25) brightness(0.5)' }} />
+        {/* Blur once and keep it on its own layer, so scrolling only moves it (no re-blurring every frame) */}
+        <img src={url} alt="" decoding="async" style={{ position: 'absolute', inset: '-8%', width: '116%', height: '116%', objectFit: 'cover', filter: 'blur(30px) saturate(1.25) brightness(0.5)', transform: 'translateZ(0)', willChange: 'transform' }} />
       </div>
 
       {bleed ? (

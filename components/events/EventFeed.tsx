@@ -57,15 +57,15 @@ function shorten(t: string, max = 46) {
 
 const roundBtn: React.CSSProperties = {
   width: 50, height: 50, flexShrink: 0, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-  background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.14)', color: T.white,
-  backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', transition: 'background 200ms ease, color 200ms ease, border-color 200ms ease',
+  background: 'rgba(20,24,22,0.62)', border: '1px solid rgba(255,255,255,0.14)', color: T.white,
+  transition: 'background 200ms ease, color 200ms ease, border-color 200ms ease',
 };
 
 /* ── Details: when, where, tickets ─────────────────────────────────── */
 function DetailRow({ icon, accent, main, sub, action }: { icon: React.ReactNode; accent: string; main: string; sub?: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-      <span aria-hidden style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: alpha(accent, 0.18), border: `1px solid ${alpha(accent, 0.28)}`, color: accent, backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+      <span aria-hidden style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: alpha(accent, 0.18), border: `1px solid ${alpha(accent, 0.28)}`, color: accent, }}>
         {icon}
       </span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -80,8 +80,7 @@ function DetailRow({ icon, accent, main, sub, action }: { icon: React.ReactNode;
 /** Small round icon button at the end of a detail row (Add to calendar, Directions) */
 const rowAction: React.CSSProperties = {
   pointerEvents: 'auto', flexShrink: 0, width: 40, height: 40, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: T.white, textDecoration: 'none',
-  backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+  background: 'rgba(20,24,22,0.55)', border: '1px solid rgba(255,255,255,0.14)', color: T.white, textDecoration: 'none',
 };
 
 /* ── Ticket packages, right on the card ───────────────────────────── */
@@ -103,7 +102,7 @@ function TierChips({ event, accent, onOpen }: { event: GhanaEvent; accent: strin
             role="listitem"
             onClick={onOpen}
             aria-label={`${t.name}, ${t.price === 0 ? 'free' : `GH₵ ${t.price}`}${!t.available ? ', sold out' : low ? `, only ${t.spots} left` : ''}`}
-            style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, padding: '8px 14px', borderRadius: 16, cursor: 'pointer', textAlign: 'left', background: 'rgba(3,10,6,0.45)', border: `1px solid ${low ? alpha(accent, 0.55) : 'rgba(255,255,255,0.12)'}`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: t.available ? T.white : 'rgba(255,255,255,0.4)' }}
+            style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, padding: '8px 14px', borderRadius: 16, cursor: 'pointer', textAlign: 'left', background: 'rgba(3,10,6,0.45)', border: `1px solid ${low ? alpha(accent, 0.55) : 'rgba(255,255,255,0.12)'}`, color: t.available ? T.white : 'rgba(255,255,255,0.4)' }}
           >
             <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 500, color: t.available ? 'rgba(255,255,255,0.7)' : undefined, whiteSpace: 'nowrap' }}>{t.name}</span>
             <span style={{ fontFamily: FONT.display, fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', textDecoration: t.available ? 'none' : 'line-through' }}>
@@ -205,7 +204,7 @@ function EventCard({
           position: 'absolute', zIndex: 3, pointerEvents: 'none', left: wide ? 48 : 20, right: wide ? undefined : 20, width: wide ? 'min(44%, 600px)' : undefined,
           bottom: `calc(${bottom}px + env(safe-area-inset-bottom, 0px))`,
           display: 'flex', flexDirection: 'column', gap: 12,
-          opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'all 0.5s ease',
+          opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'opacity 0.45s ease, transform 0.45s ease',
         }}
       >
         <span style={{ display: 'flex', pointerEvents: 'auto' }}><MomentsPill list={moments} slug={event.slug} onOpen={() => setWatching(true)} /></span>
@@ -329,10 +328,16 @@ export default function EventFeed({
   useEffect(() => {
     const el = scroller.current;
     if (!el) return;
-    const onScroll = () => setActive(Math.round(el.scrollTop / Math.max(1, el.clientHeight)));
-    onScroll();
+    // Work out the card on screen only once a swipe settles: updating mid-swipe re-rendered every card
+    // and loaded flyers while the finger was still moving, which made scrolling stutter
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const commit = () => setActive(Math.round(el.scrollTop / Math.max(1, el.clientHeight)));
+    const onScroll = () => { if (t) clearTimeout(t); t = setTimeout(commit, 110); };
+    const onEnd = () => { if (t) clearTimeout(t); commit(); };
+    commit();
     el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
+    el.addEventListener('scrollend', onEnd);
+    return () => { if (t) clearTimeout(t); el.removeEventListener('scroll', onScroll); el.removeEventListener('scrollend', onEnd); };
   }, [hasItems]);
 
   const listKey = items.map((i) => i.event.slug).join('|');
@@ -398,7 +403,7 @@ export default function EventFeed({
             key={item.event.slug}
             item={item}
             active={i === active}
-            near={Math.abs(i - active) <= 2}
+            near={Math.abs(i - active) <= 1}
             wide={wide}
             saved={saved.has(item.event.slug)}
             going={going.has(item.event.slug)}
