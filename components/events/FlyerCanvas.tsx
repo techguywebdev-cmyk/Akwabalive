@@ -86,12 +86,8 @@ export default function FlyerCanvas({
 
   return (
     <div ref={box} style={{ ...fill, overflow: 'hidden' }}>
-      {/* Backdrop: the flyer itself, blurred, so any spare room takes its colours */}
-      <div aria-hidden style={{ ...fill, overflow: 'hidden' }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {/* Blur once and keep it on its own layer, so scrolling only moves it (no re-blurring every frame) */}
-        <img src={url} alt="" decoding="async" style={{ position: 'absolute', inset: '-8%', width: '116%', height: '116%', objectFit: 'cover', filter: 'blur(30px) saturate(1.25) brightness(0.5)', transform: 'translateZ(0)', willChange: 'transform' }} />
-      </div>
+      {/* Backdrop: the flyer's colours as a soft glow */}
+      <Glow src={url} />
 
       {bleed ? (
         <>
@@ -122,5 +118,39 @@ export default function FlyerCanvas({
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * The flyer shrunk to a few pixels on a canvas and stretched to fill: the browser's smoothing turns it into a soft
+ * colour glow. Unlike a CSS blur, there's nothing to redraw while scrolling, so changing direction never stutters.
+ */
+function Glow({ src }: { src: string }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let live = true;
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = () => {
+      const c = ref.current;
+      const ctx = c?.getContext('2d');
+      if (!live || !c || !ctx) return;
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, c.width, c.height);
+      setReady(true);
+    };
+    img.src = src;
+    return () => { live = false; };
+  }, [src]);
+  return (
+    <canvas
+      ref={ref}
+      width={12}
+      height={20}
+      aria-hidden
+      style={{ position: 'absolute', inset: '-10%', width: '120%', height: '120%', opacity: ready ? 1 : 0, transition: 'opacity 0.4s ease' }}
+    />
   );
 }
