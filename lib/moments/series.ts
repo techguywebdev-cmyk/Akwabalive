@@ -18,6 +18,19 @@ export function seriesKey(name: string | null | undefined): string | null {
   return words[0] ?? null;
 }
 
+/** Every meaningful word of an event's name ("Ghana Music Awards 2026" → ghana, music, awards) */
+export function seriesWords(name: string | null | undefined): string[] {
+  if (!name) return [];
+  return name
+    .toLowerCase()
+    .replace(/\b(19|20)\d{2}\b/g, '')
+    .replace(NOISE, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 3);
+}
+
 export function daysUntil(isoDate: string | null | undefined): number | null {
   if (!isoDate) return null;
   const target = new Date(`${isoDate.slice(0, 10)}T00:00:00`);

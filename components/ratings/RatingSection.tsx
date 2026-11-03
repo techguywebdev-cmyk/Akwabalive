@@ -88,7 +88,7 @@ export function RateSheet({ slug, title, status, onClose, onSaved }: { slug: str
         <textarea value={review} onChange={(e) => setReview(e.target.value)} maxLength={600} rows={3} placeholder="Tell people what it was like (optional)"
           style={{ width: '100%', boxSizing: 'border-box', marginTop: 16, padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.45, outline: 'none', resize: 'none' }} />
         <p style={{ margin: '6px 0 0', display: 'flex', justifyContent: 'space-between', fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>
-          <span>{status.verified ? 'Shown as a verified attendee' : 'Shown as a ticket holder'}</span><span>{review.length}/600</span>
+          <span>{status.verified ? 'Shown with a Verified ticket badge' : 'Shown with your name'}</span><span>{review.length}/600</span>
         </p>
 
         {err && <p role="alert" style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.danger }}>{err}</p>}
@@ -196,7 +196,7 @@ export default function RatingSection({ slug, title, past }: { slug: string; tit
       {thanks && <p style={{ margin: '10px 0 0', textAlign: 'center', fontFamily: FONT.sans, fontSize: 14, color: T.mintText }}>Thanks — your rating is live.</p>}
       {past && status?.reason === 'signed_out' && (
         <p style={{ margin: '14px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>
-          Went with an Akwaaba ticket? <Link href={`/auth?next=${encodeURIComponent(`/events/${slug}?rate=1`)}`} style={{ color: T.mintText, fontWeight: 600, textDecoration: 'none' }}>Sign in to rate it</Link>
+          Were you there? <Link href={`/auth?next=${encodeURIComponent(`/events/${slug}?rate=1`)}`} style={{ color: T.mintText, fontWeight: 600, textDecoration: 'none' }}>Sign in to rate it</Link>
         </p>
       )}
 
@@ -212,7 +212,7 @@ export default function RatingSection({ slug, title, past }: { slug: string; tit
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.white }}>
                     {r.username ? <Link href={`/u/${r.username}`} style={{ color: 'inherit', textDecoration: 'none' }}>{r.name}</Link> : r.name}
-                    {r.verified && <BadgeCheck size={15} color={T.mint} aria-label="Verified attendee" />}
+                    {r.verified && <BadgeCheck size={15} color={T.mint} aria-label="Verified: had an Akwaaba ticket" />}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
                     <Stars value={r.overall} size={12} />

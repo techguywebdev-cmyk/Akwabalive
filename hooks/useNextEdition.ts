@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { supabaseToGhanaEvent, type SupabaseEvent } from '@/lib/supabase/events';
 import { events as staticEvents } from '@/lib/data/events';
-import { seriesKey } from '@/lib/moments/series';
+import { seriesKey, seriesWords } from '@/lib/moments/series';
 import type { GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
 
@@ -18,15 +18,20 @@ export function useNextEdition(moment: Moment | null) {
   const [next, setNext] = useState<GhanaEvent | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const key = seriesKey(moment?.event_name || moment?.title);
+  // Only the event's own name decides (not the clip title), and every word of it must match:
+  // "Africa" alone used to pull in any event with "Africa" in its title
+  const name = moment?.event_name || null;
+  const words = seriesWords(name);
+  const key = words.length && !/ live$/i.test(name ?? '') ? seriesKey(name) : null;
+  const allWords = (title: string) => { const t = title.toLowerCase(); return words.every((w) => t.includes(w)); };
 
   useEffect(() => {
     if (!key) {
       setNext(null);
       return;
     }
-    if (cache.has(key)) {
-      setNext(cache.get(key) ?? null);
+    if (cache.has(words.join(' '))) {
+      setNext(cache.get(words.join(' ')) ?? null);
       return;
     }
 
@@ -45,18 +50,19 @@ export function useNextEdition(moment: Moment | null) {
           .gte('date', today)
           .ilike('title', `%${key}%`)
           .order('date', { ascending: true })
-          .limit(1);
-        if (data && data.length) found = supabaseToGhanaEvent(data[0] as SupabaseEvent);
+          .limit(10);
+        const hit = (data ?? []).find((e: { title: string }) => allWords(e.title));
+        if (hit) found = supabaseToGhanaEvent(hit as SupabaseEvent);
       } catch {
         /* fall through to static */
       }
       if (!found) {
         found =
           staticEvents
-            .filter((e) => e.date >= today && e.title.toLowerCase().includes(key))
+            .filter((e) => e.date >= today && allWords(e.title))
             .sort((a, b) => a.date.localeCompare(b.date))[0] ?? null;
       }
-      cache.set(key, found);
+      cache.set(words.join(' '), found);
       if (!cancelled) {
         setNext(found);
         setLoading(false);
@@ -66,7 +72,7 @@ export function useNextEdition(moment: Moment | null) {
     return () => {
       cancelled = true;
     };
-  }, [key]);
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { next, loading };
 }

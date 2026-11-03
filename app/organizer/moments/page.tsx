@@ -29,6 +29,8 @@ export default function MomentsReviewPage() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
   const [tab, setTab] = useState<'pending' | 'reposts'>('pending');
+  const [add, setAdd] = useState({ url: '', event_name: '', year: '', title: '' });
+  const [addNote, setAddNote] = useState('');
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('moments')
@@ -62,6 +64,16 @@ export default function MomentsReviewPage() {
     load();
   }
 
+  async function addVideo() {
+    setAddNote('');
+    const token = (await supabase.auth.getSession()).data.session?.access_token;
+    const res = await fetch('/api/moments/add', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(add) });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) { setAddNote(j.error ?? 'Could not add it.'); return; }
+    setAddNote('Added — it’s live in Moments.');
+    setAdd({ url: '', event_name: '', year: '', title: '' });
+  }
+
   const pending = rows.filter((r) => r.status === 'pending');
   const reposts = rows.filter((r) => r.status === 'live' && !r.official);
   const shown = tab === 'pending' ? pending : reposts;
@@ -87,6 +99,21 @@ export default function MomentsReviewPage() {
           <Search size={17} /> {busy ? 'Looking…' : 'Find official videos now'}
         </button>
         {note && <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.mintText }}>{note}</p>}
+
+
+        {/* Add a video the finder can't reach (posts on X, or any YouTube link) */}
+        <section style={{ marginTop: 26, padding: 16, borderRadius: 20, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: T.white }}>Add a video</h2>
+          <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Paste a YouTube or X link — it goes straight into Moments.</p>
+          <input placeholder="https://x.com/... or https://youtube.com/..." value={add.url} onChange={(e) => setAdd((a) => ({ ...a, url: e.target.value }))} style={{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }} />
+          <input placeholder="Show or event (e.g. Rapperholic)" value={add.event_name} onChange={(e) => setAdd((a) => ({ ...a, event_name: e.target.value }))} style={{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }} />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input placeholder="Title (optional)" value={add.title} onChange={(e) => setAdd((a) => ({ ...a, title: e.target.value }))} style={{ ...{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }, flex: 1 }} />
+            <input placeholder="Year" inputMode="numeric" value={add.year} onChange={(e) => setAdd((a) => ({ ...a, year: e.target.value }))} style={{ ...{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }, width: 90 }} />
+          </div>
+          <button type="button" onClick={addVideo} disabled={!add.url || !add.event_name} style={{ ...BTN.primary, marginTop: 12, height: 44, width: '100%' }}>Add to Moments</button>
+          {addNote && <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.mintText }}>{addNote}</p>}
+        </section>
 
         <div role="tablist" style={{ display: 'inline-flex', marginTop: 24, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
           {([['pending', `To review · ${pending.length}`], ['reposts', `Reposts live · ${reposts.length}`]] as const).map(([k, label]) => (
