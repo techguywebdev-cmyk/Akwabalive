@@ -28,7 +28,7 @@ export default async function EventsPage() {
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
-      <EventsClient events={allEvents} />
+      <EventsClient events={allEvents} seed={Math.floor(Math.random() * 2 ** 31)} />
       <Footer />
     </div>
   );

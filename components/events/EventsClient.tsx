@@ -87,7 +87,29 @@ function Row({ event, last }: { event: GhanaEvent; last: boolean }) {
   );
 }
 
-export default function EventsClient({ events }: { events: GhanaEvent[] }) {
+/* ── Feed mix ─────────────────────────────────────────────────────── */
+// Each page load brings a new seed from the server (so server and browser agree); the first one sticks for the whole
+// visit, so going back to the feed shows the same order, and a reload starts a new mix
+let seed: number | null = null;
+function feedSeed(fresh: number) {
+  if (typeof window === 'undefined') return fresh; // the server renders each request with its own seed
+  if (seed === null) seed = fresh;
+  return seed;
+}
+function rng(n: number) { return () => { n = (n + 0x6d2b79f5) | 0; let t = Math.imul(n ^ (n >>> 15), 1 | n); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+/** Weighted shuffle: hot, featured and this-fortnight events are more likely near the top */
+function mix(list: GhanaEvent[], s: number): GhanaEvent[] {
+  const r = rng(s);
+  const now = Date.now();
+  return list.map((e) => {
+    const d = parseDay(e.date)?.getTime() ?? now;
+    const days = (d - now) / 86400000;
+    const w = (e.isFeatured ? 3 : 1) * (e.hot ? 2.5 : 1) * (e.highlight ? 1.3 : 1) * (days < 0 ? 0.3 : days <= 14 ? 1.8 : days <= 45 ? 1.2 : 1);
+    return { e, k: Math.pow(r(), 1 / w) };
+  }).sort((a, b) => b.k - a.k).map((x) => x.e);
+}
+
+export default function EventsClient({ events, seed: seedProp = 1 }: { events: GhanaEvent[]; seed?: number }) {
   const { user } = useAuth();
   const supabase = createClient();
 
@@ -239,9 +261,13 @@ export default function EventsClient({ events }: { events: GhanaEvent[] }) {
     [events, filters, userLoc, radius],
   );
 
+  // With nothing filtered, the feed is a fresh mix on every visit (hot and soon events lean to the top).
+  // The mix holds while browsing in and back out, and changes on reload.
+  const untouched = JSON.stringify(filters) === JSON.stringify(base);
+  const ordered = useMemo(() => (untouched ? mix(filtered, feedSeed(seedProp)) : filtered), [filtered, untouched]);
   const items = useMemo(
-    () => filtered.map((e) => ({ event: e, dist: userLoc ? haversine(userLoc.lat, userLoc.lng, e.lat, e.lng) : null })),
-    [filtered, userLoc],
+    () => ordered.map((e) => ({ event: e, dist: userLoc ? haversine(userLoc.lat, userLoc.lng, e.lat, e.lng) : null })),
+    [ordered, userLoc],
   );
 
   // What's switched on, in words — shown under the list title
