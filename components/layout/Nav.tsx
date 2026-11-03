@@ -137,7 +137,7 @@ export default function Nav({
         { label: 'My profile', href: profileHref },
         { label: 'My tickets', href: '/account/tickets' },
         { label: 'Find friends', href: '/people' },
-        { label: 'Dream events', href: '/account/dream-events' },
+        { label: 'Saved events', href: user ? `/u/${profile?.username ?? ''}?tab=saved` : '/auth' },
         { label: 'Organizer dashboard', href: '/organizer/dashboard' },
       ]
     : [];

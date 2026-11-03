@@ -273,6 +273,11 @@ export default function UserProfilePage() {
   const [saved, setSaved] = useState<{ dream: DreamEvent; event?: GhanaEvent }[] | null>(null);
   const [moments, setMoments] = useState<Moment[] | null>(null);
   const [tab, setTab] = useState<Tab>('going');
+  // Deep links like /u/name?tab=saved open on that tab
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab');
+    if (t === 'saved' || t === 'moments' || t === 'going') setTab(t);
+  }, []);
   const [sheet, setSheet] = useState<null | 'edit' | 'followers' | 'following'>(null);
   const [viewer, setViewer] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);

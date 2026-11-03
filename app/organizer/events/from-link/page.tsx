@@ -1,15 +1,16 @@
 'use client';
-import { C, G } from '@/lib/theme';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft, Link2, Loader2, CheckCircle, AlertCircle, ExternalLink,
+  ArrowLeft, Link2, Loader2, AlertCircle, ExternalLink,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
+import { T, FONT, GROUND } from '@/lib/thiscene';
+import { BTN } from '@/components/events/CardParts';
 import LocationFields from '@/components/organizer/LocationFields';
 import LineupPicker, { lineupPayload, emptyLineup, type LineupValue } from '@/components/organizer/LineupPicker';
 import { detectArtistsFromText } from '@/lib/data/artists';
@@ -29,16 +30,16 @@ const REGIONS: Record<string,string> = {
 };
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', ...G.raised, border: `1px solid ${C.bd}`,
-  borderRadius: 8, padding: '12px 14px',
-  fontFamily: 'var(--font-inter), sans-serif', fontSize: 14,
-  color: C.cream, outline: 'none',
+  width: '100%', boxSizing: 'border-box', height: 52, padding: '0 16px', borderRadius: 16,
+  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+  fontFamily: FONT.sans, fontSize: 16, color: T.white, outline: 'none',
 };
+const card: React.CSSProperties = { padding: 18, borderRadius: 22, background: T.surface, border: `1px solid ${T.hairline}` };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: 'block', fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.gold, opacity: 0.75, marginBottom: 8 }}>
+      <label style={{ display: 'block', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text2, margin: '0 0 8px 4px' }}>
         {label}
       </label>
       {children}
@@ -51,7 +52,7 @@ export default function FromLinkPage() {
   const { user } = useAuth();
   const supabase = createClient();
 
-  const [url, setUrl] = useState('https://www.instagram.com/p/DcajY5Ogqu5/');
+  const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -180,26 +181,23 @@ export default function FromLinkPage() {
   }
 
   return (
-    <div style={{ background: 'transparent', minHeight: '100vh' }}>
-      <Nav active="Events" />
-      <div style={{ paddingTop: 62, maxWidth: 680, margin: '0 auto', padding: '80px 20px 80px' }}>
-        <Link href="/organizer/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.c3, textDecoration: 'none', marginBottom: 20 }}>
-          <ArrowLeft size={12} /> Dashboard
+    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
+      <Nav back="/organizer/dashboard" />
+      <main style={{ maxWidth: 640, margin: '0 auto', padding: 'calc(76px + env(safe-area-inset-top, 0px)) 20px 80px' }}>
+        <Link href="/organizer/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 14, color: T.text2, textDecoration: 'none', marginBottom: 14 }}>
+          <ArrowLeft size={15} /> Dashboard
         </Link>
-        <h1 style={{ fontFamily: 'var(--font-display), sans-serif, serif', fontSize: 32, fontWeight: 300, color: C.cream, letterSpacing: '-1px', marginBottom: 8 }}>
-          Add from link
-        </h1>
-        <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 14, fontWeight: 300, color: C.c2, lineHeight: 1.6, marginBottom: 28 }}>
-          Paste an Instagram, X, Eventbrite or ticket URL. We draft the event — you confirm venue and the official buy link. Tickets stay on their site.
+        <h1 style={{ margin: '0 0 8px', fontFamily: FONT.display, fontSize: 32, fontWeight: 800, letterSpacing: '-0.035em', color: T.white }}>Add from a link</h1>
+        <p style={{ margin: '0 0 22px', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>
+          Paste an Instagram, X, Eventbrite or ticket link. We draft the event; you check the venue and the official ticket link. Tickets stay on their site.
         </p>
 
-        <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
-          <Field label="Post or ticket URL">
+        <div style={{ ...card, marginBottom: 18 }}>
+          <Field label="Post or ticket link">
             <div style={{ display: 'flex', gap: 8 }}>
-              <input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://www.instagram.com/p/…" style={{ ...inputStyle, flex: 1 }} />
-              <button onClick={parse} disabled={loading || !url}
-                style={{ background: C.gold, color: C.onAccent, border: 'none', padding: '0 18px', borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-                {loading ? <Loader2 size={14} /> : <Link2 size={14} />}
+              <input value={url} onChange={e => setUrl(e.target.value)} placeholder="https://www.instagram.com/p/…" inputMode="url" style={{ ...inputStyle, flex: 1, minWidth: 0 }} />
+              <button type="button" onClick={parse} disabled={loading || !url} style={{ ...BTN.primary, height: 52, padding: '0 18px', opacity: !url ? 0.5 : 1 }}>
+                {loading ? <Loader2 size={16} /> : <Link2 size={16} />}
                 {loading ? 'Reading…' : 'Read'}
               </button>
             </div>
@@ -207,27 +205,26 @@ export default function FromLinkPage() {
         </div>
 
         {confidence > 0 && (
-          <p style={{ fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', color: confidence > 0.7 ? C.greenL : C.gold, marginBottom: 12 }}>
-            Confidence {Math.round(confidence * 100)}% — review before publishing
+          <p style={{ margin: '0 0 12px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: confidence > 0.7 ? T.mintText : '#FFD98A' }}>
+            {Math.round(confidence * 100)}% sure: check everything before publishing
           </p>
         )}
 
         {notes.length > 0 && (
-          <div style={{ background: C.goldDim, border: `1px solid ${C.goldBd}`, borderRadius: 10, padding: 14, marginBottom: 20 }}>
-            {notes.map(n => (
-              <p key={n} style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 13, color: C.cream, marginBottom: 6 }}>{n}</p>
-            ))}
+          <div style={{ ...card, marginBottom: 18, background: 'rgba(255,209,102,0.08)', borderColor: 'rgba(255,209,102,0.2)' }}>
+            {notes.map(n => <p key={n} style={{ margin: '0 0 6px', fontFamily: FONT.sans, fontSize: 14, color: T.text }}>{n}</p>)}
           </div>
         )}
 
         {title !== '' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {imageUrl && <div style={{ height: 180, borderRadius: 12, backgroundImage: `url(${imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', border: `1px solid ${C.bd}` }} />}
-            <Field label="Title *">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {imageUrl && <img src={imageUrl} alt="" style={{ width: '100%', maxHeight: 360, objectFit: 'cover', borderRadius: 18, display: 'block' }} />}
+            <Field label="Event name *">
               <input value={title} onChange={e => setTitle(e.target.value)} style={inputStyle} />
             </Field>
             <Field label="Description">
-              <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+              <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} style={{ ...inputStyle, height: 'auto', padding: '14px 16px', lineHeight: 1.5, resize: 'vertical' }} />
             </Field>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <Field label="City *">
@@ -237,64 +234,49 @@ export default function FromLinkPage() {
               </Field>
               <Field label="Category">
                 <select value={category} onChange={e => setCategory(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  {['concert','festival','culture','nightlife'].map(c => <option key={c} value={c}>{c}</option>)}
+                  {[['concert', 'Concert'], ['festival', 'Festival'], ['nightlife', 'Nightlife'], ['culture', 'Culture'], ['food', 'Food & drink'], ['fashion', 'Fashion'], ['art', 'Art'], ['sports', 'Sports'], ['tech', 'Tech']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </Field>
             </div>
             <Field label="Venue *">
-              <input value={venue} onChange={e => setVenue(e.target.value)} placeholder="Prince Bandroom, Melbourne" style={inputStyle} />
+              <input value={venue} onChange={e => setVenue(e.target.value)} placeholder="e.g. Kona, Osu" style={inputStyle} />
             </Field>
-            <Field label="Lineup / billed artists">
+            <Field label="Line-up">
               <LineupPicker value={lineupVal} onChange={setLineupVal} />
             </Field>
-            <LocationFields
-              city={city}
-              venue={venue}
-              area={area}
-              lat={lat}
-              lng={lng}
-              onChange={({ area: a, lat: la, lng: ln }) => { setArea(a); setLat(la); setLng(ln); }}
-            />
+            <LocationFields city={city} venue={venue} area={area} lat={lat} lng={lng}
+              onChange={({ area: a, lat: la, lng: ln }) => { setArea(a); setLat(la); setLng(ln); }} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <Field label="Date *">
-                <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle} />
-              </Field>
-              <Field label="Time">
-                <input type="time" value={time} onChange={e => setTime(e.target.value)} style={inputStyle} />
-              </Field>
+              <Field label="Date *"><input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle} /></Field>
+              <Field label="Time"><input type="time" value={time} onChange={e => setTime(e.target.value)} style={inputStyle} /></Field>
             </div>
-            <Field label="Official ticket URL *">
-              <input value={ticketUrl} onChange={e => setTicketUrl(e.target.value)} placeholder="https://… (not the Instagram post if you have the real shop)" style={inputStyle} />
+            <Field label="Official ticket link *">
+              <input value={ticketUrl} onChange={e => setTicketUrl(e.target.value)} placeholder="https://… the real ticket shop, not the post" inputMode="url" style={inputStyle} />
             </Field>
-            <Field label="Ticket source label">
-              <input value={ticketSource} onChange={e => setTicketSource(e.target.value)} placeholder="Eventbrite, O2, Instagram" style={inputStyle} />
+            <Field label="Ticket site name">
+              <input value={ticketSource} onChange={e => setTicketSource(e.target.value)} placeholder="e.g. Egotickets" style={inputStyle} />
             </Field>
 
             {error && (
-              <div style={{ display: 'flex', gap: 8, background: 'rgba(206,17,38,0.1)', border: '1px solid rgba(206,17,38,0.25)', borderRadius: 8, padding: 12 }}>
-                <AlertCircle size={14} style={{ color: C.red }} />
-                <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: '#f87171' }}>{error}</p>
+              <div role="alert" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 14, borderRadius: 16, background: 'rgba(255,138,138,0.1)', border: '1px solid rgba(255,138,138,0.25)' }}>
+                <AlertCircle size={16} style={{ color: T.danger, flexShrink: 0, marginTop: 1 }} />
+                <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.danger }}>{error}</p>
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => publish('draft')} disabled={saving} style={{ flex: 1, background: 'transparent', color: C.c2, border: `1px solid ${C.bd}`, padding: 14, borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer' }}>
-                Save draft
-              </button>
-              <button onClick={() => publish('pending_review')} disabled={saving} style={{ flex: 1, background: C.goldDim, color: C.gold, border: `1px solid ${C.goldBd}`, padding: 14, borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', cursor: 'pointer' }}>
-                Save for review
-              </button>
-              <button onClick={() => publish('published')} disabled={saving} style={{ flex: 2, background: C.gold, color: C.onAccent, border: 'none', padding: 14, borderRadius: 8, fontFamily: 'var(--font-inter), sans-serif, monospace', fontSize: 11, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                {saving ? <Loader2 size={14} /> : <ExternalLink size={14} />}
-                Publish as listed
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button type="button" onClick={() => publish('draft')} disabled={saving} style={{ ...BTN.secondary, flex: 1 }}>Save draft</button>
+              <button type="button" onClick={() => publish('pending_review')} disabled={saving} style={{ ...BTN.secondary, flex: 1 }}>For review</button>
+              <button type="button" onClick={() => publish('published')} disabled={saving} style={{ ...BTN.primary, flex: '1 1 100%' }}>
+                {saving ? <Loader2 size={16} /> : <ExternalLink size={16} />} Publish
               </button>
             </div>
-            <p style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: C.c3, textAlign: 'center' }}>
-              Checkout stays off. The button on the event page opens the official ticket URL.
+            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, color: T.text3, textAlign: 'center' }}>
+              The ticket button on the event opens the official ticket link.
             </p>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
-        }
+}

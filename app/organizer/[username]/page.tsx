@@ -1,11 +1,9 @@
-import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import OrganizerPageClient from '@/components/organizers/OrganizerPageClient';
 import { fetchPublishedEvents, supabaseToGhanaEvent } from '@/lib/supabase/events';
-import { BRAND_NAME, C } from '@/lib/theme';
+import { BRAND_NAME } from '@/lib/theme';
+import LostPage from '@/components/layout/LostPage';
 import type { GhanaEvent } from '@/lib/types';
-import Nav from '@/components/layout/Nav';
-import Footer from '@/components/layout/Footer';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -50,8 +48,8 @@ export default async function OrganizerPage({
   if (!supabase) {
     return (
       <SoftMissing
-        title="Configuration needed"
-        body="Supabase env vars are missing on this deploy."
+        title="Something went wrong"
+        body="This page couldn’t load. Try again in a moment."
       />
     );
   }
@@ -86,7 +84,7 @@ export default async function OrganizerPage({
     return (
       <SoftMissing
         title={`@${raw} not found`}
-        body="No profile with that username. Organizer pages use the same username as the account profile (set under account / auth). Publish an event while logged in, then open /organizer/your-username."
+        body="There’s no organiser with that username on Akwaaba."
       />
     );
   }
@@ -121,67 +119,5 @@ export default async function OrganizerPage({
 }
 
 function SoftMissing({ title, body }: { title: string; body: string }) {
-  return (
-    <div style={{ background: 'transparent', minHeight: '100vh' }}>
-      <Nav active="Events" />
-      <div
-        style={{
-          paddingTop: 120,
-          maxWidth: 480,
-          margin: '0 auto',
-          padding: '120px 20px 80px',
-          textAlign: 'center',
-        }}
-      >
-        <p
-          style={{
-            fontFamily: 'var(--font-inter), sans-serif',
-            fontSize: 10,
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            color: C.gold,
-            marginBottom: 12,
-          }}
-        >
-          Organizer
-        </p>
-        <h1
-          style={{
-            fontFamily: 'var(--font-display), sans-serif',
-            fontSize: 28,
-            color: C.cream,
-            fontWeight: 400,
-            marginBottom: 12,
-          }}
-        >
-          {title}
-        </h1>
-        <p
-          style={{
-            fontFamily: 'var(--font-inter,sans-serif)',
-            fontSize: 14,
-            color: C.c2,
-            lineHeight: 1.6,
-            marginBottom: 24,
-          }}
-        >
-          {body}
-        </p>
-        <Link
-          href="/events"
-          style={{
-            color: C.gold,
-            fontFamily: 'var(--font-inter), sans-serif',
-            fontSize: 11,
-            letterSpacing: '1.5px',
-            textTransform: 'uppercase',
-            textDecoration: 'none',
-          }}
-        >
-          ← Back to events
-        </Link>
-      </div>
-      <Footer />
-    </div>
-  );
+  return <LostPage title={title} body={body} />;
 }
