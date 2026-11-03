@@ -122,7 +122,9 @@ const MomentSlide = forwardRef<SlideHandle, {
   const info = useMomentInfo(nightMoment, series, mounted);
   // The best words about the night: this clip's description, else the fullest from the night's other clips,
   // else a line built from what we've confirmed (who was on stage, where), else the show's blurb
+  const recapClip = clips.find((c) => c.recap);
   const about = useMemo(() => {
+    if (recapClip?.recap) return recapClip.recap;
     const best = [clip, ...clips].map((c) => c.description?.trim()).filter((x): x is string => !!x && x.length >= 40)
       .sort((a, b) => b.length - a.length)[0];
     if (clip.description && clip.description.length >= 100) return clip.description;
@@ -137,7 +139,7 @@ const MomentSlide = forwardRef<SlideHandle, {
       return `${what}${where}${guests}.${series?.blurb ? ` ${series.blurb}` : ''}`;
     }
     return series?.blurb ?? null;
-  }, [clip, clips, info.onStage, info.event, night.event_name, night.year, series]);
+  }, [recapClip, clip, clips, info.onStage, info.event, night.event_name, night.year, series]);
   const tag = CATEGORIES.find((c) => c.key === night.category);
   const fresh = justHappened(night);
   const canGift = Boolean(next?.tiers?.some((x) => x.price > 0 && x.quantity - x.sold > 0)) && !next?.ticketUrl;
@@ -320,6 +322,15 @@ const MomentSlide = forwardRef<SlideHandle, {
               ...(more ? {} : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
             }}>{about}</p>
           )}
+          {recapClip?.recap_sources?.length ? (
+            <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 12, color: T.text3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Source: {recapClip.recap_sources.map((src, i) => (
+                <a key={src.url} href={src.url} target="_blank" rel="noopener noreferrer" style={{ color: T.text2, textDecoration: 'underline', textUnderlineOffset: 2 }}>
+                  {i ? ', ' : ''}{src.title.split(' — ').pop()}
+                </a>
+              ))}
+            </p>
+          ) : null}
 
           {/* Who was on stage — tap a face for a quick look */}
           {info.onStage.length > 0 && (
