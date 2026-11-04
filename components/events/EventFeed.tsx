@@ -199,7 +199,7 @@ function EventCard({
  * green-black; each card's colour only tints its tags, title glow and main button.
  */
 export default function EventFeed({
-  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel,
+  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel, frameTop = 0,
 }: {
   items: FeedItem[];
   saved: Set<string>;
@@ -208,6 +208,8 @@ export default function EventFeed({
   going: Set<string>;
   onToggleGoing: (e: GhanaEvent) => void | Promise<void>;
   topInset: number;
+  /** Where the feed starts (below the header and Hot rail); cards never sit under them */
+  frameTop?: number;
   onShowAll?: () => void;
   showAllLabel?: string;
 }) {
@@ -318,7 +320,7 @@ export default function EventFeed({
       <div
         ref={scroller}
         className="no-scrollbar"
-        style={{ position: 'fixed', inset: 0, zIndex: 40, overflowY: 'auto', overflowX: 'hidden', scrollSnapType: 'y mandatory', overscrollBehavior: 'contain', background: T.bg }}
+        style={{ position: 'fixed', top: frameTop ? `calc(${frameTop}px + env(safe-area-inset-top, 0px))` : 0, left: 0, right: 0, bottom: 0, zIndex: 40, overflowY: 'auto', overflowX: 'hidden', scrollSnapType: 'y mandatory', overscrollBehavior: 'contain', background: T.bg }}
       >
         {items.map((item, i) => (
           <EventCard

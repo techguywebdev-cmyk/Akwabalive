@@ -76,11 +76,15 @@ export default function FlyerCanvas({
       // Home hero: fill the screen like a cover photo
       poster = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 35%' };
       fadeFrom = Math.max(room - 140, size.h * 0.4);
+    } else if (fullH <= room * 1.08) {
+      // Only a little taller: full width, the last few pixels tuck under the fade
+      poster = { position: 'absolute', left: 0, top: 0, width: '100%', height: fullH, objectFit: 'cover', objectPosition: 'center top' };
+      fadeFrom = room - 12;
     } else {
-      // Taller than the room: always full width, never shrunk or cropped at the sides; the
-      // lower part continues under the text behind a dark fade
-      poster = { position: 'absolute', left: 0, top: 0, width: '100%', height: Math.min(fullH, size.h), objectFit: 'cover', objectPosition: 'center top' };
-      fadeFrom = Math.max(room - 60, size.h * 0.45);
+      // Much taller than the room: shown whole (never under the text), centred on its own colour glow
+      const w = Math.round(room * ratio);
+      poster = { position: 'absolute', left: Math.round((size.w - w) / 2), top: 0, width: w, height: room, objectFit: 'contain', borderRadius: 14 };
+      fadeFrom = room - 12;
     }
   }
 
