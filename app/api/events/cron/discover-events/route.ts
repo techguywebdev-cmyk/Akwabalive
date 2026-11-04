@@ -1,3 +1,4 @@
+import { isScheduler } from '@/lib/cronAuth';
 import { NextResponse } from 'next/server';
 import { getWatchedSources, EVENT_SIGNAL_RE } from '@/lib/ingest/watchedSources';
 import { ingestUrlToSuggestion } from '@/lib/ingest/createSuggestion';
@@ -33,7 +34,7 @@ async function run(req: Request) {
     (auth.startsWith('Bearer ') ? auth.slice(7) : '');
   const expected = process.env.CRON_SECRET;
 
-  if (expected && secret !== expected) {
+  if (expected && !isScheduler(secret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

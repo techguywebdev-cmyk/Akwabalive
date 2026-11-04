@@ -21,6 +21,30 @@ export function loadAll(): Promise<Moment[]> {
   return all;
 }
 
+/**
+ * Moments to show when an event has none of its own: the line-up's performances first,
+ * then the latest moments on Akwaaba, so every event page ends on something to watch.
+ */
+export function useLineupMoments(slugs: string[], names: string[], exclude: string[], enabled = true) {
+  const [list, setList] = useState<{ moments: Moment[]; fromLineup: boolean }>({ moments: [], fromLineup: false });
+  const key = `${slugs.join(',')}|${names.join(',')}|${exclude.join(',')}`;
+  useEffect(() => {
+    if (!enabled) return;
+    let live = true;
+    loadAll().then((all) => {
+      const skip = new Set(exclude);
+      const low = names.map((n) => n.toLowerCase()).filter((n) => n.length >= 3);
+      const mine = all.filter((m) => !skip.has(m.id) && (
+        (m.performers ?? []).some((p) => slugs.includes(p)) || low.some((n) => m.title.toLowerCase().includes(n))
+      ));
+      const pick = mine.length ? mine : all.filter((m) => !skip.has(m.id)).sort((a, b) => String(b.published_at ?? '').localeCompare(String(a.published_at ?? '')));
+      if (live) setList({ moments: pick.slice(0, 8), fromLineup: mine.length > 0 });
+    });
+    return () => { live = false; };
+  }, [key, enabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  return list;
+}
+
 /** Moments for one event (its own videos, then past editions). Empty until loaded. */
 export function useEventMoments(event: { slug: string; title: string }, enabled = true) {
   const [list, setList] = useState<Moment[]>([]);
