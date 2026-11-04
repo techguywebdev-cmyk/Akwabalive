@@ -6,7 +6,7 @@ import { Icon, CATEGORY_ICONS } from '@/components/ui/Icon';
 import { T, FONT, alpha } from '@/lib/thiscene';
 import { parseDay } from '@/lib/dates';
 import type { Hype, HypeKind } from '@/lib/events/hype';
-import { Flame, Sparkles, Star, RotateCcw, Zap, PartyPopper, Mic2 } from 'lucide-react';
+import { Flame, Sparkles, Star, RotateCcw, Zap, PartyPopper, Mic2, GraduationCap } from 'lucide-react';
 
 /** Shared pieces for event cards (feed, home hero) so they stay identical. */
 
@@ -48,6 +48,7 @@ const HYPE_STYLE: Record<HypeKind, { style: CSSProperties; icon: React.ReactNode
   stars: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <Mic2 size={14} strokeWidth={2.2} /> },
   returning: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <RotateCcw size={13} strokeWidth={2.4} /> },
   new: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <Zap size={13} strokeWidth={2.4} /> },
+  campus: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <GraduationCap size={14} strokeWidth={2.2} /> },
   detty: { style: { background: 'rgba(255,209,102,0.16)', color: '#FFD98A' }, icon: <PartyPopper size={14} strokeWidth={2.2} /> },
 };
 
