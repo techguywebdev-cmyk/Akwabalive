@@ -20,7 +20,8 @@ import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import { useEventComments } from '@/hooks/useEventComments';
 import CommentsSheet from '@/components/moments/CommentsSheet';
 import { Portrait } from '@/components/artists/parts';
-import { Bookmark, BookmarkCheck, CalendarPlus, Check, MessageSquareText, Navigation, Play, Share2, UserPlus } from 'lucide-react';
+import { Bookmark, BookmarkCheck, CalendarPlus, Check, Eye, MessageSquareText, Navigation, Play, Share2, UserPlus, Users } from 'lucide-react';
+import { trackEvent, eventCounts, compact, type EventCounts } from '@/lib/events/track';
 import { TicketsSheet } from '@/components/events/EventActions';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { parseDay, longDay, shortDay } from '@/lib/dates';
@@ -55,6 +56,14 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
   const [wash, setWash] = useState<RGB>([14, 17, 16]);
+  const [counts, setCounts] = useState<EventCounts | null>(null);
+  // Count this view, then show the real numbers once they're worth showing
+  useEffect(() => {
+    trackEvent(event.slug, 'view');
+    let live = true;
+    eventCounts([event.slug]).then((c) => { if (live) setCounts(c[event.slug] ?? null); }).catch(() => {});
+    return () => { live = false; };
+  }, [event.slug]);
   const [ticketOpen,     setTicketOpen]     = useState(false);
   const [inDreamList,    setInDreamList]    = useState(false);
   const [isGoing,        setIsGoing]        = useState(false);
@@ -279,6 +288,12 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           <p style={{ margin: '8px 0 0', fontFamily: FONT.display, fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)' }}>{short.subtitle}</p>
         )}
         <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{eventBlurb(event, 160)}</p>
+        {counts && (counts.seen7d >= 30 || counts.going >= 10) && (
+          <p style={{ margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: '#FFB27A' }}>
+            {counts.seen7d >= 30 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Eye size={16} /> {compact(counts.seen7d)} people checked this out this week</span>}
+            {counts.going >= 10 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Users size={16} /> {compact(counts.going)} going</span>}
+          </p>
+        )}
 
         {/* Small actions: the big one (tickets) lives in the bottom bar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 20 }}>

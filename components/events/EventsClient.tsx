@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect, useRef, type CSSProperties }
 import Link from 'next/link';
 import Nav from '@/components/layout/Nav';
 import EventFeed from '@/components/events/EventFeed';
+import HotRail, { HOT_RAIL_H } from '@/components/events/HotRail';
 import FilterSheet, { CITIES, CATEGORIES, WHEN_OPTS, PRICE_OPTS, type Place } from '@/components/events/FilterSheet';
 import { Icon } from '@/components/ui/Icon';
 import type { GhanaEvent, FilterState, City, Category } from '@/lib/types';
@@ -265,13 +266,13 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   // The mix holds while browsing in and back out, and changes on reload.
   const untouched = JSON.stringify(filters) === JSON.stringify(base);
   const ordered = useMemo(() => (untouched ? mix(filtered, feedSeed(seedProp)) : filtered), [filtered, untouched]);
-  // Hot, featured and specially-tagged shows coming up, soonest first: the feed's first screen
-  const bigShows = useMemo(() => {
+  // The Hot rail: hot and featured shows coming up (featured order first, then soonest)
+  const hotShows = useMemo(() => {
     const today = new Date(new Date().toDateString()).getTime();
     return events
       .filter((e) => (e.hot || e.isFeatured) && e.image && (parseDay(e.date)?.getTime() ?? 0) >= today)
-      .sort((a, b) => (parseDay(a.date)?.getTime() ?? 0) - (parseDay(b.date)?.getTime() ?? 0))
-      .slice(0, 6);
+      .sort((a, b) => ((a.isFeatured ? a.featuredOrder ?? 100 : 1000) - (b.isFeatured ? b.featuredOrder ?? 100 : 1000)) || (parseDay(a.date)?.getTime() ?? 0) - (parseDay(b.date)?.getTime() ?? 0))
+      .slice(0, 12);
   }, [events]);
   const items = useMemo(
     () => ordered.map((e) => ({ event: e, dist: userLoc ? haversine(userLoc.lat, userLoc.lng, e.lat, e.lng) : null })),
@@ -321,10 +322,12 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
 
   const headerH = 74;
   const searchH = searchOpen ? 60 : 0;
+  const railH = hotShows.length ? HOT_RAIL_H : 0;
 
   return (
     <>
       <Nav active="Events" actions={headerActions} />
+      <HotRail events={hotShows} top={headerH + searchH} />
 
       {searchOpen && (
         <div style={{ position: 'fixed', zIndex: 195, top: `calc(${headerH}px + env(safe-area-inset-top, 0px))`, left: 16, right: 16, maxWidth: 720, margin: '0 auto' }}>
@@ -353,13 +356,12 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
           onToggleSave={toggleSave}
           going={going}
           onToggleGoing={toggleGoing}
-          topInset={headerH + searchH}
-          bigShows={untouched ? bigShows : []}
+          topInset={headerH + searchH + railH}
           onShowAll={filters.when !== 'all' ? () => set('when', 'all') : clear}
           showAllLabel={filters.when !== 'all' ? 'Include past events' : 'Clear filters'}
         />
       ) : (
-        <main style={{ maxWidth: 760, margin: '0 auto', padding: `calc(${headerH + searchH + 10}px + env(safe-area-inset-top, 0px)) 20px 40px` }}>
+        <main style={{ maxWidth: 760, margin: '0 auto', padding: `calc(${headerH + searchH + railH + 10}px + env(safe-area-inset-top, 0px)) 20px 40px` }}>
           <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(36px, 7vw, 52px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', color: T.white }}>
             Events
           </h1>
