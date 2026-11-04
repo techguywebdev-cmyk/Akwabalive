@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
+import LineupUpdates from '@/components/organizer/LineupUpdates';
 import { card, ghs } from '@/components/organizer/ui';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
@@ -154,7 +155,10 @@ export default function ReviewQueuePage() {
         </div>
         {(note || error) && <p role={error ? 'alert' : 'status'} style={{ margin: '12px 0 0', padding: '10px 14px', borderRadius: 14, background: error ? 'rgba(255,138,138,0.12)' : 'rgba(123,227,168,0.12)', color: error ? T.danger : T.mintText, fontFamily: FONT.sans, fontSize: 14 }}>{error || note}</p>}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 20 }}>
+        <LineupUpdates />
+
+        <h2 style={{ margin: '30px 0 0', fontFamily: FONT.display, fontSize: 20, fontWeight: 800, color: T.white }}>New events</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
           {loading ? [0, 1].map((i) => <div key={i} style={{ ...card, height: 200 }} />)
             : items.length ? items.map((ev) => (
               <ReviewCard key={ev.id} ev={ev} busy={busy === ev.id}
@@ -165,7 +169,7 @@ export default function ReviewQueuePage() {
               <div style={{ ...card, padding: '40px 20px', textAlign: 'center' }}>
                 <span style={{ display: 'inline-flex', width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.12)', color: T.mint }}><Check size={28} /></span>
                 <p style={{ margin: '14px 0 0', fontFamily: FONT.display, fontSize: 20, fontWeight: 700, color: T.white }}>All caught up</p>
-                <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>New events from ticket sites arrive every morning.</p>
+                <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>New events from ticket sites are checked every 2 hours.</p>
               </div>
             )}
         </div>
