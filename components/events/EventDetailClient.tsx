@@ -20,7 +20,8 @@ import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import { useEventComments } from '@/hooks/useEventComments';
 import CommentsSheet from '@/components/moments/CommentsSheet';
 import { Portrait } from '@/components/artists/parts';
-import { Bookmark, BookmarkCheck, CalendarPlus, Check, Eye, MessageSquareText, Navigation, Play, Share2, UserPlus, Users } from 'lucide-react';
+import { AtSign, Bookmark, BookmarkCheck, CalendarPlus, Check, ExternalLink, Eye, Globe, Info, Mail, MessageCircle, MessageSquareText, Navigation, Phone, Play, Share2, Shirt, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { eventInfo, hasInfo } from '@/lib/events/contacts';
 import { trackEvent, eventCounts, compact, type EventCounts } from '@/lib/events/track';
 import { TicketsSheet } from '@/components/events/EventActions';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
@@ -218,6 +219,11 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
   const eyebrow: CSSProperties = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 6px' };
   const eyebrowMint: CSSProperties = { ...eyebrow, color: T.mintText };
+  const info = eventInfo(event.description, event.flyerText);
+  const infoRow: CSSProperties = { display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: -1 };
+  const infoLabel: CSSProperties = { display: 'block', fontFamily: FONT.sans, fontSize: 12, color: T.text3 };
+  const infoValue: CSSProperties = { display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+  const infoBtn: CSSProperties = { width: 38, height: 38, borderRadius: 19, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', color: T.white, textDecoration: 'none' };
   const roundBtn = (on: boolean): CSSProperties => ({
     width: 44, height: 44, borderRadius: 22, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0,
     ...(on ? { background: 'rgba(123,227,168,0.16)', color: T.mintText, border: '1px solid rgba(123,227,168,0.4)' } : { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' }),
@@ -335,6 +341,56 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             )}
           </div>
         </section>
+
+        {/* Info & contact: numbers, Instagram, dress code and the like, read from the listing and the flyer */}
+        {hasInfo(info) && (
+          <section style={{ marginTop: 28 }}>
+            <h2 style={eyebrowMint}>Info &amp; contact</h2>
+            <div style={{ marginTop: 8, borderRadius: 20, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+              {info.ussd.map((code) => (
+                <a key={code} href={`tel:${encodeURIComponent(code)}`} style={{ ...infoRow, textDecoration: 'none' }}>
+                  <Phone size={17} color={T.text2} />
+                  <span style={{ flex: 1, minWidth: 0 }}><span style={infoLabel}>Tickets by phone: dial</span><span style={infoValue}>{code}</span></span>
+                  <span style={{ ...infoBtn, width: 'auto', padding: '0 14px', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 13.5, fontWeight: 700 }}>Dial</span>
+                </a>
+              ))}
+              {info.phones.map((p) => (
+                <div key={p.intl} style={infoRow}>
+                  <Phone size={17} color={T.text2} />
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={infoLabel}>{p.label}</span>
+                    <span style={infoValue}>{p.display}</span>
+                  </span>
+                  <a href={`tel:${p.intl}`} aria-label={`Call ${p.display}`} style={infoBtn}><Phone size={15} /></a>
+                  <a href={`https://wa.me/${p.intl.slice(1)}`} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${p.display}`} style={{ ...infoBtn, background: 'rgba(123,227,168,0.14)', color: T.mintText }}><MessageCircle size={15} /></a>
+                </div>
+              ))}
+              {info.instagram.map((h) => (
+                <a key={h} href={`https://instagram.com/${h}`} target="_blank" rel="noopener noreferrer" style={{ ...infoRow, textDecoration: 'none' }}>
+                  <AtSign size={17} color={T.text2} />
+                  <span style={{ flex: 1, minWidth: 0 }}><span style={infoLabel}>Instagram</span><span style={infoValue}>@{h}</span></span>
+                  <ExternalLink size={15} color={T.text3} />
+                </a>
+              ))}
+              {info.emails.map((m) => (
+                <a key={m} href={`mailto:${m}`} style={{ ...infoRow, textDecoration: 'none' }}>
+                  <Mail size={17} color={T.text2} />
+                  <span style={{ flex: 1, minWidth: 0 }}><span style={infoLabel}>Email</span><span style={infoValue}>{m}</span></span>
+                </a>
+              ))}
+              {info.websites.map((w) => (
+                <a key={w} href={/^https?:/.test(w) ? w : `https://${w}`} target="_blank" rel="noopener noreferrer" style={{ ...infoRow, textDecoration: 'none' }}>
+                  <Globe size={17} color={T.text2} />
+                  <span style={{ flex: 1, minWidth: 0 }}><span style={infoLabel}>Website</span><span style={infoValue}>{w.replace(/^https?:\/\/(www\.)?/, '')}</span></span>
+                  <ExternalLink size={15} color={T.text3} />
+                </a>
+              ))}
+              {info.dressCode && <div style={infoRow}><Shirt size={17} color={T.text2} /><span style={{ flex: 1 }}><span style={infoLabel}>Dress code</span><span style={infoValue}>{info.dressCode}</span></span></div>}
+              {info.age && <div style={infoRow}><ShieldCheck size={17} color={T.text2} /><span style={{ flex: 1 }}><span style={infoLabel}>Age</span><span style={infoValue}>{info.age}</span></span></div>}
+              {info.notes.map((n) => <div key={n} style={infoRow}><Info size={17} color={T.text2} /><span style={{ flex: 1, ...infoValue }}>{n}</span></div>)}
+            </div>
+          </section>
+        )}
 
         {acts.length > 0 && (
           <section style={{ marginTop: 28 }}>
