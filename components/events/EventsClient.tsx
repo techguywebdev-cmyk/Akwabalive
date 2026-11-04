@@ -265,6 +265,14 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   // The mix holds while browsing in and back out, and changes on reload.
   const untouched = JSON.stringify(filters) === JSON.stringify(base);
   const ordered = useMemo(() => (untouched ? mix(filtered, feedSeed(seedProp)) : filtered), [filtered, untouched]);
+  // Hot, featured and specially-tagged shows coming up, soonest first: the feed's first screen
+  const bigShows = useMemo(() => {
+    const today = new Date(new Date().toDateString()).getTime();
+    return events
+      .filter((e) => (e.hot || e.isFeatured) && e.image && (parseDay(e.date)?.getTime() ?? 0) >= today)
+      .sort((a, b) => (parseDay(a.date)?.getTime() ?? 0) - (parseDay(b.date)?.getTime() ?? 0))
+      .slice(0, 6);
+  }, [events]);
   const items = useMemo(
     () => ordered.map((e) => ({ event: e, dist: userLoc ? haversine(userLoc.lat, userLoc.lng, e.lat, e.lng) : null })),
     [ordered, userLoc],
@@ -346,6 +354,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
           going={going}
           onToggleGoing={toggleGoing}
           topInset={headerH + searchH}
+          bigShows={untouched ? bigShows : []}
           onShowAll={filters.when !== 'all' ? () => set('when', 'all') : clear}
           showAllLabel={filters.when !== 'all' ? 'Include past events' : 'Clear filters'}
         />
