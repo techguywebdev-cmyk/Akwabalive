@@ -13,6 +13,7 @@ import { useEventMoments, MomentsPill, MomentsViewer } from '@/components/moment
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { EventTags, BTN } from '@/components/events/CardParts';
 import { hypeTags, eventExcerpt } from '@/lib/events/hype';
+import BigShows from '@/components/events/BigShows';
 import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
@@ -198,9 +199,11 @@ function EventCard({
  * green-black; each card's colour only tints its tags, title glow and main button.
  */
 export default function EventFeed({
-  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel,
+  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel, bigShows = [],
 }: {
   items: FeedItem[];
+  /** The season's biggest shows, shown as a photo grid on the first screen */
+  bigShows?: GhanaEvent[];
   saved: Set<string>;
   saveLoading?: string | null;
   onToggleSave: (e: GhanaEvent) => void;
@@ -219,6 +222,7 @@ export default function EventFeed({
   const [tickets, setTickets] = useState<{ event: GhanaEvent; accent: string } | null>(null);
   const [checkout, setCheckout] = useState<{ event: GhanaEvent; tiers: CheckoutTier[] } | null>(null);
   const hasItems = items.length > 0;
+  const lead = bigShows.length >= 4 ? 1 : 0; // the Big shows screen sits before the first card
 
   useEffect(() => {
     const fn = () => setWide(window.innerWidth >= 900);
@@ -241,14 +245,14 @@ export default function EventFeed({
     // Work out the card on screen only once a swipe settles: updating mid-swipe re-rendered every card
     // and loaded flyers while the finger was still moving, which made scrolling stutter
     let t: ReturnType<typeof setTimeout> | null = null;
-    const commit = () => setActive(Math.round(el.scrollTop / Math.max(1, el.clientHeight)));
+    const commit = () => setActive(Math.round(el.scrollTop / Math.max(1, el.clientHeight)) - lead);
     const onScroll = () => { if (t) clearTimeout(t); t = setTimeout(commit, 110); };
     const onEnd = () => { if (t) clearTimeout(t); commit(); };
     commit();
     el.addEventListener('scroll', onScroll, { passive: true });
     el.addEventListener('scrollend', onEnd);
     return () => { if (t) clearTimeout(t); el.removeEventListener('scroll', onScroll); el.removeEventListener('scrollend', onEnd); };
-  }, [hasItems]);
+  }, [hasItems, lead]);
 
   // Coming back from an event: return to the card you were on. Any other list change starts at the top.
   const listKey = items.map((i) => i.event.slug).join('|');
@@ -259,13 +263,13 @@ export default function EventFeed({
     if (!items.length) return;
     if (firstKey.current === null) firstKey.current = listKey;
     const back = listKey === firstKey.current && returnTo ? items.findIndex((i) => i.event.slug === returnTo) : -1;
-    if (el && back > 0) { el.scrollTo({ top: back * el.clientHeight, behavior: 'instant' as ScrollBehavior }); setActive(back); return; }
-    el?.scrollTo({ top: 0 }); setActive(0);
+    if (el && back >= 0 && (back > 0 || lead)) { el.scrollTo({ top: (back + lead) * el.clientHeight, behavior: 'instant' as ScrollBehavior }); setActive(back); return; }
+    el?.scrollTo({ top: 0 }); setActive(lead ? -1 : 0);
   }, [listKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const slug = items[active]?.event.slug; if (slug) lastSeen = slug; }, [active, items]);
 
   // The live accent follows the active card
-  const current = items[Math.min(active, items.length - 1)]?.event;
+  const current = items[Math.max(0, Math.min(active, items.length - 1))]?.event;
   useEffect(() => {
     if (!current) return;
     let live = true;
@@ -319,12 +323,13 @@ export default function EventFeed({
         className="no-scrollbar"
         style={{ position: 'fixed', inset: 0, zIndex: 40, overflowY: 'auto', overflowX: 'hidden', scrollSnapType: 'y mandatory', overscrollBehavior: 'contain', background: T.bg }}
       >
+        {lead > 0 && <BigShows events={bigShows} topInset={topInset} onMore={() => scroller.current?.scrollTo({ top: scroller.current.clientHeight, behavior: 'smooth' })} />}
         {items.map((item, i) => (
           <EventCard
             key={item.event.slug}
             item={item}
             active={i === active}
-            near={Math.abs(i - active) <= 1}
+            near={Math.abs(i - Math.max(0, active)) <= 1}
             wide={wide}
             saved={saved.has(item.event.slug)}
             going={going.has(item.event.slug)}
