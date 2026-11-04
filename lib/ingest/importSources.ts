@@ -48,6 +48,7 @@ export const SOURCES: Source[] = [
     lists: [
       'https://allevents.in/accra/all',
       'https://allevents.in/accra/concerts',
+      'https://allevents.in/accra/parties',
       'https://allevents.in/kumasi/all',
       'https://allevents.in/tema/all',
     ],
@@ -57,6 +58,11 @@ export const SOURCES: Source[] = [
     name: 'Eventbrite',
     lists: ['https://www.eventbrite.com/d/ghana--accra/events/', 'https://www.eventbrite.com/d/ghana--kumasi/events/'],
     link: /^https:\/\/www\.eventbrite\.(?:com|co\.uk)\/e\/[a-z0-9-]+-\d{6,}$/i,
+  },
+  {
+    name: 'Aya Tickets',
+    lists: ['https://ayatickets.com/en/events-in-accra', 'https://ayatickets.com/en/events-in-kumasi'],
+    link: /^https:\/\/ayatickets\.com\/en\/event\/[a-z0-9][a-z0-9-]+$/i,
   },
 ];
 
