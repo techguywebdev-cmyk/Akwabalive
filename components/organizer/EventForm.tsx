@@ -1,5 +1,6 @@
 'use client';
 
+import { readFlyer, type FlyerRead } from '@/lib/watch/readFlyer';
 import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -102,12 +103,13 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
 }
 
 /* ── Flyer ───────────────────────────────────────────────────────────── */
-function FlyerField({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+function FlyerField({ value, onChange, onRead }: { value: string; onChange: (url: string) => void; onRead?: (r: FlyerRead) => void }) {
   const supabase = useMemo(() => createClient(), []);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [byLink, setByLink] = useState(false);
+  const [reading, setReading] = useState(false);
 
   async function upload(file: File) {
     if (!file.type.startsWith('image/')) { setErr('Choose an image (JPG, PNG or WebP).'); return; }
@@ -119,6 +121,8 @@ function FlyerField({ value, onChange }: { value: string; onChange: (url: string
     setBusy(false);
     if (error) { setErr(error.message); return; }
     onChange(supabase.storage.from('event-images').getPublicUrl(path).data.publicUrl);
+    // Read the flyer's words in the background: acts and the date, offered as one-tap fills
+    if (onRead) { setReading(true); readFlyer(file).then(onRead).catch(() => {}).finally(() => setReading(false)); }
   }
 
   return (
@@ -141,6 +145,7 @@ function FlyerField({ value, onChange }: { value: string; onChange: (url: string
       )}
       <input ref={input} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ''; }} />
       {err && <p role="alert" style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 13.5, color: T.danger }}>{err}</p>}
+      {reading && <p role="status" style={{ margin: '8px 0 0', display: 'flex', alignItems: 'center', gap: 8, fontFamily: FONT.sans, fontSize: 13.5, color: T.mintText }}><Loader2 size={15} className="animate-spin" /> Reading the flyer for names and the date…</p>}
       <button type="button" onClick={() => setByLink((v) => !v)} style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 500, color: T.mintText }}>
         <Link2 size={15} /> {byLink ? 'Hide link field' : 'Or paste an image link'}
       </button>
@@ -154,6 +159,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [d, setD] = useState<EventDraft>(initial);
+  const [flyerRead, setFlyerRead] = useState<FlyerRead | null>(null);
   const [busy, setBusy] = useState<'' | 'draft' | 'published'>('');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
@@ -253,7 +259,31 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Section title="Flyer" note="Shown full width on the feed. Portrait flyers (4:5) look best.">
-          <FlyerField value={d.image} onChange={(v) => set('image', v)} />
+          <FlyerField value={d.image} onChange={(v) => set('image', v)} onRead={setFlyerRead} />
+          {flyerRead && (() => {
+            const have = new Set([...d.lineup.artistSlugs, ...d.lineup.extraNames.split(',').map((x) => x.trim().toLowerCase())]);
+            const acts = flyerRead.acts.filter((a) => !(a.slug && have.has(a.slug)) && !have.has(a.name.toLowerCase()));
+            const dateNew = flyerRead.date && flyerRead.date !== d.date ? flyerRead.date : null;
+            if (!acts.length && !dateNew) return null;
+            const major = new Set(majorArtists.map((m) => m.slug));
+            const addActs = () => {
+              const slugs = acts.filter((a) => a.slug && major.has(a.slug)).map((a) => a.slug!);
+              const names = acts.filter((a) => !(a.slug && major.has(a.slug))).map((a) => a.name);
+              set('lineup', { enabled: true, artistSlugs: Array.from(new Set([...d.lineup.artistSlugs, ...slugs])), extraNames: [d.lineup.extraNames, ...names].filter(Boolean).join(', ') });
+            };
+            return (
+              <div style={{ marginTop: 12, padding: 14, borderRadius: 16, background: 'rgba(123,227,168,0.08)', border: '1px solid rgba(123,227,168,0.25)' }}>
+                <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, color: T.white }}>From your flyer</p>
+                {acts.length > 0 && <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text }}>On the bill: {acts.map((a) => a.name).join(', ')}</p>}
+                {dateNew && <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text }}>Date: {dayLabel(dateNew)}</p>}
+                <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                  {acts.length > 0 && <button type="button" onClick={() => { addActs(); setFlyerRead({ ...flyerRead, acts: [] }); }} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: 'none', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>Add to line-up</button>}
+                  {dateNew && <button type="button" onClick={() => { set('date', dateNew); setFlyerRead({ ...flyerRead, date: null }); }} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: T.white, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Use this date</button>}
+                  <button type="button" onClick={() => setFlyerRead(null)} style={{ height: 36, padding: '0 10px', border: 'none', background: 'transparent', color: T.text2, fontFamily: FONT.sans, fontSize: 13.5, cursor: 'pointer' }}>Ignore</button>
+                </div>
+              </div>
+            );
+          })()}
         </Section>
 
         <Section title="About the event">

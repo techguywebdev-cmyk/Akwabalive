@@ -1,13 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { artists } from '@/lib/data/artists';
-import { PRESS_FEEDS, newsSearch, VISITING_ACTS } from './sources';
+import { PRESS_FEEDS, newsSearch } from './sources';
+import { ACTS, actsIn, norm } from './acts';
 
 type Item = { title: string; text: string; link: string; host: string; source: string };
 type EventRow = { id: string; slug: string; title: string; lineup: string[] | null; artist_slugs: string[] | null; official_url: string | null; date: string };
 
 const strip = (h: string) => h.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ')
   .replace(/&amp;/g, '&').replace(/&#8217;|&rsquo;/g, '’').replace(/&#8216;|&lsquo;/g, '‘').replace(/&quot;/g, '"').replace(/&#039;|&#39;/g, "'").replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
-const norm = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 const hostOf = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
 
 async function get(url: string, ms = 9000): Promise<string | null> {
@@ -28,16 +27,6 @@ function parseRss(xml: string, source: string): Item[] {
     const outlet = pick('source') || source;
     return { title: pick('title'), text: `${pick('title')} ${pick('description')}`, link, host: outlet.toLowerCase(), source: outlet };
   });
-}
-
-/** Every act we can recognise: our artists (with their keywords) plus big visiting acts */
-const ACTS: { name: string; slug?: string; keys: string[] }[] = [
-  ...artists.map((a) => ({ name: a.name, slug: a.slug, keys: (a.keywords?.length ? a.keywords : [a.name]).map(norm) })),
-  ...VISITING_ACTS.map((n) => ({ name: n, keys: [norm(n)] })),
-];
-function actsIn(text: string) {
-  const t = ` ${norm(text)} `;
-  return ACTS.filter((a) => a.keys.some((k) => k.length >= 3 && t.includes(` ${k} `)));
 }
 
 /** Words that say someone is on the bill (not just mentioned) */
