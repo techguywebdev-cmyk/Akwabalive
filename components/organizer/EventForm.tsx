@@ -28,6 +28,8 @@ export type EventDraft = {
   id?: string;
   status: string;
   title: string; description: string; category: string; highlight: string;
+  /** OCR text from the flyer, kept for contacts and details on the event page */
+  flyerText?: string;
   city: string; venue: string; area: string;
   date: string; start: string; end: string; // HH:MM (24h) in the inputs
   image: string;
@@ -204,7 +206,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
     try {
       const bill = lineupPayload(d.lineup);
       const row = {
-        title: d.title.trim(), description: d.description.trim() || null, highlight: d.highlight.trim().slice(0, 32) || null, category: d.category || 'concert',
+        title: d.title.trim(), description: d.description.trim() || null, highlight: d.highlight.trim().slice(0, 32) || null, ...(d.flyerText !== undefined ? { flyer_text: d.flyerText.slice(0, 4000) || null } : {}), category: d.category || 'concert',
         city: d.city, region: REGIONS[d.city] ?? d.city, venue: d.venue.trim() || 'Venue to be announced', area: d.area.trim() || null,
         date: d.date || null, date_label: d.date ? dayLabel(d.date) : null, time: d.start ? to12h(d.start) : 'Time TBA', end_time: d.end ? to12h(d.end) : null,
         image_url: d.image.trim() || null, status: target,
@@ -259,7 +261,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Section title="Flyer" note="Shown full width on the feed. Portrait flyers (4:5) look best.">
-          <FlyerField value={d.image} onChange={(v) => set('image', v)} onRead={setFlyerRead} />
+          <FlyerField value={d.image} onChange={(v) => set('image', v)} onRead={(r) => { setFlyerRead(r); set('flyerText', r.text.replace(/\s+/g, ' ').trim()); }} />
           {flyerRead && (() => {
             const have = new Set([...d.lineup.artistSlugs, ...d.lineup.extraNames.split(',').map((x) => x.trim().toLowerCase())]);
             const acts = flyerRead.acts.filter((a) => !(a.slug && have.has(a.slug)) && !have.has(a.name.toLowerCase()));

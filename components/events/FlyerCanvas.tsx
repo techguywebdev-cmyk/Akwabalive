@@ -125,7 +125,7 @@ export default function FlyerCanvas({
  * The flyer shrunk to a few pixels on a canvas and stretched to fill: the browser's smoothing turns it into a soft
  * colour glow. Unlike a CSS blur, there's nothing to redraw while scrolling, so changing direction never stutters.
  */
-function Glow({ src }: { src: string }) {
+export function Glow({ src }: { src: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
   useEffect(() => {

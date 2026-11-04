@@ -83,6 +83,8 @@ export interface GhanaEvent {
   organizerAvatar?: string | null;
   /** The organiser's one special line, shown as a tag ("Surprise guests") */
   highlight?: string | null;
+  /** Words read off the flyer (contacts, dress code…) */
+  flyerText?: string | null;
   /** Free-text description / caption (also searched for artist names) */
   description?: string | null;
   /** Real ticket tiers (Supabase events only). Needed to sell tickets on Akwaaba. */
