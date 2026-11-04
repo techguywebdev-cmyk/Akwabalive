@@ -559,8 +559,9 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       <div style={{ position: 'fixed', zIndex: 150, left: 0, right: 0, bottom: 0, padding: '18px 16px calc(18px + env(safe-area-inset-bottom, 0px)) 20px', background: 'linear-gradient(180deg, rgba(3,8,6,0) 0%, rgba(3,8,6,0.92) 32%, #030806 100%)' }}>
         <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.text2 }}>{free ? 'Entry' : 'From'}</span>
-            <span style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: T.white }}>{free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</span>
+            {/* No prices listed: never claim "Free"; use the flyer's gate price when there is one */}
+            <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.text2 }}>{event.priceUnknown ? (info.gatePrice ? 'At the gate' : 'Tickets') : free ? 'Entry' : 'From'}</span>
+            <span style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: T.white }}>{event.priceUnknown ? (info.gatePrice ? `GH₵ ${info.gatePrice}` : 'See prices') : free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</span>
           </span>
           {daysAway != null && daysAway < 0 ? (
             <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>

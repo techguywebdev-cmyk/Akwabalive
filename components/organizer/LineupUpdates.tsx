@@ -46,11 +46,14 @@ export default function LineupUpdates() {
   async function checkNow() {
     setChecking(true); setNote('');
     const t = (await supabase.auth.getSession()).data.session?.access_token;
-    const r = await fetch('/api/events/watch', { headers: { authorization: `Bearer ${t}` } }).then((x) => x.json()).catch(() => null);
+    const [r, f] = await Promise.all([
+      fetch('/api/events/watch', { headers: { authorization: `Bearer ${t}` } }).then((x) => x.json()).catch(() => null),
+      fetch('/api/events/read-flyers', { headers: { authorization: `Bearer ${t}` } }).then((x) => x.json()).catch(() => null),
+    ]);
     setChecking(false);
     const applied = (r?.report ?? []).reduce((n: number, x: { applied: string[] }) => n + x.applied.length, 0);
     const queued = (r?.report ?? []).reduce((n: number, x: { queued: string[] }) => n + x.queued.length, 0);
-    setNote(r ? `Checked ${r.events} events: ${applied} added, ${queued} to review` : 'Couldn’t check right now');
+    setNote(r ? `Checked ${r.events} events: ${applied} added, ${queued} to review${f?.read?.length ? ` · read ${f.read.length} flyers` : ''}` : 'Couldn’t check right now');
     load();
   }
 
