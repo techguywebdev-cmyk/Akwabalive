@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import LineupUpdates from '@/components/organizer/LineupUpdates';
+import CampusLeads from '@/components/organizer/CampusLeads';
 import { card, ghs } from '@/components/organizer/ui';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
@@ -156,6 +157,7 @@ export default function ReviewQueuePage() {
         {(note || error) && <p role={error ? 'alert' : 'status'} style={{ margin: '12px 0 0', padding: '10px 14px', borderRadius: 14, background: error ? 'rgba(255,138,138,0.12)' : 'rgba(123,227,168,0.12)', color: error ? T.danger : T.mintText, fontFamily: FONT.sans, fontSize: 14 }}>{error || note}</p>}
 
         <LineupUpdates />
+        <CampusLeads />
 
         <h2 style={{ margin: '30px 0 0', fontFamily: FONT.display, fontSize: 20, fontWeight: 800, color: T.white }}>New events</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>

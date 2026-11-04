@@ -1,3 +1,4 @@
+import { isCampus } from '@/lib/events/campus';
 import type { GhanaEvent, FilterState, WhenFilter } from '@/lib/types';
 import { rankScore } from '@/lib/events/rank';
 
@@ -104,6 +105,7 @@ export function filterEvents(
     if (!matchesWhen(ev, when)) return false;
     if (filters.city !== 'all' && ev.city !== filters.city) return false;
     if (filters.category && ev.category !== filters.category) return false;
+    if (filters.campus && !isCampus(ev)) return false;
     if (filters.freeOnly && ev.price > 0) return false;
     if (filters.priceFilter === 'free'  && ev.price > 0)    return false;
     if (filters.priceFilter === 'u50'   && ev.price >= 50)  return false;

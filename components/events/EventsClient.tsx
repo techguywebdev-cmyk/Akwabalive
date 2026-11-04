@@ -187,8 +187,9 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
       ...(when && WHEN_OPTS.some((w) => w.value === when) ? { when: when as FilterState['when'] } : {}),
       ...(text ? { search: text } : {}),
       ...(q.get('price') === 'free' ? { priceFilter: 'free' as const } : {}),
+      ...(q.get('campus') === '1' ? { campus: true } : {}),
     }));
-    if (q.get('view') === 'list' || cat || city || q.get('price')) setViewState('list');
+    if (q.get('view') === 'list' || cat || city || q.get('price') || q.get('campus')) setViewState('list');
     if (q.get('search') === '1' || text) setSearchOpen(true);
   }, []);
 
@@ -285,6 +286,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
     if (filters.when !== base.when) parts.push(WHEN_OPTS.find((w) => w.value === filters.when)?.label ?? '');
     if (filters.city !== 'all') parts.push(CITIES.find((c) => c.value === filters.city)?.label ?? '');
     if (filters.category) parts.push(CATEGORIES.find((c) => c.value === filters.category)?.label ?? '');
+    if (filters.campus) parts.push('Campus nights');
     if (filters.priceFilter) parts.push(PRICE_OPTS.find((p) => p.value === filters.priceFilter)?.label ?? '');
     if (locStatus === 'found' && locLabel) parts.push(`${locLabel} · ${radius} km`);
     if (filters.search) parts.push(`“${filters.search}”`);

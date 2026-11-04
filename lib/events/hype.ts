@@ -1,8 +1,9 @@
 import type { GhanaEvent } from '@/lib/types';
 import { parseDay } from '@/lib/dates';
 import { artistsForEvent } from '@/lib/data/artists';
+import { campusOf } from '@/lib/events/campus';
 
-export type HypeKind = 'soldout' | 'last' | 'fast' | 'hot' | 'pick' | 'special' | 'new' | 'returning' | 'stars' | 'detty';
+export type HypeKind = 'soldout' | 'last' | 'fast' | 'hot' | 'pick' | 'special' | 'new' | 'returning' | 'stars' | 'detty' | 'campus';
 export type Hype = { kind: HypeKind; text: string };
 
 /** Warm tags are about demand; the rest are about what makes the night special. */
@@ -30,6 +31,10 @@ export function hypeTags(e: GhanaEvent, opts: { returning?: boolean; max?: numbe
 
   // Marked hot by Akwaaba: always in demand
   if (e.hot && !e.isFeatured && !out.some((h) => WARM.includes(h.kind))) out.push({ kind: 'hot', text: 'Hot' });
+
+  // Student-run: SRC weeks, hall weeks, artiste nights
+  const school = campusOf(e);
+  if (school) out.push({ kind: 'campus', text: school === 'Campus' ? 'Campus night' : `${school} campus` });
 
   // The organiser's own line ("Surprise guests", "Album launch")
   if (e.highlight?.trim()) out.push({ kind: 'special', text: e.highlight.trim() });

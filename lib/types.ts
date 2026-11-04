@@ -139,6 +139,8 @@ export interface FilterState {
   sort: SortMode;
   /** Default upcoming = hide past events */
   when: WhenFilter;
+  /** Only campus nights (SRC weeks, hall weeks, artiste nights) */
+  campus?: boolean;
 }
 
 export function isListedEvent(event: Pick<GhanaEvent, 'listingType' | 'ticketUrl'>): boolean {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -53,6 +53,8 @@ export default function FromLinkPage() {
   const supabase = createClient();
 
   const [url, setUrl] = useState('');
+  // /organizer/events/from-link?url=… (from a campus lead on the review page)
+  useEffect(() => { const u = new URLSearchParams(window.location.search).get('url'); if (u) setUrl(u); }, []);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');

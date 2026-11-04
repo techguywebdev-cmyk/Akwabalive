@@ -1,5 +1,6 @@
 'use client';
 
+import { GraduationCap } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { FilterState, City, Category, WhenFilter, SortMode } from '@/lib/types';
 import { T, FONT, EASE } from '@/lib/thiscene';
@@ -193,6 +194,10 @@ export default function FilterSheet({
                 </Chip>
               );
             })}
+            <Chip on={!!filters.campus} onClick={() => set('campus', filters.campus ? undefined : true)}>
+              <GraduationCap size={16} color={filters.campus ? T.mintText : 'rgba(255,255,255,0.6)'} />
+              Campus nights
+            </Chip>
           </Group>
 
           <Group title="Price">
