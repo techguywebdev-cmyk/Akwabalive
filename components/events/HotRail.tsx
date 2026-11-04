@@ -9,14 +9,15 @@ import { hiRes } from '@/lib/events/image';
 import { eventCounts, trackEvent, compact, type EventCounts } from '@/lib/events/track';
 import { T, FONT } from '@/lib/thiscene';
 
-export const HOT_RAIL_H = 96;
+export const HOT_RAIL_H = 84;
 
-const ring = 'linear-gradient(135deg, #FF4D2E 0%, #FF8A3D 45%, #FFD23F 100%)';
+/** Mint ring, the app's own accent */
+const ring = `linear-gradient(140deg, ${T.mint} 0%, #3FBF86 100%)`;
 
 /**
- * The Hot rail: the shows everyone's after, pinned under the header on the events feed and list,
- * so they're one tap away on every screen. Shows real numbers (people who saw it this week, people going)
- * once they're worth showing; otherwise the date.
+ * The Hot rail: the shows everyone's after, in a slim row under the header on the events feed and list.
+ * It sits on the page ground (the feed starts below it), so it never covers a flyer. Shows real numbers
+ * (people who saw it this week, people going) once they're worth showing; otherwise the date.
  */
 export default function HotRail({ events, top }: { events: GhanaEvent[]; top: number }) {
   const [counts, setCounts] = useState<Record<string, EventCounts>>({});
@@ -32,32 +33,30 @@ export default function HotRail({ events, top }: { events: GhanaEvent[]; top: nu
 
   if (!events.length) return null;
   return (
-    <nav aria-label="Hot right now" style={{ position: 'fixed', zIndex: 190, left: 0, right: 0, top: `calc(${top}px + env(safe-area-inset-top, 0px))`, height: HOT_RAIL_H, background: 'linear-gradient(180deg, rgba(5,6,6,0.94) 0%, rgba(5,6,6,0.86) 75%, rgba(5,6,6,0) 100%)' }}>
-      <div className="no-scrollbar" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, overflowX: 'auto', padding: '4px 16px 0', maxWidth: 960, margin: '0 auto' }}>
-        <span aria-hidden style={{ flexShrink: 0, width: 46, height: 72, borderRadius: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'rgba(255,106,61,0.12)', border: '1px solid rgba(255,138,61,0.3)', color: '#FFB27A' }}>
-          <Flame size={20} fill="currentColor" />
-          <span style={{ fontFamily: FONT.display, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em' }}>HOT</span>
+    <nav aria-label="Hot right now" style={{ position: 'fixed', zIndex: 190, left: 0, right: 0, top: `calc(${top}px + env(safe-area-inset-top, 0px))`, height: HOT_RAIL_H, background: T.bg, borderBottom: `1px solid ${T.hairline}` }}>
+      <div className="no-scrollbar" style={{ display: 'flex', alignItems: 'flex-start', gap: 14, overflowX: 'auto', padding: '6px 16px 0', maxWidth: 960, margin: '0 auto' }}>
+        <span style={{ flexShrink: 0, alignSelf: 'center', marginTop: -14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, color: T.mintText }}>
+          <Flame size={18} />
+          <span style={{ fontFamily: FONT.display, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em' }}>HOT</span>
         </span>
         {events.map((e) => {
           const c = counts[e.slug];
           const d = parseDay(e.date);
-          const stat = c && c.seen7d >= 30
-            ? <><Eye size={10} strokeWidth={2.6} /> {compact(c.seen7d)}</>
-            : c && c.going >= 10
-              ? <><Users size={10} strokeWidth={2.6} /> {compact(c.going)}</>
-              : <>{d ? shortDay(d).replace(/^\w+ /, '') : 'Soon'}</>;
+          const stat = c && c.seen7d >= 30 ? <><Eye size={10} strokeWidth={2.6} /> {compact(c.seen7d)}</>
+            : c && c.going >= 10 ? <><Users size={10} strokeWidth={2.6} /> {compact(c.going)}</>
+              : null;
+          const when = d ? shortDay(d).replace(/^\w+ /, '') : 'Soon';
           return (
-            <Link key={e.slug} href={`/events/${e.slug}`} aria-label={e.title} style={{ flexShrink: 0, width: 62, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-              <span style={{ position: 'relative', width: 58, height: 72, borderRadius: 17, padding: 2, background: ring, boxShadow: '0 4px 18px rgba(255,106,61,0.28)' }}>
-                <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: 15, overflow: 'hidden', background: '#111', border: '2px solid #050606' }}>
+            <Link key={e.slug} href={`/events/${e.slug}`} aria-label={e.title} style={{ flexShrink: 0, width: 58, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <span style={{ position: 'relative', width: 54, height: 54, borderRadius: 27, padding: 2, background: ring }}>
+                <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: 25, overflow: 'hidden', background: '#111', border: `2px solid ${T.bg}` }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {e.image && <img src={hiRes(e.image, 240) ?? e.image} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />}
+                  {e.image && <img src={hiRes(e.image, 200) ?? e.image} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />}
                 </span>
-                <span style={{ position: 'absolute', left: '50%', bottom: -6, transform: 'translateX(-50%)', display: 'inline-flex', alignItems: 'center', gap: 3, height: 17, padding: '0 6px', borderRadius: 9, whiteSpace: 'nowrap', background: ring, color: '#1C0B03', fontFamily: FONT.sans, fontSize: 10, fontWeight: 800, boxShadow: '0 0 0 2px #050606' }}>
-                  {stat}
-                </span>
+                <span style={{ position: 'absolute', left: '50%', bottom: -5, transform: 'translateX(-50%)', display: 'inline-flex', alignItems: 'center', gap: 3, height: 16, padding: '0 6px', borderRadius: 8, whiteSpace: 'nowrap', fontFamily: FONT.sans, fontSize: 9.5, fontWeight: 800, boxShadow: `0 0 0 2px ${T.bg}`,
+                  ...(stat ? { background: T.mint, color: T.onMint } : { background: '#1A1F1D', color: T.text }) }}>{stat ?? when}</span>
               </span>
-              <span style={{ width: '100%', marginTop: 2, textAlign: 'center', fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(e.title)}</span>
+              <span style={{ width: '100%', textAlign: 'center', fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 600, lineHeight: 1.2, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(e.title)}</span>
             </Link>
           );
         })}
@@ -68,6 +67,6 @@ export default function HotRail({ events, top }: { events: GhanaEvent[]; top: nu
 
 /** "Tidal Rave Festival 2026" → "Tidal Rave" */
 function shortName(t: string) {
-  const clean = t.replace(/\b(19|20)\d{2}\b/g, '').replace(/\b(festival|concert|live in [a-z]+|live)\b/gi, '').replace(/[|:–—-].*$/, '').replace(/\s+/g, ' ').trim();
+  const clean = t.replace(/\b(19|20)\d{2}\b/g, '').replace(/\b(festival|concert|live in [a-z]+|live|memorial)\b/gi, '').replace(/[|:–—-].*$/, '').replace(/\s+/g, ' ').trim();
   return clean || t;
 }
