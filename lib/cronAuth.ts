@@ -3,7 +3,9 @@
  * FRESHNESS_KEY (a second key you can see and copy, since Vercel locks CRON_SECRET once saved). 24+ characters.
  */
 export function isScheduler(token: string | null | undefined): boolean {
-  if (!token) return false;
-  const keys = [process.env.CRON_SECRET, process.env.FRESHNESS_KEY].filter((k): k is string => !!k && k.length >= 16);
-  return keys.includes(token);
+  const t = token?.trim();
+  if (!t) return false;
+  // trimmed: a pasted key often carries a stray space or line break
+  const keys = [process.env.CRON_SECRET, process.env.FRESHNESS_KEY].map((k) => k?.trim()).filter((k): k is string => !!k && k.length >= 16);
+  return keys.includes(t);
 }
