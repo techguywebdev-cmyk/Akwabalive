@@ -1,3 +1,4 @@
+import { isScheduler } from '@/lib/cronAuth';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { runImport } from '@/lib/ingest/importSources';
@@ -20,8 +21,7 @@ export async function POST(req: Request) { return run(req); }
 async function authorized(req: Request) {
   const url = new URL(req.url);
   const token = (req.headers.get('authorization') || '').replace(/^Bearer /, '');
-  const cron = process.env.CRON_SECRET;
-  if (cron && (token === cron || url.searchParams.get('secret') === cron)) return true;
+  if (isScheduler(token) || isScheduler(url.searchParams.get('secret'))) return true;
   const reviewer = process.env.INGEST_ORGANIZER_ID;
   if (!token || !reviewer) return false;
   const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
