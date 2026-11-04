@@ -27,6 +27,8 @@ export const CATEGORIES: { value: Category; label: string }[] = [
   { value: 'tech', label: 'Tech' },
   { value: 'wellness', label: 'Wellness' },
   { value: 'fashion', label: 'Fashion' },
+  { value: 'business', label: 'Business' },
+  { value: 'faith', label: 'Faith' },
 ];
 
 export const WHEN_OPTS: { value: WhenFilter; label: string }[] = [

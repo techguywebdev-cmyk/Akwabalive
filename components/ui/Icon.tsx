@@ -136,4 +136,6 @@ export const CATEGORY_ICONS: Record<string, IconName> = {
   tech: 'tech',
   wellness: 'wellness',
   fashion: 'fashion',
+  business: 'dashboard',
+  faith: 'sparkle',
 };

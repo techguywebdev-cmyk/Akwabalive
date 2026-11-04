@@ -20,7 +20,9 @@ export type Category =
   | 'tech'
   | 'art'
   | 'fashion'
-  | 'wellness';
+  | 'wellness'
+  | 'business'
+  | 'faith';
 
 export type ListingType = 'hosted' | 'listed';
 

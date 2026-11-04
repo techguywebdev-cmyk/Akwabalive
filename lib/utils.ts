@@ -1,4 +1,5 @@
 import { isCampus } from '@/lib/events/campus';
+import { inCategory, eventCategories } from '@/lib/events/categories';
 import type { GhanaEvent, FilterState, WhenFilter } from '@/lib/types';
 import { rankScore } from '@/lib/events/rank';
 
@@ -104,7 +105,7 @@ export function filterEvents(
   let list = all.filter(ev => {
     if (!matchesWhen(ev, when)) return false;
     if (filters.city !== 'all' && ev.city !== filters.city) return false;
-    if (filters.category && ev.category !== filters.category) return false;
+    if (filters.category && !inCategory(ev, filters.category)) return false;
     if (filters.campus && !isCampus(ev)) return false;
     if (filters.freeOnly && ev.price > 0) return false;
     if (filters.priceFilter === 'free'  && ev.price > 0)    return false;
@@ -114,7 +115,7 @@ export function filterEvents(
     if (filters.maxPrice < 500 && ev.price > filters.maxPrice) return false;
     if (filters.search) {
       const q   = filters.search.toLowerCase();
-      const hay = `${ev.title} ${ev.venue} ${ev.city} ${ev.region ?? ''} ${ev.area ?? ''} ${ev.category}`.toLowerCase();
+      const hay = `${ev.title} ${ev.venue} ${ev.city} ${ev.region ?? ''} ${ev.area ?? ''} ${Array.from(eventCategories(ev)).join(' ')} ${(ev.lineup ?? []).join(' ')} ${ev.highlight ?? ''} ${ev.organizerName ?? ''}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     if (filters.sort === 'nearby' && userLoc) {
