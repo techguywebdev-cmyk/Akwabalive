@@ -20,7 +20,7 @@ import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import { useEventComments } from '@/hooks/useEventComments';
 import CommentsSheet from '@/components/moments/CommentsSheet';
 import { Portrait } from '@/components/artists/parts';
-import { AtSign, Bookmark, BookmarkCheck, CalendarPlus, Check, ExternalLink, Eye, Globe, Info, Mail, MessageCircle, MessageSquareText, Navigation, Phone, Play, Share2, Shirt, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { AtSign, Bookmark, BookmarkCheck, CalendarDays, CalendarPlus, MapPin, Check, ExternalLink, Eye, Globe, Info, Mail, MessageCircle, MessageSquareText, Navigation, Phone, Play, Share2, Shirt, ShieldCheck, UserPlus, Users } from 'lucide-react';
 import { eventInfo, hasInfo } from '@/lib/events/contacts';
 import { trackEvent, eventCounts, compact, type EventCounts } from '@/lib/events/track';
 import { TicketsSheet } from '@/components/events/EventActions';
@@ -229,7 +229,6 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
     ...(on ? { background: 'rgba(123,227,168,0.16)', color: T.mintText, border: '1px solid rgba(123,227,168,0.4)' } : { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' }),
   });
   const pillBtn = (on: boolean): CSSProperties => ({ ...roundBtn(on), width: 'auto', padding: '0 16px', gap: 7, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 });
-  const cardAction: CSSProperties = { flex: 1, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.white, textDecoration: 'none' };
   const primary: CSSProperties = {
     height: 52, padding: '0 28px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
     color: T.onMint, background: T.mint, border: 'none', boxShadow: '0 8px 24px rgba(123,227,168,0.22)',
@@ -315,30 +314,26 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
         <FriendsStrip slug={event.slug} variant="full" />
 
-        {/* When and where: one clean card — countdown, date, venue, then two even actions */}
-        <section style={{ marginTop: 22, borderRadius: 22, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16 }}>
-            {daysAway != null && daysAway >= 0 && (
-              <span style={{ width: 68, height: 68, flexShrink: 0, borderRadius: 18, background: `rgba(${r}, ${g}, ${b}, 0.28)`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontFamily: FONT.display, fontSize: daysAway === 0 ? 17 : daysAway > 99 ? 24 : 30, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1, color: T.white }}>{daysAway === 0 ? 'Today' : daysAway}</span>
-                {daysAway > 0 && <span style={{ marginTop: 3, fontFamily: FONT.sans, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)' }}>{daysAway === 1 ? 'day' : 'days'}</span>}
+        {/* When and where: the same quiet rows as Info & contact */}
+        <section style={{ marginTop: 26 }}>
+          <h2 style={eyebrowMint}>When &amp; where</h2>
+          <div style={{ marginTop: 8, borderRadius: 20, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+            <div style={{ ...infoRow, borderTop: 'none' }}>
+              <CalendarDays size={17} color={T.text2} />
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={infoLabel}>{daysAway == null ? 'Date' : daysAway < 0 ? 'Past event' : daysAway === 0 ? 'Today' : daysAway === 1 ? 'Tomorrow' : `In ${daysAway} days`}</span>
+                <span style={infoValue}>{parsed ? shortDay(parsed) : event.dateLabel}{event.time ? ` · ${event.time}` : ''}</span>
               </span>
-            )}
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 16, fontWeight: 700, color: T.white }}>
-                {parsed ? shortDay(parsed) : event.dateLabel}{event.time ? ` · ${event.time}` : ''}
+              {calendar && daysAway != null && daysAway >= 0 && <a href={calendar} target="_blank" rel="noopener noreferrer" aria-label="Add to calendar" title="Add to calendar" style={infoBtn}><CalendarPlus size={15} /></a>}
+            </div>
+            <div style={infoRow}>
+              <MapPin size={17} color={T.text2} />
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={infoLabel}>{[event.area, cityLabel(event.city)].filter(Boolean).join(', ') || 'Venue'}</span>
+                <span style={infoValue}>{event.venue}</span>
               </span>
-              <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event.venue}</span>
-              <span style={{ display: 'block', marginTop: 1, fontFamily: FONT.sans, fontSize: 13, color: T.text2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {[event.area, cityLabel(event.city)].filter(Boolean).join(', ')}{daysAway != null && daysAway < 0 ? ' · Past event' : ''}
-              </span>
-            </span>
-          </div>
-          <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-            <a href={maps} target="_blank" rel="noopener noreferrer" style={cardAction}><Navigation size={15} /> Directions</a>
-            {calendar && daysAway != null && daysAway >= 0 && (
-              <a href={calendar} target="_blank" rel="noopener noreferrer" style={{ ...cardAction, borderLeft: '1px solid rgba(255,255,255,0.08)' }}><CalendarPlus size={15} /> Add to calendar</a>
-            )}
+              <a href={maps} target="_blank" rel="noopener noreferrer" aria-label="Directions" title="Directions" style={{ ...infoBtn, background: 'rgba(123,227,168,0.14)', color: T.mintText }}><Navigation size={15} /></a>
+            </div>
           </div>
         </section>
 
