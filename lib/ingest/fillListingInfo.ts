@@ -14,7 +14,7 @@ export async function fillListingInfo(db: SupabaseClient, opts: { max?: number }
     await Promise.all(rows.slice(i, i + 5).map(async (r) => {
       const url = (r.source_url || r.ticket_url) as string;
       let info = '';
-      try { info = listingInfo(await fetchHtml(url, 10000)); } catch { return; } // try again next run
+      try { info = listingInfo(await fetchHtml(url, 10000), { pageLinks: /ayatickets\.com/.test(url) }); } catch { info = ''; } // unreadable page: don't block the queue
       await db.from('events').update({ listing_info: info }).eq('id', r.id);
       done.push({ slug: r.slug, chars: info.length });
     }));
