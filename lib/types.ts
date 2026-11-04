@@ -85,6 +85,8 @@ export interface GhanaEvent {
   highlight?: string | null;
   /** Words read off the flyer (contacts, dress code…) */
   flyerText?: string | null;
+  /** Info lines from the ticket page (dial code, organiser contacts) */
+  listingInfo?: string | null;
   /** Free-text description / caption (also searched for artist names) */
   description?: string | null;
   /** Real ticket tiers (Supabase events only). Needed to sell tickets on Akwaaba. */

@@ -23,6 +23,9 @@ jobs:
       - name: Campus nights (SRC weeks, hall weeks, artiste nights)
         run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/campus" | head -c 2000; echo
         continue-on-error: true
+      - name: Ticket-page info (dial codes, organiser contacts)
+        run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/listing-info" | head -c 2000; echo
+        continue-on-error: true
       - name: Read flyers (contacts, dress code, gate price)
         run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/read-flyers" | head -c 2000; echo
         continue-on-error: true

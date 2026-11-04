@@ -49,6 +49,7 @@ export default function LineupUpdates() {
     const [r, f] = await Promise.all([
       fetch('/api/events/watch', { headers: { authorization: `Bearer ${t}` } }).then((x) => x.json()).catch(() => null),
       fetch('/api/events/read-flyers', { headers: { authorization: `Bearer ${t}` } }).then((x) => x.json()).catch(() => null),
+      fetch('/api/events/listing-info', { headers: { authorization: `Bearer ${t}` } }).catch(() => null),
     ]);
     setChecking(false);
     const applied = (r?.report ?? []).reduce((n: number, x: { applied: string[] }) => n + x.applied.length, 0);

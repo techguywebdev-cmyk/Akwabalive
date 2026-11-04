@@ -221,7 +221,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
   const eyebrow: CSSProperties = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 6px' };
   const eyebrowMint: CSSProperties = { ...eyebrow, color: T.mintText };
-  const info = eventInfo(event.description, event.flyerText);
+  const info = eventInfo(event.description, event.listingInfo, event.ticketSource, event.flyerText);
   const infoRow: CSSProperties = { display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: -1 };
   const infoLabel: CSSProperties = { display: 'block', fontFamily: FONT.sans, fontSize: 12, color: T.text3 };
   const infoValue: CSSProperties = { display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
