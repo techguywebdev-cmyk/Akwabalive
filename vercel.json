@@ -11,6 +11,10 @@
     {
       "path": "/api/moments/find",
       "schedule": "30 4 * * *"
+    },
+    {
+      "path": "/api/events/watch",
+      "schedule": "0 7 * * *"
     }
   ]
 }
