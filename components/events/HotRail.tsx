@@ -9,7 +9,7 @@ import { hiRes } from '@/lib/events/image';
 import { eventCounts, trackEvent, compact, type EventCounts } from '@/lib/events/track';
 import { T, FONT } from '@/lib/thiscene';
 
-export const HOT_RAIL_H = 84;
+export const HOT_RAIL_H = 100;
 
 /** Mint ring, the app's own accent */
 const ring = `linear-gradient(140deg, ${T.mint} 0%, #3FBF86 100%)`;
@@ -48,8 +48,8 @@ export default function HotRail({ events, top }: { events: GhanaEvent[]; top: nu
           const when = d ? shortDay(d).replace(/^\w+ /, '') : 'Soon';
           return (
             <Link key={e.slug} href={`/events/${e.slug}`} aria-label={e.title} style={{ flexShrink: 0, width: 58, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <span style={{ position: 'relative', width: 54, height: 54, borderRadius: 27, padding: 2, background: ring }}>
-                <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: 25, overflow: 'hidden', background: '#111', border: `2px solid ${T.bg}` }}>
+              <span style={{ position: 'relative', width: 54, height: 68, borderRadius: 16, padding: 2, background: ring }}>
+                <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: 14, overflow: 'hidden', background: '#111', border: `2px solid ${T.bg}` }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {e.image && <img src={hiRes(e.image, 200) ?? e.image} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />}
                 </span>

@@ -322,12 +322,13 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
 
   const headerH = 74;
   const searchH = searchOpen ? 60 : 0;
-  const railH = hotShows.length ? HOT_RAIL_H : 0;
+  // The Hot rail sits on the list view; the feed keeps its full-height flyers
+  const railH = hotShows.length && view === 'list' ? HOT_RAIL_H : 0;
 
   return (
     <>
       <Nav active="Events" actions={headerActions} />
-      <HotRail events={hotShows} top={headerH + searchH} />
+      {view === 'list' && <HotRail events={hotShows} top={headerH + searchH} />}
 
       {searchOpen && (
         <div style={{ position: 'fixed', zIndex: 195, top: `calc(${headerH}px + env(safe-area-inset-top, 0px))`, left: 16, right: 16, maxWidth: 720, margin: '0 auto' }}>
@@ -356,8 +357,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
           onToggleSave={toggleSave}
           going={going}
           onToggleGoing={toggleGoing}
-          topInset={railH ? 0 : headerH + searchH}
-          frameTop={railH ? headerH + searchH + railH : 0}
+          topInset={headerH + searchH}
           onShowAll={filters.when !== 'all' ? () => set('when', 'all') : clear}
           showAllLabel={filters.when !== 'all' ? 'Include past events' : 'Clear filters'}
         />
