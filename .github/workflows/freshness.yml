@@ -1,6 +1,6 @@
 # Keeps Akwaaba fresh: every 2 hours, look for new events on ticket sites and new line-up news.
 # (Vercel's plan only allows daily schedules, so GitHub runs the frequent ones.)
-# Needs one repository secret: FRESHNESS_KEY (the same value as the FRESHNESS_KEY env var in Vercel).
+# Needs one repository secret: FRESHNESS_KEY (the same value as the FRESHNESS_KEY env var in Vercel, 16+ characters).
 name: Freshness
 
 on:
@@ -11,26 +11,33 @@ on:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     env:
       SITE: https://akwabalive.vercel.app
-      CRON_SECRET: ${{ secrets.FRESHNESS_KEY }}
+      KEY: ${{ secrets.FRESHNESS_KEY }}
     steps:
-      - name: Check the secret is set
-        run: test -n "$CRON_SECRET" || (echo "Add FRESHNESS_KEY in Settings → Secrets and variables → Actions" && exit 1)
+      - name: Check the key
+        run: |
+          if [ -z "$KEY" ]; then echo "::error::No FRESHNESS_KEY secret found in this repository"; exit 1; fi
+          echo "FRESHNESS_KEY found (${#KEY} characters)"
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -H "Authorization: Bearer $KEY" "$SITE/api/events/campus")
+          if [ "$code" = "401" ]; then echo "::error::The site rejected the key: FRESHNESS_KEY in GitHub and in Vercel must be the same (16+ characters), and Vercel needs a redeploy after changing it"; exit 1; fi
+          echo "Site accepted the key (HTTP $code)"
       - name: Line-up news (official sites + press)
-        run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/watch" | head -c 2000; echo
+        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/watch" | head -c 2000; echo
+        continue-on-error: true
       - name: Campus nights (SRC weeks, hall weeks, artiste nights)
-        run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/campus" | head -c 2000; echo
+        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/campus" | head -c 2000; echo
         continue-on-error: true
       - name: Ticket-page info (dial codes, organiser contacts)
-        run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/listing-info" | head -c 2000; echo
+        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/listing-info" | head -c 2000; echo
         continue-on-error: true
       - name: Read flyers (contacts, dress code, gate price)
-        run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/read-flyers" | head -c 2000; echo
+        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/read-flyers" | head -c 2000; echo
         continue-on-error: true
       - name: New events from ticket sites
-        run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/cron/import-events" | head -c 2000; echo
+        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/cron/import-events" | head -c 2000; echo
+        continue-on-error: true
       - name: Discover events
-        run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/cron/discover-events" | head -c 2000; echo
+        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/cron/discover-events" | head -c 2000; echo
         continue-on-error: true
