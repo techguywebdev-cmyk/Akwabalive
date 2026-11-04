@@ -26,7 +26,7 @@ const LABELS: [RegExp, string][] = [
 
 /** 0244 697 529 / +233 24 469 7529 / 233244697529 → +233244697529 */
 function ghanaIntl(raw: string): string | null {
-  const d = raw.replace(/\D/g, '');
+  const d = raw.replace(/\D/g, '').replace(/^2330/, '233');
   if (/^0[235]\d{8}$/.test(d)) return `+233${d.slice(1)}`;
   if (/^233[235]\d{8}$/.test(d)) return `+${d}`;
   return null;
@@ -53,6 +53,13 @@ export function eventInfo(...texts: Array<string | null | undefined>): EventInfo
   };
   // Ghana numbers: 0244 697 529, 024-469-7529, +233 24 469 7529, +233 509388909, Tel_0540515129
   for (const m of Array.from(text.matchAll(/(?:\+\s?233|\b233|\b0)[\s._-]?\(?\d{2}\)?[\s._-]?\d{3}[\s._-]?\d{3,4}\b/g))) {
+    const intl = ghanaIntl(m[0]);
+    if (!intl || seen.has(intl) || PLATFORM_NUMBERS.has(intl)) continue;
+    seen.add(intl);
+    phones.push({ display: pretty(intl), intl, label: labelFor(m.index ?? 0) });
+  }
+  // Looser layouts: +233(0) 55 808 40 85, 055 808 40 85
+  for (const m of Array.from(text.matchAll(/(?:\+\s?233\s?\(0\)|\+\s?233|(?<!\d)0)[\d\s().-]{8,15}\d/g))) {
     const intl = ghanaIntl(m[0]);
     if (!intl || seen.has(intl) || PLATFORM_NUMBERS.has(intl)) continue;
     seen.add(intl);
@@ -86,7 +93,7 @@ export function eventInfo(...texts: Array<string | null | undefined>): EventInfo
   if (/swim\s?(suit|wear|ming costume)|swimming costume/i.test(text)) notes.push('Bring swimwear');
   if (/private location|location (?:will be )?(?:shared|sent)/i.test(text)) notes.push('Location shared with ticket holders');
   return {
-    phones: phones.slice(0, 4), ussd: Array.from(new Set(Array.from(text.matchAll(/\*\s?\d{2,4}(?:\s?\*\s?\d{1,6})+\s?#/g)).map((m) => m[0].replace(/\s+/g, '')))).slice(0, 2), emails, instagram, websites,
+    phones: phones.slice(0, 4), ussd: ((codes) => codes.filter((c) => !codes.some((o) => o !== c && o.startsWith(c.slice(0, -1) + '*'))))(Array.from(new Set(Array.from(text.matchAll(/\*\s?\d{2,4}(?:\s?\*\s?\d{1,6})+\s?#/g)).map((m) => m[0].replace(/\s+/g, ''))))).slice(0, 2), emails, instagram, websites,
     dressCode: dress ? dress[1].trim().replace(/\s+/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) : null,
     age: age ? `${age[1] ?? age[2]}+ only` : null,
     notes: notes.filter(Boolean),
