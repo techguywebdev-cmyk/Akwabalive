@@ -20,7 +20,7 @@ export type EventInfo = {
 const LABELS: [RegExp, string][] = [
   [/table|reserv|booking|vip/i, 'Tables & reservations'],
   [/sponsor|partner/i, 'Sponsorship'],
-  [/ticket|enquir|inquir|info/i, 'Tickets & enquiries'],
+  [/ticket|enquir|inquir|info|customer care|hotline/i, 'Tickets & enquiries'],
   [/vendor|stand|booth|exhibit/i, 'Vendors'],
 ];
 
@@ -31,6 +31,8 @@ function ghanaIntl(raw: string): string | null {
   if (/^233[235]\d{8}$/.test(d)) return `+${d}`;
   return null;
 }
+/** Ticket platforms' own support lines: not the organiser's */
+const PLATFORM_NUMBERS = new Set(['+233559416230', '+233559051324']);
 const pretty = (intl: string) => `0${intl.slice(4, 6)} ${intl.slice(6, 9)} ${intl.slice(9)}`;
 
 export function eventInfo(...texts: Array<string | null | undefined>): EventInfo {
@@ -40,12 +42,19 @@ export function eventInfo(...texts: Array<string | null | undefined>): EventInfo
   const labelFor = (at: number) => {
     // The words just before the number (same line or the line above) say what it's for
     const before = text.slice(Math.max(0, at - 70), at);
-    return LABELS.find(([re]) => re.test(before))?.[1] ?? 'Call';
+    // the nearest keyword wins ("SPONSORSHIP · PURCHASE TICKET 054…" is the ticket line)
+    let best: [number, string] = [-1, 'Call'];
+    for (const [re, label] of LABELS) {
+      const hits = Array.from(before.matchAll(new RegExp(re.source, 'gi')));
+      const at = hits.length ? hits[hits.length - 1].index ?? -1 : -1;
+      if (at > best[0]) best = [at, label];
+    }
+    return best[1];
   };
   // Ghana numbers: 0244 697 529, 024-469-7529, +233 24 469 7529, +233 509388909, Tel_0540515129
   for (const m of Array.from(text.matchAll(/(?:\+\s?233|\b233|\b0)[\s._-]?\(?\d{2}\)?[\s._-]?\d{3}[\s._-]?\d{3,4}\b/g))) {
     const intl = ghanaIntl(m[0]);
-    if (!intl || seen.has(intl)) continue;
+    if (!intl || seen.has(intl) || PLATFORM_NUMBERS.has(intl)) continue;
     seen.add(intl);
     phones.push({ display: pretty(intl), intl, label: labelFor(m.index ?? 0) });
   }
@@ -57,10 +66,11 @@ export function eventInfo(...texts: Array<string | null | undefined>): EventInfo
     seen.add(intl);
     phones.push({ display: m[0].replace(/\s+/g, ' ').trim(), intl, label: labelFor(m.index ?? 0) });
   }
-  const emails = Array.from(new Set(Array.from(text.matchAll(/[\w.+-]+@[\w-]+\.[\w.]{2,}/g)).map((m) => m[0].toLowerCase()))).slice(0, 3);
-  const instagram = Array.from(new Set(Array.from(text.matchAll(/(?:^|[\s(])@([a-z0-9_.]{3,30})\b/gi))
-    // all-caps after @ is a flyer saying "@ BUKOM ARENA", not a handle
-    .map((m) => m[1].replace(/\.$/, '')).filter((h) => !(h === h.toUpperCase() && /[A-Z]/.test(h))).filter((h) => !emails.some((e) => e.includes(`@${h.toLowerCase()}`))))).slice(0, 4);
+  const emails = Array.from(new Set(Array.from(text.matchAll(/[\w.+-]+@[\w-]+\.[\w.]{2,}/g)).map((m) => m[0].toLowerCase().replace(/\.$/, '')))).filter((e) => !/ayatickets|egotickets|allevents|eventbrite/.test(e)).slice(0, 3);
+  const instagram = Array.from(new Set(Array.from(text.matchAll(/(?:^|[\s(|])@([a-z0-9_.]{3,30})\b/gi))
+    // "@BUKOM ARENA" on a flyer is a venue, not a handle: all caps followed by another all-caps word
+    .filter((m) => !(m[1] === m[1].toUpperCase() && /^\s+[A-Z]{3,}\b/.test(text.slice((m.index ?? 0) + m[0].length))))
+    .map((m) => m[1].replace(/\.$/, '').toLowerCase()).filter((h) => !/^ayatickets|^egotickets|^allevents/.test(h)).filter((h) => !emails.some((e) => e.includes(`@${h}`))))).slice(0, 4);
   const websites = Array.from(new Set(Array.from(text.matchAll(/\b(?:https?:\/\/)?(?:www\.)?([a-z0-9-]+\.(?:com|gh|com\.gh|net|org|live|events|co|africa|tv))(\/[^\s)]*)?/gi))
     .map((m) => m[0].replace(/[.,]$/, '').toLowerCase()).filter((w) => !/instagram|facebook|twitter|x\.com|tiktok|allevents|eventbrite|egotickets/i.test(w) && !emails.some((e) => e.endsWith(`@${w.toLowerCase().replace(/^https?:\/\/(www\.)?/, '')}`))))).slice(0, 2);
   const dress = text.match(/dress\s*code\s*[:\-]?\s*([a-z][a-z &/-]{2,30})/i);
@@ -73,9 +83,10 @@ export function eventInfo(...texts: Array<string | null | undefined>): EventInfo
   if (/tables?\s+(?:are\s+)?(?:strictly\s+)?(?:by\s+)?reserv/i.test(text)) notes.push('Tables by reservation only');
   if (/access to everything for free|free drinks|open bar/i.test(text)) notes.push('Everything included with your ticket');
   if (/early bird/i.test(text)) notes.push('Early bird tickets available');
+  if (/swim\s?(suit|wear|ming costume)|swimming costume/i.test(text)) notes.push('Bring swimwear');
   if (/private location|location (?:will be )?(?:shared|sent)/i.test(text)) notes.push('Location shared with ticket holders');
   return {
-    phones: phones.slice(0, 4), ussd: Array.from(new Set(Array.from(text.matchAll(/\*\d{2,4}(?:\*\d{1,6})*#/g)).map((m) => m[0]))).slice(0, 2), emails, instagram, websites,
+    phones: phones.slice(0, 4), ussd: Array.from(new Set(Array.from(text.matchAll(/\*\s?\d{2,4}(?:\s?\*\s?\d{1,6})+\s?#/g)).map((m) => m[0].replace(/\s+/g, '')))).slice(0, 2), emails, instagram, websites,
     dressCode: dress ? dress[1].trim().replace(/\s+/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) : null,
     age: age ? `${age[1] ?? age[2]}+ only` : null,
     notes: notes.filter(Boolean),
