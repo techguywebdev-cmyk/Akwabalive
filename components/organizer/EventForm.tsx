@@ -15,7 +15,7 @@ import { T, FONT } from '@/lib/thiscene';
 /* ── Options ─────────────────────────────────────────────────────────── */
 export const CATEGORIES = [
   ['concert', 'Concert'], ['festival', 'Festival'], ['nightlife', 'Nightlife'], ['culture', 'Culture'], ['food', 'Food & drink'],
-  ['art', 'Art'], ['fashion', 'Fashion'], ['sports', 'Sports'], ['tech', 'Tech'], ['wellness', 'Wellness'],
+  ['art', 'Art'], ['fashion', 'Fashion'], ['sports', 'Sports'], ['tech', 'Tech'], ['wellness', 'Wellness'], ['business', 'Business'], ['faith', 'Faith'],
 ] as const;
 export const CITIES = [['accra', 'Accra'], ['kumasi', 'Kumasi'], ['cape-coast', 'Cape Coast'], ['takoradi', 'Takoradi'], ['tamale', 'Tamale'], ['ho', 'Ho']] as const;
 const REGIONS: Record<string, string> = { accra: 'Greater Accra', kumasi: 'Ashanti', 'cape-coast': 'Central', takoradi: 'Western', tamale: 'Northern', ho: 'Volta' };

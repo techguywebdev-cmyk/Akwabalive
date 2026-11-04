@@ -26,6 +26,8 @@ const CATEGORY_ACCENT: Record<string, RGB> = {
   art: hexToRgb(ACCENTS.indigo),
   fashion: hexToRgb(ACCENTS.rose),
   wellness: hexToRgb(ACCENTS.lime),
+  business: hexToRgb(ACCENTS.sky),
+  faith: hexToRgb(ACCENTS.gold),
 };
 
 export const toHex = (c: RGB) => `#${c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
