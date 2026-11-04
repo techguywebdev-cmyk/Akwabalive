@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import Link from 'next/link';
 import type { GhanaEvent } from '@/lib/types';
 import { cityLabel, formatDistance } from '@/lib/utils';
@@ -14,6 +14,7 @@ import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { EventTags, BTN } from '@/components/events/CardParts';
 import { hypeTags, eventExcerpt } from '@/lib/events/hype';
 import { trackEvent } from '@/lib/events/track';
+import HotCarousel from '@/components/events/HotCarousel';
 import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
@@ -199,7 +200,7 @@ function EventCard({
  * green-black; each card's colour only tints its tags, title glow and main button.
  */
 export default function EventFeed({
-  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel, frameTop = 0,
+  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel, frameTop = 0, hot = [],
 }: {
   items: FeedItem[];
   saved: Set<string>;
@@ -210,6 +211,8 @@ export default function EventFeed({
   topInset: number;
   /** Where the feed starts (below the header and Hot rail); cards never sit under them */
   frameTop?: number;
+  /** Hot shows: a sideways carousel screen after the 3rd card, then every 6 cards */
+  hot?: GhanaEvent[];
   onShowAll?: () => void;
   showAllLabel?: string;
 }) {
@@ -222,6 +225,17 @@ export default function EventFeed({
   const [tickets, setTickets] = useState<{ event: GhanaEvent; accent: string } | null>(null);
   const [checkout, setCheckout] = useState<{ event: GhanaEvent; tiers: CheckoutTier[] } | null>(null);
   const hasItems = items.length > 0;
+  // Event cards with the Hot carousel screen woven in
+  type Slide = { kind: 'event'; item: FeedItem } | { kind: 'hot'; key: string };
+  const slides = useMemo<Slide[]>(() => {
+    const out: Slide[] = [];
+    items.forEach((item, i) => {
+      out.push({ kind: 'event', item });
+      if (hot.length >= 3 && (i === 2 || (i > 2 && (i - 2) % 6 === 0)) && i < items.length - 1) out.push({ kind: 'hot', key: `hot-${i}` });
+    });
+    return out;
+  }, [items, hot.length]);
+  const eventAt = (i: number) => { const s = slides[i]; return s && s.kind === 'event' ? s.item : undefined; };
 
   useEffect(() => {
     const fn = () => setWide(window.innerWidth >= 900);
@@ -261,14 +275,14 @@ export default function EventFeed({
     const el = scroller.current;
     if (!items.length) return;
     if (firstKey.current === null) firstKey.current = listKey;
-    const back = listKey === firstKey.current && returnTo ? items.findIndex((i) => i.event.slug === returnTo) : -1;
+    const back = listKey === firstKey.current && returnTo ? slides.findIndex((x) => x.kind === 'event' && x.item.event.slug === returnTo) : -1;
     if (el && back > 0) { el.scrollTo({ top: back * el.clientHeight, behavior: 'instant' as ScrollBehavior }); setActive(back); return; }
     el?.scrollTo({ top: 0 }); setActive(0);
   }, [listKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { const slug = items[active]?.event.slug; if (slug) { lastSeen = slug; trackEvent(slug, 'impression'); } }, [active, items]);
+  useEffect(() => { const slug = eventAt(active)?.event.slug; if (slug) { lastSeen = slug; trackEvent(slug, 'impression'); } }, [active, slides]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The live accent follows the active card
-  const current = items[Math.min(active, items.length - 1)]?.event;
+  const current = (eventAt(active) ?? eventAt(active - 1) ?? items[0])?.event;
   useEffect(() => {
     if (!current) return;
     let live = true;
@@ -322,19 +336,21 @@ export default function EventFeed({
         className="no-scrollbar"
         style={{ position: 'fixed', top: frameTop ? `calc(${frameTop}px + env(safe-area-inset-top, 0px))` : 0, left: 0, right: 0, bottom: 0, zIndex: 40, overflowY: 'auto', overflowX: 'hidden', scrollSnapType: 'y mandatory', overscrollBehavior: 'contain', background: T.bg }}
       >
-        {items.map((item, i) => (
+        {slides.map((sl, i) => sl.kind === 'hot' ? (
+          <HotCarousel key={sl.key} events={hot} topInset={topInset} active={i === active} onNext={() => scroller.current?.scrollBy({ top: scroller.current.clientHeight, behavior: 'smooth' })} />
+        ) : (
           <EventCard
-            key={item.event.slug}
-            item={item}
+            key={sl.item.event.slug}
+            item={sl.item}
             active={i === active}
             near={Math.abs(i - active) <= 1}
             wide={wide}
-            saved={saved.has(item.event.slug)}
-            going={going.has(item.event.slug)}
-            onSave={() => onToggleSave(item.event)}
-            onGoing={() => onToggleGoing(item.event)}
-            onShare={() => share(item.event)}
-            onTickets={(accent) => setTickets({ event: item.event, accent })}
+            saved={saved.has(sl.item.event.slug)}
+            going={going.has(sl.item.event.slug)}
+            onSave={() => onToggleSave(sl.item.event)}
+            onGoing={() => onToggleGoing(sl.item.event)}
+            onShare={() => share(sl.item.event)}
+            onTickets={(accent) => setTickets({ event: sl.item.event, accent })}
             topInset={topInset}
           />
         ))}

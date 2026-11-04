@@ -358,6 +358,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
           going={going}
           onToggleGoing={toggleGoing}
           topInset={headerH + searchH}
+          hot={hotShows}
           onShowAll={filters.when !== 'all' ? () => set('when', 'all') : clear}
           showAllLabel={filters.when !== 'all' ? 'Include past events' : 'Clear filters'}
         />
