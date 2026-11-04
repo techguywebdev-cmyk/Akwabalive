@@ -13,6 +13,8 @@ export type EventInfo = {
   dressCode: string | null;
   age: string | null;
   notes: string[];
+  /** Price at the gate when the flyer gives one */
+  gatePrice: number | null;
 };
 
 const LABELS: [RegExp, string][] = [
@@ -35,13 +37,25 @@ export function eventInfo(...texts: Array<string | null | undefined>): EventInfo
   const text = texts.filter(Boolean).join('\n').replace(/[–—]/g, '-');
   const phones: Phone[] = [];
   const seen = new Set<string>();
-  for (const m of Array.from(text.matchAll(/(?:\+?233|0)[\s.-]?\(?\d{2}\)?[\s.-]?\d{3}[\s.-]?\d{3,4}/g))) {
+  const labelFor = (at: number) => {
+    // The words just before the number (same line or the line above) say what it's for
+    const before = text.slice(Math.max(0, at - 70), at);
+    return LABELS.find(([re]) => re.test(before))?.[1] ?? 'Call';
+  };
+  // Ghana numbers: 0244 697 529, 024-469-7529, +233 24 469 7529, +233 509388909, Tel_0540515129
+  for (const m of Array.from(text.matchAll(/(?:\+\s?233|\b233|\b0)[\s._-]?\(?\d{2}\)?[\s._-]?\d{3}[\s._-]?\d{3,4}\b/g))) {
     const intl = ghanaIntl(m[0]);
     if (!intl || seen.has(intl)) continue;
     seen.add(intl);
-    const before = text.slice(Math.max(0, (m.index ?? 0) - 60), m.index ?? 0);
-    const label = LABELS.find(([re]) => re.test(before))?.[1] ?? 'Call';
-    phones.push({ display: pretty(intl), intl, label });
+    phones.push({ display: pretty(intl), intl, label: labelFor(m.index ?? 0) });
+  }
+  // Numbers abroad (diaspora promoters): +1 615 739 1564, +44 7700 900123
+  for (const m of Array.from(text.matchAll(/\+\s?(1|44)[\s.-]?\(?\d{3,4}\)?[\s.-]?\d{3}[\s.-]?\d{3,4}\b/g))) {
+    const digits = m[0].replace(/\D/g, '');
+    const intl = `+${digits}`;
+    if (seen.has(intl) || digits.length < 11 || digits.length > 13) continue;
+    seen.add(intl);
+    phones.push({ display: m[0].replace(/\s+/g, ' ').trim(), intl, label: labelFor(m.index ?? 0) });
   }
   const emails = Array.from(new Set(Array.from(text.matchAll(/[\w.+-]+@[\w-]+\.[\w.]{2,}/g)).map((m) => m[0].toLowerCase()))).slice(0, 3);
   const instagram = Array.from(new Set(Array.from(text.matchAll(/(?:^|[\s(])@([a-z0-9_.]{3,30})\b/gi))
@@ -52,13 +66,20 @@ export function eventInfo(...texts: Array<string | null | undefined>): EventInfo
   const dress = text.match(/dress\s*code\s*[:\-]?\s*([a-z][a-z &/-]{2,30})/i);
   const age = text.match(/\b(18|21)\s*\+|\b(18|21)\s*(?:years|yrs)\s*(?:and above|\+)/i);
   const notes: string[] = [];
-  if (/access to everything for free|free drinks/i.test(text)) notes.push('Everything included with your ticket');
+  const doors = text.match(/doors?\s*open(?:s)?\s*(?:at|from)?\s*:?\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm))(\s*-\s*late)?/i);
+  if (doors) notes.push(`Doors open ${doors[1].replace(/\s+/g, '').toUpperCase().replace(/(AM|PM)/, ' $1')}${doors[2] ? ' till late' : ''}`);
+  const gate = text.match(/(?:gate|at the gate|on the gate)\s*[-:–]?\s*(?:gh[c₵¢]|gh₵|ghs|₵)\s*(\d{1,5})/i);
+  if (gate) notes.push(`Gate: GH₵ ${gate[1]}`);
+  if (/tables?\s+(?:are\s+)?(?:strictly\s+)?(?:by\s+)?reserv/i.test(text)) notes.push('Tables by reservation only');
+  if (/access to everything for free|free drinks|open bar/i.test(text)) notes.push('Everything included with your ticket');
   if (/early bird/i.test(text)) notes.push('Early bird tickets available');
+  if (/private location|location (?:will be )?(?:shared|sent)/i.test(text)) notes.push('Location shared with ticket holders');
   return {
     phones: phones.slice(0, 4), ussd: Array.from(new Set(Array.from(text.matchAll(/\*\d{2,4}(?:\*\d{1,6})*#/g)).map((m) => m[0]))).slice(0, 2), emails, instagram, websites,
     dressCode: dress ? dress[1].trim().replace(/\s+/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase()) : null,
     age: age ? `${age[1] ?? age[2]}+ only` : null,
     notes: notes.filter(Boolean),
+    gatePrice: gate ? Number(gate[1]) : null,
   };
 }
 

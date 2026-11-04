@@ -20,6 +20,9 @@ jobs:
         run: test -n "$CRON_SECRET" || (echo "Add CRON_SECRET in Settings → Secrets and variables → Actions" && exit 1)
       - name: Line-up news (official sites + press)
         run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/watch" | head -c 2000; echo
+      - name: Read flyers (contacts, dress code, gate price)
+        run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/read-flyers" | head -c 2000; echo
+        continue-on-error: true
       - name: New events from ticket sites
         run: curl -fsS --max-time 90 -H "Authorization: Bearer $CRON_SECRET" "$SITE/api/events/cron/import-events" | head -c 2000; echo
       - name: Discover events
