@@ -214,7 +214,7 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
         </section>
       </main>
 
-      <div style={{ position: 'sticky', top: 'calc(72px + env(safe-area-inset-top, 0px))', zIndex: 20, marginTop: 14, background: 'linear-gradient(180deg, #070908 80%, rgba(7,9,8,0))', padding: '8px 0 12px' }}>
+      <div style={{ position: 'sticky', top: 'calc(70px + env(safe-area-inset-top, 0px))', zIndex: 20, marginTop: 14, background: 'linear-gradient(180deg, rgba(12,26,19,0.86) 0%, rgba(10,22,16,0.86) 100%)', backdropFilter: 'blur(18px) saturate(140%)', WebkitBackdropFilter: 'blur(18px) saturate(140%)', padding: '10px 0 12px' }}>
         <div ref={strip} className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', maxWidth: 760, margin: '0 auto', padding: '0 20px' }}>
           {days.map((d) => {
             const n = byDay.get(d)?.length ?? 0;
