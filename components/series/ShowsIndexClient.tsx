@@ -68,11 +68,34 @@ function HeroCard({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
   );
 }
 
+export type CalendarItem = { key: string; date: string | null; end: string | null; title: string; sub: string; href: string; image: string | null };
+
+/** A night on the December calendar: big date, name and where, small cover */
+function CalendarItemRow({ c }: { c: CalendarItem }) {
+  const d = c.date ? new Date(`${c.date}T12:00:00Z`) : null;
+  const end = c.end ? new Date(`${c.end}T12:00:00Z`).getUTCDate() : null;
+  return (
+    <Link href={c.href} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', textDecoration: 'none' }}>
+      <span style={{ width: 52, flexShrink: 0, textAlign: 'center' }}>
+        <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: d ? T.mintText : T.text3 }}>{d ? d.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' }) : 'Dec'}</span>
+        <span style={{ display: 'block', whiteSpace: 'nowrap', fontFamily: FONT.display, fontSize: d ? (end ? 20 : 28) : 17, fontWeight: 800, lineHeight: d && end ? 1.4 : 1.1, letterSpacing: '-0.03em', color: d ? T.white : T.text3 }}>{d ? `${d.getUTCDate()}${end ? `–${end}` : ''}` : 'TBA'}</span>
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{c.title}</span>
+        <span style={{ display: 'block', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{c.sub}</span>
+      </span>
+      <span style={{ width: 56, height: 56, borderRadius: 14, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.05)' }}>
+        <Cover src={c.image} name={c.title} style={{ width: '100%', height: '100%', fontSize: 18 } as React.CSSProperties} />
+      </span>
+    </Link>
+  );
+}
+
 /** December calendar row: big date, name and host, small cover */
 function CalendarRow({ s, rating }: { s: SeriesSummary; rating?: RatingSummary }) {
   const d = parseDay(s.nextDate);
   return (
-    <Link href={`/shows/${s.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderTop: `1px solid ${T.hairline}`, textDecoration: 'none' }}>
+    <Link href={`/shows/${s.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', textDecoration: 'none' }}>
       <span style={{ width: 48, flexShrink: 0, textAlign: 'center' }}>
         <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: d ? T.mintText : T.text3 }}>{d ? d.toLocaleDateString('en-GB', { month: 'short' }) : 'Dec'}</span>
         <span style={{ display: 'block', fontFamily: FONT.display, fontSize: d ? 28 : 17, fontWeight: 800, lineHeight: 1.1, color: d ? T.white : T.text3 }}>{d ? d.getDate() : 'TBA'}</span>
@@ -127,7 +150,7 @@ type When = 'any' | 'dated' | 'december';
 const MARQUEE = ['rapperholic', 'detty-rave', 'afro-future', 'tidal-rave'];
 const isDecember = (s: SeriesSummary) => /december/i.test(s.usually) || (!!s.nextDate && s.nextDate.slice(5, 7) === '12');
 
-export default function ShowsIndexClient({ series }: { series: SeriesSummary[] }) {
+export default function ShowsIndexClient({ series, calendar = [] }: { series: SeriesSummary[]; calendar?: CalendarItem[] }) {
   const mine = useMyFollows('series');
   const ratings = useRatingSummaries(series.map((s) => s.lastSlug).filter(Boolean) as string[]);
   const rate = (s: SeriesSummary) => (s.lastSlug ? ratings[s.lastSlug] : undefined);
@@ -204,12 +227,13 @@ export default function ShowsIndexClient({ series }: { series: SeriesSummary[] }
               </section>
             )}
 
-            {december.length > 0 && (
+            {(calendar.length > 0 || december.length > 0) && (
               <section style={{ marginTop: 38 }}>
                 <SectionTitle>The December calendar</SectionTitle>
-                <div style={{ borderBottom: `1px solid ${T.hairline}` }}>
-                  {december.map((s) => <CalendarRow key={s.slug} s={s} rating={rate(s)} />)}
-                </div>
+                {calendar.length > 0
+                  ? calendar.map((c) => <CalendarItemRow key={c.key} c={c} />)
+                  : december.map((s) => <CalendarRow key={s.slug} s={s} rating={rate(s)} />)}
+                <Link href="/december" style={{ marginTop: 14, height: 46, padding: '0 18px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(123,227,168,0.14)', color: T.mintText, fontFamily: FONT.display, fontSize: 14.5, fontWeight: 700, textDecoration: 'none' }}>Every night of Detty December →</Link>
               </section>
             )}
 
