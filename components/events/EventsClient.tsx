@@ -34,7 +34,6 @@ const PLACES: Place[] = [
   { id: 'cape-coast-town', label: 'Cape Coast', area: 'Central', lat: 5.1050, lng: -1.2470 },
 ];
 
-const PAGE_SIZE = 24;
 
 const DEFAULT: FilterState = {
   city: 'all',
@@ -133,7 +132,6 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   const base = useMemo<FilterState>(() => ({ ...DEFAULT, when: hasUpcoming ? 'upcoming' : 'all' }), [hasUpcoming]);
 
   const [filters, setFilters] = useState<FilterState>(base);
-  const [page, setPage] = useState(PAGE_SIZE);
   const [view, setViewState] = useState<View>('feed');
   const setView = useCallback((v: View) => {
     setViewState(v);
@@ -154,7 +152,6 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
 
   const set = useCallback(<K extends keyof FilterState>(k: K, v: FilterState[K]) => {
     setFilters((f) => ({ ...f, [k]: v }));
-    setPage(PAGE_SIZE);
   }, []);
 
   const clearLoc = useCallback(() => {
@@ -167,7 +164,6 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
 
   const clear = useCallback(() => {
     setFilters(base);
-    setPage(PAGE_SIZE);
     clearLoc();
   }, [base, clearLoc]);
 
@@ -332,14 +328,14 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   // List view: group by day
   const groups = useMemo(() => {
     const out: { key: string; label: string; events: GhanaEvent[] }[] = [];
-    for (const e of filtered.slice(0, page)) {
+    for (const e of filtered) {
       const key = (e.date || e.dateLabel || '').slice(0, 10);
       const last = out[out.length - 1];
       if (last && last.key === key && filters.sort === 'upcoming') last.events.push(e);
       else out.push({ key, label: dayHeading(e), events: [e] });
     }
     return out;
-  }, [filtered, page, filters.sort]);
+  }, [filtered, filters.sort]);
 
   // One capsule: search | filters (the cards/list switch lives in the filter sheet)
   const capBtn = (on: boolean): CSSProperties => ({ position: 'relative', width: 46, height: 44, padding: 0, border: 'none', background: on ? 'rgba(123,227,168,0.14)' : 'transparent', color: on ? T.mintText : T.text, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' });
@@ -500,13 +496,6 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
             ))
           )}
 
-          {page < filtered.length && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 28 }}>
-              <button type="button" onClick={() => setPage((p) => p + PAGE_SIZE)} style={{ height: 46, padding: '0 22px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.text, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                Show more
-              </button>
-            </div>
-          )}
         </main>
       )}
 
