@@ -57,6 +57,7 @@ export function useEventMoments(event: { slug: string; title: string }, enabled 
   return list;
 }
 
+export const momentsLabel = (list: Moment[], slug: string) => label(list, slug);
 const label = (list: Moment[], slug: string) => {
   const own = list[0]?.event_slug === slug;
   const year = list[0]?.year;
