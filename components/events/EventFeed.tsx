@@ -9,7 +9,7 @@ import RsvpSheet from '@/components/thiscene/RsvpSheet';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import FlyerCanvas, { Glow } from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
-import { useEventMoments, momentsLabel } from '@/components/moments/EventMoments';
+import { useEventMoments } from '@/components/moments/EventMoments';
 import { ytThumb } from '@/lib/moments/match';
 import CustomPlayer from '@/components/moments/CustomPlayer';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
@@ -204,12 +204,12 @@ function EventCard({
         <span style={{ pointerEvents: 'auto' }}>
           <EventTags event={event} accent={a} hype={hype} extra={watching ? (
             <button type="button" onClick={() => setWatching(false)} style={{ ...chip, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(3,10,6,0.5)', color: T.white }}>
-              <ImageIcon size={14} strokeWidth={2.2} /> Back to flyer
+              <ImageIcon size={14} strokeWidth={2.2} /> Flyer
             </button>
           ) : moments.length > 0 ? (
-            <button type="button" onClick={() => { setClip(0); setProg(0); setWatching(true); }} aria-label={`${momentsLabel(moments, event.slug)}, ${moments.length} video${moments.length > 1 ? 's' : ''}`} style={{ ...chip, cursor: 'pointer', border: 'none', background: 'rgba(123,227,168,0.16)', color: T.mintText, fontWeight: 700 }}>
-              <span aria-hidden style={{ width: 18, height: 18, borderRadius: 9, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint }}><Play size={10} fill="currentColor" strokeWidth={0} style={{ marginLeft: 1 }} /></span>
-              {momentsLabel(moments, event.slug)}
+            <button type="button" onClick={() => { setClip(0); setProg(0); setWatching(true); }} aria-label={`Watch moments from past editions, ${moments.length} video${moments.length > 1 ? 's' : ''}`} title="Watch moments"
+              style={{ width: 28, height: 28, padding: 0, borderRadius: 14, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint, boxShadow: '0 0 14px rgba(123,227,168,0.45)' }}>
+              <Play size={12} fill="currentColor" strokeWidth={0} style={{ marginLeft: 2 }} />
             </button>
           ) : null} />
         </span>
