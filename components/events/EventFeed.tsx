@@ -7,9 +7,10 @@ import { cityLabel, formatDistance } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import RsvpSheet from '@/components/thiscene/RsvpSheet';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
-import FlyerCanvas from '@/components/events/FlyerCanvas';
+import FlyerCanvas, { Glow } from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
-import { useEventMoments, MomentsPill, MomentsViewer } from '@/components/moments/EventMoments';
+import { useEventMoments, MomentsPill } from '@/components/moments/EventMoments';
+import { ytThumb } from '@/lib/moments/match';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { EventTags, BTN } from '@/components/events/CardParts';
 import { hypeTags, eventExcerpt } from '@/lib/events/hype';
@@ -81,7 +82,10 @@ function EventCard({
   const { event, dist } = item;
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
   const [more, setMore] = useState(false);
+  // Watching a past edition's clips right on the card, in place of the flyer
   const [watching, setWatching] = useState(false);
+  const [clip, setClip] = useState(0);
+  useEffect(() => { if (!active) setWatching(false); }, [active]);
   const moments = useEventMoments(event, near);
   const block = useRef<HTMLDivElement>(null);
   const [blockH, setBlockH] = useState(300);
@@ -126,7 +130,24 @@ function EventCard({
       aria-label={event.title}
       style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: ambient(a), color: T.text, scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
     >
-      {near && (
+      {watching && moments[clip] && (
+        <div style={wide
+          ? { position: 'absolute', zIndex: 3, top: topInset + 16, bottom: 40, right: '6%', left: '48%', display: 'flex', alignItems: 'center' }
+          : { position: 'absolute', zIndex: 3, top: topInset + 4, bottom: blockH + bottom + 12, left: 0, right: 0, display: 'flex', alignItems: 'center' }}>
+          <Glow src={ytThumb(moments[clip].youtube_id, 'hq')} />
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', maxHeight: '100%', background: '#000', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' }}>
+            <iframe
+              key={moments[clip].youtube_id}
+              title={moments[clip].title}
+              src={`https://www.youtube.com/embed/${moments[clip].youtube_id}?autoplay=1&playsinline=1&rel=0&modestbranding=1`}
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+              style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+            />
+          </div>
+        </div>
+      )}
+      {near && !watching && (
         <FlyerCanvas
           src={event.image}
           accent={a}
@@ -153,7 +174,19 @@ function EventCard({
           opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'opacity 0.45s ease, transform 0.45s ease',
         }}
       >
-        <span style={{ display: 'flex', pointerEvents: 'auto' }}><MomentsPill list={moments} slug={event.slug} onOpen={() => setWatching(true)} /></span>
+        {watching ? (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto', overflowX: 'auto' }} className="no-scrollbar">
+            <button type="button" onClick={() => setWatching(false)} style={{ flexShrink: 0, height: 40, padding: '0 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(3,10,6,0.55)', color: T.white, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Back to flyer</button>
+            {moments.length > 1 && moments.map((m, k) => (
+              <button key={m.id} type="button" onClick={() => setClip(k)} aria-label={`Play ${m.title}`} aria-current={k === clip} style={{ flexShrink: 0, width: 64, height: 40, padding: 0, borderRadius: 10, overflow: 'hidden', cursor: 'pointer', background: '#000', border: 'none', outline: k === clip ? `2px solid ${T.mint}` : '1px solid rgba(255,255,255,0.14)', outlineOffset: k === clip ? 2 : 0 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={ytThumb(m.youtube_id)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: k === clip ? 1 : 0.6, display: 'block' }} />
+              </button>
+            ))}
+          </span>
+        ) : (
+          <span style={{ display: 'flex', pointerEvents: 'auto' }}><MomentsPill list={moments} slug={event.slug} onOpen={() => { setClip(0); setWatching(true); }} /></span>
+        )}
 
         {performer && (
           <Link href={`/artists/${performer.slug}`} style={{ alignSelf: 'flex-start', pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', gap: 7, height: 32, padding: '0 13px', borderRadius: 16, background: T.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700, textDecoration: 'none' }}>
@@ -197,7 +230,6 @@ function EventCard({
         </div>
       </div>
 
-      {watching && <MomentsViewer list={moments} eventTitle={event.title} onClose={() => setWatching(false)} />}
     </section>
   );
 }
