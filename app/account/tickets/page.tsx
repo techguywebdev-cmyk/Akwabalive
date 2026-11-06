@@ -208,7 +208,7 @@ export default function MyTicketsPage() {
               <div key={t.id}>
                 <TicketRow ticket={t} ev={events[t.event_slug]} onOpen={() => setOpen(t)} />
                 {tab === 'past' && (
-                  <Link href={`/events/${t.event_slug}?rate=1`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, margin: '10px 0 4px 6px', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: '#F5C451', textDecoration: 'none' }}>
+                  <Link href={`/events/${t.event_slug}?rate=1`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, margin: '10px 0 4px 6px', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText, textDecoration: 'none' }}>
                     ★ Rate this show
                   </Link>
                 )}

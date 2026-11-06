@@ -10,7 +10,7 @@ import Footer from '@/components/layout/Footer';
 import { Stat, StatusPill, Bar, QuickAction, ghs, card, type EventStatus } from '@/components/organizer/ui';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 import { eventCounts, compact, type EventCounts } from '@/lib/events/track';
 import { Eye, Users } from 'lucide-react';
 
@@ -132,7 +132,7 @@ export default function OrganizerDashboard() {
 
         <div role="tablist" aria-label="Your events" style={{ display: 'inline-flex', marginTop: 30, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: 'none' }}>
           {(['upcoming', 'past', 'drafts'] as const).map((k) => (
-            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 38, padding: '0 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: tab === k ? T.mint : 'transparent', color: tab === k ? T.onMint : T.text2 }}>
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 38, padding: '0 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: tab === k ? GRAD.mint : 'transparent', color: tab === k ? T.onMint : T.text2 }}>
               {k === 'upcoming' ? 'Upcoming' : k === 'past' ? 'Past' : 'Drafts & review'}{lists[k].length ? ` · ${lists[k].length}` : ''}
             </button>
           ))}

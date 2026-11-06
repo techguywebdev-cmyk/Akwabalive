@@ -161,7 +161,7 @@ function AuthForm() {
         {(mode === 'signin' || mode === 'signup') && (
           <div role="tablist" aria-label="Sign in or sign up" style={{ display: 'flex', marginTop: 24, padding: 4, borderRadius: 999, background: '#0D1210', border: 'none' }}>
             {(['signin', 'signup'] as const).map((m) => (
-              <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => go(m)} style={{ flex: 1, height: 42, borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, background: mode === m ? T.mint : 'transparent', color: mode === m ? T.onMint : T.text2, fontWeight: 700, transition: 'background 200ms ease, color 200ms ease' }}>
+              <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => go(m)} style={{ flex: 1, height: 42, borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, background: mode === m ? GRAD.mint : 'transparent', color: mode === m ? T.onMint : T.text2, fontWeight: 700, transition: 'background 200ms ease, color 200ms ease' }}>
                 {m === 'signin' ? 'Sign in' : 'Sign up'}
               </button>
             ))}

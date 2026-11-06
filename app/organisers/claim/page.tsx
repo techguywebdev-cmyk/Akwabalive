@@ -95,7 +95,7 @@ export default function ClaimPage() {
                 <label style={label}>You are the</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {ROLES.map((r) => (
-                    <button key={r} type="button" onClick={() => setRole(r)} aria-pressed={role === r} style={{ height: 40, padding: '0 14px', borderRadius: 999, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, border: 'none', background: role === r ? T.mint : 'transparent', color: role === r ? T.onMint : T.text }}>{r}</button>
+                    <button key={r} type="button" onClick={() => setRole(r)} aria-pressed={role === r} style={{ height: 40, padding: '0 14px', borderRadius: 999, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, border: 'none', background: role === r ? GRAD.mint : 'transparent', color: role === r ? T.onMint : T.text }}>{r}</button>
                   ))}
                 </div>
                 <label htmlFor="proof" style={label}>How can we tell it’s yours?</label>

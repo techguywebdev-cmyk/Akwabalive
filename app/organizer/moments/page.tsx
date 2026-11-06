@@ -7,7 +7,7 @@ import Nav from '@/components/layout/Nav';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { BTN } from '@/components/events/CardParts';
-import { T, FONT, GROUND } from '@/lib/thiscene';
+import { T, FONT, GROUND, GRAD } from '@/lib/thiscene';
 
 type Row = {
   id: string; title: string; event_name: string; youtube_id: string; year: number | null; description: string | null;
@@ -119,7 +119,7 @@ export default function MomentsReviewPage() {
           {([['pending', `To review · ${pending.length}`], ['reposts', `Reposts live · ${reposts.length}`]] as const).map(([k, label]) => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{
               height: 38, padding: '0 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-              background: tab === k ? T.mint : 'transparent', color: tab === k ? T.onMint : T.text2,
+              background: tab === k ? GRAD.mint : 'transparent', color: tab === k ? T.onMint : T.text2,
             }}>{label}</button>
           ))}
         </div>

@@ -3,7 +3,7 @@
 import { Star } from 'lucide-react';
 import { T, FONT } from '@/lib/thiscene';
 
-const GOLD = '#F5C451';
+const GOLD = '#7BE3A8';
 
 /** Read-only stars (supports halves by clipping) */
 export function Stars({ value, size = 16 }: { value: number; size?: number }) {

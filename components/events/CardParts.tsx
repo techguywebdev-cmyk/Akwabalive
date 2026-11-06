@@ -43,13 +43,13 @@ const HYPE_STYLE: Record<HypeKind, { style: CSSProperties; icon: React.ReactNode
   hot: { style: { background: WARM_BG, color: '#1C0B03', boxShadow: '0 0 18px rgba(255,120,60,0.35)' }, icon: <Flame size={14} strokeWidth={2.4} fill="currentColor" /> },
   last: { style: { background: WARM_BG, color: '#1C0B03', boxShadow: '0 0 18px rgba(255,120,60,0.35)' }, icon: <Zap size={14} strokeWidth={2.4} fill="currentColor" /> },
   soldout: { style: { background: 'rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.85)' }, icon: null },
-  pick: { style: { background: T.mint, color: '#06140C' }, icon: <Sparkles size={14} strokeWidth={2.4} /> },
+  pick: { style: { background: GRAD.mint, color: '#06140C' }, icon: <Sparkles size={14} strokeWidth={2.4} /> },
   special: { style: { background: 'rgba(255,255,255,0.94)', color: '#0B0F0D' }, icon: <Star size={13} strokeWidth={2.4} fill="currentColor" /> },
   stars: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <Mic2 size={14} strokeWidth={2.2} /> },
   returning: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <RotateCcw size={13} strokeWidth={2.4} /> },
   new: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <Zap size={13} strokeWidth={2.4} /> },
   campus: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <GraduationCap size={14} strokeWidth={2.2} /> },
-  detty: { style: { background: 'rgba(255,209,102,0.16)', color: '#FFD98A' }, icon: <PartyPopper size={14} strokeWidth={2.2} /> },
+  detty: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <PartyPopper size={14} strokeWidth={2.2} /> },
 };
 
 /** A special tag: selling fast, the organiser's own line, an Akwaaba pick… */
