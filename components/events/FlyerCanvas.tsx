@@ -102,7 +102,7 @@ export default function FlyerCanvas({
             style={{ ...poster, opacity: ratio ? (dim ? 0.7 : 1) : 0, transition: 'opacity 0.4s ease' }}
           />
           {/* Dark fade so the text below/over the flyer reads */}
-          <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: fadeFrom, bottom: 0, background: `radial-gradient(120% 70% at 50% 100%, ${alpha(accent, 0.07)} 0%, rgba(0,0,0,0) 70%), linear-gradient(180deg, rgba(10,13,12,0) 0%, rgba(10,13,12,0.78) 32%, rgba(8,10,9,0.93) 66%, rgba(6,8,7,0.97) 100%)` }} />
+          <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: fadeFrom, bottom: 0, background: `radial-gradient(110% 60% at 0% 100%, rgba(123,227,168,0.16) 0%, rgba(123,227,168,0) 70%), radial-gradient(100% 55% at 100% 45%, rgba(45,190,140,0.12) 0%, rgba(45,190,140,0) 70%), linear-gradient(165deg, rgba(123,227,168,0.06) 0%, rgba(123,227,168,0.03) 100%), linear-gradient(180deg, rgba(9,16,12,0) 0%, rgba(9,16,12,0.8) 30%, rgba(8,14,11,0.93) 62%, rgba(7,12,9,0.96) 100%)` }} />
           <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 120, background: 'linear-gradient(180deg, rgba(3,8,6,0.35), rgba(3,8,6,0))' }} />
         </>
       ) : (
