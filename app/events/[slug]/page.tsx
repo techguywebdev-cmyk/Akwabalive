@@ -5,6 +5,9 @@ import EventDetailClient from '@/components/events/EventDetailClient';
 import { events as staticEvents } from '@/lib/data/events';
 import { fetchEventBySlug, fetchPublishedEvents, supabaseToGhanaEvent } from '@/lib/supabase/events';
 import type { GhanaEvent } from '@/lib/types';
+import { shareMeta } from '@/lib/og';
+import { parseDay, shortDay } from '@/lib/dates';
+import { hiRes } from '@/lib/events/image';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -19,11 +22,15 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
   const dbEvent = await fetchEventBySlug(params.slug);
   if (dbEvent) {
-    const mapped = supabaseToGhanaEvent(dbEvent);
-    return {
-      title: `${mapped.title} — Akwaaba`,
-      description: `${mapped.dateLabel} · ${mapped.venue} · ${mapped.price === 0 ? 'Free entry' : `From ₵${mapped.price}`}`,
-    };
+    const e = supabaseToGhanaEvent(dbEvent);
+    const price = e.priceUnknown ? 'Tickets on Akwaaba' : e.price === 0 ? 'Free entry' : `From GH₵ ${e.price.toLocaleString()}`;
+    const who = (e.lineup ?? []).slice(0, 4).join(', ');
+    return shareMeta({
+      title: e.title,
+      description: [[parseDay(e.date) ? shortDay(parseDay(e.date)!) : e.dateLabel, e.time && !/tba/i.test(e.time) ? e.time : ''].filter(Boolean).join(', '), e.venue, price].filter(Boolean).join(' · ') + (who ? `. With ${who}.` : ''),
+      image: e.image ? hiRes(e.image, 1200) ?? e.image : null,
+      path: `/events/${e.slug}`,
+    });
   }
   return { title: 'Event not found — Akwaaba' };
 }
