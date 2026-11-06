@@ -136,7 +136,7 @@ function EventCard({
       {watching && moments[clip] && (
         <div style={wide
           ? { position: 'absolute', zIndex: 3, top: topInset + 16, bottom: 40, right: '6%', left: '48%', display: 'flex', alignItems: 'center' }
-          : { position: 'absolute', zIndex: 3, top: topInset + 4, bottom: blockH + bottom + 12, left: 0, right: 0, display: 'flex', flexDirection: 'column', background: '#050606' }}>
+          : { position: 'absolute', zIndex: 3, top: 0, bottom: blockH + bottom + 18, left: 0, right: 0, display: 'flex', flexDirection: 'column', background: '#050606' }}>
           {/* The top of the flyer fills the space above the video, so the card stays full height */}
           {event.image && !wide ? (
             <div aria-hidden style={{ position: 'relative', flex: '1 1 0', minHeight: 0, overflow: 'hidden' }}>
@@ -158,7 +158,7 @@ function EventCard({
               <span style={{ display: 'block', height: '100%', width: `${prog}%`, background: T.mint, transition: 'width 250ms linear' }} />
             </span>
           </div>
-          <div style={{ position: 'relative', padding: '12px 20px 0' }}>
+          <div style={{ position: 'relative', padding: '12px 20px 4px' }}>
             <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
               {moments[clip].event_name}{moments[clip].year ? ` · ${moments[clip].year}` : ''}
             </p>
