@@ -395,6 +395,9 @@ async function veeTicketsFeed(): Promise<ImportDraft[]> {
   const out: ImportDraft[] = [];
   for (const e of rows) {
     if (!e?.isActive || e?.showOnWeb === false || !e?.name || !e?.startDate || !e?.suffix) continue;
+    // upcoming only (the feed also holds past events)
+    const day = String(e.startDate).slice(0, 10);
+    if (day < new Date().toISOString().slice(0, 10) || day > new Date(Date.now() + 240 * 86400000).toISOString().slice(0, 10)) continue;
     const address: string = e.location?.address || '';
     if (!/ghana/i.test(address)) continue;
     const [lng, lat] = Array.isArray(e.location?.coordinates) ? e.location.coordinates : [0, 0];
