@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import Link from 'next/link';
-import { Mic2, ChevronRight } from 'lucide-react';
+import { Mic2, Search, X, ArrowUpRight } from 'lucide-react';
+import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import { artistsInQuery, performsAt } from '@/lib/data/artists';
 import { Portrait } from '@/components/artists/parts';
 import Nav from '@/components/layout/Nav';
@@ -59,6 +60,8 @@ function dayHeading(e: GhanaEvent) {
 }
 
 const priceText = (e: GhanaEvent) => (e.priceUnknown ? 'Tickets' : e.price === 0 ? 'Free' : `GH₵ ${e.price.toLocaleString()}`);
+
+const ARTIST_ROW_H = 66;
 
 /** One borderless row in the list view: picture, quiet category, title, time · venue, price. */
 function Row({ event, last, performer }: { event: GhanaEvent; last: boolean; performer?: { name: string; slug: string } | null }) {
@@ -141,6 +144,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   const [radius, setRadius] = useState(10);
   const [filterOpen, setFilterOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchFocus, setSearchFocus] = useState(false);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [saveLoading, setSaveLoading] = useState<string | null>(null);
   const [going, setGoing] = useState<Set<string>>(new Set());
@@ -336,7 +340,8 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   const searchArtist = useMemo(() => (filters.search ? artistsInQuery(filters.search)[0] ?? null : null), [filters.search]);
   const performerFor = useCallback((e: GhanaEvent) => (searchArtist && performsAt(e, searchArtist) ? { name: searchArtist.name, slug: searchArtist.slug } : null), [searchArtist]);
   const artistShows = searchArtist ? filtered.filter((e) => performsAt(e, searchArtist)).length : 0;
-  const searchH = searchOpen ? 60 + (searchArtist ? 64 : 0) : 0;
+  const artistPhoto = useArtistPhotos(searchArtist ? [searchArtist.slug] : []);
+  const searchH = searchOpen ? 66 + (searchArtist ? ARTIST_ROW_H + 1 : 0) : 0;
   // The Hot rail sits on the list view; the feed keeps its full-height flyers
   const railH = hotShows.length && view === 'list' && !filters.search ? HOT_RAIL_H : 0;
 
@@ -347,32 +352,44 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
 
       {searchOpen && (
         <div style={{ position: 'fixed', zIndex: 195, top: `calc(${headerH}px + env(safe-area-inset-top, 0px))`, left: 16, right: 16, maxWidth: 720, margin: '0 auto' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 10, height: 50, padding: '0 8px 0 16px', borderRadius: 25, background: 'rgba(9,11,10,0.82)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', color: T.text2 }}>
-            <Icon name="search" size={19} />
-            <span className="sr-only" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Search events</span>
-            <input
-              ref={searchRef}
-              value={filters.search}
-              onChange={(e) => set('search', e.target.value)}
-              placeholder="Events, artists, venues, areas…"
-              style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15 }}
-            />
-            <button type="button" aria-label="Close search" onClick={() => { set('search', ''); setSearchOpen(false); }} style={{ width: 36, height: 36, borderRadius: 18, border: 'none', background: 'rgba(255,255,255,0.06)', color: T.text, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <Icon name="close" size={17} />
-            </button>
-          </label>
-          {searchArtist && (
-            <Link href={`/artists/${searchArtist.slug}`} style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12, height: 56, padding: '0 10px 0 8px', borderRadius: 28, background: 'rgba(9,11,10,0.82)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', textDecoration: 'none' }}>
-              <Portrait name={searchArtist.name} url={searchArtist.image} size={40} ring={artistShows > 0} />
-              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <span style={{ fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, color: T.white }}>{searchArtist.name}</span>
-                <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: artistShows ? T.mintText : T.text2 }}>
-                  {artistShows ? `Performing at ${artistShows} upcoming ${artistShows === 1 ? 'show' : 'shows'}` : 'No upcoming shows yet'}
+          {/* One panel: the search field, and the artist you're searching for joined underneath */}
+          <div style={{ borderRadius: 20, overflow: 'hidden', background: '#0D1210', border: `1px solid ${searchFocus ? 'rgba(123,227,168,0.4)' : T.hairlineStrong}`, boxShadow: '0 18px 44px rgba(0,0,0,0.5)', transition: 'border-color 160ms ease' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 12, height: 54, padding: '0 6px 0 16px' }}>
+              <Search size={19} strokeWidth={2.2} color={T.mint} />
+              <span className="sr-only" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Search events</span>
+              <input
+                ref={searchRef}
+                className="ak-search"
+                value={filters.search}
+                onChange={(e) => set('search', e.target.value)}
+                onFocus={() => setSearchFocus(true)}
+                onBlur={() => setSearchFocus(false)}
+                placeholder="Artists, events, venues, areas"
+                style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 16, fontWeight: 500 }}
+              />
+              <button type="button" aria-label="Close search" onClick={() => { set('search', ''); setSearchOpen(false); }} style={{ width: 42, height: 42, borderRadius: 21, border: 'none', background: 'none', color: T.text2, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <X size={19} strokeWidth={2.2} />
+              </button>
+            </label>
+            {searchArtist && (
+              <Link href={`/artists/${searchArtist.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 12, height: ARTIST_ROW_H, padding: '0 12px 0 14px', borderTop: `1px solid ${T.hairline}`, textDecoration: 'none' }}>
+                <Portrait name={searchArtist.name} url={artistPhoto[searchArtist.slug] ?? null} size={42} ring={artistShows > 0} />
+                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span style={{ fontFamily: FONT.display, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.text3 }}>Artist</span>
+                  <span style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em', color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {searchArtist.name}
+                    <span style={{ marginLeft: 8, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, letterSpacing: 0, color: artistShows ? T.mintText : T.text2 }}>
+                      {artistShows ? `${artistShows} upcoming ${artistShows === 1 ? 'show' : 'shows'}` : 'No upcoming shows'}
+                    </span>
+                  </span>
                 </span>
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text2 }}>Profile <ChevronRight size={15} /></span>
-            </Link>
-          )}
+                <span aria-hidden style={{ width: 34, height: 34, borderRadius: 17, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint }}>
+                  <ArrowUpRight size={18} strokeWidth={2.4} />
+                </span>
+              </Link>
+            )}
+          </div>
+          <style>{`.ak-search::placeholder{color:rgba(255,255,255,0.38)}`}</style>
         </div>
       )}
 
