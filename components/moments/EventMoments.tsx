@@ -33,12 +33,9 @@ export function useLineupMoments(slugs: string[], names: string[], exclude: stri
     let live = true;
     loadAll().then((all) => {
       const skip = new Set(exclude);
-      const low = names.map((n) => n.toLowerCase()).filter((n) => n.length >= 3);
-      const mine = all.filter((m) => !skip.has(m.id) && (
-        (m.performers ?? []).some((p) => slugs.includes(p)) || low.some((n) => m.title.toLowerCase().includes(n))
-      ));
-      const pick = mine.length ? mine : all.filter((m) => !skip.has(m.id)).sort((a, b) => String(b.published_at ?? '').localeCompare(String(a.published_at ?? '')));
-      if (live) setList({ moments: pick.slice(0, 8), fromLineup: mine.length > 0 });
+      // Only clips where an act on this bill is a confirmed performer; never someone else's videos as filler
+      const mine = slugs.length ? all.filter((m) => !skip.has(m.id) && (m.performers ?? []).some((p) => slugs.includes(p))) : [];
+      if (live) setList({ moments: mine.slice(0, 8), fromLineup: mine.length > 0 });
     });
     return () => { live = false; };
   }, [key, enabled]); // eslint-disable-line react-hooks/exhaustive-deps

@@ -528,10 +528,24 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           </section>
         )}
 
-        {/* Something to watch at the end: the line-up live (or the latest moments) when the event has none of its own */}
-        {!moments.length && more.moments.length > 0 && (
+        {/* No clips from this event: say so plainly */}
+        {!moments.length && (
           <section style={{ marginTop: 36 }}>
-            <h2 style={eyebrowMint}>{more.fromLineup ? 'See the line-up live' : 'Latest moments'}</h2>
+            <h2 style={eyebrowMint}>Moments</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 4, padding: '16px 16px', borderRadius: 20, background: T.surface, border: `1px solid ${T.hairline}` }}>
+              <span aria-hidden style={{ width: 42, height: 42, borderRadius: 21, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.1)', color: T.mintText }}><Play size={17} /></span>
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>No moments from this event yet</span>
+                <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13.5, lineHeight: 1.45, color: T.text2 }}>Clips from the night will show up here.</span>
+              </span>
+            </div>
+          </section>
+        )}
+
+        {/* The acts on this bill, live elsewhere (only clips they're confirmed in) */}
+        {!moments.length && more.moments.length > 0 && (
+          <section style={{ marginTop: 28 }}>
+            <h2 style={eyebrowMint}>See the line-up live</h2>
             <button type="button" onClick={() => setMoreAt(0)} style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '16 / 9', marginTop: 4, padding: 0, border: 'none', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`https://i.ytimg.com/vi/${more.moments[0].youtube_id}/hq720.jpg`} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
