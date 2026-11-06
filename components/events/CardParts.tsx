@@ -58,28 +58,35 @@ export function HypeChip({ hype }: { hype: Hype }) {
   return <span style={{ ...chip, fontWeight: 700, ...h.style }}>{h.icon}{hype.text}</span>;
 }
 
-export function EventTags({ event, accent, lead, hype = [], extra }: { event: GhanaEvent; accent: string; lead?: string; hype?: Hype[]; /** Ends the row (e.g. the moments button on feed cards) */ extra?: React.ReactNode }) {
+export function EventTags({ event, accent, lead, hype = [], extra, max }: {
+  event: GhanaEvent; accent: string; lead?: string; hype?: Hype[];
+  /** Ends the row (e.g. the moments button on feed cards) */
+  extra?: React.ReactNode;
+  /** At most this many tags (most telling first), so the row stays on one line */
+  max?: number;
+}) {
   const when = whenTag(event);
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-      {lead && (
-        <span style={{ ...chip, background: 'rgba(123,227,168,0.16)', color: T.mintText }}>{lead}</span>
-      )}
-      {hype.map((h) => <HypeChip key={h.kind} hype={h} />)}
-      {hype.length < 2 && <span style={{ ...chip, background: alpha(accent, 0.18), color: T.white }}>
+  const tags: React.ReactNode[] = [
+    lead && <span key="lead" style={{ ...chip, background: 'rgba(123,227,168,0.16)', color: T.mintText }}>{lead}</span>,
+    ...hype.map((h) => <HypeChip key={h.kind} hype={h} />),
+    when && (
+      <span key="when" style={{ ...chip, background: 'rgba(255,255,255,0.09)', color: when.past ? 'rgba(255,255,255,0.6)' : T.white }}>
+        {when.soon && <span aria-hidden style={{ width: 6, height: 6, borderRadius: 3, background: T.mint, boxShadow: `0 0 8px ${T.mint}` }} />}
+        {when.text}
+      </span>
+    ),
+    hype.length < 2 && (
+      <span key="cat" style={{ ...chip, background: alpha(accent, 0.18), color: T.white }}>
         <Icon name={CATEGORY_ICONS[event.category] ?? 'sparkle'} size={14} color={accent} strokeWidth={2} />
         {CATEGORY_LABEL[event.category] ?? event.category}
-      </span>}
-      {when && (
-        <span style={{ ...chip, background: 'rgba(255,255,255,0.09)', color: when.past ? 'rgba(255,255,255,0.6)' : T.white }}>
-          {when.soon && <span aria-hidden style={{ width: 6, height: 6, borderRadius: 3, background: T.mint, boxShadow: `0 0 8px ${T.mint}` }} />}
-          {when.text}
-        </span>
-      )}
-      {event.price === 0 && !event.priceUnknown && !when?.past && (
-        <span style={{ ...chip, background: 'rgba(255,255,255,0.09)', color: T.white }}>Free</span>
-      )}
-      {extra}
+      </span>
+    ),
+    event.price === 0 && !event.priceUnknown && !when?.past && <span key="free" style={{ ...chip, background: 'rgba(255,255,255,0.09)', color: T.white }}>Free</span>,
+  ].filter(Boolean);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', flexWrap: max ? 'nowrap' : 'wrap', gap: 6, minWidth: 0 }}>
+      {max ? tags.slice(0, max) : tags}
+      {extra && <span style={{ flexShrink: 0, display: 'inline-flex' }}>{extra}</span>}
     </div>
   );
 }

@@ -5,11 +5,12 @@ import type { GhanaEvent } from '@/lib/types';
  * Server reads always go to the database: without no-store, Next/Vercel keep the first
  * response in the data cache and new events never show up in the feed.
  */
-function getServerClient() {
+/** Server reads. With `revalidate`, results are kept for that many seconds (pages open instantly); otherwise always fresh. */
+function getServerClient(revalidate?: number) {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) } },
+    { global: { fetch: (input, init) => fetch(input, revalidate ? { ...init, next: { revalidate } } : { ...init, cache: 'no-store' }) } },
   );
 }
 
@@ -163,9 +164,9 @@ export async function fetchPublishedEvents(): Promise<SupabaseEvent[]> {
   }
 }
 
-export async function fetchEventBySlug(slug: string): Promise<SupabaseEvent | null> {
+export async function fetchEventBySlug(slug: string, revalidate?: number): Promise<SupabaseEvent | null> {
   try {
-    const supabase = getServerClient();
+    const supabase = getServerClient(revalidate);
     const { data, error } = await supabase
       .from('events')
       .select(SELECT)
