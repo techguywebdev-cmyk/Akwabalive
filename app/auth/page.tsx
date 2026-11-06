@@ -29,14 +29,14 @@ function FlyerFan() {
       .then(({ data }) => setFlyers(((data ?? []) as { image_url: string }[]).map((r) => hiRes(r.image_url, 500) ?? r.image_url)));
   }, []);
   const spots = [
-    { left: '50%', rot: 0, w: 46, z: 3, y: 0 },
-    { left: '24%', rot: -9, w: 36, z: 2, y: 18 },
-    { left: '76%', rot: 9, w: 36, z: 1, y: 18 },
+    { left: '50%', rot: 0, w: 70, z: 3, y: 0 },
+    { left: '15%', rot: -8, w: 54, z: 2, y: 40 },
+    { left: '85%', rot: 8, w: 54, z: 1, y: 40 },
   ];
   return (
-    <div aria-hidden style={{ position: 'relative', height: 'min(32vh, 260px)', overflow: 'hidden', maskImage: 'linear-gradient(180deg, #000 55%, transparent 100%)', WebkitMaskImage: 'linear-gradient(180deg, #000 55%, transparent 100%)' }}>
+    <div aria-hidden style={{ position: 'relative', height: 'calc(min(70vw, 340px) * 1.25 + 34px + env(safe-area-inset-top, 0px))', overflow: 'hidden', maskImage: 'linear-gradient(180deg, #000 86%, transparent 100%)', WebkitMaskImage: 'linear-gradient(180deg, #000 86%, transparent 100%)' }}>
       {spots.map((sp, i) => (
-        <span key={i} style={{ position: 'absolute', top: 24 + sp.y, left: sp.left, width: `${sp.w}%`, maxWidth: sp.w === 46 ? 210 : 165, aspectRatio: '4 / 5', transform: `translateX(-50%) rotate(${sp.rot}deg)`, zIndex: sp.z, borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg, #16201B, #0B0F0D)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', opacity: flyers[i] ? 1 : 0.6, transition: 'opacity 400ms ease' }}>
+        <span key={i} style={{ position: 'absolute', top: `calc(${sp.y - 6}px + env(safe-area-inset-top, 0px))`, left: sp.left, width: `${sp.w}%`, maxWidth: sp.w === 70 ? 340 : 262, aspectRatio: '4 / 5', transform: `translateX(-50%) rotate(${sp.rot}deg)`, zIndex: sp.z, borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg, #16201B, #0B0F0D)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', opacity: flyers[i] ? 1 : 0.6, transition: 'opacity 400ms ease' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {flyers[i] && <img src={flyers[i]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
         </span>
@@ -142,16 +142,19 @@ function AuthForm() {
     <div style={{ minHeight: '100svh', background: GROUND, display: 'flex', flexDirection: 'column' }}>
       <style>{`.ak-field::placeholder{color:rgba(255,255,255,0.32)} .ak-field:focus{border-color:rgba(123,227,168,0.55)!important;box-shadow:0 0 0 4px rgba(123,227,168,0.08)} .ak-wrap:focus-within .ak-ic{color:${T.mint}!important}`}</style>
       <header style={{ position: 'relative', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 0' }}>
-        <Link href={next} aria-label="Back" style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(5,6,6,0.6)', border: `1px solid ${T.hairlineStrong}`, color: T.white }}>
+        <Link href={next} aria-label="Back" style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(5,6,6,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${T.hairlineStrong}`, color: T.white }}>
           <ArrowLeft size={20} strokeWidth={2.2} />
         </Link>
-        <Wordmark />
+        {/* On sign in / sign up the flyers fill the top, so the name sits with the heading instead */}
+        {mode === 'forgot' || mode === 'reset' ? <Wordmark /> : <span />}
         <span style={{ width: 44 }} />
       </header>
 
-      {(mode === 'signin' || mode === 'signup') && <div style={{ marginTop: -4 }}><FlyerFan /></div>}
+      {/* The flyers run up behind the header */}
+      {(mode === 'signin' || mode === 'signup') && <div style={{ marginTop: 'calc(-58px - env(safe-area-inset-top, 0px))', position: 'relative', zIndex: 1 }}><FlyerFan /></div>}
 
       <main style={{ flex: 1, width: '100%', maxWidth: 440, margin: '0 auto', padding: `${mode === 'signin' || mode === 'signup' ? 0 : 40}px 20px calc(32px + env(safe-area-inset-bottom, 0px))`, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 4 }}>
+        {(mode === 'signin' || mode === 'signup') && <span style={{ display: 'block', marginBottom: 14 }}><Wordmark size={15} /></span>}
         <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(32px, 8.5vw, 42px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', color: T.white }}>{heading}</h1>
         <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>{sub}</p>
 
