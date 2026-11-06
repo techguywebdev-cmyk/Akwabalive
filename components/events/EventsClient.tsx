@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect, useRef, type CSSProperties }
 import Link from 'next/link';
 import { Mic2, Search, X, ArrowUpRight } from 'lucide-react';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
+import { Avatar as FriendAvatar, sentence as friendSentence, type Friend } from '@/components/social/FriendsStrip';
 import { artistsInQuery, performsAt } from '@/lib/data/artists';
 import { Portrait } from '@/components/artists/parts';
 import Nav from '@/components/layout/Nav';
@@ -288,6 +289,25 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
       .sort((a, b) => ((a.isFeatured ? a.featuredOrder ?? 100 : 1000) - (b.isFeatured ? b.featuredOrder ?? 100 : 1000)) || (parseDay(a.date)?.getTime() ?? 0) - (parseDay(b.date)?.getTime() ?? 0))
       .slice(0, 12);
   }, [events]);
+  // Where the people you follow are going (signed in only)
+  const [planRows, setPlanRows] = useState<{ slug: string; friends: Friend[] }[]>([]);
+  useEffect(() => {
+    if (!user) { setPlanRows([]); return; }
+    let live = true;
+    supabase.auth.getSession().then(({ data }) => {
+      const t = data.session?.access_token;
+      if (!t) return;
+      fetch('/api/friends/plans', { headers: { authorization: `Bearer ${t}` } }).then((r) => (r.ok ? r.json() : { plans: [] }))
+        .then((j) => { if (live) setPlanRows(j.plans ?? []); }).catch(() => {});
+    });
+    return () => { live = false; };
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  const friendPlans = useMemo(() => {
+    const bySlug = new Map(events.map((e) => [e.slug, e]));
+    const rows = planRows.filter((p) => bySlug.get(p.slug)?.image);
+    return rows.length ? { events: rows.map((p) => bySlug.get(p.slug)!), by: Object.fromEntries(rows.map((p) => [p.slug, p.friends])) } : null;
+  }, [planRows, events]);
+
   const items = useMemo(
     () => ordered.map((e) => ({ event: e, dist: userLoc ? haversine(userLoc.lat, userLoc.lng, e.lat, e.lng) : null })),
     [ordered, userLoc],
@@ -404,6 +424,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
           topInset={headerH + searchH}
           hot={filters.search ? [] : hotShows}
           performerFor={searchArtist ? performerFor : undefined}
+          friendPlans={filters.search ? null : friendPlans}
           onShowAll={filters.when !== 'all' ? () => set('when', 'all') : clear}
           showAllLabel={filters.when !== 'all' ? 'Include past events' : 'Clear filters'}
         />
@@ -421,6 +442,27 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
               </button>
             )}
           </p>
+
+          {friendPlans && !filters.search && (
+            <section aria-label="Where your friends are going" style={{ marginTop: 26 }}>
+              <h2 style={{ margin: '0 0 12px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>Where your friends are going</h2>
+              <div className="no-scrollbar" style={{ display: 'flex', gap: 14, overflowX: 'auto', margin: '0 -20px', padding: '0 20px 4px' }}>
+                {friendPlans.events.map((e) => (
+                  <Link key={e.slug} href={`/events/${e.slug}`} style={{ flexShrink: 0, width: 132, textDecoration: 'none' }}>
+                    <span style={{ position: 'relative', display: 'block', width: 132, height: 165, borderRadius: 16, overflow: 'hidden', background: '#111', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={e.image!} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      <span style={{ position: 'absolute', left: 8, bottom: 8, display: 'flex' }}>
+                        {friendPlans.by[e.slug].slice(0, 3).map((f, k) => <span key={f.id} style={{ marginLeft: k ? -8 : 0 }}><FriendAvatar f={f} size={26} ring="#050606" /></span>)}
+                      </span>
+                    </span>
+                    <span style={{ display: 'block', marginTop: 8, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</span>
+                    <span style={{ display: 'block', marginTop: 1, fontFamily: FONT.sans, fontSize: 12.5, color: T.mintText, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{friendSentence(friendPlans.by[e.slug])}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           {filtered.length === 0 ? (
             <div style={{ padding: '72px 0', textAlign: 'center' }}>
