@@ -15,7 +15,7 @@ import { EventTags } from '@/components/events/CardParts';
 import { hypeTags } from '@/lib/events/hype';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import FriendsStrip from '@/components/social/FriendsStrip';
-import { useEventMoments, useLineupMoments, MomentsViewer } from '@/components/moments/EventMoments';
+import { useEventMoments, useLineupMoments } from '@/components/moments/EventMoments';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import { useEventComments } from '@/hooks/useEventComments';
 import CommentsSheet from '@/components/moments/CommentsSheet';
@@ -73,7 +73,6 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [dreamToast,     setDreamToast]     = useState('');
   const [ticketSuccess,  setTicketSuccess]  = useState(false);
   const [showPromoVideo, setShowPromoVideo] = useState(false);
-  const [watchAt,        setWatchAt]        = useState<number | null>(null);
   const moments = useEventMoments(event);
   const chat = useEventComments(event.slug);
   const isAdmin = useIsAdmin();
@@ -183,12 +182,13 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const acts = lineup.map((name) => ({ name, artist: artistForName(name) }));
   const photos = useArtistPhotos(acts.map((x) => x.artist?.slug).filter((x): x is string => !!x));
   const more = useLineupMoments(acts.map((x) => x.artist?.slug).filter((x): x is string => !!x), lineup, moments.map((m) => m.id), !moments.length);
-  const [moreAt, setMoreAt] = useState<number | null>(null);
   const [r, g, b] = rgb;
   // The flyer's colour mixed into near-black: the hero fades into exactly this, then the wash carries on down
   // The flyer's own deep ground colour, fading into near-black further down
   // The flyer's colour, see-through so the app's mint ground shows under it (not a flat black)
   const washA = (k: number) => `rgba(${wash[0]}, ${wash[1]}, ${wash[2]}, ${k})`;
+  // Moments open on the Moments page, starting at this clip, so people find the rest of Moments too
+  const momentHref = (id: string | number) => `/moments?id=${id}&from=${encodeURIComponent(`/events/${event.slug}`)}`;
   const parsed = parseDay(event.date);
   const eventDate = parsed ?? new Date(0);
   const validDate = !!parsed;
@@ -414,7 +414,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         {moments.length > 0 && (
           <section style={{ marginTop: 30 }}>
             <h2 style={eyebrowMint}>{daysAway != null && daysAway < 0 ? 'Relive the night' : 'Relive the last edition'}</h2>
-            <button type="button" onClick={() => setWatchAt(0)} style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '16 / 9', marginTop: 4, padding: 0, border: 'none', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', background: '#000', boxShadow: `0 20px 60px rgba(${r}, ${g}, ${b}, 0.25)` }}>
+            <Link href={momentHref(moments[0].id)} style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '16 / 9', marginTop: 4, padding: 0, border: 'none', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', background: '#000', boxShadow: `0 20px 60px rgba(${r}, ${g}, ${b}, 0.25)` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`https://i.ytimg.com/vi/${moments[0].youtube_id}/hq720.jpg`} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
               <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%)' }} />
@@ -425,21 +425,20 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                 <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{moments[0].title}</span>
                 <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{[moments[0].event_name, moments[0].year].filter(Boolean).join(' · ')}{moments.length > 1 ? ` · ${moments.length} moments` : ''}</span>
               </span>
-            </button>
+            </Link>
             {moments.length > 1 && (
               <div className="no-scrollbar" style={{ display: 'flex', gap: 10, overflowX: 'auto', margin: '10px -20px 0', padding: '0 20px' }}>
                 {moments.slice(1, 8).map((m, i) => (
-                  <button key={m.id} type="button" onClick={() => setWatchAt(i + 1)} aria-label={`Play ${m.title}`} style={{ position: 'relative', width: 128, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, border: 'none', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
+                  <Link key={m.id} href={momentHref(m.id)} aria-label={`Play ${m.title}`} style={{ position: 'relative', display: 'block', textDecoration: 'none', width: 128, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, border: 'none', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={`https://i.ytimg.com/vi/${m.youtube_id}/mqdefault.jpg`} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     <span style={{ position: 'absolute', left: 8, bottom: 8, width: 24, height: 24, borderRadius: 12, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.white }}><Play size={11} fill={T.white} /></span>
-                  </button>
+                  </Link>
                 ))}
               </div>
             )}
           </section>
         )}
-        {watchAt !== null && <MomentsViewer list={moments} start={watchAt} eventTitle={event.title} onClose={() => setWatchAt(null)} />}
 
         <section style={{ marginTop: 36 }}>
           <h2 style={eyebrow}>About</h2>
@@ -552,7 +551,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         {!moments.length && more.moments.length > 0 && (
           <section style={{ marginTop: 28 }}>
             <h2 style={eyebrowMint}>See the line-up live</h2>
-            <button type="button" onClick={() => setMoreAt(0)} style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '16 / 9', marginTop: 4, padding: 0, border: 'none', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
+            <Link href={momentHref(more.moments[0].id)} style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '16 / 9', marginTop: 4, padding: 0, border: 'none', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`https://i.ytimg.com/vi/${more.moments[0].youtube_id}/hq720.jpg`} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
               <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%)' }} />
@@ -563,21 +562,20 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                 <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{more.moments[0].title}</span>
                 <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{[more.moments[0].event_name, more.moments[0].year].filter(Boolean).join(' · ')}</span>
               </span>
-            </button>
+            </Link>
             {more.moments.length > 1 && (
               <div className="no-scrollbar" style={{ display: 'flex', gap: 10, overflowX: 'auto', margin: '10px -20px 0', padding: '0 20px' }}>
                 {more.moments.slice(1).map((m, i) => (
-                  <button key={m.id} type="button" onClick={() => setMoreAt(i + 1)} aria-label={`Play ${m.title}`} style={{ position: 'relative', width: 128, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, border: 'none', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
+                  <Link key={m.id} href={momentHref(m.id)} aria-label={`Play ${m.title}`} style={{ position: 'relative', display: 'block', textDecoration: 'none', width: 128, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, border: 'none', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={`https://i.ytimg.com/vi/${m.youtube_id}/mqdefault.jpg`} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     <span style={{ position: 'absolute', left: 8, bottom: 8, width: 24, height: 24, borderRadius: 12, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.white }}><Play size={11} fill={T.white} /></span>
-                  </button>
+                  </Link>
                 ))}
               </div>
             )}
           </section>
         )}
-        {moreAt !== null && <MomentsViewer list={more.moments} start={moreAt} eventTitle={event.title} onClose={() => setMoreAt(null)} />}
       </main>
 
       {/* Bottom bar: price + the one main action */}
