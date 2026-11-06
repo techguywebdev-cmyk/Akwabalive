@@ -88,6 +88,7 @@ function EventCard({
   const [watching, setWatching] = useState(false);
   const [clip, setClip] = useState(0);
   const [prog, setProg] = useState(0);
+
   useEffect(() => { if (!active) setWatching(false); }, [active]);
   const moments = useEventMoments(event, near);
   const block = useRef<HTMLDivElement>(null);
@@ -108,6 +109,27 @@ function EventCard({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Long-press the flyer to play its moments (a tap still opens the event; a scroll cancels)
+  const press = useRef<{ t: ReturnType<typeof setTimeout> | null; x: number; y: number; fired: boolean }>({ t: null, x: 0, y: 0, fired: false });
+  const cancelPress = () => { if (press.current.t) clearTimeout(press.current.t); press.current.t = null; };
+  const pressHandlers = moments.length ? {
+    onPointerDown: (e: React.PointerEvent) => {
+      cancelPress();
+      press.current = { t: null, x: e.clientX, y: e.clientY, fired: false };
+      press.current.t = setTimeout(() => {
+        press.current.fired = true; press.current.t = null;
+        try { navigator.vibrate?.(12); } catch { /* not supported */ }
+        setClip(0); setProg(0); setWatching(true);
+      }, 450);
+    },
+    onPointerMove: (e: React.PointerEvent) => { if (Math.hypot(e.clientX - press.current.x, e.clientY - press.current.y) > 10) cancelPress(); },
+    onPointerUp: cancelPress,
+    onPointerCancel: cancelPress,
+    onPointerLeave: cancelPress,
+    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+    onClick: (e: React.MouseEvent) => { if (press.current.fired) { e.preventDefault(); press.current.fired = false; } },
+  } : {};
 
   const a = toHex(rgb);
   const split = splitEventTitle(event.title);
@@ -190,7 +212,8 @@ function EventCard({
       )}
 
       {/* Tapping anywhere on the card opens the event */}
-      <Link href={`/events/${event.slug}`} aria-label={`Open ${event.title}`} style={{ position: 'absolute', inset: 0, zIndex: 2 }} />
+      <Link href={`/events/${event.slug}`} aria-label={`Open ${event.title}`} {...pressHandlers}
+        style={{ position: 'absolute', inset: 0, zIndex: 2, WebkitTouchCallout: moments.length ? 'none' : undefined, userSelect: moments.length ? 'none' : undefined } as React.CSSProperties} />
 
       {/* Details: tags, short title, subtitle, friends, description, when/where, packages, one action.
           Taps on plain text fall through to the card link; buttons take their own taps. */}
