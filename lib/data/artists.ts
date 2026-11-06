@@ -383,3 +383,18 @@ export function artistForName(name: string): Artist | undefined {
   return artists.find((a) => a.name.toLowerCase() === n.trim())
     ?? artists.find((a) => [a.name, ...a.keywords].some((k) => keywordInText(k, n)));
 }
+
+/** Artists the search box is asking for: "sark", "sarkodie", "king promise accra" */
+export function artistsInQuery(q: string): Artist[] {
+  const t = q.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (t.length < 3) return [];
+  return artists.filter((a) => [a.name, ...a.keywords].some((k) => {
+    const kk = k.toLowerCase();
+    return kk.startsWith(t) || keywordInText(kk, t);
+  })).slice(0, 2);
+}
+
+/** Is this artist on the bill (line-up, linked, or named in the listing)? */
+export function performsAt(event: MatchableEvent, artist: Artist): boolean {
+  return eventMatchesArtist(event, artist) || (event.lineup ?? []).some((n) => artistForName(n)?.slug === artist.slug);
+}
