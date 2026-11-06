@@ -13,7 +13,7 @@ import ClaimsReview from '@/components/organizer/ClaimsReview';
 import { card, ghs } from '@/components/organizer/ui';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 
 type Item = {
   id: string; title: string; date: string; time: string | null; venue: string; city: string; image_url: string | null;
@@ -21,8 +21,8 @@ type Item = {
   ticket_tiers: { name: string; price: number; is_available: boolean | null }[];
 };
 
-const pill: React.CSSProperties = { height: 44, padding: '0 16px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: T.white };
-const mint: React.CSSProperties = { ...pill, background: T.mint, color: T.onMint, border: 'none' };
+const pill: React.CSSProperties = { height: 44, padding: '0 16px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: 'rgba(255,255,255,0.07)', border: 'none', color: T.white };
+const mint: React.CSSProperties = { ...pill, background: GRAD.mint, color: T.onMint, border: 'none' };
 
 function ReviewCard({ ev, busy, onApprove, onLater, onReject }: { ev: Item; busy: boolean; onApprove: () => void; onLater: () => void; onReject: () => void }) {
   const [confirmReject, setConfirmReject] = useState(false);
@@ -188,7 +188,7 @@ export default function ReviewQueuePage() {
           {showLinks && (
             <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
               <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, lineHeight: 1.45, color: T.text2 }}>Paste Instagram, X or ticket-site links, one per line. Akwaaba reads the flyer and details and adds them here.</p>
-              <textarea value={links} onChange={(e) => setLinks(e.target.value)} rows={4} placeholder={'https://www.instagram.com/p/…\nhttps://egotickets.com/events/…'} style={{ width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, outline: 'none', resize: 'vertical' }} />
+              <textarea value={links} onChange={(e) => setLinks(e.target.value)} rows={4} placeholder={'https://www.instagram.com/p/…\nhttps://egotickets.com/events/…'} style={{ width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, outline: 'none', resize: 'vertical' }} />
               <button type="button" onClick={addLinks} disabled={adding} style={{ ...mint, alignSelf: 'flex-start' }}>{adding ? 'Reading links…' : 'Add to queue'}</button>
             </div>
           )}

@@ -102,14 +102,14 @@ export default function MomentsReviewPage() {
 
 
         {/* Add a video the finder can't reach (posts on X, or any YouTube link) */}
-        <section style={{ marginTop: 26, padding: 16, borderRadius: 20, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <section style={{ marginTop: 26, padding: 16, borderRadius: 20, background: 'rgba(255,255,255,0.04)', border: 'none' }}>
           <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: T.white }}>Add a video</h2>
           <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Paste a YouTube or X link — it goes straight into Moments.</p>
-          <input placeholder="https://x.com/... or https://youtube.com/..." value={add.url} onChange={(e) => setAdd((a) => ({ ...a, url: e.target.value }))} style={{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }} />
-          <input placeholder="Show or event (e.g. Rapperholic)" value={add.event_name} onChange={(e) => setAdd((a) => ({ ...a, event_name: e.target.value }))} style={{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }} />
+          <input placeholder="https://x.com/... or https://youtube.com/..." value={add.url} onChange={(e) => setAdd((a) => ({ ...a, url: e.target.value }))} style={{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }} />
+          <input placeholder="Show or event (e.g. Rapperholic)" value={add.event_name} onChange={(e) => setAdd((a) => ({ ...a, event_name: e.target.value }))} style={{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }} />
           <div style={{ display: 'flex', gap: 8 }}>
-            <input placeholder="Title (optional)" value={add.title} onChange={(e) => setAdd((a) => ({ ...a, title: e.target.value }))} style={{ ...{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }, flex: 1 }} />
-            <input placeholder="Year" inputMode="numeric" value={add.year} onChange={(e) => setAdd((a) => ({ ...a, year: e.target.value }))} style={{ ...{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }, width: 90 }} />
+            <input placeholder="Title (optional)" value={add.title} onChange={(e) => setAdd((a) => ({ ...a, title: e.target.value }))} style={{ ...{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }, flex: 1 }} />
+            <input placeholder="Year" inputMode="numeric" value={add.year} onChange={(e) => setAdd((a) => ({ ...a, year: e.target.value }))} style={{ ...{ display: 'block', width: '100%', boxSizing: 'border-box' as const, marginTop: 8, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }, width: 90 }} />
           </div>
           <button type="button" onClick={addVideo} disabled={!add.url || !add.event_name} style={{ ...BTN.primary, marginTop: 12, height: 44, width: '100%' }}>Add to Moments</button>
           {addNote && <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.mintText }}>{addNote}</p>}
@@ -131,7 +131,7 @@ export default function MomentsReviewPage() {
             </p>
           )}
           {shown.map((r) => (
-            <article key={r.id} style={{ borderRadius: 20, overflow: 'hidden', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <article key={r.id} style={{ borderRadius: 20, overflow: 'hidden', background: 'rgba(255,255,255,0.04)', border: 'none' }}>
               <a href={`https://www.youtube.com/watch?v=${r.youtube_id}`} target="_blank" rel="noopener noreferrer" style={{ position: 'relative', display: 'block', aspectRatio: '16 / 9', background: '#000' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={thumb(r.youtube_id)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
@@ -149,7 +149,7 @@ export default function MomentsReviewPage() {
                   <label style={{ display: 'block', marginTop: 12 }}>
                     <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>Show / event name</span>
                     <input defaultValue={r.event_name} onChange={(e) => setNames((x) => ({ ...x, [r.id]: e.target.value }))}
-                      style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 6, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }} />
+                      style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 6, height: 44, padding: '0 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none' }} />
                   </label>
                 )}
                 <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>

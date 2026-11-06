@@ -68,7 +68,7 @@ export function RateSheet({ slug, title, status, onClose, onSaved }: { slug: str
             <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Rate the show</p>
             <h2 style={{ margin: '2px 0 0', fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{title}</h2>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" style={{ width: 40, height: 40, borderRadius: 20, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: T.white, cursor: 'pointer' }}><X size={18} /></button>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ width: 40, height: 40, borderRadius: 20, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: 'none', color: T.white, cursor: 'pointer' }}><X size={18} /></button>
         </div>
 
         <div style={{ marginTop: 22, textAlign: 'center' }}>
@@ -86,7 +86,7 @@ export function RateSheet({ slug, title, status, onClose, onSaved }: { slug: str
         </div>
 
         <textarea value={review} onChange={(e) => setReview(e.target.value)} maxLength={600} rows={3} placeholder="Tell people what it was like (optional)"
-          style={{ width: '100%', boxSizing: 'border-box', marginTop: 16, padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.45, outline: 'none', resize: 'none' }} />
+          style={{ width: '100%', boxSizing: 'border-box', marginTop: 16, padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.45, outline: 'none', resize: 'none' }} />
         <p style={{ margin: '6px 0 0', display: 'flex', justifyContent: 'space-between', fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>
           <span>{status.verified ? 'Shown with a Verified ticket badge' : 'Shown with your name'}</span><span>{review.length}/600</span>
         </p>

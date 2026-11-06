@@ -45,7 +45,7 @@ export default function OrganizerPageClient({ organizer, events }: { organizer: 
         {organizer.bio && <p style={{ margin: '18px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text }}>{organizer.bio}</p>}
 
         {events.length === 0 && (
-          <div style={{ marginTop: 30, padding: '28px 20px', borderRadius: 20, background: T.surface, border: `1px solid ${T.hairline}`, textAlign: 'center' }}>
+          <div style={{ marginTop: 30, padding: '28px 20px', borderRadius: 20, background: T.surface, border: 'none', textAlign: 'center' }}>
             <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 17, fontWeight: 700, color: T.white }}>No events yet</p>
             <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>New shows from {name} will show up here.</p>
           </div>

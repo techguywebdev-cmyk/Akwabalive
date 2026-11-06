@@ -33,7 +33,7 @@ export default function Ticket({
       aria-label={`${title} ticket`}
       style={{
         width, maxWidth: '100%', borderRadius: RADIUS.card, overflow: 'hidden', color: T.text,
-        border: `1px solid ${alpha(accent, 0.27)}`,
+        border: 'none',
         background: `radial-gradient(120% 70% at 0% 0%, ${alpha(accent, 0.18)} 0%, transparent 70%), radial-gradient(120% 70% at 100% 100%, ${alpha(accent, 0.14)} 0%, transparent 70%), ${T.bg}`,
       }}
     >

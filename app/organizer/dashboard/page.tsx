@@ -130,7 +130,7 @@ export default function OrganizerDashboard() {
           <QuickAction href="/organizer/moments" icon={<Clapperboard size={22} strokeWidth={2} />} label="Moments review" />
         </div>
 
-        <div role="tablist" aria-label="Your events" style={{ display: 'inline-flex', marginTop: 30, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div role="tablist" aria-label="Your events" style={{ display: 'inline-flex', marginTop: 30, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: 'none' }}>
           {(['upcoming', 'past', 'drafts'] as const).map((k) => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 38, padding: '0 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: tab === k ? T.mint : 'transparent', color: tab === k ? T.onMint : T.text2 }}>
               {k === 'upcoming' ? 'Upcoming' : k === 'past' ? 'Past' : 'Drafts & review'}{lists[k].length ? ` · ${lists[k].length}` : ''}

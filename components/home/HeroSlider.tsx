@@ -514,7 +514,7 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
       }}>
         <div style={{
           maxWidth: 600, pointerEvents: 'auto',
-          ...G.panel, border: `1px solid ${C.bd2}`, borderRadius: R.sheet,
+          ...G.panel, border: 'none', borderRadius: R.sheet,
           padding: 'clamp(18px, 4vw, 28px)',
         }}>
           <div
@@ -530,7 +530,7 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
             {slide.live && (
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: 'rgba(206,17,38,0.16)', border: '1px solid rgba(206,17,38,0.45)',
+                background: 'rgba(206,17,38,0.16)', border: 'none',
                 color: '#FCA5A5', borderRadius: R.chip,
                 fontFamily: mono, fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase',
                 padding: '4px 10px',

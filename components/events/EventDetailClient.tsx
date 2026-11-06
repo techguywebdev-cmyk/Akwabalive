@@ -3,7 +3,7 @@ import { useState, useEffect, type CSSProperties } from 'react';
 import Link from 'next/link';
 import Nav, { HeaderIconButton } from '@/components/layout/Nav';
 import { Icon } from '@/components/ui/Icon';
-import { T, FONT, alpha } from '@/lib/thiscene';
+import { T, FONT, alpha, GRAD } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventColours, NEUTRAL_ACCENT, toHex } from '@/lib/events/accent';
 import { resolveLineupNames } from '@/components/ui/LineupChips';
 import { artistForName } from '@/lib/data/artists';
@@ -228,7 +228,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const infoBtn: CSSProperties = { width: 38, height: 38, borderRadius: 19, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', color: T.white, textDecoration: 'none' };
   const roundBtn = (on: boolean): CSSProperties => ({
     width: 44, height: 44, borderRadius: 22, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0,
-    ...(on ? { background: 'rgba(123,227,168,0.16)', color: T.mintText, border: '1px solid rgba(123,227,168,0.4)' } : { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' }),
+    ...(on ? { background: 'rgba(123,227,168,0.16)', color: T.mintText, border: 'none'} : { background: 'rgba(255,255,255,0.08)', color: T.white, border: 'none' }),
   });
   const pillBtn = (on: boolean): CSSProperties => ({ ...roundBtn(on), width: 'auto', padding: '0 16px', gap: 7, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 });
   const primary: CSSProperties = {
@@ -256,7 +256,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       />
 
       {(dreamToast || ticketSuccess) && (
-        <div role="status" style={{ position: 'fixed', top: 'calc(80px + env(safe-area-inset-top, 0px))', left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: 'rgba(9,11,10,0.92)', border: '1px solid rgba(123,227,168,0.35)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 999, padding: '10px 18px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div role="status" style={{ position: 'fixed', top: 'calc(80px + env(safe-area-inset-top, 0px))', left: '50%', transform: 'translateX(-50%)', zIndex: 600, background: 'rgba(9,11,10,0.92)', border: 'none', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 999, padding: '10px 18px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 8 }}>
           {ticketSuccess ? <><Icon name="check" size={16} /> Ticket confirmed — it&apos;s in My tickets</> : dreamToast}
         </div>
       )}
@@ -319,7 +319,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         {/* When and where: the same quiet rows as Info & contact */}
         <section style={{ marginTop: 26 }}>
           <h2 style={eyebrowMint}>When &amp; where</h2>
-          <div style={{ marginTop: 8, borderRadius: 20, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+          <div style={{ marginTop: 8, borderRadius: 20, background: 'rgba(255,255,255,0.05)', border: 'none', overflow: 'hidden' }}>
             <div style={{ ...infoRow, borderTop: 'none' }}>
               <CalendarDays size={17} color={T.text2} />
               <span style={{ flex: 1, minWidth: 0 }}>
@@ -343,12 +343,12 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         {hasInfo(info) && (
           <section style={{ marginTop: 28 }}>
             <h2 style={eyebrowMint}>Info &amp; contact</h2>
-            <div style={{ marginTop: 8, borderRadius: 20, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+            <div style={{ marginTop: 8, borderRadius: 20, background: 'rgba(255,255,255,0.05)', border: 'none', overflow: 'hidden' }}>
               {info.ussd.map((code) => (
                 <a key={code} href={`tel:${encodeURIComponent(code)}`} style={{ ...infoRow, textDecoration: 'none' }}>
                   <Phone size={17} color={T.text2} />
                   <span style={{ flex: 1, minWidth: 0 }}><span style={infoLabel}>Tickets by phone: dial</span><span style={infoValue}>{code}</span></span>
-                  <span style={{ ...infoBtn, width: 'auto', padding: '0 14px', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 13.5, fontWeight: 700 }}>Dial</span>
+                  <span style={{ ...infoBtn, width: 'auto', padding: '0 14px', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 13.5, fontWeight: 700 }}>Dial</span>
                 </a>
               ))}
               {info.phones.map((p) => (
@@ -472,7 +472,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
               </button>
             );
           })}
-          <button type="button" onClick={() => setChatOpen(true)} style={{ marginTop: chat.comments.length ? 8 : 4, width: '100%', height: 48, borderRadius: 999, display: 'flex', alignItems: 'center', gap: 10, padding: '0 18px', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: T.text3, fontFamily: FONT.sans, fontSize: 14, textAlign: 'left' }}>
+          <button type="button" onClick={() => setChatOpen(true)} style={{ marginTop: chat.comments.length ? 8 : 4, width: '100%', height: 48, borderRadius: 999, display: 'flex', alignItems: 'center', gap: 10, padding: '0 18px', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', border: 'none', color: T.text3, fontFamily: FONT.sans, fontSize: 14, textAlign: 'left' }}>
             <MessageSquareText size={17} color={T.text2} />
             {chat.comments.length ? 'Join the conversation…' : daysAway != null && daysAway < 0 ? 'Were you there? Say something…' : 'Ask about tickets, gates, dress code…'}
           </button>
@@ -537,7 +537,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         {!moments.length && (
           <section style={{ marginTop: 36 }}>
             <h2 style={eyebrowMint}>Moments</h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 4, padding: '16px 16px', borderRadius: 20, background: T.surface, border: `1px solid ${T.hairline}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 4, padding: '16px 16px', borderRadius: 20, background: T.surface, border: 'none' }}>
               <span aria-hidden style={{ width: 42, height: 42, borderRadius: 21, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.1)', color: T.mintText }}><Play size={17} /></span>
               <span style={{ minWidth: 0 }}>
                 <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>No moments from this event yet</span>
@@ -588,13 +588,13 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             <span style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: T.white }}>{event.priceUnknown ? (info.gatePrice ? `GH₵ ${info.gatePrice}` : 'See prices') : free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</span>
           </span>
           {daysAway != null && daysAway < 0 ? (
-            <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
+            <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
           ) : listed ? (
             <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={primary}>
               Tickets on {event.ticketSource || 'official site'} <Icon name="open" size={16} />
             </a>
           ) : daysAway != null && daysAway < 0 ? (
-            <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
+            <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
           ) : (
             <button type="button" onClick={() => setTicketsOpen(true)} style={primary}>
               {free ? 'Reserve a spot' : 'Get tickets'}

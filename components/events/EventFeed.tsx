@@ -24,7 +24,7 @@ import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { type CheckoutTier } from '@/lib/events/tiers';
 import { Heart, Share2, Mic2, Play, Image as ImageIcon } from 'lucide-react';
 import { isListedEvent } from '@/lib/types';
-import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
+import { T, TYPE, RADIUS, FONT, alpha, ambient, glass, GRAD } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
 
 /** The card last on screen, kept for the whole visit so Back returns to it */
@@ -66,7 +66,7 @@ function shorten(t: string, max = 46) {
 
 const roundBtn: React.CSSProperties = {
   width: 50, height: 50, flexShrink: 0, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-  background: 'rgba(20,24,22,0.62)', border: '1px solid rgba(255,255,255,0.14)', color: T.white,
+  background: 'rgba(20,24,22,0.62)', border: 'none', color: T.white,
   transition: 'background 200ms ease, color 200ms ease, border-color 200ms ease',
 };
 
@@ -227,18 +227,18 @@ function EventCard({
         }}
       >
         {performer && (
-          <Link href={`/artists/${performer.slug}`} style={{ alignSelf: 'flex-start', pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', gap: 7, height: 32, padding: '0 13px', borderRadius: 16, background: T.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700, textDecoration: 'none' }}>
+          <Link href={`/artists/${performer.slug}`} style={{ alignSelf: 'flex-start', pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', gap: 7, height: 32, padding: '0 13px', borderRadius: 16, background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700, textDecoration: 'none' }}>
             <Mic2 size={14} strokeWidth={2.4} /> {performer.name} is performing
           </Link>
         )}
         <span style={{ pointerEvents: 'auto' }}>
           <EventTags event={event} accent={a} hype={hype} max={watching ? 1 : moments.length ? 2 : undefined} extra={watching ? (
-            <button type="button" onClick={() => setWatching(false)} style={{ ...chip, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(3,10,6,0.5)', color: T.white }}>
+            <button type="button" onClick={() => setWatching(false)} style={{ ...chip, cursor: 'pointer', border: 'none', background: 'rgba(3,10,6,0.5)', color: T.white }}>
               <ImageIcon size={14} strokeWidth={2.2} /> Flyer
             </button>
           ) : moments.length > 0 ? (
             <button type="button" onClick={() => { setClip(0); setProg(0); setWatching(true); }} aria-label={`Watch moments from past editions, ${moments.length} video${moments.length > 1 ? 's' : ''}`} title="Watch moments"
-              style={{ width: 28, height: 28, padding: 0, borderRadius: 14, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint, boxShadow: '0 0 14px rgba(123,227,168,0.45)' }}>
+              style={{ width: 28, height: 28, padding: 0, borderRadius: 14, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, boxShadow: '0 0 14px rgba(123,227,168,0.45)' }}>
               <Play size={12} fill="currentColor" strokeWidth={0} style={{ marginLeft: 2 }} />
             </button>
           ) : null} />
@@ -415,7 +415,7 @@ export default function EventFeed({
         <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>Nothing matches yet</p>
         <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Try another date, city or price.</p>
         {onShowAll && (
-          <button type="button" onClick={onShowAll} style={{ marginTop: 14, height: 48, padding: '0 22px', borderRadius: 999, border: 'none', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={onShowAll} style={{ marginTop: 14, height: 48, padding: '0 22px', borderRadius: 999, border: 'none', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
             {showAllLabel ?? 'Show all dates'}
           </button>
         )}

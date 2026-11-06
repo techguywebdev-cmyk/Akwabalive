@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Check, X, Radio, RefreshCw } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { card } from '@/components/organizer/ui';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 
 type Update = {
   id: string; value: string; status: string; created_at: string;
@@ -64,7 +64,7 @@ export default function LineupUpdates() {
     <section style={{ marginTop: 26 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <h2 style={{ margin: 0, flex: 1, display: 'flex', alignItems: 'center', gap: 8, fontFamily: FONT.display, fontSize: 20, fontWeight: 800, color: T.white }}><Radio size={18} color="#FFB27A" /> Line-up news</h2>
-        <button type="button" onClick={checkNow} disabled={checking} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.14)', background: 'transparent', color: T.text, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+        <button type="button" onClick={checkNow} disabled={checking} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: 'none', background: 'transparent', color: T.text, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
           <RefreshCw size={14} /> {checking ? 'Checking…' : 'Check now'}
         </button>
       </div>
@@ -89,8 +89,8 @@ export default function LineupUpdates() {
                 ))}
               </ul>
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                <button type="button" disabled={busy === u.id} onClick={() => decide(u, true)} style={{ height: 38, padding: '0 16px', borderRadius: 999, border: 'none', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 14, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}><Check size={15} /> Add to line-up</button>
-                <button type="button" disabled={busy === u.id} onClick={() => decide(u, false)} style={{ height: 38, padding: '0 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.14)', background: 'transparent', color: T.text, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}><X size={15} /> Not right</button>
+                <button type="button" disabled={busy === u.id} onClick={() => decide(u, true)} style={{ height: 38, padding: '0 16px', borderRadius: 999, border: 'none', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 14, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}><Check size={15} /> Add to line-up</button>
+                <button type="button" disabled={busy === u.id} onClick={() => decide(u, false)} style={{ height: 38, padding: '0 14px', borderRadius: 999, border: 'none', background: 'transparent', color: T.text, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}><X size={15} /> Not right</button>
               </div>
             </article>
           ))}

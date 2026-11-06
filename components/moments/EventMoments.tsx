@@ -71,7 +71,7 @@ export function MomentsPill({ list, slug, onOpen }: { list: Moment[]; slug: stri
       type="button"
       onClick={onOpen}
       aria-label={`${label(list, slug)}, ${list.length} video${list.length > 1 ? 's' : ''}`}
-      style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 10, height: 44, padding: '0 14px 0 4px', borderRadius: 999, cursor: 'pointer', background: 'rgba(3,10,6,0.45)', border: '1px solid rgba(255,255,255,0.14)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: T.white }}
+      style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 10, height: 44, padding: '0 14px 0 4px', borderRadius: 999, cursor: 'pointer', background: 'rgba(3,10,6,0.45)', border: 'none', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', color: T.white }}
     >
       <span style={{ position: 'relative', width: 60, height: 36, borderRadius: 999, overflow: 'hidden', flexShrink: 0, background: '#000' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -146,7 +146,7 @@ export function MomentsViewer({ list, start = 0, eventTitle, onClose }: { list: 
           <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>Moments{m.year ? ` · ${m.year}` : ''}</p>
           <p style={{ margin: '4px 0 0', fontFamily: FONT.display, fontSize: 17, fontWeight: 700, color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</p>
         </div>
-        <button type="button" aria-label="Close" onClick={onClose} style={{ width: 44, height: 44, borderRadius: 22, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: T.white, cursor: 'pointer' }}>
+        <button type="button" aria-label="Close" onClick={onClose} style={{ width: 44, height: 44, borderRadius: 22, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: 'none', color: T.white, cursor: 'pointer' }}>
           <Icon name="close" size={20} />
         </button>
       </div>

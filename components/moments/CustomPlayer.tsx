@@ -522,7 +522,7 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
             height: 40,
             borderRadius: '50%',
             background: 'rgba(0,0,0,0.5)',
-            border: '1px solid rgba(255,255,255,0.18)',
+            border: 'none',
             backdropFilter: 'blur(12px)',
             color: '#FFFEF8',
             display: 'flex',

@@ -49,7 +49,7 @@ export default function HotCarousel({ events, topInset, active, onNext, friends 
           <p style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>{friends ? <><Users size={14} /> Your people</> : <><Flame size={14} /> Hot right now</>}</p>
           <h2 style={{ margin: '3px 0 0', fontFamily: FONT.display, fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05, color: T.white }}>{friends ? 'Where your friends are going' : 'The shows everyone’s going to'}</h2>
         </div>
-        <button type="button" onClick={onNext} aria-label="Next event" style={{ flexShrink: 0, width: 40, height: 40, borderRadius: 20, border: '1px solid rgba(255,255,255,0.14)', background: 'transparent', color: T.text, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><ChevronDown size={18} /></button>
+        <button type="button" onClick={onNext} aria-label="Next event" style={{ flexShrink: 0, width: 40, height: 40, borderRadius: 20, border: 'none', background: 'transparent', color: T.text, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><ChevronDown size={18} /></button>
       </header>
       {/* The flyers fill the rest of the screen; swipe sideways for the next one */}
       <div ref={rowRef} className="no-scrollbar" style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, overflowX: 'auto', scrollSnapType: 'x mandatory', padding: '0 20px', scrollPaddingLeft: 20 }}>

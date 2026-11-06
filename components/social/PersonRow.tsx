@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 
 export type Person = { id: string; username: string; name: string; avatar: string | null; reason?: string };
 
@@ -47,7 +47,7 @@ export default function PersonRow({ p, initiallyFollowing = false }: { p: Person
       {user?.id !== p.id && (
         <button type="button" onClick={toggle} disabled={busy} aria-pressed={following}
           style={{ height: 38, padding: '0 16px', borderRadius: 999, flexShrink: 0, cursor: 'pointer', fontFamily: FONT.display, fontSize: 14, fontWeight: 700,
-            ...(following ? { background: 'transparent', color: T.white, border: '1px solid rgba(255,255,255,0.18)' } : { background: T.mint, color: T.onMint, border: 'none' }) }}>
+            ...(following ? { background: 'transparent', color: T.white, border: 'none' } : { background: GRAD.mint, color: T.onMint, border: 'none' }) }}>
           {following ? 'Following' : 'Follow'}
         </button>
       )}

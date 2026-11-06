@@ -6,7 +6,7 @@ import { placesForCity, matchPlace, type Place } from '@/lib/places';
 
 import { C, G } from '@/lib/theme';
 const inputStyle: React.CSSProperties = {
-  width: '100%', ...G.raised, border: `1px solid ${C.bd}`,
+  width: '100%', ...G.raised, border: 'none',
   borderRadius: 8, padding: '12px 14px',
   fontFamily: 'var(--font-inter,sans-serif)', fontSize: 14,
   color: C.cream, outline: 'none',
@@ -47,7 +47,7 @@ export default function LocationFields({
           type="button"
           onClick={() => pick(guessed)}
           style={{
-            textAlign: 'left', background: C.goldDim, border: `1px solid ${C.goldBd}`,
+            textAlign: 'left', background: C.goldDim, border: 'none',
             color: C.gold, borderRadius: 8, padding: '10px 12px', cursor: 'pointer',
             fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13,
           }}
@@ -67,8 +67,8 @@ export default function LocationFields({
               style={{
                 fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '1px',
                 textTransform: 'uppercase', padding: '7px 12px', borderRadius: 999, cursor: 'pointer',
-                border: `1px solid ${active ? C.goldBd : C.bd}`,
-                background: active ? C.goldDim : 'transparent',
+                border: 'none',
+                background: active ? C.goldDim : 'rgba(255,255,255,0.05)',
                 color: active ? C.gold : C.c3,
               }}
             >

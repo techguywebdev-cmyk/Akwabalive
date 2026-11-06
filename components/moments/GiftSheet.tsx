@@ -78,7 +78,7 @@ export default function GiftSheet({
         style={{
           position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 61, maxHeight: '88%', overflowY: 'auto',
           margin: '0 auto', maxWidth: 560,
-          ...G.sheet, border: `1px solid ${C.bd2}`, borderBottom: 'none', borderRadius: `${R.sheet}px ${R.sheet}px 0 0`,
+          ...G.sheet, border: 'none', borderBottom: 'none', borderRadius: `${R.sheet}px ${R.sheet}px 0 0`,
           padding: '10px 20px calc(18px + env(safe-area-inset-bottom, 0px))',
         }}
       >
@@ -93,12 +93,12 @@ export default function GiftSheet({
                 <p style={{ fontFamily: mono, fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase', color: C.goldText, marginBottom: 4 }}>Gift a ticket</p>
                 <h2 style={{ fontFamily: serif, fontSize: 28, fontWeight: 500, lineHeight: 1.1, color: C.cream }}>Bring {first} to {next.title}</h2>
               </div>
-              <button type="button" onClick={onClose} aria-label="Close" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 22, ...G.raised, border: `1px solid ${C.bd}`, color: C.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <button type="button" onClick={onClose} aria-label="Close" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 22, ...G.raised, border: 'none', color: C.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <X size={18} />
               </button>
             </div>
 
-            <div style={{ borderRadius: R.card - 4, border: `1px solid ${C.bd}`, ...G.raised, overflow: 'hidden' }}>
+            <div style={{ borderRadius: R.card - 4, border: 'none', ...G.raised, overflow: 'hidden' }}>
               <div style={{ display: 'flex', gap: 12, padding: '12px 14px', alignItems: 'center' }}>
                 <span style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 20, overflow: 'hidden', background: '#8E1B24', color: C.cream, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: sans, fontSize: 15, fontWeight: 700 }}>
                   {comment.profiles?.avatar_url
@@ -137,7 +137,7 @@ export default function GiftSheet({
                     style={{
                       display: 'flex', alignItems: 'center', gap: 12, minHeight: 56, padding: '10px 14px', borderRadius: R.btn,
                       textAlign: 'left', cursor: soldOut ? 'not-allowed' : 'pointer', opacity: soldOut ? 0.45 : 1, color: C.cream,
-                      border: `1px solid ${on ? C.gold : C.bd2}`, background: on ? C.goldDim : 'transparent',
+                      border: 'none', background: on ? C.goldDim : 'transparent',
                     }}
                   >
                     <span style={{ width: 18, height: 18, borderRadius: 9, border: `2px solid ${on ? C.gold : C.c3}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -166,7 +166,7 @@ export default function GiftSheet({
                     onClick={() => setMethod(m.key)}
                     style={{
                       height: 40, padding: '0 14px', borderRadius: R.chip, cursor: 'pointer', fontFamily: sans, fontSize: 13, fontWeight: 600,
-                      border: `1px solid ${on ? C.gold : C.bd2}`, background: on ? C.goldDim : 'transparent', color: on ? C.goldText : C.c2,
+                      border: 'none', background: on ? C.goldDim : 'transparent', color: on ? C.goldText : C.c2,
                     }}
                   >
                     {m.label}
@@ -192,14 +192,14 @@ export default function GiftSheet({
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '18px 0 4px', textAlign: 'center' }}>
-            <span style={{ width: 72, height: 72, borderRadius: 36, background: C.greenDim, border: `1px solid ${C.greenBd}`, color: '#86EFAC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ width: 72, height: 72, borderRadius: 36, background: C.greenDim, border: 'none', color: '#86EFAC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Check size={32} />
             </span>
             <h2 style={{ fontFamily: serif, fontSize: 32, fontWeight: 500, color: C.cream }}>Gift sent to {first}</h2>
             <p style={{ fontFamily: sans, fontSize: 14, lineHeight: 1.55, color: C.c2, maxWidth: 320 }}>
               Their {tier?.name} ticket for {next.title} is waiting in their account.
             </p>
-            <div style={{ width: '100%', display: 'flex', borderRadius: R.card - 4, overflow: 'hidden', border: `1px solid ${C.goldBd}`, ...G.raised, textAlign: 'left' }}>
+            <div style={{ width: '100%', display: 'flex', borderRadius: R.card - 4, overflow: 'hidden', border: 'none', ...G.raised, textAlign: 'left' }}>
               <div style={{ flex: 1, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ fontFamily: mono, fontSize: 10, letterSpacing: '1.8px', textTransform: 'uppercase', color: C.goldText }}>Admit one · {tier?.name}</span>
                 <span style={{ fontFamily: sans, fontSize: 16, fontWeight: 700, color: C.cream }}>{next.title}</span>

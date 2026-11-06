@@ -6,7 +6,7 @@ import { X } from 'lucide-react';
 import type { GhanaEvent } from '@/lib/types';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 
 type Kind = 'ticket' | 'going' | 'saved';
 const ghDay = (offset: number) => new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10); // Ghana is on UTC
@@ -66,7 +66,7 @@ export default function ShowNudge({ events, compact = false }: {
 
   if (compact) {
     return (
-      <Link href={action.href} onClick={dismiss} aria-label={`${next.title} is ${when}. ${action.label}`} style={{ position: 'fixed', zIndex: 205, top: 'calc(17px + env(safe-area-inset-top, 0px))', left: 72, maxWidth: 'calc(100vw - 200px)', height: 38, padding: '0 14px 0 11px', borderRadius: 19, display: 'inline-flex', alignItems: 'center', gap: 8, background: '#0D1210', border: '1px solid rgba(123,227,168,0.4)', textDecoration: 'none', boxShadow: '0 8px 22px rgba(0,0,0,0.4)' }}>
+      <Link href={action.href} onClick={dismiss} aria-label={`${next.title} is ${when}. ${action.label}`} style={{ position: 'fixed', zIndex: 205, top: 'calc(17px + env(safe-area-inset-top, 0px))', left: 72, maxWidth: 'calc(100vw - 200px)', height: 38, padding: '0 14px 0 11px', borderRadius: 19, display: 'inline-flex', alignItems: 'center', gap: 8, background: '#0D1210', border: 'none', textDecoration: 'none', boxShadow: '0 8px 22px rgba(0,0,0,0.4)' }}>
         <span aria-hidden style={{ width: 7, height: 7, borderRadius: 4, flexShrink: 0, background: T.mint, boxShadow: `0 0 8px ${T.mint}` }} />
         <span style={{ minWidth: 0, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           <span style={{ color: T.mintText }}>{when === 'today' ? 'Today' : 'Tomorrow'}</span> · {next.title}
@@ -76,13 +76,13 @@ export default function ShowNudge({ events, compact = false }: {
   }
 
   return (
-    <div role="status" style={{ margin: '0 0 22px', display: 'flex', alignItems: 'center', gap: 10, minHeight: 60, padding: '8px 6px 8px 14px', borderRadius: 18, background: '#0D1210', border: '1px solid rgba(123,227,168,0.35)', boxShadow: '0 14px 34px rgba(0,0,0,0.5)' }}>
+    <div role="status" style={{ margin: '0 0 22px', display: 'flex', alignItems: 'center', gap: 10, minHeight: 60, padding: '8px 6px 8px 14px', borderRadius: 18, background: '#0D1210', border: 'none', boxShadow: '0 14px 34px rgba(0,0,0,0.5)' }}>
       <span aria-hidden style={{ width: 8, height: 8, borderRadius: 4, flexShrink: 0, background: T.mint, boxShadow: `0 0 10px ${T.mint}` }} />
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
         <span style={{ fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.mintText }}>{when === 'today' ? 'Today' : 'Tomorrow'}{time}</span>
         <span style={{ fontFamily: FONT.sans, fontSize: 14.5, fontWeight: 600, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{next.title}</span>
       </span>
-      <Link href={action.href} style={{ flexShrink: 0, height: 36, padding: '0 14px', borderRadius: 18, display: 'inline-flex', alignItems: 'center', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 13.5, fontWeight: 700, textDecoration: 'none' }}>{action.label}</Link>
+      <Link href={action.href} style={{ flexShrink: 0, height: 36, padding: '0 14px', borderRadius: 18, display: 'inline-flex', alignItems: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 13.5, fontWeight: 700, textDecoration: 'none' }}>{action.label}</Link>
       <button type="button" onClick={dismiss} aria-label="Dismiss" style={{ flexShrink: 0, width: 32, height: 32, border: 'none', background: 'none', color: T.text2, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={17} /></button>
     </div>
   );

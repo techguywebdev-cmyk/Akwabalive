@@ -38,7 +38,7 @@ export default function EventCard({
         size === 'feature' && 'h-full min-h-[400px]',
         className,
       )}
-      style={{ borderRadius: R.card, border: `1px solid ${C.bd}`, ...(isOverlay ? {} : G.panel), textDecoration: 'none', display: 'flex', flexDirection: 'column' }}
+      style={{ borderRadius: R.card, border: 'none', ...(isOverlay ? {} : G.panel), textDecoration: 'none', display: 'flex', flexDirection: 'column' }}
       onMouseEnter={e => { e.currentTarget.style.borderColor = C.goldBd; }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = C.bd; }}
     >
@@ -60,12 +60,12 @@ export default function EventCard({
           className="transition-transform duration-700 group-hover:scale-[1.05]"
         />
         <div style={{ position: 'absolute', top: 10, left: 10, right: 10, zIndex: 4, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <span style={{ ...G.overlay, fontFamily: mono, fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', padding: '5px 10px', borderRadius: R.chip, color: C.cream, border: '1px solid rgba(255,255,255,0.16)' }}>
+          <span style={{ ...G.overlay, fontFamily: mono, fontSize: 10, letterSpacing: '1.2px', textTransform: 'uppercase', padding: '5px 10px', borderRadius: R.chip, color: C.cream, border: 'none' }}>
             {event.hot && <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 6, background: C.gold, marginRight: 6, verticalAlign: 1 }} />}
             {event.badge}
           </span>
           {distanceKm !== undefined && (
-            <span style={{ ...G.overlay, fontFamily: mono, fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', padding: '5px 10px', borderRadius: R.chip, color: '#86efac', border: '1px solid rgba(74,222,128,0.35)' }}>
+            <span style={{ ...G.overlay, fontFamily: mono, fontSize: 10, letterSpacing: '1px', textTransform: 'uppercase', padding: '5px 10px', borderRadius: R.chip, color: '#86efac', border: 'none'}}>
               {formatDistance(distanceKm)} away
             </span>
           )}
@@ -76,7 +76,7 @@ export default function EventCard({
       <div
         style={{
           ...(isOverlay
-            ? { position: 'absolute', bottom: 10, left: 10, right: 10, zIndex: 2, ...G.panel, border: `1px solid ${C.bd2}`, borderRadius: R.card - 4 }
+            ? { position: 'absolute', bottom: 10, left: 10, right: 10, zIndex: 2, ...G.panel, border: 'none', borderRadius: R.card - 4 }
             : {}),
           padding: size === 'mini' ? '12px 14px 14px' : '16px 18px 18px',
           display: 'flex', flexDirection: 'column', flex: 1,

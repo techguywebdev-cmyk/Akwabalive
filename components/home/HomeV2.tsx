@@ -185,7 +185,7 @@ export default function HomeV2({ events }: { events: GhanaEvent[] }) {
         <Icon name="chevron" size={24} strokeWidth={2.4} color={T.mint} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 200ms ease' }} />
       </button>
       {open && (
-        <div role="listbox" aria-label="Choose a city" style={{ position: 'absolute', zIndex: 20, top: '100%', left: -6, marginTop: 8, minWidth: 220, padding: 6, borderRadius: 18, background: 'rgba(8,24,16,0.97)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column' }}>
+        <div role="listbox" aria-label="Choose a city" style={{ position: 'absolute', zIndex: 20, top: '100%', left: -6, marginTop: 8, minWidth: 220, padding: 6, borderRadius: 18, background: 'rgba(8,24,16,0.97)', border: 'none', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column' }}>
           {CITY_LIST.map((c) => (
             <button key={c.value} type="button" role="option" aria-selected={city === c.value} onClick={() => pick(c.value)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 46, padding: '0 14px', borderRadius: 12, border: 'none', background: city === c.value ? 'rgba(123,227,168,0.12)' : 'transparent', color: city === c.value ? T.mint : T.white, fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}>
               {c.value === 'all' ? 'All of Ghana' : c.label}
@@ -335,7 +335,7 @@ export default function HomeV2({ events }: { events: GhanaEvent[] }) {
             <SectionHead title="Around Ghana" />
             <div className="no-scrollbar" style={{ ...rail, gap: 8 }}>
               {cities.map((c) => (
-                <button key={c.value} type="button" onClick={() => { pick(c.value); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ flexShrink: 0, height: 44, padding: '0 18px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: city === c.value ? T.onMint : T.white, background: city === c.value ? T.mint : 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <button key={c.value} type="button" onClick={() => { pick(c.value); window.scrollTo({ top: 0, behavior: 'smooth' }); }} style={{ flexShrink: 0, height: 44, padding: '0 18px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: city === c.value ? T.onMint : T.white, background: city === c.value ? T.mint : 'rgba(255,255,255,0.07)', border: 'none' }}>
                   {c.label} <span style={{ opacity: 0.6, fontWeight: 500 }}>{c.n}</span>
                 </button>
               ))}

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { Icon } from '@/components/ui/Icon';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 
 export interface Friend { id: string; username: string; name: string; avatar: string | null; hasTicket: boolean }
 
@@ -90,7 +90,7 @@ export default function FriendsStrip({ slug, variant = 'compact', enabled = true
             <span style={{ position: 'relative' }}>
               <Avatar f={f} size={56} ring={f.hasTicket ? T.mint : 'rgba(255,255,255,0.12)'} />
               {f.hasTicket && (
-                <span title="Has a ticket" style={{ position: 'absolute', right: -3, bottom: -3, width: 22, height: 22, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint, boxShadow: '0 0 0 2px #030806' }}>
+                <span title="Has a ticket" style={{ position: 'absolute', right: -3, bottom: -3, width: 22, height: 22, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, boxShadow: '0 0 0 2px #030806' }}>
                   <Icon name="tickets" size={13} strokeWidth={2} />
                 </span>
               )}

@@ -31,10 +31,10 @@ const REGIONS: Record<string,string> = {
 
 const inputStyle: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box', height: 52, padding: '0 16px', borderRadius: 16,
-  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+  background: 'rgba(255,255,255,0.06)', border: 'none',
   fontFamily: FONT.sans, fontSize: 16, color: T.white, outline: 'none',
 };
-const card: React.CSSProperties = { padding: 18, borderRadius: 22, background: T.surface, border: `1px solid ${T.hairline}` };
+const card: React.CSSProperties = { padding: 18, borderRadius: 22, background: T.surface, border: 'none' };
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -260,7 +260,7 @@ export default function FromLinkPage() {
             </Field>
 
             {error && (
-              <div role="alert" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 14, borderRadius: 16, background: 'rgba(255,138,138,0.1)', border: '1px solid rgba(255,138,138,0.25)' }}>
+              <div role="alert" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 14, borderRadius: 16, background: 'rgba(255,138,138,0.1)', border: 'none'}}>
                 <AlertCircle size={16} style={{ color: T.danger, flexShrink: 0, marginTop: 1 }} />
                 <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.danger }}>{error}</p>
               </div>

@@ -11,7 +11,7 @@ import { parseDay, longDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { cityLabel } from '@/lib/utils';
 import { useFollow } from '@/components/follow/useFollow';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 import { ScoreChip } from '@/components/ratings/Stars';
 import type { RatingSummary } from '@/lib/ratings';
 
@@ -46,7 +46,7 @@ export function countdown(date?: string | null): string | null {
 
 export const roundBtn: React.CSSProperties = {
   width: 46, height: 46, borderRadius: 23, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: T.white, cursor: 'pointer', textDecoration: 'none',
+  background: 'rgba(255,255,255,0.08)', border: 'none', color: T.white, cursor: 'pointer', textDecoration: 'none',
 };
 
 export function SpotifyLogo({ size = 20 }: { size?: number }) {
@@ -102,8 +102,8 @@ export function FollowPill({ kind, slug, label }: { kind: 'artist' | 'series'; s
         height: 34, padding: '0 14px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, cursor: 'pointer',
         fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
         ...(following
-          ? { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' }
-          : { background: 'rgba(123,227,168,0.14)', color: T.mintText, border: '1px solid rgba(123,227,168,0.35)' }),
+          ? { background: 'rgba(255,255,255,0.08)', color: T.white, border: 'none' }
+          : { background: 'rgba(123,227,168,0.14)', color: T.mintText, border: 'none'}),
       }}>
       {following ? <Check size={14} /> : <Plus size={14} />}{following ? 'Following' : 'Follow'}
     </button>
@@ -247,7 +247,7 @@ export function PastRow({ show, rating, onPlay }: { show: PastShow; rating?: Rat
   );
   const chip = n > 0 && (
     <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPlay(); }} aria-label={`Watch ${n} ${n === 1 ? 'moment' : 'moments'} from ${show.title}`}
-      style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5, height: 34, padding: '0 12px 0 10px', borderRadius: 17, border: 'none', cursor: 'pointer', background: T.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>
+      style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5, height: 34, padding: '0 12px 0 10px', borderRadius: 17, border: 'none', cursor: 'pointer', background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>
       <Play size={13} fill="currentColor" /> {n}
     </button>
   );

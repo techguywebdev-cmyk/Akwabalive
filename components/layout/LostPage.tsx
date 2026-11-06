@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 import Wordmark from '@/components/brand/Wordmark';
 
 // Server-safe copies of the shared button styles (CardParts is a client module)
 export const LOST_BTN = {
-  primary: { height: 50, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: T.mint, color: T.onMint, border: 'none', cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap', fontFamily: FONT.display, fontSize: 15, fontWeight: 700 } as React.CSSProperties,
-  secondary: { height: 50, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(20,24,22,0.6)', color: T.white, border: '1px solid rgba(255,255,255,0.14)', cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap', fontFamily: FONT.display, fontSize: 15, fontWeight: 600 } as React.CSSProperties,
+  primary: { height: 50, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: GRAD.mint, color: T.onMint, border: 'none', cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap', fontFamily: FONT.display, fontSize: 15, fontWeight: 700 } as React.CSSProperties,
+  secondary: { height: 50, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(20,24,22,0.6)', color: T.white, border: 'none', cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap', fontFamily: FONT.display, fontSize: 15, fontWeight: 600 } as React.CSSProperties,
 };
 
 /** Shared look for "not found" and "something went wrong" */

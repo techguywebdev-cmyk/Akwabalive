@@ -128,8 +128,8 @@ export default function ScanPage() {
       </div>
 
       <header style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/organizer/dashboard" aria-label="Back to dashboard" style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.18)', color: T.white }}><ArrowLeft size={22} /></Link>
-        <span style={{ height: 36, padding: '0 14px', borderRadius: 18, display: 'inline-flex', alignItems: 'center', background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.18)', fontSize: 14, fontWeight: 600 }}>{count} checked in</span>
+        <Link href="/organizer/dashboard" aria-label="Back to dashboard" style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', color: T.white }}><ArrowLeft size={22} /></Link>
+        <span style={{ height: 36, padding: '0 14px', borderRadius: 18, display: 'inline-flex', alignItems: 'center', background: 'rgba(0,0,0,0.45)', border: 'none', fontSize: 14, fontWeight: 600 }}>{count} checked in</span>
       </header>
 
       <p style={{ position: 'absolute', left: 0, right: 0, top: 'calc(50% + min(36vw, 150px) + 18px)', textAlign: 'center', margin: 0, fontSize: 15, fontWeight: 500, color: 'rgba(255,255,255,0.85)' }}>

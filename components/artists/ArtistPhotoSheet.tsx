@@ -10,7 +10,7 @@ import { T, FONT, EASE } from '@/lib/thiscene';
 
 const field: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)',
-  border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 16, outline: 'none',
+  border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 16, outline: 'none',
 };
 
 /** Admin only: upload a photo for an artist (press kit, or one you have permission to use) */
@@ -81,7 +81,7 @@ export default function ArtistPhotoSheet({ slug, name, current, onClose, onSaved
         <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)', margin: '0 auto 14px' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 22, fontWeight: 700, color: T.white }}>Photo for {name}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" style={{ width: 40, height: 40, borderRadius: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: T.white, cursor: 'pointer' }}><X size={18} /></button>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ width: 40, height: 40, borderRadius: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: 'none', color: T.white, cursor: 'pointer' }}><X size={18} /></button>
         </div>
 
         <button type="button" onClick={() => fileRef.current?.click()} style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '4 / 3', padding: 0, borderRadius: 20, overflow: 'hidden', border: '1px dashed rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.04)', cursor: 'pointer' }}>

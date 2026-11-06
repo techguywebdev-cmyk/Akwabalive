@@ -7,7 +7,7 @@ import type { GhanaEvent } from '@/lib/types';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { eventCounts, trackEvent, compact, type EventCounts } from '@/lib/events/track';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 
 export const HOT_RAIL_H = 100;
 
@@ -54,7 +54,7 @@ export default function HotRail({ events, top }: { events: GhanaEvent[]; top: nu
                   {e.image && <img src={hiRes(e.image, 200) ?? e.image} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />}
                 </span>
                 <span style={{ position: 'absolute', left: '50%', bottom: -5, transform: 'translateX(-50%)', display: 'inline-flex', alignItems: 'center', gap: 3, height: 16, padding: '0 6px', borderRadius: 8, whiteSpace: 'nowrap', fontFamily: FONT.sans, fontSize: 9.5, fontWeight: 800, boxShadow: `0 0 0 2px ${T.bg}`,
-                  ...(stat ? { background: T.mint, color: T.onMint } : { background: '#1A1F1D', color: T.text }) }}>{stat ?? when}</span>
+                  ...(stat ? { background: GRAD.mint, color: T.onMint } : { background: '#1A1F1D', color: T.text }) }}>{stat ?? when}</span>
               </span>
               <span style={{ width: '100%', textAlign: 'center', fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 600, lineHeight: 1.2, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(e.title)}</span>
             </Link>

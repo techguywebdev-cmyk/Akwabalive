@@ -40,7 +40,7 @@ function Pass({ ticket, ev, qrKey, holder, onClose }: { ticket: Ticket; ev?: Eve
     <div role="dialog" aria-modal="true" aria-label={`Ticket for ${ticket.event_title}`} style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(1,4,3,0.94)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', overflowY: 'auto', opacity: shown ? 1 : 0, transition: 'opacity 240ms ease' }}>
       <div style={{ maxWidth: 420, margin: '0 auto', padding: 'calc(16px + env(safe-area-inset-top, 0px)) 16px calc(28px + env(safe-area-inset-bottom, 0px))', transform: shown ? 'none' : 'translateY(24px)', transition: `transform 320ms ${EASE.sheet}` }}>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-          <button type="button" aria-label="Close" onClick={onClose} style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: T.white, cursor: 'pointer' }}>
+          <button type="button" aria-label="Close" onClick={onClose} style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', border: 'none', color: T.white, cursor: 'pointer' }}>
             <Icon name="close" size={20} />
           </button>
         </div>
@@ -125,7 +125,7 @@ function TicketRow({ ticket, ev, onOpen }: { ticket: Ticket; ev?: EventInfo; onO
   const d = parseDay(ticket.event_date);
   const past = isPast(ticket);
   return (
-    <button type="button" onClick={onOpen} style={{ display: 'flex', alignItems: 'stretch', gap: 0, width: '100%', padding: 0, textAlign: 'left', cursor: 'pointer', borderRadius: 22, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.04)', color: T.white, opacity: past ? 0.7 : 1 }}>
+    <button type="button" onClick={onOpen} style={{ display: 'flex', alignItems: 'stretch', gap: 0, width: '100%', padding: 0, textAlign: 'left', cursor: 'pointer', borderRadius: 22, overflow: 'hidden', border: 'none', background: 'rgba(255,255,255,0.04)', color: T.white, opacity: past ? 0.7 : 1 }}>
       <span style={{ width: 96, flexShrink: 0, background: '#06120C', position: 'relative' }}>
         {ev?.image_url && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -192,7 +192,7 @@ export default function MyTicketsPage() {
       <main style={{ maxWidth: 640, margin: '0 auto', padding: 'calc(88px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
         <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(34px, 8vw, 48px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1, color: T.white }}>My tickets</h1>
 
-        <div role="tablist" aria-label="Upcoming or past" style={{ display: 'inline-flex', marginTop: 20, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div role="tablist" aria-label="Upcoming or past" style={{ display: 'inline-flex', marginTop: 20, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: 'none' }}>
           {(['upcoming', 'past'] as const).map((k) => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 40, padding: '0 18px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: tab === k ? T.white : 'transparent', color: tab === k ? T.onMint : T.text2 }}>
               {k === 'upcoming' ? `Upcoming${upcoming.length ? ` · ${upcoming.length}` : ''}` : `Past${past.length ? ` · ${past.length}` : ''}`}

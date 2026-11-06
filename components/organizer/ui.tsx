@@ -6,7 +6,7 @@ import { T, FONT, alpha } from '@/lib/thiscene';
 
 /** Shared pieces for the organiser pages, in the app's green design. */
 
-export const card: CSSProperties = { borderRadius: 22, background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.08)' };
+export const card: CSSProperties = { borderRadius: 22, background: 'rgba(255,255,255,0.045)', border: 'none' };
 
 export function Stat({ label, value, note, accent = T.mint }: { label: string; value: string; note?: string; accent?: string }) {
   return (
@@ -46,7 +46,7 @@ export function Bar({ value, max, color = T.mint }: { value: number; max: number
 
 export function QuickAction({ href, icon, label, badge, primary }: { href: string; icon: ReactNode; label: string; badge?: number; primary?: boolean }) {
   return (
-    <Link href={href} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, padding: 14, minHeight: 92, borderRadius: 20, textDecoration: 'none', boxSizing: 'border-box', background: primary ? T.mint : 'rgba(255,255,255,0.06)', border: primary ? 'none' : '1px solid rgba(255,255,255,0.09)', color: primary ? T.onMint : T.white }}>
+    <Link href={href} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, padding: 14, minHeight: 92, borderRadius: 20, textDecoration: 'none', boxSizing: 'border-box', background: primary ? T.mint : 'rgba(255,255,255,0.06)', border: 'none', color: primary ? T.onMint : T.white }}>
       <span style={{ display: 'flex' }}>{icon}</span>
       <span style={{ fontFamily: FONT.display, fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.15 }}>{label}</span>
       {!!badge && <span style={{ position: 'absolute', top: 12, right: 12, minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#F5C451', color: '#1A1300', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>{badge}</span>}

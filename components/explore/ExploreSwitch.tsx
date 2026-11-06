@@ -17,7 +17,7 @@ export default function ExploreSwitch({ active }: { active: 'artists' | 'shows' 
   };
   return (
     <nav aria-label="Artists or shows" style={{
-      display: 'inline-flex', padding: 4, borderRadius: 999, background: 'rgba(3,10,6,0.45)', border: '1px solid rgba(255,255,255,0.1)',
+      display: 'inline-flex', padding: 4, borderRadius: 999, background: 'rgba(3,10,6,0.45)', border: 'none',
       backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
     }}>
       {item('artists', 'Artists')}

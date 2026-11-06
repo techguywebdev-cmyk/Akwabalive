@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 import { Icon, PAGE_ICONS, type IconName } from '@/components/ui/Icon';
 import Wordmark from '@/components/brand/Wordmark';
 
@@ -16,7 +16,7 @@ const SECTIONS: { href: string; label: string; icon: IconName }[] = [
 
 const GLASS: React.CSSProperties = {
   background: 'rgba(3,10,6,0.36)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  border: 'none',
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
 };
@@ -40,7 +40,7 @@ export function HeaderIconButton({
     display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none',
     color: active ? T.mintText : T.text,
     ...GLASS,
-    ...(active ? { background: 'rgba(123,227,168,0.12)', border: '1px solid rgba(123,227,168,0.35)' } : {}),
+    ...(active ? { background: 'rgba(123,227,168,0.12)', border: 'none'} : {}),
     transition: 'background 200ms ease, border-color 200ms ease, color 200ms ease',
   };
   const inner = (
@@ -229,7 +229,7 @@ export default function Nav({
               position: 'fixed', zIndex: 190, left: '50%', bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
               width: 'min(340px, calc(100vw - 48px))', height: 58, borderRadius: 29,
               display: 'flex', alignItems: 'center', justifyContent: 'space-around', padding: '0 6px',
-              background: 'rgba(8,24,16,0.55)', border: '1px solid rgba(255,255,255,0.07)',
+              background: 'rgba(8,24,16,0.55)', border: 'none',
               boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
               backdropFilter: 'blur(26px) saturate(160%)', WebkitBackdropFilter: 'blur(26px) saturate(160%)',
               transform: `translateX(-50%) translateY(${tabsHidden ? 'calc(100% + 24px)' : '0'})`,
@@ -329,15 +329,15 @@ export default function Nav({
             )}
 
             <div style={{ ...stagger(6), marginTop: 'auto', paddingTop: 28, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <Link href="/organisers" onClick={() => setMenuOpen(false)} style={{ height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+              <Link href="/organisers" onClick={() => setMenuOpen(false)} style={{ height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
                 <Icon name="plus" size={18} strokeWidth={2} /> List an event
               </Link>
               {user ? (
-                <button type="button" onClick={() => { signOut(); setMenuOpen(false); }} style={{ height: 48, borderRadius: 999, background: 'none', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
+                <button type="button" onClick={() => { signOut(); setMenuOpen(false); }} style={{ height: 48, borderRadius: 999, background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
                   Sign out
                 </button>
               ) : (
-                <Link href="/auth" onClick={() => setMenuOpen(false)} style={{ height: 48, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.14)', color: T.white, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
+                <Link href="/auth" onClick={() => setMenuOpen(false)} style={{ height: 48, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'rgba(255,255,255,0.08)', color: T.white, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
                   Sign in
                 </Link>
               )}

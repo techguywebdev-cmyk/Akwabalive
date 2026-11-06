@@ -3,7 +3,7 @@
 import type { CSSProperties } from 'react';
 import type { GhanaEvent } from '@/lib/types';
 import { Icon, CATEGORY_ICONS } from '@/components/ui/Icon';
-import { T, FONT, alpha } from '@/lib/thiscene';
+import { T, FONT, alpha, GRAD } from '@/lib/thiscene';
 import { parseDay } from '@/lib/dates';
 import type { Hype, HypeKind } from '@/lib/events/hype';
 import { Flame, Sparkles, Star, RotateCcw, Zap, PartyPopper, Mic2, GraduationCap } from 'lucide-react';
@@ -106,12 +106,12 @@ export function MetaRows({ when, where }: { when: string; where: string }) {
 export const BTN = {
   primary: {
     height: 50, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-    background: T.mint, color: T.onMint, border: 'none', cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
+    background: GRAD.mint, color: T.onMint, border: 'none', cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
     fontFamily: FONT.display, fontSize: 15, fontWeight: 700, boxShadow: '0 8px 24px rgba(123,227,168,0.22)',
   } as CSSProperties,
   secondary: {
     height: 50, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    background: 'rgba(20,24,22,0.6)', color: T.white, border: '1px solid rgba(255,255,255,0.14)', cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
+    background: 'rgba(20,24,22,0.6)', color: T.white, border: 'none', cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
     fontFamily: FONT.display, fontSize: 15, fontWeight: 600,
   } as CSSProperties,
 };

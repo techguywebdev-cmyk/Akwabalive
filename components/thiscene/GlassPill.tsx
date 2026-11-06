@@ -22,20 +22,20 @@ export function pillStyle(variant: Variant, accent: string = DEFAULT_ACCENT, opt
   };
   switch (variant) {
     case 'primary':
-      return { ...base, ...TYPE.pill, height: 46, padding: opts.compact ? '0 20px' : '0 26px', color: T.white, background: alpha(accent, 0.18), border: `1px solid ${alpha(accent, 0.6)}` };
+      return { ...base, ...TYPE.pill, height: 46, padding: opts.compact ? '0 20px' : '0 26px', color: T.white, background: alpha(accent, 0.18), border: 'none'};
     case 'secondary':
       return { ...base, ...TYPE.pill, height: 46, padding: opts.compact ? '0 20px' : '0 26px', color: T.white, ...glass(), backdropFilter: BLUR };
     case 'chip':
       return opts.selected
-        ? { ...base, fontFamily: TYPE.pill.fontFamily, fontSize: 12.5, fontWeight: 700, height: 34, padding: '0 13px', color: T.white, background: alpha(accent, 0.2), border: '1px solid transparent', boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.53)}` }
-        : { ...base, fontFamily: TYPE.pill.fontFamily, fontSize: 12.5, fontWeight: 700, height: 34, padding: '0 13px', color: 'rgba(255,255,255,0.8)', background: T.surface, border: `1px solid ${T.hairlineStrong}` };
+        ? { ...base, fontFamily: TYPE.pill.fontFamily, fontSize: 12.5, fontWeight: 700, height: 34, padding: '0 13px', color: T.white, background: alpha(accent, 0.2), border: 'none', boxShadow: `inset 0 0 0 1px ${alpha(accent, 0.53)}` }
+        : { ...base, fontFamily: TYPE.pill.fontFamily, fontSize: 12.5, fontWeight: 700, height: 34, padding: '0 13px', color: 'rgba(255,255,255,0.8)', background: T.surface, border: 'none' };
     case 'round': {
       const s = opts.size ?? 46;
       return {
         ...base, width: s, height: s, padding: 0, color: opts.active ? accent : T.white,
         ...(opts.active
-          ? { background: alpha(accent, 0.18), border: `1px solid ${alpha(accent, 0.6)}` }
-          : { background: T.glass, border: `1px solid ${T.hairlineStrong}` }),
+          ? { background: alpha(accent, 0.18), border: 'none'}
+          : { background: T.glass, border: 'none' }),
         backdropFilter: BLUR,
       };
     }
@@ -86,7 +86,7 @@ export function Capsule({ children, accent, accentBorder = false }: { children: 
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
         background: T.glass, backdropFilter: BLUR, WebkitBackdropFilter: BLUR,
-        border: `1px solid ${accentBorder && accent ? alpha(accent, 0.19) : T.hairlineStrong}`,
+        border: 'none',
         borderRadius: RADIUS.pill, padding: '5px 12px',
         fontFamily: TYPE.pill.fontFamily, fontSize: 11, fontWeight: 600, color: T.text,
       }}

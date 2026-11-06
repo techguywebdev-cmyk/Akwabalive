@@ -63,7 +63,7 @@ export function LineupChips({
               gap: 6,
               padding: '5px 12px',
               borderRadius: 999,
-              border: `1px solid ${C.goldBd}`,
+              border: 'none',
               background: C.goldDim,
               color: C.gold,
               fontFamily: 'var(--font-inter), sans-serif',

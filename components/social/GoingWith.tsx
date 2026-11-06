@@ -123,7 +123,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, ...G.sheet, border: `1px solid ${C.bd2}`, borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.cream, whiteSpace: 'nowrap' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 600, ...G.sheet, border: 'none', borderRadius: 10, padding: '12px 20px', fontFamily: 'var(--font-inter), sans-serif', fontSize: 11, letterSpacing: '1.5px', textTransform: 'uppercase', color: C.cream, whiteSpace: 'nowrap' }}>
           {toast}
         </div>
       )}
@@ -134,7 +134,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
       </p>
 
       {/* Going count + avatars */}
-      <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, padding: '18px 20px', marginBottom: 12 }}>
+      <div style={{ ...G.panel, border: 'none', borderRadius: 14, padding: '18px 20px', marginBottom: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: goingProfiles.length > 0 ? 16 : 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Users size={16} style={{ color: C.gold }} />
@@ -147,7 +147,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
             style={{
               display: 'flex', alignItems: 'center', gap: 7,
               fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '2px', textTransform: 'uppercase',
-              border: `1px solid ${isGoing ? C.greenBd : C.goldBd}`,
+              border: 'none',
               background: isGoing ? C.greenDim : C.goldDim,
               color: isGoing ? C.greenL : C.gold,
               padding: '10px 16px', borderRadius: 8, cursor: 'pointer', transition: 'all 200ms',
@@ -187,7 +187,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
 
       {/* Invite followers */}
       {user && followers.length > 0 && (
-        <div style={{ ...G.panel, border: `1px solid ${C.bd}`, borderRadius: 14, overflow: 'hidden' }}>
+        <div style={{ ...G.panel, border: 'none', borderRadius: 14, overflow: 'hidden' }}>
           <button
             onClick={() => setShowInvite(v => !v)}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer' }}>
@@ -218,7 +218,7 @@ export default function GoingWith({ eventSlug, eventTitle }: GoingWithProps) {
                   <button
                     onClick={() => sendInvite(f)}
                     disabled={invited.has(f.id)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: `1px solid ${invited.has(f.id) ? C.greenBd : C.goldBd}`, background: invited.has(f.id) ? C.greenDim : C.goldDim, color: invited.has(f.id) ? C.greenL : C.gold, padding: '8px 12px', borderRadius: 6, cursor: invited.has(f.id) ? 'default' : 'pointer', transition: 'all 200ms', flexShrink: 0 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1.5px', textTransform: 'uppercase', border: 'none', background: invited.has(f.id) ? C.greenDim : C.goldDim, color: invited.has(f.id) ? C.greenL : C.gold, padding: '8px 12px', borderRadius: 6, cursor: invited.has(f.id) ? 'default' : 'pointer', transition: 'all 200ms', flexShrink: 0 }}>
                     {invited.has(f.id) ? <><CheckCircle size={11} /> Invited</> : <><Send size={11} /> Invite</>}
                   </button>
                 </div>

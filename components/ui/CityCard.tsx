@@ -9,7 +9,7 @@ export default function CityCard({ city }: { city: CityInfo }) {
     <Link
       href={`/events?city=${city.slug}`}
       className="group relative block overflow-hidden transition-[transform,border-color] duration-300 hover:-translate-y-1"
-      style={{ borderRadius: R.card, border: `1px solid ${C.bd}`, textDecoration: 'none', height: 200, background: C.bg3 }}
+      style={{ borderRadius: R.card, border: 'none', textDecoration: 'none', height: 200, background: C.bg3 }}
       onMouseEnter={e => { e.currentTarget.style.borderColor = C.goldBd; }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = C.bd; }}
     >
@@ -20,7 +20,7 @@ export default function CityCard({ city }: { city: CityInfo }) {
       />
       <div
         className="absolute"
-        style={{ left: 10, right: 10, bottom: 10, ...G.panel, border: `1px solid ${C.bd2}`, borderRadius: R.card - 6, padding: '10px 14px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}
+        style={{ left: 10, right: 10, bottom: 10, ...G.panel, border: 'none', borderRadius: R.card - 6, padding: '10px 14px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}
       >
         <span
           className="transition-colors duration-200 group-hover:text-[#E0B25A]"

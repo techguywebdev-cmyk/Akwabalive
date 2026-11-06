@@ -79,7 +79,7 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
 
   const fan = big.slice(0, 3).map((x) => img(x.event, 500));
   return (
-    <div style={{ minHeight: '100svh', background: `radial-gradient(120% 60% at 0% 0%, rgba(123,227,168,0.16) 0%, transparent 70%), radial-gradient(120% 60% at 100% 100%, rgba(45,190,140,0.14) 0%, transparent 70%), linear-gradient(165deg, rgba(123,227,168,0.07) 0%, rgba(123,227,168,0.03) 50%, rgba(123,227,168,0.06) 100%), ${GROUND}`, backgroundAttachment: 'fixed' }}>
+    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
       <Nav back="/" />
 
       {/* Hero: northern-lights wash, the three biggest flyers fanned out behind the header */}

@@ -16,7 +16,7 @@ type Mine = { id: string; title: string; event_name: string; year: number | null
 
 const field: React.CSSProperties = {
   display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 8, height: 48, padding: '0 14px', borderRadius: 14,
-  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none',
+  background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none',
 };
 const label: React.CSSProperties = { display: 'block', marginTop: 18, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text2 };
 const thumb = (m: Mine) => (m.source === 'x' ? null : `https://i.ytimg.com/vi/${m.youtube_id}/mqdefault.jpg`);

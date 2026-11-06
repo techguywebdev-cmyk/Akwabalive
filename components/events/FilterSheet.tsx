@@ -3,7 +3,7 @@
 import { GraduationCap } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { FilterState, City, Category, WhenFilter, SortMode } from '@/lib/types';
-import { T, FONT, EASE } from '@/lib/thiscene';
+import { T, FONT, EASE, GRAD } from '@/lib/thiscene';
 import { Icon, CATEGORY_ICONS } from '@/components/ui/Icon';
 
 export const CITIES: { value: City | 'all'; label: string }[] = [
@@ -69,7 +69,7 @@ export function Chip({ on, onClick, children }: { on: boolean; onClick: () => vo
         fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap',
         color: on ? T.white : 'rgba(255,255,255,0.78)',
         background: on ? 'rgba(123,227,168,0.16)' : 'rgba(255,255,255,0.05)',
-        border: `1px solid ${on ? 'rgba(123,227,168,0.55)' : 'transparent'}`,
+        border: 'none',
         transition: 'background 160ms ease, border-color 160ms ease, color 160ms ease',
       }}
     >
@@ -239,7 +239,7 @@ export default function FilterSheet({
           <button type="button" onClick={clear} style={{ height: 48, padding: '0 8px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.75)', fontFamily: FONT.sans, fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
             Reset
           </button>
-          <button type="button" onClick={onClose} style={{ flex: 1, height: 52, borderRadius: 999, border: 'none', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={onClose} style={{ flex: 1, height: 52, borderRadius: 999, border: 'none', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
             {count === 0 ? 'No events match' : `Show ${count} event${count === 1 ? '' : 's'}`}
           </button>
         </div>

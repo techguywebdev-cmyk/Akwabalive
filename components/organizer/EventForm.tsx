@@ -10,7 +10,7 @@ import { majorArtists } from '@/lib/data/artists';
 import { lineupPayload, type LineupValue } from '@/components/organizer/LineupPicker';
 import { Icon, CATEGORY_ICONS } from '@/components/ui/Icon';
 import { card } from '@/components/organizer/ui';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 
 /* ── Options ─────────────────────────────────────────────────────────── */
 export const CATEGORIES = [
@@ -71,7 +71,7 @@ const slugify = (t: string) => `${t.toLowerCase().replace(/[^a-z0-9\s-]/g, '').t
 /* ── Bits ────────────────────────────────────────────────────────────── */
 const field: CSSProperties = {
   width: '100%', boxSizing: 'border-box', height: 52, padding: '0 16px', borderRadius: 16, outline: 'none',
-  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white,
+  background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white,
   fontFamily: FONT.sans, fontSize: 16, colorScheme: 'dark',
 };
 const labelCss: CSSProperties = { display: 'block', margin: '0 0 7px 4px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.text2 };
@@ -98,7 +98,7 @@ function Field({ label, children, hint }: { label: string; children: ReactNode; 
 }
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: ReactNode }) {
   return (
-    <button type="button" onClick={onClick} aria-pressed={on} style={{ flexShrink: 0, height: 40, padding: '0 14px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 7, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: on ? T.white : 'rgba(255,255,255,0.06)', color: on ? T.onMint : T.white, border: on ? '1px solid transparent' : '1px solid rgba(255,255,255,0.12)' }}>
+    <button type="button" onClick={onClick} aria-pressed={on} style={{ flexShrink: 0, height: 40, padding: '0 14px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 7, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: on ? T.white : 'rgba(255,255,255,0.06)', color: on ? T.onMint : T.white, border: 'none'}}>
       {children}
     </button>
   );
@@ -134,8 +134,8 @@ function FlyerField({ value, onChange, onRead }: { value: string; onChange: (url
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={value} alt="Event flyer" style={{ display: 'block', width: '100%', height: 'auto', maxHeight: 560, objectFit: 'contain' }} />
           <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 8 }}>
-            <button type="button" onClick={() => input.current?.click()} style={{ height: 38, padding: '0 14px', borderRadius: 19, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.6)', color: T.white, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Change</button>
-            <button type="button" aria-label="Remove flyer" onClick={() => onChange('')} style={{ width: 38, height: 38, borderRadius: 19, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(0,0,0,0.6)', color: T.white, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={18} /></button>
+            <button type="button" onClick={() => input.current?.click()} style={{ height: 38, padding: '0 14px', borderRadius: 19, border: 'none', background: 'rgba(0,0,0,0.6)', color: T.white, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Change</button>
+            <button type="button" aria-label="Remove flyer" onClick={() => onChange('')} style={{ width: 38, height: 38, borderRadius: 19, border: 'none', background: 'rgba(0,0,0,0.6)', color: T.white, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={18} /></button>
           </div>
         </div>
       ) : (
@@ -277,13 +277,13 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
               set('lineup', { enabled: true, artistSlugs: Array.from(new Set([...d.lineup.artistSlugs, ...slugs])), extraNames: [d.lineup.extraNames, ...names].filter(Boolean).join(', ') });
             };
             return (
-              <div style={{ marginTop: 12, padding: 14, borderRadius: 16, background: 'rgba(123,227,168,0.08)', border: '1px solid rgba(123,227,168,0.25)' }}>
+              <div style={{ marginTop: 12, padding: 14, borderRadius: 16, background: 'rgba(123,227,168,0.08)', border: 'none'}}>
                 <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, color: T.white }}>From your flyer</p>
                 {acts.length > 0 && <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text }}>On the bill: {acts.map((a) => a.name).join(', ')}</p>}
                 {dateNew && <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text }}>Date: {dayLabel(dateNew)}</p>}
                 <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                  {acts.length > 0 && <button type="button" onClick={() => { addActs(); setFlyerRead({ ...flyerRead, acts: [] }); }} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: 'none', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>Add to line-up</button>}
-                  {dateNew && <button type="button" onClick={() => { set('date', dateNew); setFlyerRead({ ...flyerRead, date: null }); }} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: T.white, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Use this date</button>}
+                  {acts.length > 0 && <button type="button" onClick={() => { addActs(); setFlyerRead({ ...flyerRead, acts: [] }); }} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: 'none', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>Add to line-up</button>}
+                  {dateNew && <button type="button" onClick={() => { set('date', dateNew); setFlyerRead({ ...flyerRead, date: null }); }} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: 'none', background: 'transparent', color: T.white, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Use this date</button>}
                   <button type="button" onClick={() => setFlyerRead(null)} style={{ height: 36, padding: '0 10px', border: 'none', background: 'transparent', color: T.text2, fontFamily: FONT.sans, fontSize: 13.5, cursor: 'pointer' }}>Ignore</button>
                 </div>
               </div>
@@ -343,7 +343,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
             {([['hosted', 'Sell on Akwaaba', 'MoMo & card, QR tickets, door scanning'], ['listed', 'Sold elsewhere', 'Link to another ticket site']] as const).map(([v, t, n]) => {
               const on = d.listing === v;
               return (
-                <button key={v} type="button" role="radio" aria-checked={on} onClick={() => set('listing', v)} style={{ textAlign: 'left', padding: 14, borderRadius: 18, cursor: 'pointer', background: on ? 'rgba(123,227,168,0.12)' : 'rgba(255,255,255,0.04)', border: on ? `1.5px solid ${T.mint}` : '1px solid rgba(255,255,255,0.1)', color: T.white, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <button key={v} type="button" role="radio" aria-checked={on} onClick={() => set('listing', v)} style={{ textAlign: 'left', padding: 14, borderRadius: 18, cursor: 'pointer', background: on ? 'rgba(123,227,168,0.12)' : 'rgba(255,255,255,0.04)', border: 'none', color: T.white, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {v === 'hosted' ? <Ticket size={20} color={on ? T.mint : T.text2} /> : <ExternalLink size={20} color={on ? T.mint : T.text2} />}
                   <span style={{ fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>{t}</span>
                   <span style={{ fontFamily: FONT.sans, fontSize: 12.5, lineHeight: 1.4, color: T.text2 }}>{n}</span>
@@ -362,10 +362,10 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {d.listing === 'listed' && <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>Prices (optional): shown on the card so people know what to expect.</p>}
             {d.tiers.map((t, i) => (
-              <div key={t.id ?? `new-${i}`} style={{ padding: 14, borderRadius: 18, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div key={t.id ?? `new-${i}`} style={{ padding: 14, borderRadius: 18, background: 'rgba(255,255,255,0.04)', border: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
                   <div style={{ flex: 1, minWidth: 0 }}><Field label="Ticket name"><input value={t.name} onChange={(e) => setTier(i, { name: e.target.value })} placeholder="Regular, VIP, Table for 6…" style={field} /></Field></div>
-                  <button type="button" onClick={() => removeTier(i)} aria-label={`Remove ${t.name || 'ticket type'}`} style={{ width: 52, height: 52, flexShrink: 0, borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: T.text2, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                  <button type="button" onClick={() => removeTier(i)} aria-label={`Remove ${t.name || 'ticket type'}`} style={{ width: 52, height: 52, flexShrink: 0, borderRadius: 16, border: 'none', background: 'rgba(255,255,255,0.04)', color: T.text2, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Trash2 size={18} /></button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <Field label="Price (GH₵)" hint={t.price === '0' ? 'Free: people reserve a spot' : undefined}><input inputMode="decimal" value={t.price} onChange={(e) => setTier(i, { price: e.target.value.replace(/[^0-9.]/g, '') })} placeholder="0 for free" style={field} /></Field>
@@ -385,7 +385,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
           {(error || saved) && <p role={error ? 'alert' : 'status'} style={{ margin: '0 0 10px', padding: '10px 14px', borderRadius: 14, background: error ? 'rgba(255,138,138,0.12)' : 'rgba(123,227,168,0.12)', color: error ? T.danger : T.mintText, fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.4 }}>{error || saved}</p>}
           <div style={{ display: 'flex', gap: 10 }}>
             {(!live || mode === 'create') && (
-              <button type="button" disabled={!!busy} onClick={() => save('draft')} style={{ flex: 1, height: 54, borderRadius: 999, cursor: 'pointer', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', color: T.white, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700 }}>{busy === 'draft' ? 'Saving…' : 'Save draft'}</button>
+              <button type="button" disabled={!!busy} onClick={() => save('draft')} style={{ flex: 1, height: 54, borderRadius: 999, cursor: 'pointer', background: 'rgba(255,255,255,0.08)', border: 'none', color: T.white, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700 }}>{busy === 'draft' ? 'Saving…' : 'Save draft'}</button>
             )}
             <button type="button" disabled={!!busy} onClick={() => save('published')} style={{ flex: 1.4, height: 54, borderRadius: 999, cursor: 'pointer', background: T.mint, border: 'none', color: T.onMint, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, boxShadow: '0 8px 24px rgba(123,227,168,0.22)' }}>{busy === 'published' ? 'Saving…' : live ? 'Save changes' : 'Publish'}</button>
           </div>

@@ -23,7 +23,7 @@ export function GlassIcon({
 }) {
   const style: React.CSSProperties = {
     width: size, height: size, borderRadius: size / 2, flexShrink: 0,
-    ...G.overlay, border: `1px solid ${active && activeColor ? activeColor : 'rgba(255,255,255,0.18)'}`,
+    ...G.overlay, border: 'none',
     color: active && activeColor ? activeColor : C.cream,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     cursor: 'pointer', padding: 0, textDecoration: 'none',
@@ -111,8 +111,8 @@ export function ChapterBar({
                 flexShrink: 0, height: 40, padding: '0 14px', borderRadius: R.chip, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 8, fontFamily: mono, fontSize: 11, letterSpacing: '0.3px',
                 ...(on
-                  ? { background: C.gold, color: C.onAccent, border: `1px solid ${C.gold}` }
-                  : { ...G.overlay, color: C.cream, border: '1px solid rgba(255,255,255,0.18)' }),
+                  ? { background: C.gold, color: C.onAccent, border: 'none'}
+                  : { ...G.overlay, color: C.cream, border: 'none' }),
               }}
             >
               <span style={{ opacity: on ? 0.7 : 0.65 }}>{formatTime(c.startSeconds)}</span>
@@ -165,12 +165,12 @@ export function NextEditionCard({ next, goingCount }: { next: GhanaEvent; goingC
   const external = Boolean(next.ticketUrl);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, borderRadius: R.card, ...G.sheet, border: `1px solid ${C.goldBd}` }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 10, borderRadius: R.card, ...G.sheet, border: 'none'}}>
       <Link
         href={`/events/${next.slug}`}
         style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, textDecoration: 'none', color: C.cream }}
       >
-        <span style={{ width: 52, height: 56, flexShrink: 0, borderRadius: 12, background: C.goldDim, border: `1px solid ${C.goldBd}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ width: 52, height: 56, flexShrink: 0, borderRadius: 12, background: C.goldDim, border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ fontFamily: mono, fontSize: 10, letterSpacing: '1.5px', color: C.goldText }}>{month}</span>
           <span style={{ fontFamily: serif, fontSize: 26, lineHeight: 1, color: C.cream }}>{day}</span>
         </span>
