@@ -36,7 +36,9 @@ export default function LineupUpdates() {
   async function decide(u: Update, apply: boolean) {
     setBusy(u.id);
     if (apply && u.events) {
-      await supabase.from('events').update({ lineup: Array.from(new Set([...(u.events.lineup ?? []), u.value])), updated_at: new Date().toISOString() }).eq('id', u.events.id);
+      // read the line-up fresh: approving several acts in a row must not overwrite each other
+      const { data: cur } = await supabase.from('events').select('lineup').eq('id', u.events.id).single();
+      await supabase.from('events').update({ lineup: Array.from(new Set([...((cur?.lineup as string[] | null) ?? []), u.value])), updated_at: new Date().toISOString() }).eq('id', u.events.id);
     }
     await supabase.from('event_updates').update({ status: apply ? 'applied' : 'dismissed', decided_at: new Date().toISOString() }).eq('id', u.id);
     setList((l) => (l ?? []).filter((x) => x.id !== u.id));
