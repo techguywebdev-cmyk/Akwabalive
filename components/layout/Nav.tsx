@@ -270,7 +270,7 @@ export default function Nav({
             style={{
               position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(400px, 88vw)', display: 'flex', flexDirection: 'column',
               padding: 'calc(14px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))',
-              background: 'radial-gradient(120% 50% at 0% 0%, rgba(20,78,52,0.9) 0%, rgba(10,13,12,0) 70%), linear-gradient(180deg, #071A10 0%, #030806 100%)',
+              background: 'radial-gradient(90% 30% at 0% 0%, rgba(40,130,85,0.16) 0%, rgba(40,130,85,0) 80%), linear-gradient(180deg, #0B0F0D 0%, #070908 55%, #050606 100%)',
               borderRight: '1px solid rgba(255,255,255,0.08)', boxShadow: '30px 0 80px rgba(0,0,0,0.5)',
               transform: menuShown ? 'translateX(0)' : 'translateX(-104%)', transition: 'transform 420ms cubic-bezier(0.22,1,0.36,1)',
               overflowY: 'auto',
