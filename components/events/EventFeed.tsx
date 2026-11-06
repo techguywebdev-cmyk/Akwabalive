@@ -11,6 +11,7 @@ import FlyerCanvas, { Glow } from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments } from '@/components/moments/EventMoments';
 import { ytThumb } from '@/lib/moments/match';
+import { hiRes } from '@/lib/events/image';
 import CustomPlayer from '@/components/moments/CustomPlayer';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { EventTags, BTN, chip } from '@/components/events/CardParts';
@@ -135,8 +136,14 @@ function EventCard({
       {watching && moments[clip] && (
         <div style={wide
           ? { position: 'absolute', zIndex: 3, top: topInset + 16, bottom: 40, right: '6%', left: '48%', display: 'flex', alignItems: 'center' }
-          : { position: 'absolute', zIndex: 3, top: topInset + 4, bottom: blockH + bottom + 12, left: 0, right: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <Glow src={ytThumb(moments[clip].youtube_id, 'hq')} />
+          : { position: 'absolute', zIndex: 3, top: topInset + 4, bottom: blockH + bottom + 12, left: 0, right: 0, display: 'flex', flexDirection: 'column', background: '#050606' }}>
+          {/* The top of the flyer fills the space above the video, so the card stays full height */}
+          {event.image && !wide ? (
+            <div aria-hidden style={{ position: 'relative', flex: '1 1 0', minHeight: 0, overflow: 'hidden' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={hiRes(event.image, 1200) ?? event.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
+            </div>
+          ) : <Glow src={ytThumb(moments[clip].youtube_id, 'hq')} />}
           {/* The Moments player: our player, mint progress line, a dot per clip; the next clip follows on */}
           <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' }}>
             <CustomPlayer key={moments[clip].youtube_id} youtubeId={moments[clip].youtube_id} title={moments[clip].title} fit="contain" active={active}
