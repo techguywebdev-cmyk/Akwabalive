@@ -33,7 +33,7 @@ export default function HotRail({ events, top }: { events: GhanaEvent[]; top: nu
 
   if (!events.length) return null;
   return (
-    <nav aria-label="Hot right now" style={{ position: 'fixed', zIndex: 190, left: 0, right: 0, top: `calc(${top}px + env(safe-area-inset-top, 0px))`, height: HOT_RAIL_H, background: T.bg, borderBottom: `1px solid ${T.hairline}` }}>
+    <nav aria-label="Hot right now" style={{ position: 'fixed', zIndex: 190, left: 0, right: 0, top: `calc(${top}px + env(safe-area-inset-top, 0px))`, height: HOT_RAIL_H, background: 'linear-gradient(180deg, rgba(16,34,25,0.86) 0%, rgba(10,22,16,0.86) 100%)', backdropFilter: 'blur(18px) saturate(140%)', WebkitBackdropFilter: 'blur(18px) saturate(140%)' }}>
       <div className="no-scrollbar" style={{ display: 'flex', alignItems: 'flex-start', gap: 14, overflowX: 'auto', padding: '6px 16px 0', maxWidth: 960, margin: '0 auto' }}>
         <span style={{ flexShrink: 0, alignSelf: 'center', marginTop: -14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, color: T.mintText }}>
           <Flame size={18} />
@@ -49,11 +49,11 @@ export default function HotRail({ events, top }: { events: GhanaEvent[]; top: nu
           return (
             <Link key={e.slug} href={`/events/${e.slug}`} aria-label={e.title} style={{ flexShrink: 0, width: 58, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
               <span style={{ position: 'relative', width: 54, height: 68, borderRadius: 16, padding: 2, background: ring }}>
-                <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: 14, overflow: 'hidden', background: '#111', border: `2px solid ${T.bg}` }}>
+                <span style={{ display: 'block', width: '100%', height: '100%', borderRadius: 14, overflow: 'hidden', background: '#111', border: '2px solid #0D1C14' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {e.image && <img src={hiRes(e.image, 200) ?? e.image} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 20%', display: 'block' }} />}
                 </span>
-                <span style={{ position: 'absolute', left: '50%', bottom: -5, transform: 'translateX(-50%)', display: 'inline-flex', alignItems: 'center', gap: 3, height: 16, padding: '0 6px', borderRadius: 8, whiteSpace: 'nowrap', fontFamily: FONT.sans, fontSize: 9.5, fontWeight: 800, boxShadow: `0 0 0 2px ${T.bg}`,
+                <span style={{ position: 'absolute', left: '50%', bottom: -5, transform: 'translateX(-50%)', display: 'inline-flex', alignItems: 'center', gap: 3, height: 16, padding: '0 6px', borderRadius: 8, whiteSpace: 'nowrap', fontFamily: FONT.sans, fontSize: 9.5, fontWeight: 800, boxShadow: '0 0 0 2px #0D1C14',
                   ...(stat ? { background: GRAD.mint, color: T.onMint } : { background: '#1A1F1D', color: T.text }) }}>{stat ?? when}</span>
               </span>
               <span style={{ width: '100%', textAlign: 'center', fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 600, lineHeight: 1.2, color: T.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shortName(e.title)}</span>
