@@ -18,8 +18,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://akwabalive.vercel.app'),
   title:       'Akwaaba — Ghana Events & Tickets', // rename via lib/theme BRAND_NAME
-  description: "Discover and book Ghana's best events. Pay with MTN MoMo, Vodafone Cash, or AirtelTigo.",
+  description: "Every event in Ghana in one place: concerts, festivals and parties, with tickets, line-ups and moments.",
+  openGraph: { type: 'website', siteName: 'Akwaaba', title: 'Akwaaba — Ghana Events & Tickets', description: 'Every event in Ghana in one place: concerts, festivals and parties, with tickets, line-ups and moments.' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export const viewport = {

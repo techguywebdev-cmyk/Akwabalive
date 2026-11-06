@@ -6,8 +6,8 @@ const LINKS = [
   { label: 'Events', href: '/events' },
   { label: 'Moments', href: '/moments' },
   { label: 'List an event', href: '/organizer/events/new' },
-  { label: 'Privacy', href: '#' },
-  { label: 'Terms', href: '#' },
+  { label: 'Privacy', href: '/privacy' },
+  { label: 'Terms', href: '/terms' },
 ];
 
 /** Minimal footer: a hairline, a row of links, one quiet line. No box. */

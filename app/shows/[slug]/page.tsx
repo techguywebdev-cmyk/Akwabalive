@@ -1,3 +1,4 @@
+import { shareMeta } from '@/lib/og';
 import { notFound } from 'next/navigation';
 import SeriesPageClient from '@/components/series/SeriesPageClient';
 import { getSeries, editionsOf, momentInSeries } from '@/lib/data/series';
@@ -14,7 +15,7 @@ export const fetchCache = 'force-no-store';
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const s = getSeries(params.slug);
   if (!s) return { title: BRAND_NAME };
-  return { title: `${s.name} — ${BRAND_NAME}`, description: s.blurb };
+  return shareMeta({ title: s.name, description: s.blurb, path: `/shows/${s.slug}` });
 }
 
 export default async function SeriesPage({ params }: { params: { slug: string } }) {

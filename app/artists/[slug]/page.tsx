@@ -8,6 +8,7 @@ import { BRAND_NAME } from '@/lib/theme';
 import { momentsForArtist } from '@/lib/moments/matchArtist';
 import { fetchMoments } from '@/lib/moments/server';
 import { getArtistPhotos } from '@/lib/artists/photos';
+import { shareMeta } from '@/lib/og';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -15,10 +16,14 @@ export const fetchCache = 'force-no-store';
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const artist = getArtistBySlug(params.slug);
   if (!artist) return { title: `Artist — ${BRAND_NAME}` };
-  return {
-    title: `${artist.name} shows — ${BRAND_NAME}`,
-    description: `Upcoming and past concerts and moments for ${artist.name} on ${BRAND_NAME}.`,
-  };
+  const photos = await getArtistPhotos([artist], 2500).catch(() => ({} as Record<string, { url?: string } | undefined>));
+  return shareMeta({
+    title: `${artist.name} shows in Ghana`,
+    description: `Upcoming dates, past shows and moments from ${artist.name} on ${BRAND_NAME}.`,
+    image: photos[artist.slug]?.url ?? null,
+    path: `/artists/${artist.slug}`,
+    square: true,
+  });
 }
 
 export default async function ArtistPage({ params }: { params: { slug: string } }) {
