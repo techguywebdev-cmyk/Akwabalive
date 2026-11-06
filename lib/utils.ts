@@ -2,6 +2,7 @@ import { isCampus } from '@/lib/events/campus';
 import { inCategory, eventCategories } from '@/lib/events/categories';
 import type { GhanaEvent, FilterState, WhenFilter } from '@/lib/types';
 import { rankScore } from '@/lib/events/rank';
+import { artistsForEvent } from '@/lib/data/artists';
 
 export function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
@@ -114,9 +115,7 @@ export function filterEvents(
     if (filters.priceFilter === 'o200'  && ev.price < 200)  return false;
     if (filters.maxPrice < 500 && ev.price > filters.maxPrice) return false;
     if (filters.search) {
-      const q   = filters.search.toLowerCase();
-      const hay = `${ev.title} ${ev.venue} ${ev.city} ${ev.region ?? ''} ${ev.area ?? ''} ${Array.from(eventCategories(ev)).join(' ')} ${(ev.lineup ?? []).join(' ')} ${ev.highlight ?? ''} ${ev.organizerName ?? ''}`.toLowerCase();
-      if (!hay.includes(q)) return false;
+      if (!matchesSearch(ev, filters.search)) return false;
     }
     if (filters.sort === 'nearby' && userLoc) {
       const d = haversine(userLoc.lat, userLoc.lng, ev.lat, ev.lng);
@@ -167,4 +166,31 @@ export function formatEventDate(value: string | null | undefined): string {
   const d = new Date(`${value.slice(0, 10)}T00:00:00`);
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/* ── Search ───────────────────────────────────────────────────────────── */
+
+const fold = (t: string) => t.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9*#]+/g, ' ');
+const hayCache = new WeakMap<GhanaEvent, string>();
+
+/** Everything a person might type to find an event: who plays (line-up, known artists and their other names), what it is, where, who's behind it */
+function searchHay(ev: GhanaEvent): string {
+  const hit = hayCache.get(ev);
+  if (hit) return hit;
+  const artists = artistsForEvent(ev).flatMap((a) => [a.name, ...(a.keywords ?? [])]);
+  const hay = fold([
+    ev.title, ev.venue, ev.city, ev.region, ev.area, ev.highlight, ev.organizerName, ev.organizerUsername,
+    Array.from(eventCategories(ev)).join(' '), (ev.lineup ?? []).join(' '), artists.join(' '),
+    ev.description, ev.flyerText, ev.listingInfo,
+  ].filter(Boolean).join(' '));
+  hayCache.set(ev, ` ${hay} `);
+  return ` ${hay} `;
+}
+
+/** Every word typed must appear ("sarkodie tidal", "kidi accra") */
+export function matchesSearch(ev: GhanaEvent, q: string): boolean {
+  const words = fold(q).split(' ').filter(Boolean);
+  if (!words.length) return true;
+  const hay = searchHay(ev);
+  return words.every((w) => hay.includes(w.length <= 3 ? ` ${w}` : w));
 }
