@@ -28,7 +28,7 @@ export function whenTag(e: GhanaEvent): { text: string; soon: boolean; past: boo
   return null;
 }
 
-const chip: CSSProperties = {
+export const chip: CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 6, height: 28, padding: '0 11px', borderRadius: 999,
   fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 600, letterSpacing: '0.01em', whiteSpace: 'nowrap',
 };
@@ -58,7 +58,7 @@ export function HypeChip({ hype }: { hype: Hype }) {
   return <span style={{ ...chip, fontWeight: 700, ...h.style }}>{h.icon}{hype.text}</span>;
 }
 
-export function EventTags({ event, accent, lead, hype = [] }: { event: GhanaEvent; accent: string; lead?: string; hype?: Hype[] }) {
+export function EventTags({ event, accent, lead, hype = [], extra }: { event: GhanaEvent; accent: string; lead?: string; hype?: Hype[]; /** Ends the row (e.g. the moments button on feed cards) */ extra?: React.ReactNode }) {
   const when = whenTag(event);
   return (
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
@@ -79,6 +79,7 @@ export function EventTags({ event, accent, lead, hype = [] }: { event: GhanaEven
       {event.price === 0 && !event.priceUnknown && !when?.past && (
         <span style={{ ...chip, background: 'rgba(255,255,255,0.09)', color: T.white }}>Free</span>
       )}
+      {extra}
     </div>
   );
 }

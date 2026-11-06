@@ -9,11 +9,11 @@ import RsvpSheet from '@/components/thiscene/RsvpSheet';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import FlyerCanvas, { Glow } from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
-import { useEventMoments, MomentsPill } from '@/components/moments/EventMoments';
+import { useEventMoments, momentsLabel } from '@/components/moments/EventMoments';
 import { ytThumb } from '@/lib/moments/match';
 import CustomPlayer from '@/components/moments/CustomPlayer';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
-import { EventTags, BTN } from '@/components/events/CardParts';
+import { EventTags, BTN, chip } from '@/components/events/CardParts';
 import { hypeTags, eventExcerpt } from '@/lib/events/hype';
 import { trackEvent } from '@/lib/events/track';
 import HotCarousel from '@/components/events/HotCarousel';
@@ -21,7 +21,7 @@ import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { type CheckoutTier } from '@/lib/events/tiers';
-import { Heart, Share2, Mic2 } from 'lucide-react';
+import { Heart, Share2, Mic2, Play, Image as ImageIcon } from 'lucide-react';
 import { isListedEvent } from '@/lib/types';
 import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
@@ -86,6 +86,7 @@ function EventCard({
   // Watching a past edition's clips right on the card, in place of the flyer
   const [watching, setWatching] = useState(false);
   const [clip, setClip] = useState(0);
+  const [prog, setProg] = useState(0);
   useEffect(() => { if (!active) setWatching(false); }, [active]);
   const moments = useEventMoments(event, near);
   const block = useRef<HTMLDivElement>(null);
@@ -134,12 +135,37 @@ function EventCard({
       {watching && moments[clip] && (
         <div style={wide
           ? { position: 'absolute', zIndex: 3, top: topInset + 16, bottom: 40, right: '6%', left: '48%', display: 'flex', alignItems: 'center' }
-          : { position: 'absolute', zIndex: 3, top: topInset + 4, bottom: blockH + bottom + 12, left: 0, right: 0, display: 'flex', alignItems: 'center' }}>
+          : { position: 'absolute', zIndex: 3, top: topInset + 4, bottom: blockH + bottom + 12, left: 0, right: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <Glow src={ytThumb(moments[clip].youtube_id, 'hq')} />
-          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', maxHeight: '100%', background: '#000', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' }}>
-            {/* The same player as Moments: our controls, tap to pause, sound button; the next clip follows on */}
+          {/* The Moments player: our player, mint progress line, a dot per clip; the next clip follows on */}
+          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' }}>
             <CustomPlayer key={moments[clip].youtube_id} youtubeId={moments[clip].youtube_id} title={moments[clip].title} fit="contain" active={active}
-              onEnded={() => { if (clip < moments.length - 1) setClip(clip + 1); else setWatching(false); }} />
+              onTimeUpdate={(cur, len) => setProg(len ? Math.min(100, (cur / len) * 100) : 0)}
+              onEnded={() => { if (clip < moments.length - 1) { setClip(clip + 1); setProg(0); } else setWatching(false); }} />
+            {moments.length > 1 && (
+              <span style={{ position: 'absolute', left: '50%', bottom: 10, transform: 'translateX(-50%)', zIndex: 9, display: 'flex', gap: 5, pointerEvents: 'none' }}>
+                {moments.map((c, k) => <span key={c.id} style={{ width: k === clip ? 16 : 6, height: 6, borderRadius: 3, background: k === clip ? T.white : 'rgba(255,255,255,0.45)', transition: 'width 250ms ease' }} />)}
+              </span>
+            )}
+            <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, zIndex: 9, background: 'rgba(255,255,255,0.16)', pointerEvents: 'none' }}>
+              <span style={{ display: 'block', height: '100%', width: `${prog}%`, background: T.mint, transition: 'width 250ms linear' }} />
+            </span>
+          </div>
+          <div style={{ position: 'relative', padding: '12px 20px 0' }}>
+            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
+              {moments[clip].event_name}{moments[clip].year ? ` · ${moments[clip].year}` : ''}
+            </p>
+            <p style={{ margin: '3px 0 0', fontFamily: FONT.display, fontSize: 16, fontWeight: 700, lineHeight: 1.25, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{moments[clip].title}</p>
+            {moments.length > 1 && (
+              <div className="no-scrollbar" style={{ display: 'flex', gap: 8, marginTop: 10, overflowX: 'auto' }}>
+                {moments.map((m, k) => (
+                  <button key={m.id} type="button" onClick={() => { setClip(k); setProg(0); }} aria-label={`Play ${m.title}`} aria-current={k === clip} style={{ position: 'relative', width: 64, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, borderRadius: 8, overflow: 'hidden', cursor: 'pointer', background: '#000', border: 'none', outline: k === clip ? `2px solid ${T.mint}` : '1px solid rgba(255,255,255,0.12)', outlineOffset: k === clip ? 1 : 0, opacity: k === clip ? 1 : 0.7 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ytThumb(m.youtube_id)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -170,26 +196,23 @@ function EventCard({
           opacity: active ? 1 : 0.4, transform: active ? 'translateY(0)' : 'translateY(14px)', transition: 'opacity 0.45s ease, transform 0.45s ease',
         }}
       >
-        {watching ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto', overflowX: 'auto' }} className="no-scrollbar">
-            <button type="button" onClick={() => setWatching(false)} style={{ flexShrink: 0, height: 40, padding: '0 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(3,10,6,0.55)', color: T.white, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Back to flyer</button>
-            {moments.length > 1 && moments.map((m, k) => (
-              <button key={m.id} type="button" onClick={() => setClip(k)} aria-label={`Play ${m.title}`} aria-current={k === clip} style={{ flexShrink: 0, width: 64, height: 40, padding: 0, borderRadius: 10, overflow: 'hidden', cursor: 'pointer', background: '#000', border: 'none', outline: k === clip ? `2px solid ${T.mint}` : '1px solid rgba(255,255,255,0.14)', outlineOffset: k === clip ? 2 : 0 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={ytThumb(m.youtube_id)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: k === clip ? 1 : 0.6, display: 'block' }} />
-              </button>
-            ))}
-          </span>
-        ) : (
-          <span style={{ display: 'flex', pointerEvents: 'auto' }}><MomentsPill list={moments} slug={event.slug} onOpen={() => { setClip(0); setWatching(true); }} /></span>
-        )}
-
         {performer && (
           <Link href={`/artists/${performer.slug}`} style={{ alignSelf: 'flex-start', pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', gap: 7, height: 32, padding: '0 13px', borderRadius: 16, background: T.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700, textDecoration: 'none' }}>
             <Mic2 size={14} strokeWidth={2.4} /> {performer.name} is performing
           </Link>
         )}
-        <EventTags event={event} accent={a} hype={hype} />
+        <span style={{ pointerEvents: 'auto' }}>
+          <EventTags event={event} accent={a} hype={hype} extra={watching ? (
+            <button type="button" onClick={() => setWatching(false)} style={{ ...chip, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(3,10,6,0.5)', color: T.white }}>
+              <ImageIcon size={14} strokeWidth={2.2} /> Back to flyer
+            </button>
+          ) : moments.length > 0 ? (
+            <button type="button" onClick={() => { setClip(0); setProg(0); setWatching(true); }} aria-label={`${momentsLabel(moments, event.slug)}, ${moments.length} video${moments.length > 1 ? 's' : ''}`} style={{ ...chip, cursor: 'pointer', border: 'none', background: 'rgba(123,227,168,0.16)', color: T.mintText, fontWeight: 700 }}>
+              <span aria-hidden style={{ width: 18, height: 18, borderRadius: 9, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint }}><Play size={10} fill="currentColor" strokeWidth={0} style={{ marginLeft: 1 }} /></span>
+              {momentsLabel(moments, event.slug)}
+            </button>
+          ) : null} />
+        </span>
 
         <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6, pointerEvents: 'auto' }}>
           <h2 style={{ margin: 0, fontFamily: FONT.display, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', fontSize: titleSize, color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
