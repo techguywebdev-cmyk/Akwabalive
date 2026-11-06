@@ -447,6 +447,17 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
             )}
           </p>
 
+          {!filters.search && new Date() < new Date('2027-01-06') && (
+            <Link href="/december" style={{ marginTop: 22, display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 20, textDecoration: 'none', background: 'radial-gradient(120% 140% at 0% 0%, rgba(123,227,168,0.18) 0%, rgba(123,227,168,0.03) 60%), #0D1210', border: '1px solid rgba(123,227,168,0.25)' }}>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>15 Dec – 5 Jan</span>
+                <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>Detty December</span>
+                <span style={{ display: 'block', marginTop: 1, fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>The big shows, day by day</span>
+              </span>
+              <span aria-hidden style={{ width: 38, height: 38, borderRadius: 19, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint }}><ArrowUpRight size={18} strokeWidth={2.4} /></span>
+            </Link>
+          )}
+
           {friendPlans && !filters.search && (
             <section aria-label="Where your friends are going" style={{ marginTop: 26 }}>
               <h2 style={{ margin: '0 0 12px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>Where your friends are going</h2>
