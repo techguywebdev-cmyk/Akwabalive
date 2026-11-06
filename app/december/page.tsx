@@ -3,7 +3,8 @@ import { fetchEventsBetween, supabaseToGhanaEvent } from '@/lib/supabase/events'
 import { artistsForEvent } from '@/lib/data/artists';
 import { shareMeta } from '@/lib/og';
 import { hiRes } from '@/lib/events/image';
-import DecemberClient, { type DecEvent } from '@/components/december/DecemberClient';
+import { linkTentpoles } from '@/lib/data/tentpoles';
+import DecemberClient, { type DecEvent, type DecPole } from '@/components/december/DecemberClient';
 
 export const revalidate = 300;
 
@@ -36,7 +37,13 @@ async function counts(slugs: string[]) {
 }
 
 export default async function DecemberPage() {
-  const events = (await fetchEventsBetween(FROM, TO)).map(supabaseToGhanaEvent).filter((e) => e.image);
+  const season = (await fetchEventsBetween('2026-11-01', TO)).map(supabaseToGhanaEvent);
+  const events = season.filter((e) => e.image && e.date >= FROM);
+  // The big nights of the season, linked to their listings when they're on Akwaaba
+  const poles: DecPole[] = linkTentpoles(season).map(({ match: _m, event, ...t }) => ({
+    ...t,
+    event: event ? { slug: event.slug, image: event.image ?? null, venue: event.venue ?? null } : null,
+  }));
   const c = await counts(events.map((e) => e.slug)).catch(() => ({} as Record<string, { seen: number; going: number }>));
   const list: DecEvent[] = events.map((e) => {
     const stars = artistsForEvent(e).length;
@@ -45,5 +52,5 @@ export default async function DecemberPage() {
     const score = (e.hot ? 60 : 0) + (e.isFeatured ? 50 : 0) + Math.min(stars, 5) * 12 + Math.min(n.seen, 500) / 5 + n.going * 2 + (e.highlight ? 6 : 0);
     return { event: e, seen: n.seen, going: n.going, score };
   });
-  return <DecemberClient list={list} from={FROM} to={TO} />;
+  return <DecemberClient list={list} poles={poles} from={FROM} to={TO} />;
 }
