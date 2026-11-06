@@ -110,3 +110,51 @@ export const SCRIM = {
   bottom: 'linear-gradient(to top, #030806 0%, rgba(4,16,10,0.9) 30%, rgba(3,8,6,0.35) 62%, rgba(3,8,6,0) 100%)',
   top: 'linear-gradient(to bottom, rgba(3,8,6,0.6) 0%, rgba(3,8,6,0) 100%)',
 } as const;
+
+/**
+ * Nov 2026 "lit" layer: gradients and lit buttons, so screens feel made rather than flat.
+ * Stays in the brand: mint into emerald into deep teal on charcoal. No warm colours.
+ */
+export const GRAD = {
+  /** Primary fill: pale mint into deep emerald */
+  mint: 'linear-gradient(135deg, #D2FBE3 0%, #8FEBB7 34%, #5AD99A 68%, #2FB97E 100%)',
+  /** Text fill for display headings */
+  text: 'linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 38%, #BFF5D6 72%, #7BE3A8 100%)',
+  /** Lit glass for secondary controls and cards */
+  glass: 'linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.035) 100%)',
+  /** Card surface with a cool green cast */
+  card: 'linear-gradient(160deg, rgba(123,227,168,0.10) 0%, rgba(255,255,255,0.03) 38%, rgba(255,255,255,0.015) 100%)',
+  /** Hairline that catches light at the top */
+  edge: 'linear-gradient(180deg, rgba(190,255,220,0.42) 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.03) 100%)',
+  /** Northern-lights wash for heroes */
+  aurora:
+    'radial-gradient(48% 38% at 22% 18%, rgba(70,220,150,0.34) 0%, rgba(70,220,150,0) 70%), ' +
+    'radial-gradient(42% 34% at 82% 10%, rgba(40,190,200,0.26) 0%, rgba(40,190,200,0) 72%), ' +
+    'radial-gradient(70% 50% at 50% 60%, rgba(20,120,80,0.30) 0%, rgba(20,120,80,0) 75%)',
+} as const;
+
+/** Lit buttons. Spread onto a <button> or <Link>, then add size. */
+export const BTN = {
+  primary: {
+    background: GRAD.mint,
+    color: T.onMint,
+    border: 'none',
+    boxShadow: '0 12px 32px -10px rgba(91,217,154,0.65), 0 2px 6px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.75), inset 0 -2px 0 rgba(0,60,30,0.18)',
+    fontFamily: FONT.display,
+    fontWeight: 800,
+    letterSpacing: '-0.01em',
+  },
+  ghost: {
+    background: GRAD.glass,
+    color: T.white,
+    border: '1px solid rgba(255,255,255,0.14)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), 0 8px 24px -12px rgba(0,0,0,0.6)',
+    backdropFilter: BLUR,
+    WebkitBackdropFilter: BLUR,
+    fontFamily: FONT.display,
+    fontWeight: 600,
+  },
+} satisfies Record<string, CSSProperties>;
+
+/** A 1px light-catching border around anything: wrap the child in a padded span with this background */
+export const ringed = (radius: number, bg: string = GRAD.edge): CSSProperties => ({ padding: 1, borderRadius: radius, background: bg });
