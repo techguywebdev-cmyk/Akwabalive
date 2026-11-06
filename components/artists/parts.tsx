@@ -211,3 +211,48 @@ export function MomentsStrip({ list, onOpen }: { list: Moment[]; onOpen: (i: num
     </div>
   );
 }
+
+/** A past night: listed event and/or the clips from it. The row opens the event (or its clips); the mint chip plays the clips. */
+export type PastShow = { key: string; sortKey: string; title: string; year: number | null; event: GhanaEvent | null; moments: Moment[] };
+
+export function PastRow({ show, rating, onPlay }: { show: PastShow; rating?: RatingSummary; onPlay: () => void }) {
+  const d = show.event ? parseDay(show.event.date) : null;
+  const thumb = show.event?.image ? hiRes(show.event.image, 240) ?? show.event.image : show.moments[0] ? ytThumb(show.moments[0].youtube_id, 'hq') : null;
+  const n = show.moments.length;
+  const body = (
+    <>
+      <span style={{ width: 46, flexShrink: 0, textAlign: 'center' }}>
+        {d ? (
+          <>
+            <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.text3 }}>{d.toLocaleDateString('en-GB', { month: 'short' })}</span>
+            <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 26, fontWeight: 800, lineHeight: 1.05, color: T.white }}>{d.getDate()}</span>
+            <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 11, color: T.text3 }}>{d.getFullYear()}</span>
+          </>
+        ) : (
+          <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{show.year ?? '—'}</span>
+        )}
+      </span>
+      <span style={{ position: 'relative', width: 52, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {thumb && <img src={thumb} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0.85 }} />}
+      </span>
+      <span style={{ minWidth: 0, flex: 1 }}>
+        <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: FONT.display, fontSize: 16, fontWeight: 700, lineHeight: 1.25, color: T.white }}>{show.title}</span>
+        <span style={{ display: 'block', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
+          {show.event ? place(show.event) : `${n} ${n === 1 ? 'moment' : 'moments'}`}
+        </span>
+        {rating && <span style={{ display: 'block', marginTop: 4 }}><ScoreChip score={rating.overall} count={rating.ratings} /></span>}
+      </span>
+    </>
+  );
+  const chip = n > 0 && (
+    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPlay(); }} aria-label={`Watch ${n} ${n === 1 ? 'moment' : 'moments'} from ${show.title}`}
+      style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5, height: 34, padding: '0 12px 0 10px', borderRadius: 17, border: 'none', cursor: 'pointer', background: T.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>
+      <Play size={13} fill="currentColor" /> {n}
+    </button>
+  );
+  const row: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', textDecoration: 'none', width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' };
+  return show.event
+    ? <Link href={`/events/${show.event.slug}`} style={row}>{body}{chip}</Link>
+    : <div role="button" tabIndex={0} onClick={onPlay} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPlay(); } }} style={row}>{body}{chip}</div>;
+}
