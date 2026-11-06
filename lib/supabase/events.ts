@@ -164,6 +164,16 @@ export async function fetchPublishedEvents(): Promise<SupabaseEvent[]> {
   }
 }
 
+/** Published events between two days (inclusive), kept for `revalidate` seconds */
+export async function fetchEventsBetween(from: string, to: string, revalidate = 300): Promise<SupabaseEvent[]> {
+  try {
+    const { data, error } = await getServerClient(revalidate).from('events').select(SELECT)
+      .eq('status', 'published').gte('date', from).lte('date', to).order('date', { ascending: true });
+    if (error) { console.error('fetchEventsBetween error:', error.message); return []; }
+    return (data ?? []) as SupabaseEvent[];
+  } catch { return []; }
+}
+
 export async function fetchEventBySlug(slug: string, revalidate?: number): Promise<SupabaseEvent | null> {
   try {
     const supabase = getServerClient(revalidate);
