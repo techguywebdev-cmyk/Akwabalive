@@ -17,7 +17,7 @@ import type { GhanaEvent, FilterState, City, Category } from '@/lib/types';
 import { filterEvents, haversine, matchesWhen } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 import { categoryAccent, toHex } from '@/lib/events/accent';
 import { parseDay, longDay } from '@/lib/dates';
 
@@ -344,7 +344,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   // One capsule: search | filters (the cards/list switch lives in the filter sheet)
   const capBtn = (on: boolean): CSSProperties => ({ position: 'relative', width: 46, height: 44, padding: 0, border: 'none', background: on ? 'rgba(123,227,168,0.14)' : 'transparent', color: on ? T.mintText : T.text, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' });
   const headerActions = (
-    <div role="group" aria-label="Search and filter" style={{ display: 'flex', alignItems: 'center', height: 44, borderRadius: 22, overflow: 'hidden', background: 'rgba(3,10,6,0.38)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
+    <div role="group" aria-label="Search and filter" style={{ display: 'flex', alignItems: 'center', height: 44, borderRadius: 22, overflow: 'hidden', background: 'rgba(3,10,6,0.38)', border: 'none', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
       <button type="button" aria-label="Search" aria-pressed={searchOpen} onClick={() => setSearchOpen((s) => !s)} style={capBtn(searchOpen || !!filters.search)}>
         <Icon name="search" size={21} />
       </button>
@@ -374,7 +374,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
       {searchOpen && (
         <div style={{ position: 'fixed', zIndex: 195, top: `calc(${headerH}px + env(safe-area-inset-top, 0px))`, left: 16, right: 16, maxWidth: 720, margin: '0 auto' }}>
           {/* One panel: the search field, and the artist you're searching for joined underneath */}
-          <div style={{ borderRadius: 20, overflow: 'hidden', background: '#0D1210', border: `1px solid ${searchFocus ? 'rgba(123,227,168,0.4)' : T.hairlineStrong}`, boxShadow: '0 18px 44px rgba(0,0,0,0.5)', transition: 'border-color 160ms ease' }}>
+          <div style={{ borderRadius: 20, overflow: 'hidden', background: '#0D1210', border: 'none', boxShadow: '0 18px 44px rgba(0,0,0,0.5)', transition: 'border-color 160ms ease' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 12, height: 54, padding: '0 6px 0 16px' }}>
               <Search size={19} strokeWidth={2.2} color={T.mint} />
               <span className="sr-only" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Search events</span>
@@ -404,7 +404,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
                     </span>
                   </span>
                 </span>
-                <span aria-hidden style={{ width: 34, height: 34, borderRadius: 17, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint }}>
+                <span aria-hidden style={{ width: 34, height: 34, borderRadius: 17, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}>
                   <ArrowUpRight size={18} strokeWidth={2.4} />
                 </span>
               </Link>
@@ -448,13 +448,13 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
           </p>
 
           {!filters.search && new Date() < new Date('2027-01-06') && (
-            <Link href="/december" style={{ marginTop: 22, display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 20, textDecoration: 'none', background: 'radial-gradient(120% 140% at 0% 0%, rgba(123,227,168,0.18) 0%, rgba(123,227,168,0.03) 60%), #0D1210', border: '1px solid rgba(123,227,168,0.25)' }}>
+            <Link href="/december" style={{ marginTop: 22, display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 20, textDecoration: 'none', background: 'radial-gradient(120% 140% at 0% 0%, rgba(123,227,168,0.18) 0%, rgba(123,227,168,0.03) 60%), #0D1210', border: 'none'}}>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>15 Dec – 5 Jan</span>
                 <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>Detty December</span>
                 <span style={{ display: 'block', marginTop: 1, fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>The big shows, day by day</span>
               </span>
-              <span aria-hidden style={{ width: 38, height: 38, borderRadius: 19, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint }}><ArrowUpRight size={18} strokeWidth={2.4} /></span>
+              <span aria-hidden style={{ width: 38, height: 38, borderRadius: 19, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}><ArrowUpRight size={18} strokeWidth={2.4} /></span>
             </Link>
           )}
 
@@ -483,7 +483,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
             <div style={{ padding: '72px 0', textAlign: 'center' }}>
               <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: T.white }}>Nothing matches yet</p>
               <p style={{ margin: '8px 0 20px', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Try another date, city or price.</p>
-              <button type="button" onClick={filters.when !== 'all' ? () => set('when', 'all') : clear} style={{ height: 48, padding: '0 22px', borderRadius: 999, border: 'none', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={filters.when !== 'all' ? () => set('when', 'all') : clear} style={{ height: 48, padding: '0 22px', borderRadius: 999, border: 'none', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
                 {filters.when !== 'all' ? 'Include past events' : 'Clear filters'}
               </button>
             </div>
@@ -502,7 +502,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
 
           {page < filtered.length && (
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: 28 }}>
-              <button type="button" onClick={() => setPage((p) => p + PAGE_SIZE)} style={{ height: 46, padding: '0 22px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: T.text, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <button type="button" onClick={() => setPage((p) => p + PAGE_SIZE)} style={{ height: 46, padding: '0 22px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.text, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Show more
               </button>
             </div>

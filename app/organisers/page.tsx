@@ -4,7 +4,7 @@ import { Megaphone, Flame, Clapperboard, BarChart3, ScanLine, ImagePlus, CheckCi
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import { shareMeta } from '@/lib/og';
-import { T, FONT, GROUND } from '@/lib/thiscene';
+import { T, FONT, GROUND, GRAD } from '@/lib/thiscene';
 
 export const revalidate = 600;
 export const metadata = shareMeta({
@@ -28,8 +28,8 @@ async function numbers() {
 
 const eyebrow: React.CSSProperties = { margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
 const h2: React.CSSProperties = { margin: '6px 0 0', fontFamily: FONT.display, fontSize: 'clamp(26px, 6vw, 34px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05, color: T.white };
-const primary: React.CSSProperties = { height: 54, padding: '0 24px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, textDecoration: 'none', boxShadow: '0 10px 30px rgba(123,227,168,0.2)' };
-const ghost: React.CSSProperties = { height: 54, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(255,255,255,0.06)', border: `1px solid ${T.hairlineStrong}`, color: T.white, fontFamily: FONT.display, fontSize: 15, fontWeight: 600, textDecoration: 'none' };
+const primary: React.CSSProperties = { height: 54, padding: '0 24px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, textDecoration: 'none', boxShadow: '0 10px 30px rgba(123,227,168,0.2)' };
+const ghost: React.CSSProperties = { height: 54, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.display, fontSize: 15, fontWeight: 600, textDecoration: 'none' };
 
 const WHY = [
   { icon: Megaphone, title: 'Seen where people decide', body: 'Akwaaba is where people look for what to do this weekend: every show in Ghana in one feed, with your full flyer, line-up and a ticket button.' },
@@ -70,7 +70,7 @@ export default async function OrganisersPage() {
         {n && n.events > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 34 }}>
             {[{ v: n.events, l: 'upcoming events listed' }, { v: n.moments, l: 'moments from past shows' }].map((s) => (
-              <div key={s.l} style={{ padding: '18px 18px 16px', borderRadius: 20, background: T.surface, border: `1px solid ${T.hairline}` }}>
+              <div key={s.l} style={{ padding: '18px 18px 16px', borderRadius: 20, background: T.surface, border: 'none' }}>
                 <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 34, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>{s.v.toLocaleString()}</p>
                 <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>{s.l}</p>
               </div>
@@ -83,7 +83,7 @@ export default async function OrganisersPage() {
           <h2 style={h2}>More people at the door</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, marginTop: 20 }}>
             {WHY.map(({ icon: I, title, body }) => (
-              <div key={title} style={{ padding: 18, borderRadius: 20, background: T.surface, border: `1px solid ${T.hairline}` }}>
+              <div key={title} style={{ padding: 18, borderRadius: 20, background: T.surface, border: 'none' }}>
                 <span style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.12)', color: T.mintText }}><I size={20} /></span>
                 <p style={{ margin: '14px 0 0', fontFamily: FONT.display, fontSize: 17, fontWeight: 700, color: T.white }}>{title}</p>
                 <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.55, color: T.text2 }}>{body}</p>
@@ -97,8 +97,8 @@ export default async function OrganisersPage() {
           <h2 style={h2}>Live in two minutes</h2>
           <ol style={{ listStyle: 'none', margin: '20px 0 0', padding: 0, display: 'grid', gap: 10 }}>
             {STEPS.map(({ icon: I, title, body }, i) => (
-              <li key={title} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '16px 18px', borderRadius: 20, background: T.surface, border: `1px solid ${T.hairline}` }}>
-                <span style={{ width: 34, height: 34, borderRadius: 17, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 800 }}>{i + 1}</span>
+              <li key={title} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '16px 18px', borderRadius: 20, background: T.surface, border: 'none' }}>
+                <span style={{ width: 34, height: 34, borderRadius: 17, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 800 }}>{i + 1}</span>
                 <span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: FONT.display, fontSize: 16.5, fontWeight: 700, color: T.white }}><I size={17} color={T.mintText} /> {title}</span>
                   <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.5, color: T.text2 }}>{body}</span>
@@ -110,7 +110,7 @@ export default async function OrganisersPage() {
 
         <section style={{ marginTop: 56 }}>
           <p style={eyebrow}>Questions</p>
-          <div style={{ marginTop: 14, borderRadius: 20, background: T.surface, border: `1px solid ${T.hairline}`, overflow: 'hidden' }}>
+          <div style={{ marginTop: 14, borderRadius: 20, background: T.surface, border: 'none', overflow: 'hidden' }}>
             {FAQ.map((f, i) => (
               <details key={f.q} style={{ padding: '16px 18px', borderTop: i ? `1px solid ${T.hairline}` : 'none' }}>
                 <summary style={{ cursor: 'pointer', fontFamily: FONT.sans, fontSize: 15.5, fontWeight: 600, color: T.white, listStyle: 'none' }}>{f.q}</summary>
@@ -120,7 +120,7 @@ export default async function OrganisersPage() {
           </div>
         </section>
 
-        <section style={{ marginTop: 48, padding: '26px 22px', borderRadius: 24, background: 'radial-gradient(120% 120% at 0% 0%, rgba(123,227,168,0.16) 0%, rgba(123,227,168,0.03) 60%), #0D1210', border: '1px solid rgba(123,227,168,0.25)' }}>
+        <section style={{ marginTop: 48, padding: '26px 22px', borderRadius: 24, background: 'radial-gradient(120% 120% at 0% 0%, rgba(123,227,168,0.16) 0%, rgba(123,227,168,0.03) 60%), #0D1210', border: 'none'}}>
           <h2 style={{ ...h2, marginTop: 0 }}>Got a show coming up?</h2>
           <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 15, color: T.text }}>List it now. It’s free, and it takes two minutes.</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 18 }}>

@@ -7,14 +7,14 @@ import { createClient } from '@/lib/supabase/client';
 import Wordmark from '@/components/brand/Wordmark';
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, AtSign } from 'lucide-react';
 import { hiRes } from '@/lib/events/image';
-import { T, FONT, GROUND } from '@/lib/thiscene';
+import { T, FONT, GROUND, GRAD } from '@/lib/thiscene';
 
 type Mode = 'signin' | 'signup' | 'forgot' | 'reset';
 
 const label: CSSProperties = { display: 'block', margin: '0 0 8px 2px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.text3 };
 const field: CSSProperties = {
   width: '100%', height: 54, padding: '0 16px 0 46px', borderRadius: 16, boxSizing: 'border-box',
-  background: '#0D1210', border: `1px solid ${T.hairlineStrong}`, outline: 'none',
+  background: '#0D1210', border: 'none', outline: 'none',
   fontFamily: FONT.sans, fontSize: 16, color: T.white, transition: 'border-color 160ms ease, box-shadow 160ms ease',
 };
 const fieldIcon: CSSProperties = { position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: T.text3, pointerEvents: 'none', display: 'flex' };
@@ -36,7 +36,7 @@ function FlyerFan() {
   return (
     <div aria-hidden style={{ position: 'relative', height: 'calc(min(70vw, 340px) * 1.25 + 34px + env(safe-area-inset-top, 0px))', overflow: 'hidden', maskImage: 'linear-gradient(180deg, #000 86%, transparent 100%)', WebkitMaskImage: 'linear-gradient(180deg, #000 86%, transparent 100%)' }}>
       {spots.map((sp, i) => (
-        <span key={i} style={{ position: 'absolute', top: `calc(${sp.y - 6}px + env(safe-area-inset-top, 0px))`, left: sp.left, width: `${sp.w}%`, maxWidth: sp.w === 70 ? 340 : 262, aspectRatio: '4 / 5', transform: `translateX(-50%) rotate(${sp.rot}deg)`, zIndex: sp.z, borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg, #16201B, #0B0F0D)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', opacity: flyers[i] ? 1 : 0.6, transition: 'opacity 400ms ease' }}>
+        <span key={i} style={{ position: 'absolute', top: `calc(${sp.y - 6}px + env(safe-area-inset-top, 0px))`, left: sp.left, width: `${sp.w}%`, maxWidth: sp.w === 70 ? 340 : 262, aspectRatio: '4 / 5', transform: `translateX(-50%) rotate(${sp.rot}deg)`, zIndex: sp.z, borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg, #16201B, #0B0F0D)', border: 'none', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', opacity: flyers[i] ? 1 : 0.6, transition: 'opacity 400ms ease' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {flyers[i] && <img src={flyers[i]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
         </span>
@@ -142,7 +142,7 @@ function AuthForm() {
     <div style={{ minHeight: '100svh', background: GROUND, display: 'flex', flexDirection: 'column' }}>
       <style>{`.ak-field::placeholder{color:rgba(255,255,255,0.32)} .ak-field:focus{border-color:rgba(123,227,168,0.55)!important;box-shadow:0 0 0 4px rgba(123,227,168,0.08)} .ak-wrap:focus-within .ak-ic{color:${T.mint}!important}`}</style>
       <header style={{ position: 'relative', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 0' }}>
-        <Link href={next} aria-label="Back" style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(5,6,6,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: `1px solid ${T.hairlineStrong}`, color: T.white }}>
+        <Link href={next} aria-label="Back" style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(5,6,6,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: 'none', color: T.white }}>
           <ArrowLeft size={20} strokeWidth={2.2} />
         </Link>
         {/* On sign in / sign up the flyers fill the top, so the name sits with the heading instead */}
@@ -159,7 +159,7 @@ function AuthForm() {
         <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>{sub}</p>
 
         {(mode === 'signin' || mode === 'signup') && (
-          <div role="tablist" aria-label="Sign in or sign up" style={{ display: 'flex', marginTop: 24, padding: 4, borderRadius: 999, background: '#0D1210', border: `1px solid ${T.hairlineStrong}` }}>
+          <div role="tablist" aria-label="Sign in or sign up" style={{ display: 'flex', marginTop: 24, padding: 4, borderRadius: 999, background: '#0D1210', border: 'none' }}>
             {(['signin', 'signup'] as const).map((m) => (
               <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => go(m)} style={{ flex: 1, height: 42, borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, background: mode === m ? T.mint : 'transparent', color: mode === m ? T.onMint : T.text2, fontWeight: 700, transition: 'background 200ms ease, color 200ms ease' }}>
                 {m === 'signin' ? 'Sign in' : 'Sign up'}
@@ -219,7 +219,7 @@ function AuthForm() {
           {error && <p role="alert" style={{ margin: 0, padding: '12px 14px', borderRadius: 14, background: 'rgba(255,138,138,0.1)', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.45, color: T.danger }}>{error}</p>}
           {info && <p role="status" style={{ margin: 0, padding: '12px 14px', borderRadius: 14, background: 'rgba(123,227,168,0.1)', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.45, color: T.mintText }}>{info}</p>}
 
-          <button type="submit" disabled={busy} style={{ marginTop: 6, height: 54, borderRadius: 999, border: 'none', cursor: busy ? 'wait' : 'pointer', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 16, fontWeight: 700, opacity: busy ? 0.7 : 1, boxShadow: '0 10px 30px rgba(123,227,168,0.18)' }}>
+          <button type="submit" disabled={busy} style={{ marginTop: 6, height: 54, borderRadius: 999, border: 'none', cursor: busy ? 'wait' : 'pointer', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 16, fontWeight: 700, opacity: busy ? 0.7 : 1, boxShadow: '0 10px 30px rgba(123,227,168,0.18)' }}>
             {busy ? 'One moment…' : cta}
           </button>
 

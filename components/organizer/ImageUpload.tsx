@@ -80,14 +80,14 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
       {/* Preview */}
       {value && (
         <div style={{ position: 'relative', marginBottom: 12 }}>
-          <div style={{ height: 180, borderRadius: 10, overflow: 'hidden', backgroundImage: `url(${value})`, backgroundSize: 'cover', backgroundPosition: 'center', border: `1px solid ${C.bd}` }} />
+          <div style={{ height: 180, borderRadius: 10, overflow: 'hidden', backgroundImage: `url(${value})`, backgroundSize: 'cover', backgroundPosition: 'center', border: 'none'}} />
           <button
             onClick={() => onChange('')}
-            style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(13,11,8,0.85)', border: `1px solid ${C.bd}`, color: C.c2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            style={{ position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%', background: 'rgba(13,11,8,0.85)', border: 'none', color: C.c2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={13} />
           </button>
           {success && (
-            <div style={{ position: 'absolute', bottom: 8, left: 8, display: 'flex', alignItems: 'center', gap: 5, background: C.greenDim, border: `1px solid ${C.greenBd}`, borderRadius: 6, padding: '4px 10px' }}>
+            <div style={{ position: 'absolute', bottom: 8, left: 8, display: 'flex', alignItems: 'center', gap: 5, background: C.greenDim, border: 'none', borderRadius: 6, padding: '4px 10px' }}>
               <CheckCircle size={11} style={{ color: C.greenL }} />
               <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 10, letterSpacing: '1px', color: C.greenL }}>Uploaded</span>
             </div>
@@ -117,7 +117,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 44, height: 44, borderRadius: '50%', background: C.goldDim, border: `1px solid ${C.goldBd}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: C.goldDim, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Upload size={18} style={{ color: C.gold }} />
             </div>
             <div>
@@ -155,7 +155,7 @@ export default function ImageUpload({ value, onChange, label = 'Cover Image' }: 
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder="https://images.unsplash.com/…"
-        style={{ width: '100%', ...G.raised, border: `1px solid ${C.bd}`, borderRadius: 8, padding: '10px 14px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.cream, outline: 'none', marginTop: 10 }}
+        style={{ width: '100%', ...G.raised, border: 'none', borderRadius: 8, padding: '10px 14px', fontFamily: 'var(--font-inter,sans-serif)', fontSize: 13, color: C.cream, outline: 'none', marginTop: 10 }}
       />
     </div>
   );

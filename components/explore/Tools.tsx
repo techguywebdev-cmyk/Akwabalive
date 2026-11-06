@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Icon } from '@/components/ui/Icon';
 import { BTN } from '@/components/events/CardParts';
-import { T, FONT, EASE } from '@/lib/thiscene';
+import { T, FONT, EASE, GRAD } from '@/lib/thiscene';
 
 const capBtn = (on: boolean): React.CSSProperties => ({
   position: 'relative', width: 46, height: 44, padding: 0, border: 'none', cursor: 'pointer',
@@ -16,7 +16,7 @@ const capBtn = (on: boolean): React.CSSProperties => ({
 /** Search | filter icons in one capsule (same as the events feed) */
 export function ToolsCapsule({ searchOn, filtersOn, onSearch, onFilter }: { searchOn: boolean; filtersOn: boolean; onSearch: () => void; onFilter: () => void }) {
   return (
-    <div role="group" aria-label="Search and filter" style={{ display: 'flex', alignItems: 'center', height: 44, borderRadius: 22, overflow: 'hidden', background: 'rgba(8,10,9,0.5)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
+    <div role="group" aria-label="Search and filter" style={{ display: 'flex', alignItems: 'center', height: 44, borderRadius: 22, overflow: 'hidden', background: 'rgba(8,10,9,0.5)', border: 'none', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
       <button type="button" aria-label="Search" aria-pressed={searchOn} onClick={onSearch} style={capBtn(searchOn)}><Icon name="search" size={21} /></button>
       <span aria-hidden style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.14)' }} />
       <button type="button" aria-label={filtersOn ? 'Filters (on)' : 'Filters'} onClick={onFilter} style={capBtn(filtersOn)}>
@@ -34,7 +34,7 @@ export function SearchDrop({ open, value, onChange, onClose, placeholder }: { op
   if (!open) return null;
   return (
     <div style={{ position: 'fixed', zIndex: 195, top: 'calc(74px + env(safe-area-inset-top, 0px))', left: 16, right: 16, maxWidth: 720, margin: '0 auto' }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 10, height: 50, padding: '0 8px 0 16px', borderRadius: 25, background: 'rgba(12,15,13,0.9)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', color: T.text2, boxShadow: '0 12px 30px rgba(0,0,0,0.4)' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 10, height: 50, padding: '0 8px 0 16px', borderRadius: 25, background: 'rgba(12,15,13,0.9)', border: 'none', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', color: T.text2, boxShadow: '0 12px 30px rgba(0,0,0,0.4)' }}>
         <Icon name="search" size={19} />
         <input ref={ref} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-label={placeholder} type="text" enterKeyHint="search"
           style={{ flex: 1, minWidth: 0, height: '100%', border: 'none', outline: 'none', background: 'transparent', color: T.white, fontFamily: FONT.sans, fontSize: 16 }} />
@@ -83,7 +83,7 @@ export function ChoiceSheet({ title, groups, onClose, onReset, resultLabel }: {
                 return (
                   <button key={o.value} type="button" aria-pressed={on} onClick={() => g.onChange(o.value)} style={{
                     height: 40, padding: '0 16px', borderRadius: 999, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600,
-                    ...(on ? { background: T.mint, color: T.onMint, border: `1px solid ${T.mint}` } : { background: 'rgba(255,255,255,0.06)', color: T.text, border: '1px solid rgba(255,255,255,0.1)' }),
+                    ...(on ? { background: GRAD.mint, color: T.onMint, border: 'none'} : { background: 'rgba(255,255,255,0.06)', color: T.text, border: 'none' }),
                   }}>{o.label}</button>
                 );
               })}

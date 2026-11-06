@@ -7,7 +7,7 @@ import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
 import type { Comment, Moment } from './types';
 import { formatTime } from './types';
-import { T, FONT, EASE } from '@/lib/thiscene';
+import { T, FONT, EASE, GRAD } from '@/lib/thiscene';
 
 interface Props {
   moment: Moment;
@@ -234,7 +234,7 @@ export default function CommentsSheet({
               </div>
               <form onSubmit={submit} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Avatar url={profile?.avatar_url} name={me} size={36} />
-                <label style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', height: 46, borderRadius: 23, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', padding: '0 5px 0 16px' }}>
+                <label style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', height: 46, borderRadius: 23, background: 'rgba(255,255,255,0.08)', border: 'none', padding: '0 5px 0 16px' }}>
                   <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Add a comment</span>
                   <input ref={inputRef} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Add a comment…" maxLength={500}
                     style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15 }} />
@@ -249,7 +249,7 @@ export default function CommentsSheet({
               </form>
             </>
           ) : (
-            <Link href="/auth" style={{ height: 48, borderRadius: 999, background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+            <Link href="/auth" style={{ height: 48, borderRadius: 999, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
               Sign in to comment
             </Link>
           )}
@@ -267,7 +267,7 @@ function PromptChip({ onClick, children }: { onClick: () => void; children: Reac
     <button type="button" onClick={onClick} style={{
       flexShrink: 0, height: 32, padding: '0 12px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap',
       display: 'inline-flex', alignItems: 'center', gap: 5,
-      background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
+      background: 'rgba(255,255,255,0.07)', border: 'none', color: T.text2, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600,
     }}>
       {children}
     </button>

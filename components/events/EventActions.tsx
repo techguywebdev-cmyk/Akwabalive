@@ -39,10 +39,10 @@ export function ActionBar({ actions, accent, maxWidth = 400, vertical = false }:
           width: 50, height: 50, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center',
           backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', transition: 'background 200ms ease, border-color 200ms ease, color 200ms ease',
           ...(a.primary
-            ? { background: T.mint, border: '1px solid transparent', color: T.onMint }
+            ? { background: T.mint, border: 'none', color: T.onMint }
             : a.on
-              ? { background: alpha(accent, 0.16), border: `1px solid ${alpha(accent, 0.5)}`, color: accent }
-              : { background: 'rgba(3,10,6,0.38)', border: '1px solid rgba(255,255,255,0.12)', color: T.white }),
+              ? { background: alpha(accent, 0.16), border: 'none', color: accent }
+              : { background: 'rgba(3,10,6,0.38)', border: 'none', color: T.white }),
         } as const;
         const inner = (
           <>
@@ -166,7 +166,7 @@ export function TicketsSheet({
 
         <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
           {past ? (
-            <span style={{ ...cta, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default' }}>This event has ended</span>
+            <span style={{ ...cta, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default' }}>This event has ended</span>
           ) : listed ? (
             <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={cta}>Buy on {event.ticketSource || 'official site'} <Icon name="open" size={16} /></a>
           ) : free && onRsvp ? (
@@ -174,7 +174,7 @@ export function TicketsSheet({
           ) : sellable ? (
             <button type="button" onClick={() => onBuy(tiers)} style={cta}>Choose tickets</button>
           ) : (
-            <span style={{ ...cta, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, cursor: 'default', fontSize: 14 }}>Not on sale on Akwaaba yet</span>
+            <span style={{ ...cta, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default', fontSize: 14 }}>Not on sale on Akwaaba yet</span>
           )}
         </div>
         {footer}

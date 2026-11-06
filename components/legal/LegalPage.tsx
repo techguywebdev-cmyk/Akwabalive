@@ -19,7 +19,7 @@ export default function LegalPage({ eyebrow, title, intro, sections }: { eyebrow
         <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Last updated {UPDATED}</p>
         <p style={{ margin: '22px 0 0', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.65, color: T.text }}>{intro}</p>
 
-        <nav aria-label="Contents" style={{ margin: '28px 0 8px', padding: '16px 18px', borderRadius: 18, background: T.surface, border: `1px solid ${T.hairline}` }}>
+        <nav aria-label="Contents" style={{ margin: '28px 0 8px', padding: '16px 18px', borderRadius: 18, background: T.surface, border: 'none' }}>
           <ol style={{ margin: 0, paddingLeft: 22, display: 'grid', gap: 6, listStyleType: 'decimal' }}>
             {sections.map((s, i) => (
               <li key={s.title} style={{ display: 'list-item', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>

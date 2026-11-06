@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { BadgeCheck, Check, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { card } from '@/components/organizer/ui';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 
 type Claim = { id: string; role: string; proof: string; contact: string | null; created_at: string; user_id: string; events: { id: string; slug: string; title: string; date: string } | null };
 type Who = { id: string; username: string; full_name: string | null };
@@ -57,8 +57,8 @@ export default function ClaimsReview() {
               <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{c.proof}</p>
               {c.contact && <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>Contact: <a href={`tel:${c.contact.replace(/\s/g, '')}`} style={{ color: T.text2 }}>{c.contact}</a></p>}
               <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button type="button" disabled={busy === c.id} onClick={() => approve(c)} style={{ ...btn, border: 'none', background: T.mint, color: T.onMint }}><Check size={15} /> Give it to them</button>
-                <button type="button" disabled={busy === c.id} onClick={() => decline(c)} style={{ ...btn, border: `1px solid ${T.hairlineStrong}`, background: 'transparent', color: T.text }}><X size={15} /> Decline</button>
+                <button type="button" disabled={busy === c.id} onClick={() => approve(c)} style={{ ...btn, border: 'none', background: GRAD.mint, color: T.onMint }}><Check size={15} /> Give it to them</button>
+                <button type="button" disabled={busy === c.id} onClick={() => decline(c)} style={{ ...btn, border: 'none', background: 'transparent', color: T.text }}><X size={15} /> Decline</button>
               </div>
             </article>
           );

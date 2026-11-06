@@ -120,6 +120,6 @@ export default function ArtistsIndexClient({ artists }: { artists: ArtistCard[] 
 }
 
 const chipOn: React.CSSProperties = {
-  height: 34, padding: '0 14px', borderRadius: 999, border: '1px solid rgba(123,227,168,0.35)', background: 'rgba(123,227,168,0.12)',
+  height: 34, padding: '0 14px', borderRadius: 999, border: 'none', background: 'rgba(123,227,168,0.12)',
   color: T.mintText, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 };

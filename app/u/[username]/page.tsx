@@ -18,7 +18,7 @@ import { supabaseToGhanaEvent, type SupabaseEvent } from '@/lib/supabase/events'
 import { events as staticEvents } from '@/lib/data/events';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
-import { T, FONT, GROUND, EASE } from '@/lib/thiscene';
+import { T, FONT, GROUND, EASE, GRAD } from '@/lib/thiscene';
 
 type Tab = 'going' | 'saved' | 'moments';
 type Person = Pick<Profile, 'id' | 'username' | 'full_name' | 'avatar_url'>;
@@ -80,7 +80,7 @@ function Sheet({ title, onClose, children }: { title: string; onClose: () => voi
 
 const roundBtn: React.CSSProperties = {
   width: 40, height: 40, borderRadius: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: T.white, cursor: 'pointer',
+  background: 'rgba(255,255,255,0.08)', border: 'none', color: T.white, cursor: 'pointer',
 };
 
 /* ── Followers / following list ─────────────────────────────────────── */
@@ -125,7 +125,7 @@ function PeopleSheet({ profileId, kind, onClose }: { profileId: string; kind: 'f
 
 const field: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)',
-  border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 16, outline: 'none',
+  border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 16, outline: 'none',
 };
 const label: React.CSSProperties = { display: 'block', margin: '18px 0 8px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text2 };
 
@@ -166,7 +166,7 @@ function EditSheet({ profile, onClose, onSaved }: { profile: Profile; onClose: (
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <button type="button" onClick={() => fileRef.current?.click()} aria-label="Change photo" style={{ position: 'relative', padding: 0, border: 'none', background: 'none', cursor: 'pointer', borderRadius: 40 }}>
           <Avatar p={{ ...profile, full_name: name || profile.full_name, avatar_url: avatar }} size={80} />
-          <span style={{ position: 'absolute', right: -2, bottom: -2, width: 30, height: 30, borderRadius: 15, background: T.mint, color: T.onMint, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px #0F1311' }}>
+          <span style={{ position: 'absolute', right: -2, bottom: -2, width: 30, height: 30, borderRadius: 15, background: GRAD.mint, color: T.onMint, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 3px #0F1311' }}>
             <Camera size={15} strokeWidth={2.2} />
           </span>
         </button>

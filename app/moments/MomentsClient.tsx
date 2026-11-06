@@ -189,7 +189,7 @@ export default function MomentsClient() {
       )}
 
       {toast && (
-        <div role="status" style={{ position: 'absolute', zIndex: 70, left: '50%', bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))', transform: 'translateX(-50%)', background: 'rgba(14,17,16,0.94)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 999, padding: '10px 16px', fontFamily: FONT.sans, fontSize: 13, color: T.white, whiteSpace: 'nowrap' }}>
+        <div role="status" style={{ position: 'absolute', zIndex: 70, left: '50%', bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))', transform: 'translateX(-50%)', background: 'rgba(14,17,16,0.94)', border: 'none', borderRadius: 999, padding: '10px 16px', fontFamily: FONT.sans, fontSize: 13, color: T.white, whiteSpace: 'nowrap' }}>
           {toast}
         </div>
       )}

@@ -30,7 +30,10 @@ export const T = {
 
 /** The base every screen sits on: near-black charcoal with a faint green light at the top (Nov 2026: calmer). */
 export const GROUND =
-  'radial-gradient(60% 22% at 50% 0%, rgba(40,130,85,0.16) 0%, rgba(40,130,85,0) 80%), ' +
+  // Nov 2026: the This-scine ambient wash in mint — light from two corners and a faint tint across, no boxes
+  'radial-gradient(120% 60% at 0% 0%, rgba(123,227,168,0.15) 0%, rgba(123,227,168,0) 70%), ' +
+  'radial-gradient(120% 60% at 100% 100%, rgba(45,190,140,0.12) 0%, rgba(45,190,140,0) 70%), ' +
+  'linear-gradient(165deg, rgba(123,227,168,0.06) 0%, rgba(123,227,168,0.025) 50%, rgba(123,227,168,0.05) 100%), ' +
   'linear-gradient(180deg, #0B0F0D 0%, #070908 50%, #050606 100%)';
 
 /** Accent palette (tokens accent-*). Gold is the default. */

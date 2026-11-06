@@ -10,7 +10,7 @@ import Footer from '@/components/layout/Footer';
 import { Stat, StatusPill, Bar, ghs, card, type EventStatus } from '@/components/organizer/ui';
 import { parseDay, longDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 
 type Ev = {
   id: string; title: string; slug: string; date: string; time: string | null; venue: string; status: string; image_url: string | null;
@@ -20,7 +20,7 @@ type Ev = {
 type Row = { ticket_id: string; holder: string; username: string | null; avatar_url: string | null; tier: string; quantity: number; total_paid: number; status: string; checked_in_at: string | null; bought_at: string };
 
 const clock = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-const btn: React.CSSProperties = { height: 44, padding: '0 16px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: T.white, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 };
+const btn: React.CSSProperties = { height: 44, padding: '0 16px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.07)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 };
 
 export default function ManageEventPage({ params }: { params: { id: string } }) {
   const { user, loading: authLoading } = useAuth();
@@ -103,7 +103,7 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
             </div>
 
             <div className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '18px -20px 0', padding: '0 20px' }}>
-              {hosted && !past && <Link href={`/organizer/scan?event=${ev.id}`} style={{ ...btn, background: T.mint, color: T.onMint, border: 'none' }}><ScanLine size={18} /> Scan tickets</Link>}
+              {hosted && !past && <Link href={`/organizer/scan?event=${ev.id}`} style={{ ...btn, background: GRAD.mint, color: T.onMint, border: 'none' }}><ScanLine size={18} /> Scan tickets</Link>}
               <Link href={`/organizer/events/${ev.id}`} style={btn}><Pencil size={17} /> Edit</Link>
               <button type="button" onClick={togglePublish} style={btn}>{ev.status === 'published' ? <><EyeOff size={17} /> Unpublish</> : <><Eye size={17} /> Publish</>}</button>
               <button type="button" onClick={share} style={btn}><Share2 size={17} /> Share</button>
@@ -145,7 +145,7 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
                   <span style={{ fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>{rows.length} order{rows.length === 1 ? '' : 's'}</span>
                 </div>
                 {rows.length > 4 && (
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, height: 48, padding: '0 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.text2, marginBottom: 10 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, height: 48, padding: '0 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.text2, marginBottom: 10 }}>
                     <Search size={18} />
                     <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or ticket" aria-label="Search attendees" style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15 }} />
                   </label>

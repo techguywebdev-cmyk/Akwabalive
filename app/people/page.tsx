@@ -73,7 +73,7 @@ export default function PeoplePage() {
         <label style={{ position: 'relative', display: 'block', marginTop: 22 }}>
           <span style={{ position: 'absolute', left: 16, top: 0, bottom: 0, display: 'flex', alignItems: 'center', color: T.text3 }}><Search size={18} /></span>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search names or @usernames" aria-label="Search people" autoComplete="off"
-            style={{ width: '100%', boxSizing: 'border-box', height: 52, padding: '0 44px 0 46px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 16, outline: 'none' }} />
+            style={{ width: '100%', boxSizing: 'border-box', height: 52, padding: '0 44px 0 46px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 16, outline: 'none' }} />
           {q && <button type="button" onClick={() => setQ('')} aria-label="Clear" style={{ position: 'absolute', right: 8, top: 8, width: 36, height: 36, borderRadius: 18, border: 'none', background: 'transparent', color: T.text2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>}
         </label>
 
@@ -85,7 +85,7 @@ export default function PeoplePage() {
               : <p style={{ fontFamily: FONT.sans, fontSize: 15, color: T.text2 }}>No one called “{q.trim()}” yet. Invite them below.</p>}
           </>
         ) : !user ? (
-          <div style={{ marginTop: 28, padding: 20, borderRadius: 20, background: T.surface, border: `1px solid ${T.hairline}` }}>
+          <div style={{ marginTop: 28, padding: 20, borderRadius: 20, background: T.surface, border: 'none' }}>
             <p style={{ margin: '0 0 14px', fontFamily: FONT.sans, fontSize: 15, color: T.text }}>Sign in to follow friends and see suggestions.</p>
             <Link href="/auth?next=%2Fpeople" style={BTN.primary}>Sign in</Link>
           </div>
@@ -99,7 +99,7 @@ export default function PeoplePage() {
           </>
         )}
 
-        <div style={{ marginTop: 28, padding: 20, borderRadius: 20, background: 'linear-gradient(140deg, rgba(123,227,168,0.14), rgba(123,227,168,0.04))', border: '1px solid rgba(123,227,168,0.2)' }}>
+        <div style={{ marginTop: 28, padding: 20, borderRadius: 20, background: 'linear-gradient(140deg, rgba(123,227,168,0.14), rgba(123,227,168,0.04))', border: 'none'}}>
           <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: T.white }}>Bring your crew</p>
           <p style={{ margin: '6px 0 14px', fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.5, color: T.text2 }}>Send your profile link on WhatsApp. When friends follow you, you’ll see each other on the events you’re going to.</p>
           <button type="button" onClick={invite} style={BTN.primary}>{copied ? <><Check size={18} /> Link copied</> : <><Share2 size={18} /> Invite friends</>}</button>

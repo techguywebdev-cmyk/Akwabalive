@@ -14,7 +14,7 @@ const AUTO_NEXT_SECONDS = 5;
 
 const pill: React.CSSProperties = {
   height: 40, padding: '0 14px', borderRadius: R.chip, cursor: 'pointer',
-  ...G.overlay, border: '1px solid rgba(255,255,255,0.18)', color: C.cream,
+  ...G.overlay, border: 'none', color: C.cream,
   display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: sans, fontSize: 13, fontWeight: 600, textDecoration: 'none',
 };
 
@@ -85,7 +85,7 @@ export default function EndCard({
                   type="button"
                   onClick={onToggleThere}
                   aria-pressed={iWasThere}
-                  style={iWasThere ? { ...pill, background: C.goldDim, border: `1px solid ${C.goldBd}`, color: C.goldText } : pill}
+                  style={iWasThere ? { ...pill, background: C.goldDim, border: 'none', color: C.goldText } : pill}
                 >
                   {iWasThere ? <><Check size={16} /> On your profile</> : <><Plus size={16} /> I was there</>}
                 </button>
@@ -98,7 +98,7 @@ export default function EndCard({
         </div>
 
         {next && (
-          <div style={{ borderRadius: R.card + 2, overflow: 'hidden', ...G.sheet, border: `1px solid ${C.goldBd}` }}>
+          <div style={{ borderRadius: R.card + 2, overflow: 'hidden', ...G.sheet, border: 'none'}}>
             <div style={{ position: 'relative', height: 150, background: C.bg3 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={next.image} alt="" style={{ width: '100%', height: 150, objectFit: 'cover', display: 'block' }} />
@@ -106,7 +106,7 @@ export default function EndCard({
                 Next edition
               </span>
               {days != null && days >= 0 && (
-                <span style={{ position: 'absolute', right: 12, top: 12, fontFamily: mono, fontSize: 11, padding: '5px 10px', borderRadius: R.chip, ...G.overlay, color: C.cream, border: '1px solid rgba(255,255,255,0.18)' }}>
+                <span style={{ position: 'absolute', right: 12, top: 12, fontFamily: mono, fontSize: 11, padding: '5px 10px', borderRadius: R.chip, ...G.overlay, color: C.cream, border: 'none' }}>
                   {days === 0 ? 'Today' : `${days} ${days === 1 ? 'day' : 'days'} to go`}
                 </span>
               )}
@@ -137,7 +137,7 @@ export default function EndCard({
                     style={{
                       width: 50, height: 50, flexShrink: 0, borderRadius: R.btn, cursor: 'pointer', padding: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: `1px solid ${reminded ? C.greenBd : C.bd2}`, background: reminded ? C.greenDim : 'transparent', color: reminded ? '#86EFAC' : C.cream,
+                      border: 'none', background: reminded ? C.greenDim : 'transparent', color: reminded ? '#86EFAC' : C.cream,
                     }}
                   >
                     <Bell size={19} fill={reminded ? '#86EFAC' : 'none'} />
@@ -155,7 +155,7 @@ export default function EndCard({
             onClick={onNext}
             style={{
               marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 12, padding: 10, borderRadius: R.card, cursor: 'pointer', textAlign: 'left',
-              ...G.overlay, border: '1px solid rgba(255,255,255,0.16)', color: C.cream,
+              ...G.overlay, border: 'none', color: C.cream,
             }}
           >
             <span style={{ position: 'relative', width: 92, height: 60, flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: C.bg3 }}>

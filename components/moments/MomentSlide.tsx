@@ -22,7 +22,7 @@ import { countdown, priceLine, Portrait } from '@/components/artists/parts';
 import { useMomentInfo, type OnStage } from '@/hooks/useMomentInfo';
 import { CATEGORIES } from '@/lib/moments/categorize';
 import { parseDay, shortDay } from '@/lib/dates';
-import { T, FONT } from '@/lib/thiscene';
+import { T, FONT, GRAD } from '@/lib/thiscene';
 import { useRatingSummaries } from '@/lib/ratings';
 import { Stars } from '@/components/ratings/Stars';
 import { RateSheet, type RateStatus } from '@/components/ratings/RatingSection';
@@ -35,9 +35,9 @@ const thumb = (id: string) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
 
 const iconBtn = (on: boolean, mint = false): React.CSSProperties => ({
   width: 38, height: 38, borderRadius: 19, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, textDecoration: 'none',
-  ...(mint ? { background: T.mint, color: T.onMint, border: 'none' }
-    : on ? { background: 'rgba(123,227,168,0.14)', color: T.mintText, border: '1px solid rgba(123,227,168,0.4)' }
-      : { background: 'rgba(255,255,255,0.07)', color: T.white, border: '1px solid rgba(255,255,255,0.14)' }),
+  ...(mint ? { background: GRAD.mint, color: T.onMint, border: 'none' }
+    : on ? { background: 'rgba(123,227,168,0.14)', color: T.mintText, border: 'none'}
+      : { background: 'rgba(255,255,255,0.07)', color: T.white, border: 'none' }),
 });
 
 const pill: React.CSSProperties = {
@@ -58,7 +58,7 @@ function ShowFollowCard({ slug, name, artist, photo, tint, flash }: { slug: stri
   const { following, busy, toggle } = useFollow(artist ? 'artist' : 'series', slug);
   const one: React.CSSProperties = { display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 12, borderRadius: 20, background: `linear-gradient(120deg, rgba(${tint}, 0.32) 0%, rgba(255,255,255,0.05) 70%)`, border: '1px solid rgba(255,255,255,0.12)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 12, borderRadius: 20, background: `linear-gradient(120deg, rgba(${tint}, 0.32) 0%, rgba(255,255,255,0.05) 70%)`, border: 'none' }}>
       {artist ? <Portrait name={name} url={photo ?? null} size={46} /> : (
         <span aria-hidden style={{ width: 46, height: 46, borderRadius: 23, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', color: T.mintText }}><Bell size={19} /></span>
       )}
@@ -69,7 +69,7 @@ function ShowFollowCard({ slug, name, artist, photo, tint, flash }: { slug: stri
       </span>
       <button type="button" disabled={busy} aria-pressed={following} onClick={() => { toggle(); flash(following ? 'Reminder removed' : 'We’ll let you know'); }} style={{
         height: 38, padding: '0 14px', borderRadius: 999, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700,
-        ...(following ? { background: 'rgba(255,255,255,0.08)', color: T.white, border: '1px solid rgba(255,255,255,0.16)' } : { background: T.mint, color: T.onMint, border: 'none' }),
+        ...(following ? { background: 'rgba(255,255,255,0.08)', color: T.white, border: 'none' } : { background: GRAD.mint, color: T.onMint, border: 'none' }),
       }}>
         {following ? <BellRing size={15} /> : <Bell size={15} />}{following ? 'On' : 'Remind me'}
       </button>
@@ -252,13 +252,13 @@ const MomentSlide = forwardRef<SlideHandle, {
               {(fresh || tag) && (
                 <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
                   {fresh && (
-                    <span style={{ ...pill, background: T.mint, color: T.onMint }}>
+                    <span style={{ ...pill, background: GRAD.mint, color: T.onMint }}>
                       <span aria-hidden style={{ width: 6, height: 6, borderRadius: 3, background: T.onMint }} />Just happened
                     </span>
                   )}
                   {tag && (
                     <button type="button" onClick={() => onCategory?.(tag.key)} aria-label={`More ${tag.label.toLowerCase()}`} style={{
-                      ...pill, cursor: 'pointer', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', color: T.text,
+                      ...pill, cursor: 'pointer', background: 'rgba(255,255,255,0.07)', border: 'none', color: T.text,
                     }}>{tag.key === 'awards' ? 'Awards' : tag.label.replace(/s$/, '')}</button>
                   )}
                 </div>
@@ -359,7 +359,7 @@ const MomentSlide = forwardRef<SlideHandle, {
           {next ? (
             <Link href={`/events/${next.slug}`} style={{
               position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: 12, borderRadius: 20, overflow: 'hidden', textDecoration: 'none',
-              background: `linear-gradient(120deg, rgba(${tint}, 0.32) 0%, rgba(255,255,255,0.05) 70%)`, border: '1px solid rgba(255,255,255,0.12)',
+              background: `linear-gradient(120deg, rgba(${tint}, 0.32) 0%, rgba(255,255,255,0.05) 70%)`, border: 'none',
             }}>
               <span style={{ width: 46, height: 58, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.08)' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -372,7 +372,7 @@ const MomentSlide = forwardRef<SlideHandle, {
                   {[nextDay ? shortDay(nextDay) : null, soon, crowd.goingCount ? `${formatCount(crowd.goingCount)} going` : priceLine(next)].filter(Boolean).join(' · ')}
                 </span>
               </span>
-              <span style={{ height: 38, padding: '0 14px', borderRadius: 999, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, background: T.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>
+              <span style={{ height: 38, padding: '0 14px', borderRadius: 999, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>
                 <Ticket size={16} /> Tickets
               </span>
             </Link>

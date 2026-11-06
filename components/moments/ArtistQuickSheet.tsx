@@ -9,7 +9,7 @@ import { eventMatchesArtist, getArtistBySlug } from '@/lib/data/artists';
 import { events as staticEvents } from '@/lib/data/events';
 import { FollowPill, Portrait } from '@/components/artists/parts';
 import { parseDay, shortDay } from '@/lib/dates';
-import { T, FONT, EASE } from '@/lib/thiscene';
+import { T, FONT, EASE, GRAD } from '@/lib/thiscene';
 
 type NextShow = { slug: string; title: string; date: string; venue: string | null; city: string | null };
 type Clip = { id: string; title: string; youtube_id: string; event_name: string; year: number | null };
@@ -82,7 +82,7 @@ export default function ArtistQuickSheet({ slug, name, photo, currentId, onClose
         {/* Next show */}
         <p style={{ margin: '24px 0 10px', fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.text3 }}>Next show</p>
         {nextShow ? (
-          <Link href={`/events/${nextShow.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', textDecoration: 'none' }}>
+          <Link href={`/events/${nextShow.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, background: 'rgba(255,255,255,0.05)', border: 'none', textDecoration: 'none' }}>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 16, fontWeight: 700, color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nextShow.title}</span>
               <span style={{ display: 'flex', gap: 12, marginTop: 4, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>
@@ -90,7 +90,7 @@ export default function ArtistQuickSheet({ slug, name, photo, currentId, onClose
                 {(nextShow.venue || nextShow.city) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><MapPin size={13} />{nextShow.venue ?? nextShow.city}</span>}
               </span>
             </span>
-            <span style={{ height: 36, padding: '0 14px', borderRadius: 999, background: T.mint, color: T.onMint, display: 'inline-flex', alignItems: 'center', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>Tickets</span>
+            <span style={{ height: 36, padding: '0 14px', borderRadius: 999, background: GRAD.mint, color: T.onMint, display: 'inline-flex', alignItems: 'center', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>Tickets</span>
           </Link>
         ) : (
           <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>
@@ -117,7 +117,7 @@ export default function ArtistQuickSheet({ slug, name, photo, currentId, onClose
           </>
         )}
 
-        <Link href={`/artists/${slug}`} style={{ marginTop: 24, height: 48, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>
+        <Link href={`/artists/${slug}`} style={{ marginTop: 24, height: 48, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none', background: 'rgba(255,255,255,0.07)', border: 'none', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>
           Open {name}’s page <ArrowRight size={16} />
         </Link>
       </div>

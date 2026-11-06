@@ -66,7 +66,7 @@ export default function TicketScanPage({ params, searchParams }: { params: { id:
         {v?.reason === 'not_recognised' && <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>This QR code wasn’t issued by Akwaaba, or it has been changed.</p>}
 
         {v?.event_title && (
-          <section style={{ marginTop: 26, padding: 20, borderRadius: 24, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', textAlign: 'left' }}>
+          <section style={{ marginTop: 26, padding: 20, borderRadius: 24, background: 'rgba(255,255,255,0.05)', border: 'none', textAlign: 'left' }}>
             <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 20, fontWeight: 700, color: T.white }}>{v.event_title}</p>
             <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>{[d ? longDay(d) : v.event_date, v.event_venue].filter(Boolean).join(' · ')}</p>
             <dl style={{ margin: '16px 0 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
