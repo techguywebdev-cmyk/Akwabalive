@@ -5,17 +5,45 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import Wordmark from '@/components/brand/Wordmark';
-import { Icon } from '@/components/ui/Icon';
+import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, AtSign } from 'lucide-react';
+import { hiRes } from '@/lib/events/image';
 import { T, FONT, GROUND } from '@/lib/thiscene';
 
 type Mode = 'signin' | 'signup' | 'forgot' | 'reset';
 
-const label: CSSProperties = { display: 'block', margin: '0 0 7px 4px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.text2 };
+const label: CSSProperties = { display: 'block', margin: '0 0 8px 2px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.text3 };
 const field: CSSProperties = {
-  width: '100%', height: 54, padding: '0 18px', borderRadius: 16, boxSizing: 'border-box',
-  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', outline: 'none',
-  fontFamily: FONT.sans, fontSize: 16, color: T.white,
+  width: '100%', height: 54, padding: '0 16px 0 46px', borderRadius: 16, boxSizing: 'border-box',
+  background: '#0D1210', border: `1px solid ${T.hairlineStrong}`, outline: 'none',
+  fontFamily: FONT.sans, fontSize: 16, color: T.white, transition: 'border-color 160ms ease, box-shadow 160ms ease',
 };
+const fieldIcon: CSSProperties = { position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: T.text3, pointerEvents: 'none', display: 'flex' };
+
+/** A few real flyers from what's on, fanned out at the top */
+function FlyerFan() {
+  const [flyers, setFlyers] = useState<string[]>([]);
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    createClient().from('events').select('image_url, is_hot, is_featured').eq('status', 'published').gte('date', today).not('image_url', 'is', null)
+      .order('is_hot', { ascending: false }).order('date', { ascending: true }).limit(3)
+      .then(({ data }) => setFlyers(((data ?? []) as { image_url: string }[]).map((r) => hiRes(r.image_url, 500) ?? r.image_url)));
+  }, []);
+  const spots = [
+    { left: '50%', rot: 0, w: 46, z: 3, y: 0 },
+    { left: '24%', rot: -9, w: 36, z: 2, y: 18 },
+    { left: '76%', rot: 9, w: 36, z: 1, y: 18 },
+  ];
+  return (
+    <div aria-hidden style={{ position: 'relative', height: 'min(32vh, 260px)', overflow: 'hidden', maskImage: 'linear-gradient(180deg, #000 55%, transparent 100%)', WebkitMaskImage: 'linear-gradient(180deg, #000 55%, transparent 100%)' }}>
+      {spots.map((sp, i) => (
+        <span key={i} style={{ position: 'absolute', top: 24 + sp.y, left: sp.left, width: `${sp.w}%`, maxWidth: sp.w === 46 ? 210 : 165, aspectRatio: '4 / 5', transform: `translateX(-50%) rotate(${sp.rot}deg)`, zIndex: sp.z, borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg, #16201B, #0B0F0D)', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', opacity: flyers[i] ? 1 : 0.6, transition: 'opacity 400ms ease' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {flyers[i] && <img src={flyers[i]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 /** Where to go after signing in: ?next=/path (same site only) */
 function safeNext(raw: string | null) {
@@ -112,22 +140,25 @@ function AuthForm() {
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, display: 'flex', flexDirection: 'column' }}>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 0' }}>
-        <Link href={next} aria-label="Back" style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(3,10,6,0.38)', border: '1px solid rgba(255,255,255,0.12)', color: T.white }}>
-          <Icon name="arrowLeft" size={22} />
+      <style>{`.ak-field::placeholder{color:rgba(255,255,255,0.32)} .ak-field:focus{border-color:rgba(123,227,168,0.55)!important;box-shadow:0 0 0 4px rgba(123,227,168,0.08)} .ak-wrap:focus-within .ak-ic{color:${T.mint}!important}`}</style>
+      <header style={{ position: 'relative', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 0' }}>
+        <Link href={next} aria-label="Back" style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(5,6,6,0.6)', border: `1px solid ${T.hairlineStrong}`, color: T.white }}>
+          <ArrowLeft size={20} strokeWidth={2.2} />
         </Link>
         <Wordmark />
         <span style={{ width: 44 }} />
       </header>
 
-      <main style={{ flex: 1, width: '100%', maxWidth: 440, margin: '0 auto', padding: '40px 20px calc(32px + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
-        <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(34px, 9vw, 44px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', color: T.white }}>{heading}</h1>
-        <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>{sub}</p>
+      {(mode === 'signin' || mode === 'signup') && <div style={{ marginTop: -4 }}><FlyerFan /></div>}
+
+      <main style={{ flex: 1, width: '100%', maxWidth: 440, margin: '0 auto', padding: `${mode === 'signin' || mode === 'signup' ? 0 : 40}px 20px calc(32px + env(safe-area-inset-bottom, 0px))`, boxSizing: 'border-box', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 4 }}>
+        <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(32px, 8.5vw, 42px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', color: T.white }}>{heading}</h1>
+        <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>{sub}</p>
 
         {(mode === 'signin' || mode === 'signup') && (
-          <div role="tablist" aria-label="Sign in or sign up" style={{ display: 'flex', marginTop: 28, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div role="tablist" aria-label="Sign in or sign up" style={{ display: 'flex', marginTop: 24, padding: 4, borderRadius: 999, background: '#0D1210', border: `1px solid ${T.hairlineStrong}` }}>
             {(['signin', 'signup'] as const).map((m) => (
-              <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => go(m)} style={{ flex: 1, height: 42, borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: mode === m ? T.white : 'transparent', color: mode === m ? T.onMint : T.text2, transition: 'background 200ms ease, color 200ms ease' }}>
+              <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => go(m)} style={{ flex: 1, height: 42, borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, background: mode === m ? T.mint : 'transparent', color: mode === m ? T.onMint : T.text2, fontWeight: 700, transition: 'background 200ms ease, color 200ms ease' }}>
                 {m === 'signin' ? 'Sign in' : 'Sign up'}
               </button>
             ))}
@@ -139,13 +170,16 @@ function AuthForm() {
             <>
               <div>
                 <label htmlFor="name" style={label}>Your name</label>
-                <input id="name" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Ama Mensah" style={field} />
+                <div className="ak-wrap" style={{ position: 'relative' }}>
+                  <span className="ak-ic" style={fieldIcon}><User size={18} /></span>
+                  <input id="name" className="ak-field" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Ama Mensah" style={field} />
+                </div>
               </div>
               <div>
                 <label htmlFor="username" style={label}>Username</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', fontFamily: FONT.sans, fontSize: 16, color: T.text3 }}>@</span>
-                  <input id="username" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} required minLength={3} maxLength={24} placeholder="amamensah" style={{ ...field, paddingLeft: 36 }} />
+                <div className="ak-wrap" style={{ position: 'relative' }}>
+                  <span className="ak-ic" style={fieldIcon}><AtSign size={18} /></span>
+                  <input id="username" className="ak-field" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} required minLength={3} maxLength={24} placeholder="amamensah" style={field} />
                 </div>
               </div>
             </>
@@ -154,7 +188,10 @@ function AuthForm() {
           {mode !== 'reset' && (
             <div>
               <label htmlFor="email" style={label}>Email</label>
-              <input id="email" type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" style={field} />
+              <div className="ak-wrap" style={{ position: 'relative' }}>
+                <span className="ak-ic" style={fieldIcon}><Mail size={18} /></span>
+                <input id="email" className="ak-field" type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" style={field} />
+              </div>
             </div>
           )}
 
@@ -166,10 +203,11 @@ function AuthForm() {
                   <button type="button" onClick={() => go('forgot')} style={{ marginRight: 4, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 500, color: T.mintText }}>Forgot?</button>
                 )}
               </div>
-              <div style={{ position: 'relative' }}>
-                <input id="password" type={show ? 'text' : 'password'} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder={mode === 'signin' ? 'Your password' : 'At least 6 characters'} style={{ ...field, paddingRight: 58 }} />
+              <div className="ak-wrap" style={{ position: 'relative' }}>
+                <span className="ak-ic" style={fieldIcon}><Lock size={18} /></span>
+                <input id="password" className="ak-field" type={show ? 'text' : 'password'} autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder={mode === 'signin' ? 'Your password' : 'At least 6 characters'} style={{ ...field, paddingRight: 54 }} />
                 <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Hide password' : 'Show password'} style={{ position: 'absolute', right: 6, top: 6, width: 42, height: 42, borderRadius: 12, border: 'none', background: 'transparent', color: T.text2, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon name={show ? 'eye' : 'lock'} size={19} />
+                  {show ? <EyeOff size={19} /> : <Eye size={19} />}
                 </button>
               </div>
             </div>
@@ -178,7 +216,7 @@ function AuthForm() {
           {error && <p role="alert" style={{ margin: 0, padding: '12px 14px', borderRadius: 14, background: 'rgba(255,138,138,0.1)', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.45, color: T.danger }}>{error}</p>}
           {info && <p role="status" style={{ margin: 0, padding: '12px 14px', borderRadius: 14, background: 'rgba(123,227,168,0.1)', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.45, color: T.mintText }}>{info}</p>}
 
-          <button type="submit" disabled={busy} style={{ marginTop: 6, height: 54, borderRadius: 999, border: 'none', cursor: busy ? 'wait' : 'pointer', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 16, fontWeight: 700, opacity: busy ? 0.7 : 1, boxShadow: '0 8px 24px rgba(123,227,168,0.22)' }}>
+          <button type="submit" disabled={busy} style={{ marginTop: 6, height: 54, borderRadius: 999, border: 'none', cursor: busy ? 'wait' : 'pointer', background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 16, fontWeight: 700, opacity: busy ? 0.7 : 1, boxShadow: '0 10px 30px rgba(123,227,168,0.18)' }}>
             {busy ? 'One moment…' : cta}
           </button>
 
