@@ -11,6 +11,7 @@ import FlyerCanvas, { Glow } from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments, MomentsPill } from '@/components/moments/EventMoments';
 import { ytThumb } from '@/lib/moments/match';
+import CustomPlayer from '@/components/moments/CustomPlayer';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
 import { EventTags, BTN } from '@/components/events/CardParts';
 import { hypeTags, eventExcerpt } from '@/lib/events/hype';
@@ -136,14 +137,9 @@ function EventCard({
           : { position: 'absolute', zIndex: 3, top: topInset + 4, bottom: blockH + bottom + 12, left: 0, right: 0, display: 'flex', alignItems: 'center' }}>
           <Glow src={ytThumb(moments[clip].youtube_id, 'hq')} />
           <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', maxHeight: '100%', background: '#000', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' }}>
-            <iframe
-              key={moments[clip].youtube_id}
-              title={moments[clip].title}
-              src={`https://www.youtube.com/embed/${moments[clip].youtube_id}?autoplay=1&playsinline=1&rel=0&modestbranding=1`}
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-              allowFullScreen
-              style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-            />
+            {/* The same player as Moments: our controls, tap to pause, sound button; the next clip follows on */}
+            <CustomPlayer key={moments[clip].youtube_id} youtubeId={moments[clip].youtube_id} title={moments[clip].title} fit="contain" active={active}
+              onEnded={() => { if (clip < moments.length - 1) setClip(clip + 1); else setWatching(false); }} />
           </div>
         </div>
       )}
