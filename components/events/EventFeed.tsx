@@ -19,7 +19,7 @@ import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { type CheckoutTier } from '@/lib/events/tiers';
-import { Heart, Share2 } from 'lucide-react';
+import { Heart, Share2, Mic2 } from 'lucide-react';
 import { isListedEvent } from '@/lib/types';
 import { T, TYPE, RADIUS, FONT, alpha, ambient, glass } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
@@ -69,8 +69,10 @@ const roundBtn: React.CSSProperties = {
 
 /* ── One event, full screen ────────────────────────────────────────── */
 function EventCard({
-  item, active, near, wide, saved, going, onSave, onGoing, onShare, onTickets, topInset,
+  item, active, near, wide, saved, going, onSave, onGoing, onShare, onTickets, topInset, performer,
 }: {
+  /** From a search for an artist: who is performing here */
+  performer?: { name: string; slug: string } | null;
   item: FeedItem; active: boolean; near: boolean; wide: boolean;
   saved: boolean; going: boolean;
   onSave: () => void; onGoing: () => void; onShare: () => void; onTickets: (accent: string) => void;
@@ -153,6 +155,11 @@ function EventCard({
       >
         <span style={{ display: 'flex', pointerEvents: 'auto' }}><MomentsPill list={moments} slug={event.slug} onOpen={() => setWatching(true)} /></span>
 
+        {performer && (
+          <Link href={`/artists/${performer.slug}`} style={{ alignSelf: 'flex-start', pointerEvents: 'auto', display: 'inline-flex', alignItems: 'center', gap: 7, height: 32, padding: '0 13px', borderRadius: 16, background: T.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700, textDecoration: 'none' }}>
+            <Mic2 size={14} strokeWidth={2.4} /> {performer.name} is performing
+          </Link>
+        )}
         <EventTags event={event} accent={a} hype={hype} />
 
         <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6, pointerEvents: 'auto' }}>
@@ -200,8 +207,10 @@ function EventCard({
  * green-black; each card's colour only tints its tags, title glow and main button.
  */
 export default function EventFeed({
-  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel, frameTop = 0, hot = [],
+  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel, frameTop = 0, hot = [], performerFor,
 }: {
+  /** Search for an artist: the artist on each card's bill */
+  performerFor?: (e: GhanaEvent) => { name: string; slug: string } | null;
   items: FeedItem[];
   saved: Set<string>;
   saveLoading?: string | null;
@@ -342,6 +351,7 @@ export default function EventFeed({
           <EventCard
             key={sl.item.event.slug}
             item={sl.item}
+            performer={performerFor?.(sl.item.event) ?? null}
             active={i === active}
             near={Math.abs(i - active) <= 1}
             wide={wide}

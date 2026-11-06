@@ -2,6 +2,9 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef, type CSSProperties } from 'react';
 import Link from 'next/link';
+import { Mic2, ChevronRight } from 'lucide-react';
+import { artistsInQuery, performsAt } from '@/lib/data/artists';
+import { Portrait } from '@/components/artists/parts';
 import Nav from '@/components/layout/Nav';
 import EventFeed from '@/components/events/EventFeed';
 import HotRail, { HOT_RAIL_H } from '@/components/events/HotRail';
@@ -58,7 +61,7 @@ function dayHeading(e: GhanaEvent) {
 const priceText = (e: GhanaEvent) => (e.priceUnknown ? 'Tickets' : e.price === 0 ? 'Free' : `GH₵ ${e.price.toLocaleString()}`);
 
 /** One borderless row in the list view: picture, quiet category, title, time · venue, price. */
-function Row({ event, last }: { event: GhanaEvent; last: boolean }) {
+function Row({ event, last, performer }: { event: GhanaEvent; last: boolean; performer?: { name: string; slug: string } | null }) {
   return (
     <Link
       href={`/events/${event.slug}`}
@@ -71,9 +74,15 @@ function Row({ event, last }: { event: GhanaEvent; last: boolean }) {
         )}
       </span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontFamily: FONT.display, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
-          {event.category}
-        </span>
+        {performer ? (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.mintText }}>
+            <Mic2 size={13} strokeWidth={2.4} /> {performer.name} is performing
+          </span>
+        ) : (
+          <span style={{ fontFamily: FONT.display, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
+            {event.category}
+          </span>
+        )}
         <span style={{ fontFamily: FONT.sans, fontSize: 16, fontWeight: 600, lineHeight: 1.25, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {event.title}
         </span>
@@ -323,14 +332,18 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   );
 
   const headerH = 74;
-  const searchH = searchOpen ? 60 : 0;
+  // Searching an artist: their card under the search box, and "X is performing" on each show they're on
+  const searchArtist = useMemo(() => (filters.search ? artistsInQuery(filters.search)[0] ?? null : null), [filters.search]);
+  const performerFor = useCallback((e: GhanaEvent) => (searchArtist && performsAt(e, searchArtist) ? { name: searchArtist.name, slug: searchArtist.slug } : null), [searchArtist]);
+  const artistShows = searchArtist ? filtered.filter((e) => performsAt(e, searchArtist)).length : 0;
+  const searchH = searchOpen ? 60 + (searchArtist ? 64 : 0) : 0;
   // The Hot rail sits on the list view; the feed keeps its full-height flyers
-  const railH = hotShows.length && view === 'list' ? HOT_RAIL_H : 0;
+  const railH = hotShows.length && view === 'list' && !filters.search ? HOT_RAIL_H : 0;
 
   return (
     <>
       <Nav active="Events" actions={headerActions} />
-      {view === 'list' && <HotRail events={hotShows} top={headerH + searchH} />}
+      {view === 'list' && !filters.search && <HotRail events={hotShows} top={headerH + searchH} />}
 
       {searchOpen && (
         <div style={{ position: 'fixed', zIndex: 195, top: `calc(${headerH}px + env(safe-area-inset-top, 0px))`, left: 16, right: 16, maxWidth: 720, margin: '0 auto' }}>
@@ -348,6 +361,18 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
               <Icon name="close" size={17} />
             </button>
           </label>
+          {searchArtist && (
+            <Link href={`/artists/${searchArtist.slug}`} style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12, height: 56, padding: '0 10px 0 8px', borderRadius: 28, background: 'rgba(9,11,10,0.82)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', textDecoration: 'none' }}>
+              <Portrait name={searchArtist.name} url={searchArtist.image} size={40} ring={artistShows > 0} />
+              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <span style={{ fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, color: T.white }}>{searchArtist.name}</span>
+                <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: artistShows ? T.mintText : T.text2 }}>
+                  {artistShows ? `Performing at ${artistShows} upcoming ${artistShows === 1 ? 'show' : 'shows'}` : 'No upcoming shows yet'}
+                </span>
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text2 }}>Profile <ChevronRight size={15} /></span>
+            </Link>
+          )}
         </div>
       )}
 
@@ -360,7 +385,8 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
           going={going}
           onToggleGoing={toggleGoing}
           topInset={headerH + searchH}
-          hot={hotShows}
+          hot={filters.search ? [] : hotShows}
+          performerFor={searchArtist ? performerFor : undefined}
           onShowAll={filters.when !== 'all' ? () => set('when', 'all') : clear}
           showAllLabel={filters.when !== 'all' ? 'Include past events' : 'Clear filters'}
         />
@@ -395,7 +421,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
                     {g.label}
                   </h2>
                 )}
-                {g.events.map((e, i) => <Row key={e.slug} event={e} last={i === g.events.length - 1} />)}
+                {g.events.map((e, i) => <Row key={e.slug} event={e} last={i === g.events.length - 1} performer={performerFor(e)} />)}
               </section>
             ))
           )}
