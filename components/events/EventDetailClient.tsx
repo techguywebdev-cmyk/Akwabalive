@@ -187,7 +187,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const [r, g, b] = rgb;
   // The flyer's colour mixed into near-black: the hero fades into exactly this, then the wash carries on down
   // The flyer's own deep ground colour, fading into near-black further down
-  const washAt = (k: number) => `rgb(${Math.round(wash[0] * k + 5 * (1 - k))}, ${Math.round(wash[1] * k + 6 * (1 - k))}, ${Math.round(wash[2] * k + 6 * (1 - k))})`;
+  // The flyer's colour, see-through so the app's mint ground shows under it (not a flat black)
+  const washA = (k: number) => `rgba(${wash[0]}, ${wash[1]}, ${wash[2]}, ${k})`;
   const parsed = parseDay(event.date);
   const eventDate = parsed ?? new Date(0);
   const validDate = !!parsed;
@@ -242,7 +243,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       {/* The page washed in the flyer's colour, settling into near-black further down */}
       <span aria-hidden style={{
         position: 'absolute', left: 0, right: 0, top: 0, height: '100%', maxHeight: 2200, pointerEvents: 'none', transition: 'background 900ms ease',
-        background: `linear-gradient(180deg, ${washAt(1)} 0%, ${washAt(0.8)} 25%, ${washAt(0.45)} 55%, ${washAt(0.15)} 82%, rgba(3,8,6,0) 100%)`,
+        background: `radial-gradient(120% 40% at 0% 34%, rgba(123,227,168,0.14) 0%, rgba(123,227,168,0) 70%), radial-gradient(120% 40% at 100% 62%, rgba(45,190,140,0.11) 0%, rgba(45,190,140,0) 70%), linear-gradient(180deg, ${washA(0.9)} 0%, ${washA(0.62)} 25%, ${washA(0.3)} 55%, ${washA(0.08)} 82%, rgba(3,8,6,0) 100%)`,
       }} />
       <Nav
         active="Events"
@@ -296,7 +297,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         )}
         <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{eventBlurb(event, 160)}</p>
         {counts && (counts.seen7d >= 30 || counts.going >= 10) && (
-          <p style={{ margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: '#FFB27A' }}>
+          <p style={{ margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>
             {counts.seen7d >= 30 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Eye size={16} /> {compact(counts.seen7d)} people checked this out this week</span>}
             {counts.going >= 10 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Users size={16} /> {compact(counts.going)} going</span>}
           </p>
