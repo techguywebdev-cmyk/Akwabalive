@@ -34,6 +34,8 @@ type Source = {
   link: RegExp;
   /** Pages under the pattern that are not events */
   skip?: RegExp;
+  /** Sites with a public events feed: drafts straight from it, no pages to read */
+  feed?: () => Promise<ImportDraft[]>;
 };
 
 export const SOURCES: Source[] = [
@@ -58,6 +60,13 @@ export const SOURCES: Source[] = [
     name: 'Eventbrite',
     lists: ['https://www.eventbrite.com/d/ghana--accra/events/', 'https://www.eventbrite.com/d/ghana--kumasi/events/'],
     link: /^https:\/\/www\.eventbrite\.(?:com|co\.uk)\/e\/[a-z0-9-]+-\d{6,}$/i,
+  },
+  {
+    // VeeTickets' site is an app that loads its events from this public feed
+    name: 'VeeTickets',
+    lists: [],
+    link: /^https:\/\/www\.veetickets\.com\/events\/[a-z0-9-]+$/i,
+    feed: () => veeTicketsFeed(),
   },
   {
     name: 'Aya Tickets',
@@ -361,6 +370,67 @@ export function parseEventPage(url: string, html: string, source: string): Impor
   };
 }
 
+/* ── VeeTickets ───────────────────────────────────────────────────────── */
+
+const VEE_FEED = 'https://api.veeticketsupdates.com/api/v1/events';
+
+/** "22:00" → "10:00 PM" */
+function clock(hhmm?: string | null): string {
+  const m = (hhmm || '').match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return 'Time TBA';
+  const h = Number(m[1]);
+  return `${((h + 11) % 12) + 1}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`;
+}
+
+/** Public events only; only the event's own public fields are read (never attendee or organiser account data) */
+async function veeTicketsFeed(): Promise<ImportDraft[]> {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 15000);
+  let rows: any[] = [];
+  try {
+    const res = await fetch(VEE_FEED, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: ctl.signal, cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    rows = (await res.json())?.data ?? [];
+  } finally { clearTimeout(t); }
+  const out: ImportDraft[] = [];
+  for (const e of rows) {
+    if (!e?.isActive || e?.showOnWeb === false || !e?.name || !e?.startDate || !e?.suffix) continue;
+    const address: string = e.location?.address || '';
+    if (!/ghana/i.test(address)) continue;
+    const [lng, lat] = Array.isArray(e.location?.coordinates) ? e.location.coordinates : [0, 0];
+    const geo = lat && lng ? cityFromGeo(lat, lng) : null;
+    const named = detectCity(address);
+    // the address names the town; coordinates are often left at the default (Accra centre)
+    const place = named && !(named.city === 'accra' && geo && geo !== 'accra' && !/accra/i.test(address)) ? named : geo ? { city: geo, area: null } : null;
+    if (!place) continue;
+    const tiers: ImportTier[] = (e.tickets ?? [])
+      .filter((k: any) => k?.isEnabled !== false && k?.showOnWeb !== false && (k?.currency ?? 'GHS') === 'GHS' && typeof k?.price === 'number' && k.price > 0)
+      .map((k: any) => ({ name: String(k.ticketName || 'General').slice(0, 60), price: k.price }));
+    const desc = String(e.description || '').replace(/\r/g, '').trim();
+    const dial = typeof e.ussdCode === 'string' && /^\*\d/.test(e.ussdCode) ? e.ussdCode.trim() : null;
+    const url = `https://www.veetickets.com/events/${e.suffix}`;
+    const venue = address.split(',')[0].trim();
+    out.push({
+      title: String(e.name).trim().slice(0, 140),
+      description: [desc, dial ? `Tickets: dial ${dial}` : ''].filter(Boolean).join('\n\n').slice(0, 1500),
+      date: String(e.startDate).slice(0, 10),
+      time: clock(e.startTime),
+      venue: venue || 'Venue to be announced',
+      area: place.area,
+      address: address || null,
+      city: place.city,
+      lat: lat && !(lat === 5.6037 && lng === -0.187) ? lat : null, lng: lat && !(lat === 5.6037 && lng === -0.187) ? lng : null,
+      image: e.photos?.[0]?.url ?? null,
+      category: guessCategory(`${e.name} ${desc}`),
+      tiers,
+      ticketUrl: url,
+      ticketSource: 'VeeTickets',
+      sourceUrl: url,
+    });
+  }
+  return out;
+}
+
 /* ── Saving ───────────────────────────────────────────────────────────── */
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -407,11 +477,17 @@ export async function runImport(opts: { dryRun?: boolean; max?: number; only?: s
   const report: ImportReport = { dryRun: !!opts.dryRun, sources: [], added: [], duplicates: 0, skipped: [], preview: opts.dryRun ? [] : undefined };
 
   // 1. Event links from every listing page
-  const candidates: { url: string; source: string }[] = [];
+  const candidates: { url: string; source: string; draft?: ImportDraft }[] = [];
   const sources = SOURCES.filter((s) => !opts.only || s.name.toLowerCase() === opts.only.toLowerCase());
   await Promise.all(sources.map(async (s) => {
     const errors: string[] = [];
     const found = new Set<string>();
+    if (s.feed) {
+      try { (await s.feed()).forEach((d) => { if (!found.has(d.sourceUrl)) { found.add(d.sourceUrl); candidates.push({ url: d.sourceUrl, source: s.name, draft: d }); } }); }
+      catch (e: any) { errors.push(`${s.name} feed: ${e?.message ?? 'failed'}`); }
+      report.sources.push({ name: s.name, found: found.size, errors });
+      return;
+    }
     await Promise.all(s.lists.map(async (l) => {
       try { extractLinks(await fetchHtml(l), l, s).forEach((u) => found.add(u)); } catch (e: any) { errors.push(`${l}: ${e?.message ?? 'failed'}`); }
     }));
@@ -439,10 +515,10 @@ export async function runImport(opts: { dryRun?: boolean; max?: number; only?: s
   // 3. Read each new page and queue it for review
   const today = new Date().toISOString().slice(0, 10);
   const horizon = new Date(Date.now() + 240 * 86400000).toISOString().slice(0, 10);
-  await pool(fresh, 6, async ({ url, source }) => {
+  await pool(fresh, 6, async ({ url, source, draft: fed }) => {
     if (Date.now() - started > deadline) { report.skipped.push({ url, reason: 'out of time, next run' }); return; }
-    let draft: ImportDraft | null = null;
-    try { draft = parseEventPage(url, await fetchHtml(url), source); } catch (e: any) { report.skipped.push({ url, reason: e?.message ?? 'fetch failed' }); return; }
+    let draft: ImportDraft | null = fed ?? null;
+    if (!draft) try { draft = parseEventPage(url, await fetchHtml(url), source); } catch (e: any) { report.skipped.push({ url, reason: e?.message ?? 'fetch failed' }); return; }
     if (!draft) { report.skipped.push({ url, reason: 'no title/date or not in Ghana' }); return; }
     if (draft.date < today || draft.date > horizon) { report.skipped.push({ url, reason: `date ${draft.date} out of range` }); return; }
     if (opts.dryRun) { report.preview!.push(draft); return; }
