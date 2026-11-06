@@ -20,7 +20,7 @@ import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import { useEventComments } from '@/hooks/useEventComments';
 import CommentsSheet from '@/components/moments/CommentsSheet';
 import { Portrait } from '@/components/artists/parts';
-import { AtSign, Bookmark, BookmarkCheck, CalendarDays, CalendarPlus, MapPin, Check, ExternalLink, Eye, Globe, Info, Mail, MessageCircle, MessageSquareText, Navigation, Phone, Play, Share2, Shirt, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { ArrowRight, AtSign, Bookmark, BookmarkCheck, CalendarDays, CalendarPlus, MapPin, Check, ExternalLink, Eye, Globe, Info, Mail, MessageCircle, MessageSquareText, Navigation, Phone, Play, Share2, Shirt, ShieldCheck, UserPlus, Users } from 'lucide-react';
 import { eventInfo, hasInfo } from '@/lib/events/contacts';
 import { trackEvent, eventCounts, compact, type EventCounts } from '@/lib/events/track';
 import { TicketsSheet } from '@/components/events/EventActions';
@@ -486,6 +486,11 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
               Tickets are sold by {event.ticketSource || 'the organiser'}, not on Akwaaba. We list the event so you can find it — buy only on the official page.
             </p>
+          )}
+          {listed && (
+            <Link href={`/organisers/claim?event=${encodeURIComponent(event.slug)}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText, textDecoration: 'none' }}>
+              Is this your event? Claim it <ArrowRight size={15} />
+            </Link>
           )}
           {(!listed || tiers.length > 0) && (
             <>

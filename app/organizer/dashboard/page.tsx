@@ -11,6 +11,8 @@ import { Stat, StatusPill, Bar, QuickAction, ghs, card, type EventStatus } from 
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { T, FONT } from '@/lib/thiscene';
+import { eventCounts, compact, type EventCounts } from '@/lib/events/track';
+import { Eye, Users } from 'lucide-react';
 
 type OrgEvent = {
   id: string; title: string; slug: string; date: string; time: string | null; venue: string; status: string;
@@ -22,7 +24,7 @@ type Stats = { event_id: string; tickets: number; people: number; revenue: numbe
 const isPast = (e: OrgEvent) => { const d = parseDay(e.date); return !!d && d.getTime() < new Date(new Date().toDateString()).getTime(); };
 const statusOf = (e: OrgEvent): EventStatus => (e.status === 'pending_review' ? 'review' : e.status !== 'published' ? 'draft' : isPast(e) ? 'ended' : 'live');
 
-function EventRow({ ev, st }: { ev: OrgEvent; st?: Stats }) {
+function EventRow({ ev, st, seen }: { ev: OrgEvent; st?: Stats; seen?: EventCounts }) {
   const d = parseDay(ev.date);
   const hosted = ev.listing_type !== 'listed';
   const capacity = ev.ticket_tiers.reduce((s, t) => s + (t.quantity || 0), 0);
@@ -49,6 +51,12 @@ function EventRow({ ev, st }: { ev: OrgEvent; st?: Stats }) {
         ) : (
           <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hosted ? 'No ticket types yet' : `Listed · tickets on ${ev.ticket_source || 'another site'}`}</span>
         )}
+        {seen && (seen.seen7d > 0 || seen.going > 0) && (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 600, color: T.mintText }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Eye size={13} /> {compact(seen.seen7d)} this week</span>
+            {seen.going > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Users size={13} /> {compact(seen.going)} going</span>}
+          </span>
+        )}
       </span>
       <span style={{ display: 'flex', alignItems: 'center', paddingRight: 12, color: T.text3 }}><ChevronRight size={20} /></span>
     </Link>
@@ -60,6 +68,7 @@ export default function OrganizerDashboard() {
   const supabase = useMemo(() => createClient(), []);
   const [events, setEvents] = useState<OrgEvent[]>([]);
   const [stats, setStats] = useState<Record<string, Stats>>({});
+  const [seen, setSeen] = useState<Record<string, EventCounts>>({});
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'upcoming' | 'past' | 'drafts'>('upcoming');
 
@@ -72,6 +81,8 @@ export default function OrganizerDashboard() {
         supabase.rpc('organiser_event_stats'),
       ]);
       setEvents((data ?? []) as OrgEvent[]);
+      const slugs = ((data ?? []) as OrgEvent[]).filter((e) => e.status === 'published').map((e) => e.slug).slice(0, 60);
+      if (slugs.length) eventCounts(slugs).then(setSeen).catch(() => {});
       if (Array.isArray(s)) setStats(Object.fromEntries((s as Stats[]).map((x) => [x.event_id, x])));
       setLoading(false);
     })();
@@ -105,12 +116,15 @@ export default function OrganizerDashboard() {
           <Stat label="Money in" value={ghs(revenue)} note={revenue > 0 ? 'Before Paystack fees' : undefined} />
           <Stat label="Checked in" value={checked.toLocaleString()} note={sold > 0 ? `${Math.round((checked / sold) * 100)}% of tickets` : undefined} />
           <Stat label="Live events" value={String(live.length)} />
+          <Stat label="People who saw them" value={compact(Object.values(seen).reduce((n, c) => n + c.seen7d, 0))} note="This week" />
+          <Stat label="Going" value={compact(Object.values(seen).reduce((n, c) => n + c.going, 0))} note="Said they’re going" />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, marginTop: 14 }}>
           <QuickAction primary href="/organizer/events/new" icon={<Plus size={22} strokeWidth={2.2} />} label="Create event" />
           <QuickAction href="/organizer/scan" icon={<ScanLine size={22} strokeWidth={2} />} label="Scan tickets" />
           <QuickAction href="/organizer/events/from-link" icon={<Link2 size={22} strokeWidth={2} />} label="Add from a link" />
+          <QuickAction href="/organisers/claim" icon={<Users size={22} strokeWidth={2} />} label="Claim an event" />
           <QuickAction href="/organizer/review" icon={<Inbox size={22} strokeWidth={2} />} label="Review queue" badge={review} />
           <QuickAction href="/organizer/moments/post" icon={<Video size={22} strokeWidth={2} />} label="Post a moment" />
           <QuickAction href="/organizer/moments" icon={<Clapperboard size={22} strokeWidth={2} />} label="Moments review" />
@@ -118,7 +132,7 @@ export default function OrganizerDashboard() {
 
         <div role="tablist" aria-label="Your events" style={{ display: 'inline-flex', marginTop: 30, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {(['upcoming', 'past', 'drafts'] as const).map((k) => (
-            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 38, padding: '0 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: tab === k ? T.white : 'transparent', color: tab === k ? T.onMint : T.text2 }}>
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 38, padding: '0 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: tab === k ? T.mint : 'transparent', color: tab === k ? T.onMint : T.text2 }}>
               {k === 'upcoming' ? 'Upcoming' : k === 'past' ? 'Past' : 'Drafts & review'}{lists[k].length ? ` · ${lists[k].length}` : ''}
             </button>
           ))}
@@ -126,7 +140,7 @@ export default function OrganizerDashboard() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
           {loading ? [0, 1, 2].map((i) => <div key={i} style={{ ...card, height: 96 }} />)
-            : shown.length ? shown.map((ev) => <EventRow key={ev.id} ev={ev} st={stats[ev.id]} />)
+            : shown.length ? shown.map((ev) => <EventRow key={ev.id} ev={ev} st={stats[ev.id]} seen={seen[ev.slug]} />)
             : (
               <div style={{ ...card, padding: '36px 20px', textAlign: 'center' }}>
                 <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 19, fontWeight: 700, color: T.white }}>{tab === 'upcoming' ? 'No live events' : tab === 'past' ? 'No past events yet' : 'No drafts'}</p>

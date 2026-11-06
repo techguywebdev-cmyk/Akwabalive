@@ -9,6 +9,7 @@ import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import LineupUpdates from '@/components/organizer/LineupUpdates';
 import CampusLeads from '@/components/organizer/CampusLeads';
+import ClaimsReview from '@/components/organizer/ClaimsReview';
 import { card, ghs } from '@/components/organizer/ui';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
@@ -83,7 +84,7 @@ export default function ReviewQueuePage() {
     if (!user) return;
     const { data, error: e } = await supabase.from('events')
       .select('id, title, date, time, venue, city, image_url, source_url, ticket_url, ticket_source, description, ticket_tiers(name, price, is_available)')
-      .eq('organizer_id', user.id).eq('status', 'pending_review').order('date', { ascending: true });
+      .eq('status', 'pending_review').order('date', { ascending: true }); // every organiser's (admin can read all)
     if (e) setError(e.message); else setItems((data ?? []) as Item[]);
     setLoading(false);
   }, [user, supabase]);
@@ -98,7 +99,7 @@ export default function ReviewQueuePage() {
 
   async function setStatus(id: string, status: 'published' | 'draft', msg: string) {
     setBusy(id); setError('');
-    const { error: e } = await supabase.from('events').update({ status }).eq('id', id).eq('organizer_id', user!.id);
+    const { error: e } = await supabase.from('events').update({ status }).eq('id', id);
     setBusy(null);
     if (e) setError(e.message); else { setItems((l) => l.filter((x) => x.id !== id)); flash(msg); }
   }
@@ -110,7 +111,7 @@ export default function ReviewQueuePage() {
   }
   async function approveAll() {
     setError('');
-    const { error: e } = await supabase.from('events').update({ status: 'published' }).in('id', items.map((x) => x.id)).eq('organizer_id', user!.id);
+    const { error: e } = await supabase.from('events').update({ status: 'published' }).in('id', items.map((x) => x.id));
     if (e) setError(e.message); else { flash(`${items.length} events published`); setItems([]); }
   }
   async function importNow() {
@@ -156,6 +157,7 @@ export default function ReviewQueuePage() {
         </div>
         {(note || error) && <p role={error ? 'alert' : 'status'} style={{ margin: '12px 0 0', padding: '10px 14px', borderRadius: 14, background: error ? 'rgba(255,138,138,0.12)' : 'rgba(123,227,168,0.12)', color: error ? T.danger : T.mintText, fontFamily: FONT.sans, fontSize: 14 }}>{error || note}</p>}
 
+        <ClaimsReview />
         <LineupUpdates />
         <CampusLeads />
 

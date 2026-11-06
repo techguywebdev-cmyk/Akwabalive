@@ -329,7 +329,7 @@ export default function Nav({
             )}
 
             <div style={{ ...stagger(6), marginTop: 'auto', paddingTop: 28, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <Link href="/organizer/events/new" onClick={() => setMenuOpen(false)} style={{ height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+              <Link href="/organisers" onClick={() => setMenuOpen(false)} style={{ height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: T.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
                 <Icon name="plus" size={18} strokeWidth={2} /> List an event
               </Link>
               {user ? (
