@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { T, FONT, GRAD } from '@/lib/thiscene';
+import { T, FONT, GRAD, GROUND } from '@/lib/thiscene';
 import { Icon, PAGE_ICONS, type IconName } from '@/components/ui/Icon';
 import Wordmark from '@/components/brand/Wordmark';
 
@@ -270,8 +270,8 @@ export default function Nav({
             style={{
               position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(400px, 88vw)', display: 'flex', flexDirection: 'column',
               padding: 'calc(14px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))',
-              background: 'radial-gradient(90% 30% at 0% 0%, rgba(40,130,85,0.16) 0%, rgba(40,130,85,0) 80%), linear-gradient(180deg, #0B0F0D 0%, #070908 55%, #050606 100%)',
-              borderRight: '1px solid rgba(255,255,255,0.08)', boxShadow: '30px 0 80px rgba(0,0,0,0.5)',
+              background: GROUND,
+              boxShadow: '30px 0 80px rgba(0,0,0,0.5)',
               transform: menuShown ? 'translateX(0)' : 'translateX(-104%)', transition: 'transform 420ms cubic-bezier(0.22,1,0.36,1)',
               overflowY: 'auto',
             }}
@@ -283,7 +283,7 @@ export default function Nav({
 
             {user && (
               <Link href={profileHref} onClick={() => setMenuOpen(false)} style={{ ...stagger(0), display: 'flex', alignItems: 'center', gap: 12, marginTop: 28, textDecoration: 'none' }}>
-                <span style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', background: '#26302B', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
+                <span style={{ width: 44, height: 44, borderRadius: 14, overflow: 'hidden', background: 'rgba(123,227,168,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
                   {profile?.avatar_url
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -305,11 +305,11 @@ export default function Nav({
                     href={l.href}
                     onClick={() => setMenuOpen(false)}
                     aria-current={on ? 'page' : undefined}
-                    style={{ ...stagger(i + 1), display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', textDecoration: 'none', fontFamily: FONT.display, fontSize: 34, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, color: on ? T.mint : T.white }}
+                    style={{ ...stagger(i + 1), display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', textDecoration: 'none', fontFamily: FONT.display, fontSize: 34, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, color: on ? T.mint : T.white, ...(on ? { background: GRAD.mint, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' } : {}) }}
                   >
                     {l.label}
                     {on
-                      ? <span aria-hidden style={{ width: 8, height: 8, borderRadius: 4, background: T.mint, boxShadow: `0 0 12px ${T.mint}` }} />
+                      ? <span aria-hidden style={{ width: 8, height: 8, borderRadius: 2, background: T.mint, boxShadow: `0 0 12px ${T.mint}` }} />
                       : <Icon name="arrowRight" size={22} color="rgba(255,255,255,0.35)" />}
                   </Link>
                 );
@@ -317,7 +317,7 @@ export default function Nav({
             </div>
 
             {accountLinks.length > 0 && (
-              <div style={{ ...stagger(5), marginTop: 28, paddingTop: 20, borderTop: `1px solid ${T.hairline}` }}>
+              <div style={{ ...stagger(5), marginTop: 30 }}>
                 <p style={{ margin: '0 0 6px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Your Akwaaba</p>
                 {accountLinks.map((l) => (
                   <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 46, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 16, fontWeight: 500, color: active === l.label ? T.mint : 'rgba(255,255,255,0.82)' }}>
