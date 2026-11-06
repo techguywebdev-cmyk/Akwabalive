@@ -222,7 +222,7 @@ function AuthForm() {
 
           {mode === 'signup' && (
             <p style={{ margin: 0, textAlign: 'center', fontFamily: FONT.sans, fontSize: 12.5, lineHeight: 1.5, color: T.text3 }}>
-              By signing up you agree to Akwaaba’s terms and privacy policy.
+              By signing up you agree to Akwaaba’s <Link href="/terms" style={{ color: T.text2 }}>terms</Link> and <Link href="/privacy" style={{ color: T.text2 }}>privacy policy</Link>.
             </p>
           )}
           {(mode === 'forgot' || mode === 'reset') && (
