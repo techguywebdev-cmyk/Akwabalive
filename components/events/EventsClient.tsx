@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect, useRef, type CSSProperties }
 import Link from 'next/link';
 import { Mic2, Search, X, ArrowUpRight } from 'lucide-react';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
+import ShowNudge from '@/components/events/ShowNudge';
 import { Avatar as FriendAvatar, sentence as friendSentence, type Friend } from '@/components/social/FriendsStrip';
 import { artistsInQuery, performsAt } from '@/lib/data/artists';
 import { Portrait } from '@/components/artists/parts';
@@ -413,6 +414,8 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
         </div>
       )}
 
+      {!searchOpen && view === 'feed' && <ShowNudge events={events} compact />}
+
       {view === 'feed' ? (
         <EventFeed
           items={items}
@@ -430,6 +433,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
         />
       ) : (
         <main style={{ maxWidth: 760, margin: '0 auto', padding: `calc(${headerH + searchH + railH + 10}px + env(safe-area-inset-top, 0px)) 20px 40px` }}>
+          {!filters.search && <ShowNudge events={events} />}
           <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(36px, 7vw, 52px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', color: T.white }}>
             Events
           </h1>
