@@ -24,20 +24,26 @@ jobs:
           if [ "$code" = "401" ]; then echo "::error::The site rejected the key: FRESHNESS_KEY in GitHub and in Vercel must be the same (16+ characters), and Vercel needs a redeploy after changing it"; exit 1; fi
           echo "Site accepted the key (HTTP $code)"
       - name: Line-up news (official sites + press)
-        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/watch" | head -c 2000; echo
+        run: |
+          curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/watch" | head -c 2000; echo
         continue-on-error: true
       - name: Campus nights (SRC weeks, hall weeks, artiste nights)
-        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/campus" | head -c 2000; echo
+        run: |
+          curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/campus" | head -c 2000; echo
         continue-on-error: true
       - name: Ticket-page info (dial codes, organiser contacts)
-        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/listing-info" | head -c 2000; echo
+        run: |
+          curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/listing-info" | head -c 2000; echo
         continue-on-error: true
       - name: Read flyers (contacts, dress code, gate price)
-        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/read-flyers" | head -c 2000; echo
+        run: |
+          curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/read-flyers" | head -c 2000; echo
         continue-on-error: true
       - name: New events from ticket sites
-        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/cron/import-events" | head -c 2000; echo
+        run: |
+          curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/cron/import-events" | head -c 2000; echo
         continue-on-error: true
       - name: Discover events
-        run: curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/cron/discover-events" | head -c 2000; echo
+        run: |
+          curl -sS --fail-with-body --max-time 90 -H "Authorization: Bearer $KEY" "$SITE/api/events/cron/discover-events" | head -c 2000; echo
         continue-on-error: true
