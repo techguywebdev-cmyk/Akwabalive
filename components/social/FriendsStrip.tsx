@@ -24,7 +24,7 @@ function load(slug: string, token: string) {
 
 const COLORS = ['#26302B', '#3B2F5C', '#5C3A1F', '#1F3F5C', '#5C1F3A'];
 
-function Avatar({ f, size, ring }: { f: Friend; size: number; ring: string }) {
+export function Avatar({ f, size, ring }: { f: Friend; size: number; ring: string }) {
   return (
     <span style={{ width: size, height: size, borderRadius: size / 2, flexShrink: 0, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: COLORS[f.id.charCodeAt(0) % COLORS.length], color: 'rgba(255,255,255,0.9)', fontFamily: FONT.sans, fontSize: size * 0.38, fontWeight: 600, boxShadow: `0 0 0 2px ${ring}` }}>
       {f.avatar
@@ -35,7 +35,7 @@ function Avatar({ f, size, ring }: { f: Friend; size: number; ring: string }) {
   );
 }
 
-function sentence(friends: Friend[]) {
+export function sentence(friends: Friend[]) {
   const ticketed = friends.filter((f) => f.hasTicket);
   const list = ticketed.length ? ticketed : friends;
   const first = list[0]?.name.split(' ')[0];

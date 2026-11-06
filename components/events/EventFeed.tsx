@@ -207,8 +207,10 @@ function EventCard({
  * green-black; each card's colour only tints its tags, title glow and main button.
  */
 export default function EventFeed({
-  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel, frameTop = 0, hot = [], performerFor,
+  items, saved, onToggleSave, going, onToggleGoing, topInset, onShowAll, showAllLabel, frameTop = 0, hot = [], performerFor, friendPlans,
 }: {
+  /** Upcoming shows people you follow are going to (with who), for the friends screen after the 2nd card */
+  friendPlans?: { events: GhanaEvent[]; by: Record<string, import('@/components/social/FriendsStrip').Friend[]> } | null;
   /** Search for an artist: the artist on each card's bill */
   performerFor?: (e: GhanaEvent) => { name: string; slug: string } | null;
   items: FeedItem[];
@@ -235,15 +237,17 @@ export default function EventFeed({
   const [checkout, setCheckout] = useState<{ event: GhanaEvent; tiers: CheckoutTier[] } | null>(null);
   const hasItems = items.length > 0;
   // Event cards with the Hot carousel screen woven in
-  type Slide = { kind: 'event'; item: FeedItem } | { kind: 'hot'; key: string };
+  type Slide = { kind: 'event'; item: FeedItem } | { kind: 'hot'; key: string } | { kind: 'friends'; key: string };
+  const friendCount = friendPlans?.events.length ?? 0;
   const slides = useMemo<Slide[]>(() => {
     const out: Slide[] = [];
     items.forEach((item, i) => {
       out.push({ kind: 'event', item });
+      if (friendCount > 0 && i === 1 && i < items.length - 1) out.push({ kind: 'friends', key: 'friends' });
       if (hot.length >= 3 && (i === 2 || (i > 2 && (i - 2) % 6 === 0)) && i < items.length - 1) out.push({ kind: 'hot', key: `hot-${i}` });
     });
     return out;
-  }, [items, hot.length]);
+  }, [items, hot.length, friendCount]);
   const eventAt = (i: number) => { const s = slides[i]; return s && s.kind === 'event' ? s.item : undefined; };
 
   useEffect(() => {
@@ -345,8 +349,8 @@ export default function EventFeed({
         className="no-scrollbar"
         style={{ position: 'fixed', top: frameTop ? `calc(${frameTop}px + env(safe-area-inset-top, 0px))` : 0, left: 0, right: 0, bottom: 0, zIndex: 40, overflowY: 'auto', overflowX: 'hidden', scrollSnapType: 'y mandatory', overscrollBehavior: 'contain', background: T.bg }}
       >
-        {slides.map((sl, i) => sl.kind === 'hot' ? (
-          <HotCarousel key={sl.key} events={hot} topInset={topInset} active={i === active} onNext={() => scroller.current?.scrollBy({ top: scroller.current.clientHeight, behavior: 'smooth' })} />
+        {slides.map((sl, i) => sl.kind === 'hot' || sl.kind === 'friends' ? (
+          <HotCarousel key={sl.key} events={sl.kind === 'friends' ? friendPlans!.events : hot} friends={sl.kind === 'friends' ? friendPlans!.by : undefined} topInset={topInset} active={i === active} onNext={() => scroller.current?.scrollBy({ top: scroller.current.clientHeight, behavior: 'smooth' })} />
         ) : (
           <EventCard
             key={sl.item.event.slug}
