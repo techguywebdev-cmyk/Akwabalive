@@ -147,8 +147,8 @@ export const BTN = {
   ghost: {
     background: GRAD.glass,
     color: T.white,
-    border: '1px solid rgba(255,255,255,0.14)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.14), 0 8px 24px -12px rgba(0,0,0,0.6)',
+    border: 'none',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 8px 24px -12px rgba(0,0,0,0.6)',
     backdropFilter: BLUR,
     WebkitBackdropFilter: BLUR,
     fontFamily: FONT.display,
@@ -157,4 +157,5 @@ export const BTN = {
 } satisfies Record<string, CSSProperties>;
 
 /** A 1px light-catching border around anything: wrap the child in a padded span with this background */
+/** @deprecated Leo doesn't want bordered designs; kept for reference */
 export const ringed = (radius: number, bg: string = GRAD.edge): CSSProperties => ({ padding: 1, borderRadius: radius, background: bg });
