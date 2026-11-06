@@ -202,7 +202,7 @@ function EventCard({
           </Link>
         )}
         <span style={{ pointerEvents: 'auto' }}>
-          <EventTags event={event} accent={a} hype={hype} extra={watching ? (
+          <EventTags event={event} accent={a} hype={hype} max={watching ? 1 : moments.length ? 2 : undefined} extra={watching ? (
             <button type="button" onClick={() => setWatching(false)} style={{ ...chip, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(3,10,6,0.5)', color: T.white }}>
               <ImageIcon size={14} strokeWidth={2.2} /> Flyer
             </button>

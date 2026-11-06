@@ -18,13 +18,28 @@ export function seriesKey(title: string): string | null {
     .filter((w) => w.length > 3)[0] ?? null;
 }
 
-/** Videos for this event: its own first, then earlier editions of the same series; newest first */
+/** An event or series name boiled down to what makes it itself: "BHIM Festival 2026" → "bhim", "Tidal Rave Festival 2026" → "tidal rave" */
+const NOISE = /\b(?:(?:19|20)\d{2}|\d+(?:st|nd|rd|th)|edition|the|festival|fest|concert|live|in|at|of|and|x|tour|ghana|accra|kumasi|tema|takoradi|tamale|cape coast|london|uk|usa|melbourne|sydney|australia|edition)\b/g;
+export function seriesName(t: string | null | undefined): string {
+  return (t ?? '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s]/g, ' ').replace(NOISE, ' ').replace(/\s+/g, ' ').trim();
+}
+/** Names too plain to tie two nights together on their own ("All White Party" isn't one series) */
+const GENERIC = /^(?:(?:all )?(?:white|black|red|pink|neon|glow)(?: (?:party|affair|night))?|party|night|rave|brunch|after party|pool party|beach party|day party|hangout|jam|vibes|homecoming|experience|show|live show|turn up|turnup)$/;
+
+/**
+ * Videos for this event: its own first, then earlier editions of the same series (newest first).
+ * Earlier editions only when the clip's event is the same series by name ("BHIM Festival" ↔ "BHIM Festival 2026",
+ * "Rapperholic UK" ↔ "Rapperholic 2026"), never because a word happens to appear in a clip title.
+ */
 export function momentsForEvent(event: { slug: string; title: string }, all: Moment[]): Moment[] {
-  const key = seriesKey(event.title);
+  const name = seriesName(event.title);
   const own = all.filter((m) => m.event_slug === event.slug);
-  const series = key
-    ? all.filter((m) => m.event_slug !== event.slug && [m.event_name, m.title, m.event_slug].some((s) => s?.toLowerCase().includes(key)))
-    : [];
+  const sameSeries = (m: Moment) => {
+    const n = seriesName(m.event_name);
+    if (!n || !name || n.length < 4 || GENERIC.test(n) || GENERIC.test(name)) return false;
+    return n === name || name.startsWith(`${n} `) || n.startsWith(`${name} `);
+  };
+  const series = all.filter((m) => m.event_slug !== event.slug && sameSeries(m));
   const byYear = (a: Moment, b: Moment) => (b.year ?? 0) - (a.year ?? 0);
   return [...own.sort(byYear), ...series.sort(byYear)];
 }

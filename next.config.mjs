@@ -9,6 +9,8 @@ const nextConfig = {
     ],
   },
   experimental: {
+    // Pages you've opened (and links prefetched in view) stay in memory: Back and re-opening are instant
+    staleTimes: { dynamic: 180, static: 600 },
     // Flyer OCR runs on the server: keep tesseract as a real package and ship its worker + wasm files
     serverComponentsExternalPackages: ['tesseract.js', 'tesseract.js-core'],
     outputFileTracingIncludes: {

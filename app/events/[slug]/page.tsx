@@ -3,14 +3,19 @@ import { createClient } from '@supabase/supabase-js';
 import Footer from '@/components/layout/Footer';
 import EventDetailClient from '@/components/events/EventDetailClient';
 import { events as staticEvents } from '@/lib/data/events';
-import { fetchEventBySlug, fetchPublishedEvents, supabaseToGhanaEvent } from '@/lib/supabase/events';
+import { fetchEventBySlug, supabaseToGhanaEvent } from '@/lib/supabase/events';
 import type { GhanaEvent } from '@/lib/types';
 import { shareMeta } from '@/lib/og';
+import { momentsForEvent } from '@/lib/moments/match';
+import type { Moment } from '@/components/moments/types';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
+// Event pages are kept for a minute and refreshed in the background, so they open instantly (and can be prefetched)
+export const revalidate = 60;
+const FRESH = 60;
+/** Built the first time someone opens each event, then served from cache */
+export async function generateStaticParams() { return []; }
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const staticEvent = staticEvents.find(e => e.slug === params.slug);
@@ -20,7 +25,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       description: `${staticEvent.dateLabel} · ${staticEvent.venue} · ${staticEvent.price === 0 ? 'Free entry' : `From ₵${staticEvent.price}`}`,
     };
   }
-  const dbEvent = await fetchEventBySlug(params.slug);
+  const dbEvent = await fetchEventBySlug(params.slug, FRESH);
   if (dbEvent) {
     const e = supabaseToGhanaEvent(dbEvent);
     const price = e.priceUnknown ? 'Tickets on Akwaaba' : e.price === 0 ? 'Free entry' : `From GH₵ ${e.price.toLocaleString()}`;
@@ -35,56 +40,25 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   return { title: 'Event not found — Akwaaba' };
 }
 
-async function findSeriesMoment(title: string): Promise<string | null> {
+/** The latest clip from an earlier edition of the same series (same rules as the feed), for "Watch the last edition" */
+async function findSeriesMoment(event: { slug: string; title: string }): Promise<string | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
-
-  const series = title
-    .toLowerCase()
-    .replace(/\b(20)?\d{2}\b/g, '')
-    .replace(/\b(kumasi|accra|live|concert|festival|edition|the|melbourne|sydney|australia)\b/g, '')
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .trim()
-    .split(/\s+/)
-    .filter((w) => w.length > 3)[0];
-
-  if (!series) return null;
-
   try {
-    const supabase = createClient(url, key);
-    const { data } = await supabase
-      .from('moments')
-      .select('id')
-      .eq('status', 'live')
-      .or(`event_name.ilike.%${series}%,title.ilike.%${series}%,event_slug.ilike.%${series}%`)
-      .order('year', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    return data?.id ?? null;
+    const supabase = createClient(url, key, { global: { fetch: (i, o) => fetch(i, { ...o, next: { revalidate: FRESH } }) } });
+    const { data } = await supabase.from('moments').select('id, event_name, event_slug, year, title, youtube_id').eq('status', 'live').order('year', { ascending: false }).limit(600);
+    return momentsForEvent(event, (data ?? []) as unknown as Moment[])[0]?.id ?? null;
   } catch {
     return null;
   }
 }
 
-/** Real upcoming events like this one: same kind of event first, then same city, soonest first */
-async function relatedEvents(current: { slug: string; city: string; category: string }): Promise<GhanaEvent[]> {
-  const today = new Date().toISOString().slice(0, 10);
-  const all = (await fetchPublishedEvents()).map((e) => supabaseToGhanaEvent(e));
-  return all
-    .filter((e) => e.slug !== current.slug && e.date >= today && e.image)
-    .map((e) => ({ e, score: (e.category === current.category ? 2 : 0) + (e.city === current.city ? 1 : 0) }))
-    .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score || a.e.date.localeCompare(b.e.date))
-    .slice(0, 8)
-    .map((x) => x.e);
-}
-
 export default async function EventPage({ params }: { params: { slug: string } }) {
   const staticEvent = staticEvents.find(e => e.slug === params.slug);
   if (staticEvent) {
-    const related = await relatedEvents(staticEvent);
-    const seriesMomentId = await findSeriesMoment(staticEvent.title);
+    const seriesMomentId = await findSeriesMoment(staticEvent);
+    const related: GhanaEvent[] = [];
     return (
       <div style={{ background: 'transparent', minHeight: '100vh' }}>
         <EventDetailClient event={staticEvent} related={related} seriesMomentId={seriesMomentId} />
@@ -94,7 +68,7 @@ export default async function EventPage({ params }: { params: { slug: string } }
     );
   }
 
-  const dbEvent = await fetchEventBySlug(params.slug);
+  const dbEvent = await fetchEventBySlug(params.slug, FRESH);
   if (!dbEvent) notFound();
 
   // Shared mapper — includes promoVideoUrl, isFeatured, listingType, etc.
@@ -106,7 +80,7 @@ export default async function EventPage({ params }: { params: { slug: string } }
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       if (url && key) {
-        const sb = createClient(url, key);
+        const sb = createClient(url, key, { global: { fetch: (i, o) => fetch(i, { ...o, next: { revalidate: FRESH } }) } });
         const { data: org } = await sb
           .from('profiles')
           .select('id, username, full_name, avatar_url')
@@ -127,8 +101,8 @@ export default async function EventPage({ params }: { params: { slug: string } }
     }
   }
 
-  const related = await relatedEvents(event);
-  const seriesMomentId = await findSeriesMoment(event.title);
+  const seriesMomentId = await findSeriesMoment(event);
+  const related: GhanaEvent[] = [];
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
