@@ -5,7 +5,7 @@ import { T, FONT } from '@/lib/thiscene';
 const LINKS = [
   { label: 'Events', href: '/events' },
   { label: 'Moments', href: '/moments' },
-  { label: 'List an event', href: '/organizer/events/new' },
+  { label: 'For organisers', href: '/organisers' },
   { label: 'Privacy', href: '/privacy' },
   { label: 'Terms', href: '/terms' },
 ];

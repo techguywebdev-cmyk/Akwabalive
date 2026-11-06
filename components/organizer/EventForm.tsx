@@ -239,8 +239,11 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
       }
 
       if (mode === 'create') { router.push(`/organizer/events/${id}/manage`); return; }
-      set('status', target);
-      setSaved(target === 'published' ? 'Saved and live' : 'Saved');
+      // A first event goes to review before it's live (the database decides): show what actually happened
+      const { data: now } = await supabase.from('events').select('status').eq('id', id).single();
+      const status = (now?.status as string) ?? target;
+      set('status', status);
+      setSaved(status === 'published' ? 'Saved and live' : status === 'pending_review' ? 'Sent for review: we’ll check it and put it live, usually within a day' : 'Saved');
       setTimeout(() => setSaved(''), 2500);
       // reload tier ids for newly added ones
       const { data: fresh } = await supabase.from('ticket_tiers').select('id, name, price, quantity, sold, description').eq('event_id', id);
