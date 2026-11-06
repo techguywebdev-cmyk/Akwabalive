@@ -165,7 +165,7 @@ export default function RatingSection({ slug, title, past }: { slug: string; tit
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '3px 0' }}>
                 <span style={{ width: 10, fontFamily: FONT.sans, fontSize: 12, color: T.text3, textAlign: 'right' }}>{5 - i}</span>
                 <span style={{ flex: 1, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                  <span style={{ display: 'block', height: '100%', width: `${count ? (n / count) * 100 : 0}%`, borderRadius: 3, background: '#F5C451' }} />
+                  <span style={{ display: 'block', height: '100%', width: `${count ? (n / count) * 100 : 0}%`, borderRadius: 3, background: '#7BE3A8' }} />
                 </span>
               </div>
             ))}

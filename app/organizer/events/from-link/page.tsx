@@ -213,7 +213,7 @@ export default function FromLinkPage() {
         )}
 
         {notes.length > 0 && (
-          <div style={{ ...card, marginBottom: 18, background: 'rgba(255,209,102,0.08)', borderColor: 'rgba(255,209,102,0.2)' }}>
+          <div style={{ ...card, marginBottom: 18, background: 'rgba(123,227,168,0.08)' }}>
             {notes.map(n => <p key={n} style={{ margin: '0 0 6px', fontFamily: FONT.sans, fontSize: 14, color: T.text }}>{n}</p>)}
           </div>
         )}

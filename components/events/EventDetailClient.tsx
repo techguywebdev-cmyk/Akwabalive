@@ -233,7 +233,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const pillBtn = (on: boolean): CSSProperties => ({ ...roundBtn(on), width: 'auto', padding: '0 16px', gap: 7, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 });
   const primary: CSSProperties = {
     height: 52, padding: '0 28px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    color: T.onMint, background: T.mint, border: 'none', boxShadow: '0 8px 24px rgba(123,227,168,0.22)',
+    color: T.onMint, background: GRAD.mint, border: 'none', boxShadow: '0 8px 24px rgba(123,227,168,0.22)',
     fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
   };
 

@@ -387,7 +387,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
             {(!live || mode === 'create') && (
               <button type="button" disabled={!!busy} onClick={() => save('draft')} style={{ flex: 1, height: 54, borderRadius: 999, cursor: 'pointer', background: 'rgba(255,255,255,0.08)', border: 'none', color: T.white, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700 }}>{busy === 'draft' ? 'Saving…' : 'Save draft'}</button>
             )}
-            <button type="button" disabled={!!busy} onClick={() => save('published')} style={{ flex: 1.4, height: 54, borderRadius: 999, cursor: 'pointer', background: T.mint, border: 'none', color: T.onMint, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, boxShadow: '0 8px 24px rgba(123,227,168,0.22)' }}>{busy === 'published' ? 'Saving…' : live ? 'Save changes' : 'Publish'}</button>
+            <button type="button" disabled={!!busy} onClick={() => save('published')} style={{ flex: 1.4, height: 54, borderRadius: 999, cursor: 'pointer', background: GRAD.mint, border: 'none', color: T.onMint, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, boxShadow: '0 8px 24px rgba(123,227,168,0.22)' }}>{busy === 'published' ? 'Saving…' : live ? 'Save changes' : 'Publish'}</button>
           </div>
         </div>
       </div>

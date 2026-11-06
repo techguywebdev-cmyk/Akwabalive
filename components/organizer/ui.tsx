@@ -2,7 +2,7 @@
 
 import type { CSSProperties, ReactNode } from 'react';
 import Link from 'next/link';
-import { T, FONT, alpha } from '@/lib/thiscene';
+import { T, FONT, alpha, GRAD } from '@/lib/thiscene';
 
 /** Shared pieces for the organiser pages, in the app's green design. */
 
@@ -22,7 +22,7 @@ export type EventStatus = 'live' | 'draft' | 'review' | 'ended';
 const STATUS: Record<EventStatus, { label: string; color: string }> = {
   live: { label: 'Live', color: T.mint },
   draft: { label: 'Draft', color: 'rgba(255,255,255,0.6)' },
-  review: { label: 'In review', color: '#F5C451' },
+  review: { label: 'In review', color: '#8FDCEB' },
   ended: { label: 'Ended', color: 'rgba(255,255,255,0.45)' },
 };
 export function StatusPill({ status }: { status: EventStatus }) {
@@ -46,10 +46,10 @@ export function Bar({ value, max, color = T.mint }: { value: number; max: number
 
 export function QuickAction({ href, icon, label, badge, primary }: { href: string; icon: ReactNode; label: string; badge?: number; primary?: boolean }) {
   return (
-    <Link href={href} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, padding: 14, minHeight: 92, borderRadius: 20, textDecoration: 'none', boxSizing: 'border-box', background: primary ? T.mint : 'rgba(255,255,255,0.06)', border: 'none', color: primary ? T.onMint : T.white }}>
+    <Link href={href} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, padding: 14, minHeight: 92, borderRadius: 20, textDecoration: 'none', boxSizing: 'border-box', background: primary ? GRAD.mint : 'rgba(255,255,255,0.06)', border: 'none', color: primary ? T.onMint : T.white }}>
       <span style={{ display: 'flex' }}>{icon}</span>
       <span style={{ fontFamily: FONT.display, fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1.15 }}>{label}</span>
-      {!!badge && <span style={{ position: 'absolute', top: 12, right: 12, minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: '#F5C451', color: '#1A1300', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>{badge}</span>}
+      {!!badge && <span style={{ position: 'absolute', top: 12, right: 12, minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11, background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>{badge}</span>}
     </Link>
   );
 }
