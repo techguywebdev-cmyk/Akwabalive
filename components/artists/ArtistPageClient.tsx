@@ -18,8 +18,8 @@ import type { ArtistPhoto } from '@/lib/artists/photos';
 import { useRatingSummaries } from '@/lib/ratings';
 import ArtistPhotoSheet from '@/components/artists/ArtistPhotoSheet';
 import {
-  today, roundBtn, SpotifyLogo, XLogo, SectionTitle, Portrait, NextShow, ShowRow, SeriesRow, MomentsStrip,
-  type SeriesSummary,
+  today, roundBtn, SpotifyLogo, XLogo, SectionTitle, Portrait, NextShow, ShowRow, SeriesRow, MomentsStrip, PastRow,
+  type SeriesSummary, type PastShow,
 } from '@/components/artists/parts';
 
 export { priceLine } from '@/components/artists/parts';
@@ -43,7 +43,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
   const { user } = useAuth();
   const supabase = useMemo(() => createClient(), []);
   const { following, count: followers, busy, toggle } = useFollow('artist', artist.slug);
-  const [viewer, setViewer] = useState<number | null>(null);
+  const [viewer, setViewer] = useState<{ list: Moment[]; start: number; title: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [photo, setPhoto] = useState<ArtistPhoto | null>(initialPhoto);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -57,6 +57,28 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
   const backdrop = photo?.url ?? (next?.image ? hiRes(next.image, 800) ?? next.image : null);
   const reel = moments.slice(0, 12);
   const ratings = useRatingSummaries(past.map((e) => e.slug));
+
+  // Every past night: the listed events, plus nights we only have clips from; each carries its own clips
+  const pastShows = useMemo<PastShow[]>(() => {
+    const norm = (t: string) => t.toLowerCase().replace(/\b(19|20)\d{2}\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+    const yearOf = (e: GhanaEvent) => parseDay(e.date)?.getFullYear() ?? null;
+    const used = new Set<string>();
+    const rows: PastShow[] = past.map((e) => {
+      const y = yearOf(e);
+      const own = moments.filter((m) => !used.has(m.id) && (m.event_slug === e.slug || (m.year === y && !!m.event_name && (norm(e.title).includes(norm(m.event_name)) || norm(m.event_name).includes(norm(e.title))))));
+      own.forEach((m) => used.add(m.id));
+      return { key: e.slug, sortKey: e.date ?? '', title: e.title, year: y, event: e, moments: own };
+    });
+    const groups = new Map<string, PastShow>();
+    for (const m of moments) {
+      if (used.has(m.id) || !m.event_name) continue;
+      const k = `${norm(m.event_name)}|${m.year ?? ''}`;
+      const g = groups.get(k) ?? { key: k, sortKey: `${m.year ?? 0}-06-30`, title: m.year ? `${m.event_name} ${m.year}` : m.event_name, year: m.year, event: null, moments: [] };
+      g.moments.push(m);
+      groups.set(k, g);
+    }
+    return [...rows, ...Array.from(groups.values())].sort((a, b) => b.sortKey.localeCompare(a.sortKey));
+  }, [past, moments]);
 
   useEffect(() => {
     if (user) supabase.rpc('is_akwaaba_admin').then(({ data }) => setIsAdmin(data === true));
@@ -160,17 +182,19 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
         {reel.length > 0 && (
           <section id="moments" style={{ marginTop: 40, scrollMarginTop: 90 }}>
             <SectionTitle action={<Link href={`/moments?artist=${artist.slug}`} style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText, textDecoration: 'none' }}>See all</Link>}>Moments</SectionTitle>
-            <MomentsStrip list={reel} onOpen={setViewer} />
+            <MomentsStrip list={reel} onOpen={(i) => setViewer({ list: reel, start: i, title: artist.name })} />
           </section>
         )}
 
-        {past.length > 0 && (
+        {pastShows.length > 0 && (
           <section style={{ marginTop: 40 }}>
             <SectionTitle>Past shows</SectionTitle>
-            {(allPast ? past : past.slice(0, 5)).map((e) => <ShowRow key={e.slug} event={e} past rating={ratings[e.slug]} />)}
-            {past.length > 5 && !allPast && (
+            {(allPast ? pastShows : pastShows.slice(0, 6)).map((s) => (
+              <PastRow key={s.key} show={s} rating={s.event ? ratings[s.event.slug] : undefined} onPlay={() => setViewer({ list: s.moments, start: 0, title: s.title })} />
+            ))}
+            {pastShows.length > 6 && !allPast && (
               <button type="button" onClick={() => setAllPast(true)} style={{ marginTop: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>
-                Show all {past.length}
+                Show all {pastShows.length}
               </button>
             )}
           </section>
@@ -206,8 +230,8 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
         <ArtistPhotoSheet slug={artist.slug} name={artist.name} current={photo} onClose={() => setPhotoSheet(false)}
           onSaved={(p) => { setPhoto(p); setPhotoSheet(false); }} />
       )}
-      {viewer !== null && (
-        <MomentsViewer list={reel} start={viewer} eventTitle={artist.name} onClose={() => setViewer(null)} />
+      {viewer && (
+        <MomentsViewer list={viewer.list} start={viewer.start} eventTitle={viewer.title} onClose={() => setViewer(null)} />
       )}
     </div>
   );
