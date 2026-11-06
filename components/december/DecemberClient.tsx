@@ -27,7 +27,8 @@ function daysBetween(from: string, to: string) {
 }
 
 export default function DecemberClient({ list, from, to }: { list: DecEvent[]; from: string; to: string }) {
-  const big = useMemo(() => [...list].sort((a, b) => b.score - a.score).slice(0, 8), [list]);
+  // The big ones are nights out: concerts, festivals, parties (not expos, conferences or church programmes)
+  const big = useMemo(() => [...list].filter((x) => !['business', 'faith', 'tech'].includes(x.event.category)).sort((a, b) => b.score - a.score).slice(0, 8), [list]);
   const days = useMemo(() => daysBetween(from, to), [from, to]);
   const byDay = useMemo(() => {
     const m = new Map<string, DecEvent[]>();
