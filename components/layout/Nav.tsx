@@ -85,6 +85,14 @@ export default function Nav({
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
   const [tabsHidden, setTabsHidden] = useState(false);
+  // Once the page scrolls, the header turns into frosted green glass so content never reads through behind it
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 8);
+    on();
+    window.addEventListener('scroll', on, { passive: true });
+    return () => window.removeEventListener('scroll', on);
+  }, []);
 
   // Hide the tab bar while scrolling down the page, bring it back on any scroll up
   useEffect(() => {
@@ -164,8 +172,13 @@ export default function Nav({
       <header
         style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
-          padding: 'calc(14px + env(safe-area-inset-top, 0px)) 16px 28px',
-          background: 'linear-gradient(to bottom, rgba(3,8,6,0.42) 0%, rgba(3,8,6,0.16) 60%, rgba(3,8,6,0) 100%)',
+          padding: `calc(14px + env(safe-area-inset-top, 0px)) 16px ${scrolled ? 14 : 28}px`,
+          background: scrolled
+            ? 'linear-gradient(180deg, rgba(16,34,25,0.86) 0%, rgba(12,26,19,0.86) 100%)'
+            : 'linear-gradient(to bottom, rgba(3,8,6,0.42) 0%, rgba(3,8,6,0.16) 60%, rgba(3,8,6,0) 100%)',
+          backdropFilter: scrolled ? 'blur(18px) saturate(140%)' : undefined,
+          WebkitBackdropFilter: scrolled ? 'blur(18px) saturate(140%)' : undefined,
+          transition: 'background 220ms ease, padding 220ms ease',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
           pointerEvents: 'none',
         }}

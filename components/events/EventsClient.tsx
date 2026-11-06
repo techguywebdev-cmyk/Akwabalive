@@ -352,7 +352,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
     </div>
   );
 
-  const headerH = 74;
+  const headerH = 72;
   // Searching an artist: their card under the search box, and "X is performing" on each show they're on
   const searchArtist = useMemo(() => (filters.search ? artistsInQuery(filters.search)[0] ?? null : null), [filters.search]);
   const performerFor = useCallback((e: GhanaEvent) => (searchArtist && performsAt(e, searchArtist) ? { name: searchArtist.name, slug: searchArtist.slug } : null), [searchArtist]);
