@@ -268,15 +268,15 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
         <section style={{ marginTop: 56 }}>
           <p style={eyebrow}>First December in Ghana?</p>
           <h2 style={h2}>How to do it right</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, marginTop: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 26, marginTop: 22 }}>
             {[
               { I: Ticket, t: 'Buy early', b: 'The big shows sell out, and prices go up close to the day. Buy from the official link on the event page; many shows also sell by dialling a short code.' },
               { I: Smartphone, t: 'Mobile money', b: 'MoMo is how Ghana pays. Cards work at hotels and big venues, but carry some cash for the gate, drinks and the ride home.' },
               { I: Car, t: 'Getting around', b: 'Bolt, Uber and Yango all work in Accra. Traffic is heavy in December, so leave early and plan your ride home before you go.' },
               { I: MapPin, t: 'Where it happens', b: 'Osu, East Legon, Labadi and the beaches along the coast, with the big festivals at stadiums and beach resorts. Check each event’s venue and map.' },
             ].map(({ I, t, b }) => (
-              <div key={t}><div style={{ height: '100%', padding: 18, borderRadius: 20, background: `${GRAD.card}, #0A0E0C` }}>
-                <span style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, boxShadow: '0 8px 20px -8px rgba(91,217,154,0.6), inset 0 1px 0 rgba(255,255,255,0.7)' }}><I size={19} /></span>
+              <div key={t}><div style={{ height: '100%', padding: '4px 0' }}>
+                <span style={{ display: 'flex', color: T.mintText }}><I size={24} strokeWidth={1.8} /></span>
                 <p style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 16.5, fontWeight: 700, color: T.white }}>{t}</p>
                 <p style={{ margin: '5px 0 0', fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.55, color: T.text2 }}>{b}</p>
               </div></div>
@@ -284,7 +284,7 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
           </div>
         </section>
 
-        <section style={{ marginTop: 40 }}><div style={{ padding: '26px 22px', borderRadius: 26, overflow: 'hidden', background: `${GRAD.aurora}, #08100C` }}>
+        <section style={{ marginTop: 48 }}><div style={{ padding: '8px 0 0' }}>
           <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>Throwing something this December?</p>
           <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 15, color: T.text }}>List it free and it shows up here.</p>
           <Link href="/organisers" style={{ ...BTN.primary, marginTop: 18, height: 50, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 15, textDecoration: 'none' }}>List your event <ArrowRight size={17} /></Link>
