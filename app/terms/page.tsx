@@ -8,6 +8,12 @@ export default function TermsPage() {
       eyebrow="Akwaaba"
       title="Terms of use"
       intro="Akwaaba helps you find events in Ghana, buy tickets, follow artists and share moments. These terms are the agreement between you and Akwaaba when you use the website and app. By using Akwaaba you agree to them."
+      summary={[
+        'You need to be 13 or older, and you look after your own account.',
+        'Hosted events are run by their organisers; tickets for listed events come from the seller we link to.',
+        'If an event is cancelled and not rescheduled, you get your money back.',
+        'Post only what’s yours to share, and keep it respectful.',
+      ]}
       sections={[
         { title: 'Your account', body: [
           'You need an account to buy tickets, save events, follow people and post. Give accurate details and keep your password to yourself; you are responsible for what happens on your account.',
