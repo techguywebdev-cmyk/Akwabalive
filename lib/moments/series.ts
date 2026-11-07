@@ -3,7 +3,7 @@
  * next edition of the same event (e.g. "Rapperholic 2026"), and back.
  * Same rules the event page uses to find a last-edition moment.
  */
-const NOISE = /\b(kumasi|accra|live|concert|festival|edition|the|melbourne|sydney|australia|london|tour|night|show)\b/g;
+const NOISE = /\b(kumasi|accra|live|concert|festival|edition|the|and|for|with|all|day|melbourne|sydney|australia|london|tour|night|show)\b/g;
 
 export function seriesKey(name: string | null | undefined): string | null {
   if (!name) return null;
@@ -14,7 +14,7 @@ export function seriesKey(name: string | null | undefined): string | null {
     .replace(/[^a-z0-9\s]/g, ' ')
     .trim()
     .split(/\s+/)
-    .filter((w) => w.length > 3);
+    .filter((w) => w.length >= 3); // 3 so short names count (BYK)
   return words[0] ?? null;
 }
 
@@ -28,7 +28,7 @@ export function seriesWords(name: string | null | undefined): string[] {
     .replace(/[^a-z0-9\s]/g, ' ')
     .trim()
     .split(/\s+/)
-    .filter((w) => w.length > 3);
+    .filter((w) => w.length >= 3);
 }
 
 export function daysUntil(isoDate: string | null | undefined): number | null {
