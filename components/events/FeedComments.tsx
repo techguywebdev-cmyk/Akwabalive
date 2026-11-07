@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowUp, X } from 'lucide-react';
+import { ArrowUp, Check, X } from 'lucide-react';
 import type { Comment } from '@/components/moments/types';
 import { useAuth } from '@/lib/supabase/AuthProvider';
+import { threadComments, commenterName } from '@/lib/comments';
 import { T, FONT, GRAD } from '@/lib/thiscene';
 
 const ago = (iso: string) => {
@@ -14,20 +15,23 @@ const ago = (iso: string) => {
   if (s < 86400 * 30) return `${Math.round(s / 86400)}d`;
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 };
-const nameOf = (c: Comment) => c.profiles?.full_name || c.profiles?.username || 'Someone';
+
+const action: React.CSSProperties = { padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 600, color: T.text3 };
 
 /**
  * The comments panel on a feed card: rises from the bottom over the details, stopping just below the
  * video/flyer, so people talk without leaving the feed. The thread is the clip's own (the same one as
  * on the Moments page) or, for events with no clips yet, the event's chat.
+ * Reply to anyone, edit or delete your own; replies to you are marked.
  */
 export default function FeedComments({
-  height, title, comments, onSend, onDelete, onClose, momentHref,
+  height, title, comments, onSend, onEdit, onDelete, onClose, momentHref,
 }: {
   height: number;
   title: string;
   comments: Comment[];
-  onSend: (userId: string, text: string, profile?: Comment['profiles']) => Promise<void> | void;
+  onSend: (userId: string, text: string, profile?: Comment['profiles'], parentId?: string | null) => Promise<void> | void;
+  onEdit?: (id: string, text: string) => void;
   onDelete?: (id: string) => void;
   onClose: () => void;
   /** Where the full thread lives (the Moments page), when it's a clip's thread */
@@ -35,8 +39,12 @@ export default function FeedComments({
 }) {
   const { user, profile } = useAuth();
   const [text, setText] = useState('');
+  const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  const [editing, setEditing] = useState<Comment | null>(null);
   const list = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const rows = useMemo(() => threadComments(comments), [comments]);
 
   // The keyboard floats over the page: lift the panel above it and keep it no taller than what's left
   const [kb, setKb] = useState(0);
@@ -58,13 +66,24 @@ export default function FeedComments({
     return () => { sc.style.overflowY = prev; };
   }, []);
 
-  useEffect(() => { list.current?.scrollTo({ top: list.current.scrollHeight }); }, [comments.length]);
+  // New top-level comments land at the bottom; follow them (not when a reply lands mid-thread)
+  const lastId = comments[comments.length - 1]?.id;
+  useEffect(() => {
+    const last = comments[comments.length - 1];
+    if (last && !last.parent_id) list.current?.scrollTo({ top: list.current.scrollHeight });
+  }, [lastId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const startReply = (c: Comment) => { setEditing(null); setReplyTo(c); setText(''); input.current?.focus(); };
+  const startEdit = (c: Comment) => { setReplyTo(null); setEditing(c); setText(c.content); input.current?.focus(); };
+  const cancel = () => { setReplyTo(null); setEditing(null); setText(''); };
 
   const send = () => {
     if (!user || !text.trim()) return;
     const t = text;
     setText('');
-    onSend(user.id, t, profile ? { username: profile.username, full_name: profile.full_name ?? null, avatar_url: profile.avatar_url ?? null } : undefined);
+    if (editing) { onEdit?.(editing.id, t); setEditing(null); return; }
+    onSend(user.id, t, profile ? { username: profile.username, full_name: profile.full_name ?? null, avatar_url: profile.avatar_url ?? null } : undefined, replyTo?.id ?? null);
+    setReplyTo(null);
   };
 
   return (
@@ -95,42 +114,67 @@ export default function FeedComments({
       </div>
 
       <div ref={list} className="no-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '4px 20px 8px', overscrollBehavior: 'contain' }}>
-        {comments.length === 0 ? (
+        {rows.length === 0 ? (
           <p style={{ margin: '18px 0', fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>No comments yet. Start it off.</p>
-        ) : comments.map((c) => (
-          <div key={c.id} style={{ display: 'flex', gap: 10, padding: '8px 0' }}>
-            <span style={{ width: 30, height: 30, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'rgba(123,227,168,0.16)', color: T.mintText, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: 13, fontWeight: 800 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {c.profiles?.avatar_url ? <img src={c.profiles.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : nameOf(c).charAt(0).toUpperCase()}
-            </span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.text2 }}>
-                <span>{nameOf(c)} <span style={{ fontWeight: 500, color: T.text3 }}>· {c.id.startsWith('temp-') ? 'sending' : ago(c.created_at)}</span></span>
-                {user?.id === c.user_id && onDelete && !c.id.startsWith('temp-') && (
-                  <button type="button" onClick={() => onDelete(c.id)} style={{ marginLeft: 'auto', padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3 }}>Delete</button>
+        ) : rows.map(({ c, reply, to }) => {
+          const mine = !!user && user.id === c.user_id;
+          const toMe = reply && !!user && to?.user_id === user.id && !mine;
+          const pending = c.id.startsWith('temp-');
+          return (
+            <div key={c.id} style={{ display: 'flex', gap: 10, padding: reply ? '6px 0 6px 40px' : '9px 0' }}>
+              <span style={{ width: reply ? 24 : 30, height: reply ? 24 : 30, borderRadius: reply ? 8 : 10, overflow: 'hidden', flexShrink: 0, background: 'rgba(123,227,168,0.16)', color: T.mintText, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: reply ? 11 : 13, fontWeight: 800 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {c.profiles?.avatar_url ? <img src={c.profiles.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : commenterName(c).charAt(0).toUpperCase()}
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap', fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.text2 }}>
+                  {c.profiles?.username ? <Link href={`/u/${c.profiles.username}`} style={{ color: 'inherit', textDecoration: 'none' }}>{commenterName(c)}</Link> : commenterName(c)}
+                  {toMe && <span style={{ padding: '1px 6px', borderRadius: 5, background: 'rgba(123,227,168,0.16)', color: T.mintText, fontSize: 11, fontWeight: 700 }}>replied to you</span>}
+                  <span style={{ fontWeight: 500, color: T.text3 }}>· {pending ? 'sending' : ago(c.created_at)}{c.edited_at ? ' · edited' : ''}</span>
+                </span>
+                <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.4, color: T.white, wordBreak: 'break-word' }}>
+                  {reply && to && to.user_id !== c.user_id && <span style={{ color: T.mintText, fontWeight: 600 }}>@{to.profiles?.username || commenterName(to)} </span>}
+                  {c.content}
+                </span>
+                {!pending && user && (
+                  <span style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+                    <button type="button" onClick={() => startReply(c)} style={action}>Reply</button>
+                    {mine && onEdit && <button type="button" onClick={() => startEdit(c)} style={action}>Edit</button>}
+                    {mine && onDelete && <button type="button" onClick={() => { if (window.confirm(c.parent_id ? 'Delete this reply?' : 'Delete this comment and its replies?')) onDelete(c.id); }} style={action}>Delete</button>}
+                  </span>
                 )}
               </span>
-              <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.4, color: T.white, wordBreak: 'break-word' }}>{c.content}</span>
-            </span>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
 
-      <div style={{ padding: '8px 14px 12px' }}>
+      <div style={{ padding: '6px 14px 12px' }}>
         {user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 46, padding: '0 6px 0 16px', borderRadius: 999, background: 'rgba(255,255,255,0.07)' }}>
-            <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
-              placeholder="Add a comment…"
-              maxLength={500}
-              style={{ flex: 1, minWidth: 0, height: '100%', border: 'none', outline: 'none', background: 'transparent', color: T.white, fontFamily: FONT.sans, fontSize: 15 }}
-            />
-            <button type="button" onClick={send} disabled={!text.trim()} aria-label="Send" style={{ width: 36, height: 36, borderRadius: 12, border: 'none', cursor: 'pointer', background: text.trim() ? GRAD.mint : 'rgba(255,255,255,0.08)', color: text.trim() ? T.onMint : T.text3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ArrowUp size={18} strokeWidth={2.4} />
-            </button>
-          </div>
+          <>
+            {(replyTo || editing) && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 6px 8px', fontFamily: FONT.sans, fontSize: 12.5, color: T.text2 }}>
+                <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {editing ? 'Editing your comment' : <>Replying to <b style={{ color: T.mintText, fontWeight: 700 }}>@{replyTo!.profiles?.username || commenterName(replyTo)}</b></>}
+                </span>
+                <button type="button" onClick={cancel} style={action}>Cancel</button>
+              </div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 46, padding: '0 6px 0 16px', borderRadius: 999, background: 'rgba(255,255,255,0.07)' }}>
+              <input
+                ref={input}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') send(); if (e.key === 'Escape') cancel(); }}
+                placeholder={editing ? 'Edit your comment…' : replyTo ? `Reply to ${commenterName(replyTo)}…` : 'Add a comment…'}
+                maxLength={500}
+                style={{ flex: 1, minWidth: 0, height: '100%', border: 'none', outline: 'none', background: 'transparent', color: T.white, fontFamily: FONT.sans, fontSize: 15 }}
+              />
+              <button type="button" onClick={send} disabled={!text.trim()} aria-label={editing ? 'Save' : 'Send'} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', cursor: 'pointer', background: text.trim() ? GRAD.mint : 'rgba(255,255,255,0.08)', color: text.trim() ? T.onMint : T.text3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {editing ? <Check size={18} strokeWidth={2.4} /> : <ArrowUp size={18} strokeWidth={2.4} />}
+              </button>
+            </div>
+          </>
         ) : (
           <Link href="/auth" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 46, borderRadius: 999, background: 'rgba(255,255,255,0.07)', color: T.text, fontFamily: FONT.sans, fontSize: 14.5, fontWeight: 600, textDecoration: 'none' }}>
             Sign in to comment

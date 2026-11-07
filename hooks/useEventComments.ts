@@ -25,15 +25,23 @@ export function useEventComments(slug: string | undefined) {
         const { data } = await supabase.from('event_comments').select(select).eq('id', payload.new.id).single();
         if (data && !cancelled) setComments((prev) => (prev.some((c) => c.id === data.id) ? prev : [...prev, data as unknown as Comment]));
       })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'event_comments', filter: `event_slug=eq.${slug}` }, (payload) => {
+        const n = payload.new as Comment;
+        if (!cancelled) setComments((prev) => prev.map((c) => (c.id === n.id ? { ...c, content: n.content, edited_at: n.edited_at } : c)));
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'event_comments' }, (payload) => {
+        const id = (payload.old as { id?: string }).id;
+        if (id && !cancelled) setComments((prev) => prev.filter((c) => c.id !== id && c.parent_id !== id));
+      })
       .subscribe();
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [slug, supabase]);
 
-  async function send(userId: string, content: string, profile?: Comment['profiles']) {
+  async function send(userId: string, content: string, profile?: Comment['profiles'], parentId?: string | null) {
     if (!slug || !content.trim()) return;
     const temp = `temp-${Date.now()}`;
-    setComments((prev) => [...prev, { id: temp, moment_id: '', user_id: userId, content: content.trim(), created_at: new Date().toISOString(), profiles: profile } as Comment]);
-    const { data } = await supabase.from('event_comments').insert({ event_slug: slug, user_id: userId, content: content.trim() })
+    setComments((prev) => [...prev, { id: temp, moment_id: '', user_id: userId, content: content.trim(), created_at: new Date().toISOString(), parent_id: parentId ?? null, profiles: profile } as Comment]);
+    const { data } = await supabase.from('event_comments').insert({ event_slug: slug, user_id: userId, content: content.trim(), parent_id: parentId ?? null })
       .select('*, profiles(username, full_name, avatar_url)').single();
     setComments((prev) => {
       const rest = prev.filter((c) => c.id !== temp);
@@ -41,13 +49,20 @@ export function useEventComments(slug: string | undefined) {
     });
   }
 
+  /** Your own comment's text; shows straight away */
+  async function edit(id: string, content: string) {
+    if (!content.trim()) return;
+    setComments((prev) => prev.map((c) => (c.id === id ? { ...c, content: content.trim(), edited_at: new Date().toISOString() } : c)));
+    await supabase.from('event_comments').update({ content: content.trim() }).eq('id', id);
+  }
+
   async function remove(id: string) {
-    setComments((prev) => prev.filter((c) => c.id !== id));
+    setComments((prev) => prev.filter((c) => c.id !== id && c.parent_id !== id));
     await supabase.from('event_comments').delete().eq('id', id);
   }
   async function report(id: string) {
     await supabase.from('comment_reports').insert({ kind: 'event', comment_id: id });
   }
 
-  return { comments, goingIds, send, remove, report };
+  return { comments, goingIds, send, edit, remove, report };
 }

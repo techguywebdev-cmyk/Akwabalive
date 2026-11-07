@@ -8,6 +8,7 @@ import type { Profile } from '@/lib/supabase/types';
 import type { Comment, Moment } from './types';
 import { formatTime } from './types';
 import { T, FONT, EASE, GRAD } from '@/lib/thiscene';
+import { threadComments, commenterName } from '@/lib/comments';
 
 interface Props {
   moment: Moment;
@@ -31,7 +32,10 @@ interface Props {
   fixed?: boolean;
   heading?: string;
   onClose: () => void;
-  onSend: (text: string) => void;
+  /** parentId when it's a reply */
+  onSend: (text: string, parentId?: string | null) => void;
+  /** Save an edit to your own comment */
+  onEdit?: (c: Comment, text: string) => void;
   onSeek: (seconds: number) => void;
   onGift: (c: Comment) => void;
   /** Moderation: authors (and the admin) delete, everyone else reports */
@@ -87,11 +91,13 @@ function Avatar({ url, name, size = 34 }: { url?: string | null; name: string; s
 
 export default function CommentsSheet({
   moment, comments, user, profile, currentSeconds, goingIds, nextLabel, canGift, tint = '34, 96, 66',
-  onClose, onSend, onSeek, onGift, prompts, goingLabel, emptyHint, fixed, heading = 'Comments', onDelete, onReport, isAdmin = false,
+  onClose, onSend, onEdit, onSeek, onGift, prompts, goingLabel, emptyHint, fixed, heading = 'Comments', onDelete, onReport, isAdmin = false,
 }: Props) {
   const [reported, setReported] = useState<Set<string>>(new Set());
   const [order, setOrder] = useState<'top' | 'new'>('top');
   const [draft, setDraft] = useState('');
+  const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  const [editing, setEditing] = useState<Comment | null>(null);
   const [shown, setShown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -100,13 +106,16 @@ export default function CommentsSheet({
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  const list = useMemo(() => (order === 'new' ? [...comments].reverse() : comments), [comments, order]);
+  // Threads: each comment followed by its replies
+  const list = useMemo(() => threadComments(comments, order === 'new'), [comments, order]);
 
   function submit(e?: React.FormEvent) {
     e?.preventDefault();
     const text = draft.trim();
     if (!text) return;
-    onSend(text);
+    if (editing) { onEdit?.(editing, text); setEditing(null); setDraft(''); return; }
+    onSend(text, replyTo?.id ?? null);
+    setReplyTo(null);
     setDraft('');
   }
 
@@ -176,13 +185,15 @@ export default function CommentsSheet({
               <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>{emptyHint ?? 'Were you there? Start the conversation.'}</p>
             </div>
           )}
-          {list.map((c) => {
+          {list.map(({ c, reply, to }) => {
             const name = c.profiles?.full_name || c.profiles?.username || 'Someone';
             const going = goingIds.has(c.user_id);
             const mine = user?.id === c.user_id;
+            const toMe = reply && !!user && to?.user_id === user.id && !mine;
+            const pending = c.id.startsWith('temp-');
             return (
-              <article key={c.id} style={{ display: 'flex', gap: 12, padding: '12px 0' }}>
-                <Avatar url={c.profiles?.avatar_url} name={name} />
+              <article key={c.id} style={{ display: 'flex', gap: 12, padding: reply ? '8px 0 8px 46px' : '12px 0' }}>
+                <Avatar url={c.profiles?.avatar_url} name={name} size={reply ? 26 : 34} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
                     {c.profiles?.username
@@ -191,9 +202,11 @@ export default function CommentsSheet({
                     {going && (goingLabel || nextLabel) && (
                       <span style={{ padding: '2px 7px', borderRadius: 999, background: 'rgba(123,227,168,0.14)', color: T.mintText, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700 }}>{goingLabel ?? `Going ${nextLabel}`}</span>
                     )}
-                    <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>{timeAgo(c.created_at)}</span>
+                    {toMe && <span style={{ padding: '2px 7px', borderRadius: 6, background: 'rgba(123,227,168,0.14)', color: T.mintText, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700 }}>replied to you</span>}
+                    <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>{pending ? 'sending' : timeAgo(c.created_at)}{c.edited_at ? ' · edited' : ''}</span>
                   </div>
                   <p style={{ margin: '3px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.45, color: T.text, wordBreak: 'break-word' }}>
+                    {reply && to && to.user_id !== c.user_id && <span style={{ color: T.mintText, fontWeight: 600 }}>@{to.profiles?.username || commenterName(to)} </span>}
                     <CommentText text={c.content} onSeek={onSeek} />
                   </p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
@@ -205,7 +218,13 @@ export default function CommentsSheet({
                       <Gift size={13} /> Gift a ticket
                     </button>
                   )}
-                  {user && (mine || isAdmin) && onDelete && (
+                  {user && !pending && (
+                    <button type="button" onClick={() => { setEditing(null); setReplyTo(c); inputRef.current?.focus(); }} style={miniBtn}>Reply</button>
+                  )}
+                  {user && mine && onEdit && !pending && (
+                    <button type="button" onClick={() => { setReplyTo(null); setEditing(c); setDraft(c.content); inputRef.current?.focus(); }} style={miniBtn}>Edit</button>
+                  )}
+                  {user && (mine || isAdmin) && onDelete && !pending && (
                     <button type="button" onClick={() => { if (window.confirm('Delete this comment?')) onDelete(c); }} style={miniBtn}>Delete</button>
                   )}
                   {user && !mine && onReport && (
@@ -232,11 +251,19 @@ export default function CommentsSheet({
                   </>
                 )}
               </div>
+              {(replyTo || editing) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 4px 8px', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>
+                  <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {editing ? 'Editing your comment' : <>Replying to <b style={{ color: T.mintText, fontWeight: 700 }}>@{replyTo!.profiles?.username || commenterName(replyTo)}</b></>}
+                  </span>
+                  <button type="button" onClick={() => { setReplyTo(null); setEditing(null); setDraft(''); }} style={{ ...miniBtn, marginTop: 0 }}>Cancel</button>
+                </div>
+              )}
               <form onSubmit={submit} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Avatar url={profile?.avatar_url} name={me} size={36} />
                 <label style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', height: 46, borderRadius: 23, background: 'rgba(255,255,255,0.08)', border: 'none', padding: '0 5px 0 16px' }}>
                   <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Add a comment</span>
-                  <input ref={inputRef} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Add a comment…" maxLength={500}
+                  <input ref={inputRef} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={editing ? 'Edit your comment…' : replyTo ? `Reply to ${commenterName(replyTo)}…` : 'Add a comment…'} maxLength={500}
                     style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15 }} />
                   <button type="submit" aria-label="Post comment" disabled={!draft.trim()} style={{
                     width: 36, height: 36, borderRadius: 18, border: 'none', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',

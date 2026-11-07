@@ -610,7 +610,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           goingLabel={daysAway != null && daysAway < 0 ? 'Was there' : 'Going'}
           prompts={daysAway != null && daysAway < 0 ? ['Best moment:', 'Who else was there?', 'Next year I want'] : ['Who’s going?', 'What time do gates open?', 'Dress code?', 'Looking for people to go with']}
           emptyHint={daysAway != null && daysAway < 0 ? 'Were you there? Share the best moment.' : 'Ask a question or find people to go with.'}
-          onClose={() => setChatOpen(false)} onSend={(text) => { if (user) chat.send(user.id, text); }} onSeek={() => {}} onGift={() => {}}
+          onClose={() => setChatOpen(false)} onSend={(text, parentId) => { if (user) chat.send(user.id, text, profile ? { username: profile.username, full_name: profile.full_name ?? null, avatar_url: profile.avatar_url ?? null } : undefined, parentId); }}
+          onEdit={(c, text) => chat.edit(c.id, text)} onSeek={() => {}} onGift={() => {}}
           onDelete={(c) => chat.remove(c.id)} onReport={(c) => chat.report(c.id)} isAdmin={isAdmin} />
       )}
 
