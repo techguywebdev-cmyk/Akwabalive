@@ -33,6 +33,7 @@ import { cityLabel } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
+import StatTip from '@/components/events/StatTip';
 
 export type { CheckoutTier } from '@/lib/events/tiers';
 
@@ -298,9 +299,9 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         )}
         <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{eventBlurb(event, 160)}</p>
         {counts && (counts.seen7d >= 30 || counts.going >= 10) && (
-          <p style={{ margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>
-            {counts.seen7d >= 30 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Eye size={16} /> {compact(counts.seen7d)} people checked this out this week</span>}
-            {counts.going >= 10 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Users size={16} /> {compact(counts.going)} going</span>}
+          <p style={{ margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>
+            {counts.seen7d >= 30 && <StatTip icon={<Eye size={16} />} value={compact(counts.seen7d)} tip="people checked this out this week" intro />}
+            {counts.going >= 10 && <StatTip icon={<Users size={16} />} value={compact(counts.going)} tip="people are going" />}
           </p>
         )}
 
@@ -580,18 +581,18 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       </main>
 
       {/* Bottom bar: price + the one main action */}
-      <div style={{ position: 'fixed', zIndex: 150, left: 0, right: 0, bottom: 0, padding: '18px 16px calc(18px + env(safe-area-inset-bottom, 0px)) 20px', background: 'linear-gradient(180deg, rgba(3,8,6,0) 0%, rgba(3,8,6,0.92) 32%, #030806 100%)' }}>
+      <div style={{ position: 'fixed', zIndex: 150, left: 0, right: 0, bottom: 0, padding: '18px 16px calc(18px + env(safe-area-inset-bottom, 0px)) 20px', background: 'linear-gradient(180deg, rgba(10,22,16,0) 0%, rgba(11,24,17,0.9) 30%, rgba(10,21,15,0.97) 100%)' }}>
         <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* No prices listed: never claim "Free"; use the flyer's gate price when there is one */}
+          {/* No prices listed: never claim "Free"; use the flyer's gate price when there is one, else say nothing */}
+          {!(event.priceUnknown && !info.gatePrice) && <span style={{ display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0, whiteSpace: 'nowrap' }}>
             <span style={{ fontFamily: FONT.sans, fontSize: 12, color: T.text2 }}>{event.priceUnknown ? (info.gatePrice ? 'At the gate' : 'Tickets') : free ? 'Entry' : 'From'}</span>
-            <span style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: T.white }}>{event.priceUnknown ? (info.gatePrice ? `GH₵ ${info.gatePrice}` : 'See prices') : free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</span>
-          </span>
+            <span style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: T.white }}>{event.priceUnknown ? `GH₵ ${info.gatePrice}` : free ? 'Free' : `GH₵ ${event.price.toLocaleString()}`}</span>
+          </span>}
           {daysAway != null && daysAway < 0 ? (
             <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
           ) : listed ? (
-            <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={primary}>
-              Tickets on {event.ticketSource || 'official site'} <Icon name="open" size={16} />
+            <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={{ ...primary, ...(event.priceUnknown && !info.gatePrice ? { flex: 1 } : {}) }}>
+              {/^dial\b/i.test(event.ticketSource ?? '') ? event.ticketSource : `Tickets on ${event.ticketSource || 'the official site'}`} <Icon name="open" size={16} />
             </a>
           ) : daysAway != null && daysAway < 0 ? (
             <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
