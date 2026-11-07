@@ -7,7 +7,7 @@ import type { Artist, GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
 import Nav from '@/components/layout/Nav';
 import { BTN } from '@/components/events/CardParts';
-import { MomentsViewer } from '@/components/moments/EventMoments';
+import { useOpenInMoments } from '@/components/moments/useOpenInMoments';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { useFollow, compactCount } from '@/components/follow/useFollow';
@@ -44,6 +44,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
   const supabase = useMemo(() => createClient(), []);
   const { following, count: followers, busy, toggle } = useFollow('artist', artist.slug);
   const [viewer, setViewer] = useState<{ list: Moment[]; start: number; title: string } | null>(null);
+  useOpenInMoments(viewer ? viewer.list[viewer.start]?.id : null, () => setViewer(null));
   const [copied, setCopied] = useState(false);
   const [photo, setPhoto] = useState<ArtistPhoto | null>(initialPhoto);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -229,9 +230,6 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
       {photoSheet && (
         <ArtistPhotoSheet slug={artist.slug} name={artist.name} current={photo} onClose={() => setPhotoSheet(false)}
           onSaved={(p) => { setPhoto(p); setPhotoSheet(false); }} />
-      )}
-      {viewer && (
-        <MomentsViewer list={viewer.list} start={viewer.start} eventTitle={viewer.title} onClose={() => setViewer(null)} />
       )}
     </div>
   );
