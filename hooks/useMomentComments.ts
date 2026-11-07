@@ -60,12 +60,18 @@ export function useMomentComments(momentId: string | undefined) {
     };
   }, [momentId, supabase]);
 
-  async function send(userId: string, content: string) {
+  /** Shows straight away, then swaps in the saved row (no waiting on the live feed) */
+  async function send(userId: string, content: string, profile?: Comment['profiles']) {
     if (!momentId || !content.trim()) return;
-    await supabase.from('moment_comments').insert({
-      moment_id: momentId,
-      user_id: userId,
-      content: content.trim(),
+    const temp = `temp-${Date.now()}`;
+    setComments((prev) => [...prev, { id: temp, moment_id: momentId, user_id: userId, content: content.trim(), created_at: new Date().toISOString(), profiles: profile } as Comment]);
+    const { data, error } = await supabase.from('moment_comments')
+      .insert({ moment_id: momentId, user_id: userId, content: content.trim() })
+      .select('*, profiles(username, full_name, avatar_url)').single();
+    setComments((prev) => {
+      const rest = prev.filter((c) => c.id !== temp);
+      if (error || !data) return rest;
+      return rest.some((c) => c.id === data.id) ? rest : [...rest, data as Comment];
     });
   }
 

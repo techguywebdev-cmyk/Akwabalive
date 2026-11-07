@@ -29,11 +29,16 @@ export function useEventComments(slug: string | undefined) {
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [slug, supabase]);
 
-  async function send(userId: string, content: string) {
+  async function send(userId: string, content: string, profile?: Comment['profiles']) {
     if (!slug || !content.trim()) return;
+    const temp = `temp-${Date.now()}`;
+    setComments((prev) => [...prev, { id: temp, moment_id: '', user_id: userId, content: content.trim(), created_at: new Date().toISOString(), profiles: profile } as Comment]);
     const { data } = await supabase.from('event_comments').insert({ event_slug: slug, user_id: userId, content: content.trim() })
       .select('*, profiles(username, full_name, avatar_url)').single();
-    if (data) setComments((prev) => (prev.some((c) => c.id === data.id) ? prev : [...prev, data as unknown as Comment]));
+    setComments((prev) => {
+      const rest = prev.filter((c) => c.id !== temp);
+      return !data || rest.some((c) => c.id === data.id) ? rest : [...rest, data as unknown as Comment];
+    });
   }
 
   async function remove(id: string) {
