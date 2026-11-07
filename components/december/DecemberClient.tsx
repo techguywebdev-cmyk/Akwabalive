@@ -24,6 +24,18 @@ const untilLabel = (n: number) => (n <= 0 ? 'Today' : n === 1 ? 'Tomorrow' : `In
 
 const eyebrow: React.CSSProperties = { margin: 0, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
 const h2: React.CSSProperties = { margin: '6px 0 0', fontFamily: FONT.display, fontSize: 'clamp(26px, 6.5vw, 36px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, color: T.white };
+/** ALL-CAPS titles shout in a list; set them in title case, keeping short acronyms (BYK, DJ, ATW) */
+const SMALL = new Set(['the', 'and', 'of', 'in', 'at', 'for', 'is', 'on', 'to', 'a', 'an', 'by', 'with']);
+const calmTitle = (t: string) => {
+  if (t !== t.toUpperCase() || !/[A-Z]{4}/.test(t)) return t;
+  let first = true;
+  return t.toLowerCase().replace(/[a-z0-9’']+/g, (w) => {
+    const isFirst = first; first = false;
+    if (/^[bcdfghjklmnpqrstvwxyz]{2,3}$/.test(w)) return w.toUpperCase(); // BYK, DJ, ATW: no vowels, an acronym
+    if (!isFirst && SMALL.has(w)) return w;
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  });
+};
 const priceOf = (e: GhanaEvent) => (e.priceUnknown ? 'Tickets' : e.price === 0 ? 'Free' : `From GH₵ ${e.price.toLocaleString()}`);
 const img = (e: GhanaEvent, w = 700) => (e.image ? hiRes(e.image, w) ?? e.image : '');
 
@@ -237,28 +249,37 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
           const dt = new Date(`${d}T12:00:00Z`);
           const special = d === '2026-12-24' ? 'Christmas Eve' : d === '2026-12-25' ? 'Christmas Day' : d === '2026-12-26' ? 'Boxing Day' : d === '2026-12-31' ? 'New Year’s Eve' : d === '2027-01-01' ? 'New Year’s Day' : '';
           return (
-            <section key={d} id={`day-${d}`} data-day={d} style={{ scrollMarginTop: 140, paddingTop: 18 }}>
-              <h3 style={{ margin: 0, display: 'flex', alignItems: 'baseline', gap: 10, fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>
-                {dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}
-                {special && <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, color: T.mintText }}>{special}</span>}
+            <section key={d} id={`day-${d}`} data-day={d} style={{ scrollMarginTop: 170, paddingTop: 22 }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'baseline', gap: 10, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.text3 }}>
+                {dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' })}
+                {special && <span style={{ color: T.mintText }}>{special}</span>}
               </h3>
-              <ul style={{ listStyle: 'none', margin: '8px 0 0', padding: 0 }}>
-                {byDay.get(d)!.map((x, i, arr) => (
-                  <li key={x.event.slug}>
-                    <Link href={`/events/${x.event.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i === arr.length - 1 ? 'none' : `1px solid ${T.hairline}`, textDecoration: 'none' }}>
-                      <span style={{ width: 60, height: 75, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#111' }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={img(x.event, 240)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      </span>
-                      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                        <span style={{ fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: x.event.hot || x.score >= 60 ? T.mintText : T.text3 }}>{[x.event.time && !/tba/i.test(x.event.time) ? x.event.time : '', x.event.hot || x.score >= 60 ? 'Hot' : ''].filter(Boolean).join(' · ') || 'Time TBA'}</span>
-                        <span style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 700, lineHeight: 1.25, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{x.event.title}</span>
-                        <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[x.event.venue, cityLabel(x.event.city)].filter(Boolean).join(' · ')}</span>
-                      </span>
-                      <span style={{ flexShrink: 0, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, color: x.event.price === 0 && !x.event.priceUnknown ? T.mintText : T.text }}>{priceOf(x.event).replace('From ', '')}</span>
-                    </Link>
-                  </li>
-                ))}
+              <ul style={{ listStyle: 'none', margin: '12px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {byDay.get(d)!.map((x) => {
+                  const hot = x.event.hot || x.score >= 60;
+                  const time = x.event.time && !/tba/i.test(x.event.time) ? x.event.time.replace(':00 ', ' ').toLowerCase() : '';
+                  const price = x.event.priceUnknown ? '' : x.event.price === 0 ? 'Free' : `GH₵ ${x.event.price.toLocaleString()}`;
+                  return (
+                    <li key={x.event.slug}>
+                      <Link href={`/events/${x.event.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none' }}>
+                        <span style={{ width: 52, height: 65, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.05)' }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={img(x.event, 200)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        </span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ fontFamily: FONT.sans, fontSize: 15.5, fontWeight: 600, lineHeight: 1.3, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {hot && <span aria-label="Hot" style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 2, background: T.mint, marginRight: 8, verticalAlign: 'middle', boxShadow: `0 0 8px ${T.mint}` }} />}
+                            {calmTitle(x.event.title).replace(/\s*[-–|:]?\s*\b20(26|27)\b\s*/g, ' ').replace(/\s+([-–|:])\s*$/, '').trim()}
+                          </span>
+                          <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 13, color: T.text3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {[time, x.event.venue].filter(Boolean).join(' · ')}
+                            {price && <span style={{ color: price === 'Free' ? T.mintText : T.text2 }}>{` · ${price}`}</span>}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           );
