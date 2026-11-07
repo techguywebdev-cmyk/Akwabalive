@@ -300,15 +300,19 @@ const MomentSlide = forwardRef<SlideHandle, {
           {/* How the night was rated — tap to rate it (ticket holders) */}
           {night.event_slug ? (
             <button type="button" onClick={openRate} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 9, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}>
-              <Stars value={rating?.overall ?? 0} size={15} />
-              <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: rating ? T.white : T.text3 }}>
-                {rating ? <>{rating.overall.toFixed(1)} <span style={{ fontWeight: 500, color: T.text3 }}>· {formatCount(rating.ratings)} rating{rating.ratings === 1 ? '' : 's'}</span></> : 'Rate this night'}
+              <Stars value={rating?.overall ?? series?.stars ?? 0} size={15} />
+              <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: rating || series?.stars ? T.white : T.text3 }}>
+                {rating ? <>{rating.overall.toFixed(1)} <span style={{ fontWeight: 500, color: T.text3 }}>· {formatCount(rating.ratings)} rating{rating.ratings === 1 ? '' : 's'}</span></>
+                  : series?.stars ? <>{series.stars % 1 ? series.stars.toFixed(1) : series.stars}/5 <span style={{ fontWeight: 500, color: T.text3 }}>· every year · Rate this night</span></>
+                  : 'Rate this night'}
               </span>
             </button>
           ) : (
             <Link href={series ? `/shows/${series.slug}` : '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 9, textDecoration: 'none' }}>
-              <Stars value={0} size={15} />
-              <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text3 }}>Not rated yet</span>
+              <Stars value={series?.stars ?? 0} size={15} />
+              <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: series?.stars ? T.white : T.text3 }}>
+                {series?.stars ? <>{series.stars % 1 ? series.stars.toFixed(1) : series.stars}/5 <span style={{ fontWeight: 500, color: T.text3 }}>· every year</span></> : 'Not rated yet'}
+              </span>
             </Link>
           )}
           {clip.posted_by ? (
