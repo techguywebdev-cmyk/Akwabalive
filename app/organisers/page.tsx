@@ -76,11 +76,11 @@ export default async function OrganisersPage() {
 
       <main style={{ maxWidth: 760, margin: '0 auto', padding: flyers.length ? '0 20px 20px' : 'calc(110px + env(safe-area-inset-top, 0px)) 20px 20px', position: 'relative', zIndex: 2 }}>
         <p style={eyebrow}>For organisers</p>
-        <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(44px, 12.5vw, 78px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.92 }}>
-          <span style={gradText}>Put your night in front of </span><span style={mintText}>everyone going out.</span>
+        <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(46px, 13vw, 80px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 1, paddingBottom: '0.06em' }}>
+          <span style={gradText}>Get your show </span><span style={mintText}>seen.</span>
         </h1>
-        <p style={{ margin: '20px 0 0', maxWidth: 540, fontFamily: FONT.sans, fontSize: 18, lineHeight: 1.5, color: T.text }}>
-          List your show free. Flyer to live in two minutes, last year’s moments on the page, and real numbers on who’s seen it.
+        <p style={{ margin: '16px 0 0', maxWidth: 480, fontFamily: FONT.sans, fontSize: 17, lineHeight: 1.5, color: T.text2 }}>
+          List it free. Flyer to live in two minutes.
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 28 }}>
           <Link href="/organizer/events/new" style={{ ...BTN.primary, height: 54, padding: '0 26px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 15.5, textDecoration: 'none' }}>List your event <ArrowRight size={18} /></Link>
