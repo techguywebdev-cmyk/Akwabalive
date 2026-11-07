@@ -89,8 +89,18 @@ function EventCard({
   const [clip, setClip] = useState(0);
   const [prog, setProg] = useState(0);
 
-  useEffect(() => { if (!active) setWatching(false); }, [active]);
+  // Played on its own once per visit to the card; stopping it (Flyer) keeps it stopped until you swipe away
+  const [autoDone, setAutoDone] = useState(false);
+  useEffect(() => { if (!active) { setWatching(false); setAutoDone(false); } }, [active]);
   const moments = useEventMoments(event, near);
+  // After a few seconds on a card with moments, the clips start by themselves (muted, like the Moments feed)
+  useEffect(() => {
+    if (!active || watching || autoDone || !moments.length) return;
+    const nav = typeof navigator !== 'undefined' ? (navigator as Navigator & { connection?: { saveData?: boolean } }) : null;
+    if (nav?.connection?.saveData || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const t = setTimeout(() => { setClip(0); setProg(0); setWatching(true); setAutoDone(true); }, 3500);
+    return () => clearTimeout(t);
+  }, [active, watching, autoDone, moments.length]);
   const block = useRef<HTMLDivElement>(null);
   const [blockH, setBlockH] = useState(300);
 
@@ -233,7 +243,7 @@ function EventCard({
         )}
         <span style={{ pointerEvents: 'auto' }}>
           <EventTags event={event} accent={a} hype={hype} max={watching ? 1 : moments.length ? 2 : undefined} extra={watching ? (
-            <button type="button" onClick={() => setWatching(false)} style={{ ...chip, cursor: 'pointer', border: 'none', background: 'rgba(3,10,6,0.5)', color: T.white }}>
+            <button type="button" onClick={() => { setWatching(false); setAutoDone(true); }} style={{ ...chip, cursor: 'pointer', border: 'none', background: 'rgba(3,10,6,0.5)', color: T.white }}>
               <ImageIcon size={14} strokeWidth={2.2} /> Flyer
             </button>
           ) : moments.length > 0 ? (

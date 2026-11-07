@@ -11,6 +11,7 @@ import { Portrait } from '@/components/artists/parts';
 import Nav from '@/components/layout/Nav';
 import EventFeed from '@/components/events/EventFeed';
 import HotRail, { HOT_RAIL_H } from '@/components/events/HotRail';
+import { linkTentpoles } from '@/lib/data/tentpoles';
 import FilterSheet, { CITIES, CATEGORIES, WHEN_OPTS, PRICE_OPTS, type Place } from '@/components/events/FilterSheet';
 import { Icon } from '@/components/ui/Icon';
 import type { GhanaEvent, FilterState, City, Category } from '@/lib/types';
@@ -277,7 +278,20 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   // With nothing filtered, the feed is a fresh mix on every visit (hot and soon events lean to the top).
   // The mix holds while browsing in and back out, and changes on reload.
   const untouched = JSON.stringify(filters) === JSON.stringify(base);
-  const ordered = useMemo(() => (untouched ? mix(filtered, feedSeed(seedProp)) : filtered), [filtered, untouched]);
+  const ordered = useMemo(() => {
+    if (!untouched) return filtered;
+    // Through the season the big nights lead the feed, in date order; everything else follows mixed
+    if (Date.now() < Date.parse('2027-01-06T00:00:00Z')) {
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Accra' });
+      const picked = linkTentpoles(filtered).map((t) => t.event).filter(Boolean) as GhanaEvent[];
+      const majors = Array.from(new Set([...picked, ...filtered.filter((e) => e.hot)]))
+        .filter((e) => (e.date ?? '') >= today)
+        .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''));
+      const lead = new Set(majors.map((e) => e.slug));
+      return [...majors, ...mix(filtered.filter((e) => !lead.has(e.slug)), feedSeed(seedProp))];
+    }
+    return mix(filtered, feedSeed(seedProp));
+  }, [filtered, untouched]); // eslint-disable-line react-hooks/exhaustive-deps
   // The Hot rail: hot and featured shows coming up (featured order first, then soonest)
   const hotShows = useMemo(() => {
     const today = new Date(new Date().toDateString()).getTime();
