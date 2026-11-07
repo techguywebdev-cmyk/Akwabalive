@@ -22,8 +22,8 @@ export default function LegalPage({ eyebrow, title, intro, summary, sections }: 
           <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 10, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.mintText }}>
             {eyebrow}<span style={{ width: 4, height: 4, borderRadius: 1, background: T.text3 }} /><span style={{ color: T.text3, letterSpacing: '0.08em' }}>Updated {UPDATED}</span>
           </p>
-          <h1 style={{ margin: '14px 0 0', fontFamily: FONT.display, fontSize: 'clamp(46px, 13vw, 76px)', fontWeight: 800, lineHeight: 0.92, letterSpacing: '-0.05em', ...gradText }}>{title}</h1>
-          <p style={{ margin: '22px 0 0', maxWidth: 600, fontFamily: FONT.sans, fontSize: 18, lineHeight: 1.55, color: T.text }}>{intro}</p>
+          <h1 style={{ margin: '14px 0 0', fontFamily: FONT.display, fontSize: 'clamp(38px, 10.5vw, 60px)', fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.04em', paddingBottom: '0.08em', ...gradText }}>{title}</h1>
+          <p style={{ margin: '18px 0 0', maxWidth: 600, fontFamily: FONT.sans, fontSize: 16.5, lineHeight: 1.6, color: T.text2 }}>{intro}</p>
         </header>
 
         {summary && summary.length > 0 && (
@@ -31,7 +31,7 @@ export default function LegalPage({ eyebrow, title, intro, summary, sections }: 
             <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 13, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.white }}>The short version</p>
             <ul style={{ listStyle: 'none', margin: '16px 0 0', padding: 0, display: 'grid', gap: 14 }}>
               {summary.map((s) => (
-                <li key={s} style={{ display: 'flex', gap: 14, alignItems: 'baseline', fontFamily: FONT.sans, fontSize: 17, lineHeight: 1.45, color: T.white }}>
+                <li key={s} style={{ display: 'flex', gap: 14, alignItems: 'baseline', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.45, color: T.white }}>
                   <span aria-hidden style={{ width: 8, height: 8, borderRadius: 2, flexShrink: 0, background: GRAD.mint, transform: 'translateY(-2px)' }} />{s}
                 </li>
               ))}
@@ -54,10 +54,10 @@ export default function LegalPage({ eyebrow, title, intro, summary, sections }: 
 
         {sections.map((s, i) => (
           <section key={s.title} id={`s${i + 1}`} style={{ scrollMarginTop: 96, marginTop: 64 }}>
-            <span aria-hidden style={{ display: 'block', fontFamily: FONT.display, fontSize: 56, fontWeight: 800, lineHeight: 0.9, letterSpacing: '-0.05em', background: GRAD.mint, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', opacity: 0.9 }}>
+            <span aria-hidden style={{ display: 'block', fontFamily: FONT.display, fontSize: 44, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.04em', background: GRAD.mint, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', opacity: 0.9 }}>
               {String(i + 1).padStart(2, '0')}
             </span>
-            <h2 style={{ margin: '10px 0 0', fontFamily: FONT.display, fontSize: 'clamp(26px, 6.5vw, 32px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, color: T.white }}>{s.title}</h2>
+            <h2 style={{ margin: '10px 0 0', fontFamily: FONT.display, fontSize: 'clamp(23px, 6vw, 28px)', fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.15, color: T.white }}>{s.title}</h2>
             <div style={{ maxWidth: '62ch' }}>
               {s.body.map((b, j) => Array.isArray(b) ? (
                 <ul key={j} style={{ listStyle: 'none', margin: '16px 0 0', padding: 0, display: 'grid', gap: 12 }}>
@@ -67,7 +67,7 @@ export default function LegalPage({ eyebrow, title, intro, summary, sections }: 
                     return (
                       <li key={li} style={{ display: 'flex', gap: 12, fontFamily: FONT.sans, fontSize: 15.5, lineHeight: 1.65, color: T.text }}>
                         <span aria-hidden style={{ width: 6, height: 6, borderRadius: 2, flexShrink: 0, marginTop: 10, background: T.mint }} />
-                        <span>{lead ? <><b style={{ color: T.white, fontWeight: 700 }}>{lead}.</b> {li.slice(k + 2)}</> : li}</span>
+                        <span>{lead ? <><b style={{ color: T.white, fontWeight: 700 }}>{lead}.</b> {li.charAt(k + 2).toUpperCase() + li.slice(k + 3)}</> : li}</span>
                       </li>
                     );
                   })}
