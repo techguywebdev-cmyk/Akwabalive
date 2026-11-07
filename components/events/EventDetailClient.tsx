@@ -91,6 +91,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const q = new URLSearchParams(window.location.search);
+    if (q.get('chat') === '1') { setChatOpen(true); return; }
     if (q.get('tickets') !== '1') return;
     if (isListedEvent(event) && event.ticketUrl) {
       window.open(event.ticketUrl, '_blank', 'noopener,noreferrer');

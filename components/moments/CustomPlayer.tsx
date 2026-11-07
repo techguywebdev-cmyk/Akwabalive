@@ -116,6 +116,16 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
     youtubeIdRef.current = youtubeId;
 
     const [playing, setPlaying] = useState(false);
+    // Frames actually on screen: YouTube reports "playing" while its own grey loading card is still up,
+    // so the poster stays until the clock has moved
+    const [shown, setShown] = useState(false);
+    useEffect(() => {
+      if (!playing || shown) return;
+      const t = setInterval(() => {
+        try { if ((playerRef.current?.getCurrentTime?.() ?? 0) > 0.3) setShown(true); } catch { /* ignore */ }
+      }, 120);
+      return () => clearInterval(t);
+    }, [playing, shown]);
     const [muted, setMuted] = useState(true);
     useEffect(() => { onMuteChange?.(muted); }, [muted, onMuteChange]);
 
@@ -388,6 +398,7 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
       const p = playerRef.current;
       userPausedRef.current = false;
       setPlaying(false);
+      setShown(false);
       if (!p || typeof p.loadVideoById !== 'function') return;
       try {
         p.mute();
@@ -535,8 +546,8 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
           {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>}
 
-        {/* Poster only — no fake play button. Hides as soon as frames are playing. */}
-        {!playing && (
+        {/* Poster until real frames are playing, with a thin mint loading line so it never looks broken */}
+        {!shown && (
           <div
             style={{
               position: 'absolute',
@@ -556,6 +567,10 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
                 if (img.src.includes('maxresdefault')) img.src = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
               }}
             />
+            <style>{'@keyframes cpLoad{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}'}</style>
+            <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, overflow: 'hidden', background: 'rgba(255,255,255,0.08)' }}>
+              <span style={{ position: 'absolute', top: 0, bottom: 0, width: '40%', background: 'linear-gradient(90deg, rgba(123,227,168,0), #7BE3A8, rgba(123,227,168,0))', animation: 'cpLoad 1.1s ease-in-out infinite' }} />
+            </span>
           </div>
         )}
       </div>
