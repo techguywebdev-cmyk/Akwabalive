@@ -12,7 +12,8 @@ import type { GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
 import Nav from '@/components/layout/Nav';
 import { BTN } from '@/components/events/CardParts';
-import { loadAll, MomentsViewer } from '@/components/moments/EventMoments';
+import { loadAll } from '@/components/moments/EventMoments';
+import { useOpenInMoments } from '@/components/moments/useOpenInMoments';
 import { momentsForEvent, ytThumb } from '@/lib/moments/match';
 import { supabaseToGhanaEvent, type SupabaseEvent } from '@/lib/supabase/events';
 import { events as staticEvents } from '@/lib/data/events';
@@ -280,6 +281,7 @@ export default function UserProfilePage() {
   }, []);
   const [sheet, setSheet] = useState<null | 'edit' | 'followers' | 'following'>(null);
   const [viewer, setViewer] = useState<number | null>(null);
+  useOpenInMoments(moments && viewer !== null ? moments[viewer]?.id : null, () => setViewer(null));
   const [copied, setCopied] = useState(false);
 
   const own = !!user && profile?.id === user.id;
@@ -530,9 +532,6 @@ export default function UserProfilePage() {
       )}
       {profile && (sheet === 'followers' || sheet === 'following') && (
         <PeopleSheet profileId={profile.id} kind={sheet} onClose={() => setSheet(null)} />
-      )}
-      {moments && viewer !== null && (
-        <MomentsViewer list={moments} start={viewer} eventTitle={profile ? `${nameOf(profile)}’s moments` : 'Moments'} onClose={() => setViewer(null)} />
       )}
     </div>
   );

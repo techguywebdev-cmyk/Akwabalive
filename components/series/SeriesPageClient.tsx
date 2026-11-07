@@ -8,13 +8,14 @@ import type { Moment } from '@/components/moments/types';
 import type { EventSeries } from '@/lib/data/series';
 import Nav from '@/components/layout/Nav';
 import { BTN } from '@/components/events/CardParts';
-import { MomentsViewer } from '@/components/moments/EventMoments';
+
 import { useFollow, compactCount } from '@/components/follow/useFollow';
 import { hiRes } from '@/lib/events/image';
 import { T, FONT, GROUND } from '@/lib/thiscene';
 import { roundBtn, SectionTitle, Portrait, NextShow, ShowRow, MomentsStrip } from '@/components/artists/parts';
 import { useRatingSummaries } from '@/lib/ratings';
 import { ScoreChip } from '@/components/ratings/Stars';
+import { useOpenInMoments } from '@/components/moments/useOpenInMoments';
 
 type Host = { slug: string; name: string; photo: string | null };
 
@@ -24,6 +25,7 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
 }) {
   const { following, count, busy, toggle } = useFollow('series', series.slug);
   const [viewer, setViewer] = useState<number | null>(null);
+  useOpenInMoments(viewer !== null ? moments[viewer]?.id : null, () => setViewer(null));
   const [copied, setCopied] = useState(false);
   const [next, ...later] = upcoming;
   const ratings = useRatingSummaries(past.map((e) => e.slug));
@@ -128,7 +130,6 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
         )}
       </main>
 
-      {viewer !== null && <MomentsViewer list={moments} start={viewer} eventTitle={series.name} onClose={() => setViewer(null)} />}
     </div>
   );
 }
