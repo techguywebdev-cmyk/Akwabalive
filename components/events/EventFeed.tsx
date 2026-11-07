@@ -22,8 +22,10 @@ import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { type CheckoutTier } from '@/lib/events/tiers';
-import { Heart, Share2, Mic2, Play, Image as ImageIcon, MessageCircle } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { Heart, Share2, Mic2, Play, Image as ImageIcon, MessageSquareText } from 'lucide-react';
+import FeedComments from '@/components/events/FeedComments';
+import { useMomentComments } from '@/hooks/useMomentComments';
+import { useEventComments } from '@/hooks/useEventComments';
 import { isListedEvent } from '@/lib/types';
 import { T, TYPE, RADIUS, FONT, alpha, ambient, glass, GRAD } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
@@ -96,15 +98,15 @@ function EventCard({
   const [autoDone, setAutoDone] = useState(false);
   useEffect(() => { if (!active) { setWatching(false); setAutoDone(false); } }, [active]);
   const moments = useEventMoments(event, near);
-  // How many people are talking about it (the event chat), so the comment button shows life
-  const [chatCount, setChatCount] = useState(0);
-  useEffect(() => {
-    if (!near) return;
-    let live = true;
-    createClient().from('event_comments').select('id', { count: 'exact', head: true }).eq('event_slug', event.slug).eq('hidden', false)
-      .then(({ count }) => { if (live) setChatCount(count ?? 0); }, () => {});
-    return () => { live = false; };
-  }, [near, event.slug]);
+  // Comments: the clip's own thread (the same one as on the Moments page); the event chat when it has no clips.
+  // Loaded for the card on screen only.
+  const [chatOpen, setChatOpen] = useState(false);
+  useEffect(() => { if (!active) setChatOpen(false); }, [active]);
+  const threadClip = moments.length ? moments[watching ? clip : 0] : null;
+  const momentThread = useMomentComments(active && threadClip ? threadClip.id : undefined);
+  const eventThread = useEventComments(active && !threadClip ? event.slug : undefined);
+  const thread = threadClip ? momentThread : eventThread;
+  const chatCount = thread.comments.length;
   const series = useMemo(() => seriesForEvent(event), [event]);
   // After a few seconds on a card with moments, the clips start by themselves (muted, like the Moments feed)
   useEffect(() => {
@@ -302,16 +304,26 @@ function EventCard({
           <button type="button" onClick={onSave} aria-label={saved ? 'Saved' : 'Save'} aria-pressed={saved} style={{ ...roundBtn, ...(saved ? { background: alpha(a, 0.2), borderColor: alpha(a, 0.5), color: a } : {}) }}>
             <Heart size={21} strokeWidth={2} fill={saved ? 'currentColor' : 'none'} />
           </button>
-          <Link href={`/events/${event.slug}?chat=1`} aria-label={chatCount ? `The chat, ${chatCount} comments` : 'Open the chat'} style={{ ...roundBtn, position: 'relative', textDecoration: 'none', color: T.white, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-            <MessageCircle size={21} strokeWidth={2} />
+          <button type="button" onClick={() => setChatOpen((o) => !o)} aria-label={chatCount ? `Comments, ${chatCount}` : 'Comments'} aria-expanded={chatOpen} style={{ ...roundBtn, position: 'relative', cursor: 'pointer', ...(chatOpen ? { background: alpha(a, 0.2), color: a } : {}) }}>
+            <MessageSquareText size={20} strokeWidth={2} />
             {chatCount > 0 && <span style={{ position: 'absolute', top: 4, right: 2, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{chatCount > 99 ? '99+' : chatCount}</span>}
-          </Link>
+          </button>
           <button type="button" onClick={onShare} aria-label="Share" style={roundBtn}>
             <Share2 size={20} strokeWidth={2} />
           </button>
         </div>
       </div>
 
+      {chatOpen && (
+        <FeedComments
+          height={Math.max(blockH + bottom + 18, 320)}
+          title={event.title}
+          comments={thread.comments}
+          onSend={(uid, t) => thread.send(uid, t)}
+          onClose={() => setChatOpen(false)}
+          momentHref={threadClip ? `/moments?id=${threadClip.id}&from=${encodeURIComponent('/events')}` : undefined}
+        />
+      )}
     </section>
   );
 }
