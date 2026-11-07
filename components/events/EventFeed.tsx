@@ -26,6 +26,8 @@ import { Heart, Share2, Mic2, Play, Image as ImageIcon } from 'lucide-react';
 import { isListedEvent } from '@/lib/types';
 import { T, TYPE, RADIUS, FONT, alpha, ambient, glass, GRAD } from '@/lib/thiscene';
 import { type RGB, categoryAccent, eventAccent, resetPageAccent, setPageAccent, toHex } from '@/lib/events/accent';
+import { seriesForEvent } from '@/lib/data/series';
+import { Stars } from '@/components/ratings/Stars';
 
 /** The card last on screen, kept for the whole visit so Back returns to it */
 let lastSeen: string | null = null;
@@ -93,6 +95,7 @@ function EventCard({
   const [autoDone, setAutoDone] = useState(false);
   useEffect(() => { if (!active) { setWatching(false); setAutoDone(false); } }, [active]);
   const moments = useEventMoments(event, near);
+  const series = useMemo(() => seriesForEvent(event), [event]);
   // After a few seconds on a card with moments, the clips start by themselves (muted, like the Moments feed)
   useEffect(() => {
     if (!active || watching || autoDone || !moments.length) return;
@@ -255,6 +258,12 @@ function EventCard({
         </span>
 
         <Link href={`/events/${event.slug}`} style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6, pointerEvents: 'auto' }}>
+          {series?.stars && (
+            <span role="img" aria-label={`${series.name}: ${series.stars} out of 5, comes back every year`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <Stars value={series.stars} size={15} />
+              <span style={{ fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.text2 }}>{series.stars % 1 ? series.stars.toFixed(1) : series.stars}/5 · every year</span>
+            </span>
+          )}
           <h2 style={{ margin: 0, fontFamily: FONT.display, fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', fontSize: titleSize, color: T.white, textShadow: `0 0 42px ${alpha(a, 0.45)}, 0 2px 18px rgba(0,0,0,0.5)` }}>
             {title}
           </h2>

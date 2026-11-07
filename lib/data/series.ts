@@ -18,26 +18,28 @@ export interface EventSeries {
   blurb: string;
   /** Wikipedia article, for a free cover photo when we have no flyer */
   wiki?: string;
+  /** Out of five: how big a night it reliably is, edition after edition (our call until fan ratings build up) */
+  stars?: number;
 }
 
 export const SERIES: EventSeries[] = [
-  { slug: 'rapperholic', name: 'Rapperholic', keywords: ['rapperholic', 'rapholic'], hosts: ['sarkodie'], usually: 'Every December · Accra',
+  { slug: 'rapperholic', stars: 5, name: 'Rapperholic', keywords: ['rapperholic', 'rapholic'], hosts: ['sarkodie'], usually: 'Every December · Accra',
     blurb: 'Sarkodie’s yearly concert — one of the biggest nights in Ghanaian music, with surprise guests every edition.' },
-  { slug: 'detty-rave', name: 'Detty Rave', keywords: ['detty rave'], hosts: ['mr-eazi'], usually: 'Every December · Accra',
+  { slug: 'detty-rave', stars: 5, name: 'Detty Rave', keywords: ['detty rave'], hosts: ['mr-eazi'], usually: 'Every December · Accra',
     blurb: 'Mr Eazi’s December festival: Afrobeats, amapiano and the Choplife Soundsystem, running deep into the night.' },
-  { slug: 'tidal-rave', name: 'Tidal Rave', keywords: ['tidal rave'], hosts: [], organiser: 'Echo House', usually: 'Kokrobite Beach', wiki: 'Tidal Rave Festival',
+  { slug: 'tidal-rave', stars: 4.5, name: 'Tidal Rave', keywords: ['tidal rave'], hosts: [], organiser: 'Echo House', usually: 'Kokrobite Beach', wiki: 'Tidal Rave Festival',
     blurb: 'The beach festival at Kokrobite: big Ghanaian line-ups, sand, sea and a crowd that doesn’t sleep.' },
-  { slug: 'afro-future', name: 'AfroFuture', keywords: ['afro future', 'afrofuture', 'afrochella'], hosts: [], usually: 'Every December · Accra', wiki: 'Afrochella',
+  { slug: 'afro-future', stars: 4.5, name: 'AfroFuture', keywords: ['afro future', 'afrofuture', 'afrochella'], hosts: [], usually: 'Every December · Accra', wiki: 'Afrochella',
     blurb: 'Accra’s December culture festival (formerly Afrochella): music, fashion, art and food from across the diaspora.' },
-  { slug: 'bhim-concert', name: 'Bhim Concert', keywords: ['bhim concert'], hosts: ['stonebwoy'], usually: 'Accra',
+  { slug: 'bhim-concert', stars: 5, name: 'Bhim Concert', keywords: ['bhim concert'], hosts: ['stonebwoy'], usually: 'Accra',
     blurb: 'Stonebwoy’s own concert, with the Bhim Nation out in full.' },
-  { slug: 'ashaiman-to-the-world', name: 'Ashaiman To The World', keywords: ['ashaiman to the world'], hosts: ['stonebwoy'], usually: 'Ashaiman',
+  { slug: 'ashaiman-to-the-world', stars: 4, name: 'Ashaiman To The World', keywords: ['ashaiman to the world'], hosts: ['stonebwoy'], usually: 'Ashaiman',
     blurb: 'Stonebwoy brings the show home to Ashaiman.' },
-  { slug: 'made-in-taadi', name: 'Made in Taadi', keywords: ['made in taadi'], hosts: ['kofi-kinaata'], usually: 'Takoradi',
+  { slug: 'made-in-taadi', stars: 4, name: 'Made in Taadi', keywords: ['made in taadi'], hosts: ['kofi-kinaata'], usually: 'Takoradi',
     blurb: 'Kofi Kinaata’s hometown concert in Takoradi, drawing tens of thousands every year.' },
-  { slug: 'kweku-smoke-revival', name: 'Revival Concert', keywords: ['kweku smoke revival', 'smoke revival'], hosts: ['kweku-smoke'], usually: 'Accra',
+  { slug: 'kweku-smoke-revival', stars: 4, name: 'Revival Concert', keywords: ['kweku smoke revival', 'smoke revival'], hosts: ['kweku-smoke'], usually: 'Accra',
     blurb: 'Kweku Smoke’s headline concert.' },
-  { slug: 'gadam-nation', name: 'Gadam Nation Concert', keywords: ['gadam nation', 'gadam concert'], hosts: ['fancy-gadam'], usually: 'Tamale',
+  { slug: 'gadam-nation', stars: 4, name: 'Gadam Nation Concert', keywords: ['gadam nation', 'gadam concert'], hosts: ['fancy-gadam'], usually: 'Tamale',
     blurb: 'Fancy Gadam’s yearly concert for the north.' },
 ];
 
