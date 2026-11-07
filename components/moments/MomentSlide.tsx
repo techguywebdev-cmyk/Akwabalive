@@ -104,7 +104,7 @@ const MomentSlide = forwardRef<SlideHandle, {
   }, [night, clips]);
 
   // Data only for slides near the screen
-  const { comments, send, remove, report } = useMomentComments(mounted ? clip.id : undefined);
+  const { comments, send, edit, remove, report } = useMomentComments(mounted ? clip.id : undefined);
   const isAdmin = useIsAdmin();
   const { next } = useNextEdition(mounted ? night : null);
   const commenterIds = useMemo(() => comments.map((c) => c.user_id), [comments]);
@@ -391,7 +391,8 @@ const MomentSlide = forwardRef<SlideHandle, {
       {showComments && (
         <CommentsSheet moment={clip} comments={comments} user={user} profile={profile} currentSeconds={t}
           wasThereIds={crowd.wasThereIds} goingIds={crowd.goingIds} nextLabel={next?.date?.slice(0, 4) ?? null} canGift={canGift} tint={tint}
-          onClose={() => setShowComments(false)} onSend={(text) => { if (user) send(user.id, text); }}
+          onClose={() => setShowComments(false)} onSend={(text, parentId) => { if (user) send(user.id, text, profile ? { username: profile.username, full_name: profile.full_name ?? null, avatar_url: profile.avatar_url ?? null } : undefined, parentId); }}
+          onEdit={(c, text) => edit(c.id, text)}
           onSeek={(s) => { playerRef.current?.seekTo(s); setShowComments(false); }} onGift={(c) => setGiftTarget(c)}
           onDelete={(c) => remove(c.id)} onReport={(c) => report(c.id)} isAdmin={isAdmin} />
       )}

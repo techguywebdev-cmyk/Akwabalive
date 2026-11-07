@@ -323,7 +323,8 @@ function EventCard({
           height={Math.max(blockH + bottom + 18, 320)}
           title={event.title}
           comments={thread.comments}
-          onSend={(uid, t, prof) => thread.send(uid, t, prof)}
+          onSend={(uid, t, prof, parent) => thread.send(uid, t, prof, parent)}
+          onEdit={(id, t) => thread.edit(id, t)}
           onDelete={(id) => thread.remove(id)}
           onClose={() => setChatOpen(false)}
           momentHref={threadClip ? `/moments?id=${threadClip.id}&from=${encodeURIComponent('/events')}` : undefined}

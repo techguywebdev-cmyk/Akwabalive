@@ -52,6 +52,15 @@ export function useMomentComments(momentId: string | undefined) {
           }
         },
       )
+      // Edits and deletes from anyone show up live too
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'moment_comments', filter: `moment_id=eq.${momentId}` }, (payload) => {
+        const n = payload.new as Comment;
+        if (!cancelled) setComments((prev) => prev.map((c) => (c.id === n.id ? { ...c, content: n.content, edited_at: n.edited_at } : c)));
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'moment_comments' }, (payload) => {
+        const id = (payload.old as { id?: string }).id;
+        if (id && !cancelled) setComments((prev) => prev.filter((c) => c.id !== id && c.parent_id !== id));
+      })
       .subscribe();
 
     return () => {
@@ -61,12 +70,12 @@ export function useMomentComments(momentId: string | undefined) {
   }, [momentId, supabase]);
 
   /** Shows straight away, then swaps in the saved row (no waiting on the live feed) */
-  async function send(userId: string, content: string, profile?: Comment['profiles']) {
+  async function send(userId: string, content: string, profile?: Comment['profiles'], parentId?: string | null) {
     if (!momentId || !content.trim()) return;
     const temp = `temp-${Date.now()}`;
-    setComments((prev) => [...prev, { id: temp, moment_id: momentId, user_id: userId, content: content.trim(), created_at: new Date().toISOString(), profiles: profile } as Comment]);
+    setComments((prev) => [...prev, { id: temp, moment_id: momentId, user_id: userId, content: content.trim(), created_at: new Date().toISOString(), parent_id: parentId ?? null, profiles: profile } as Comment]);
     const { data, error } = await supabase.from('moment_comments')
-      .insert({ moment_id: momentId, user_id: userId, content: content.trim() })
+      .insert({ moment_id: momentId, user_id: userId, content: content.trim(), parent_id: parentId ?? null })
       .select('*, profiles(username, full_name, avatar_url)').single();
     setComments((prev) => {
       const rest = prev.filter((c) => c.id !== temp);
@@ -75,13 +84,20 @@ export function useMomentComments(momentId: string | undefined) {
     });
   }
 
+  /** Your own comment's text; shows straight away */
+  async function edit(id: string, content: string) {
+    if (!content.trim()) return;
+    setComments((prev) => prev.map((c) => (c.id === id ? { ...c, content: content.trim(), edited_at: new Date().toISOString() } : c)));
+    await supabase.from('moment_comments').update({ content: content.trim() }).eq('id', id);
+  }
+
   async function remove(id: string) {
-    setComments((prev) => prev.filter((c) => c.id !== id));
+    setComments((prev) => prev.filter((c) => c.id !== id && c.parent_id !== id));
     await supabase.from('moment_comments').delete().eq('id', id);
   }
   async function report(id: string) {
     await supabase.from('comment_reports').insert({ kind: 'moment', comment_id: id });
   }
 
-  return { comments, loading, send, remove, report };
+  return { comments, loading, send, edit, remove, report };
 }

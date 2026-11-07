@@ -51,6 +51,9 @@ export interface Comment {
   user_id: string;
   content: string;
   created_at: string;
+  /** The comment this answers, for replies */
+  parent_id?: string | null;
+  edited_at?: string | null;
   profiles?: {
     username: string;
     full_name: string | null;
