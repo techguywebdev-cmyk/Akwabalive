@@ -23,15 +23,20 @@ export function useNextEdition(moment: Moment | null) {
   const name = moment?.event_name || null;
   const words = seriesWords(name);
   const key = words.length && !/ live$/i.test(name ?? '') ? seriesKey(name) : null;
-  const allWords = (title: string) => { const t = title.toLowerCase(); return words.every((w) => t.includes(w)); };
+  // Whole words only ("Turn Up" isn't "The Turnup"), and travel packages or after-parties that mention a show aren't editions of it
+  const allWords = (title: string) => {
+    const t = title.toLowerCase();
+    if (/\b(tour|trip|package|itinerary)\b|^after\b|\bafter[- ]party\b/.test(t)) return false;
+    return words.every((w) => new RegExp(`(^|[^a-z0-9])${w.replace(/[^a-z0-9]/g, '')}($|[^a-z0-9])`).test(t));
+  };
 
   useEffect(() => {
-    if (!key) {
+    if (!key && !moment?.event_slug) {
       setNext(null);
       return;
     }
-    if (cache.has(words.join(' '))) {
-      setNext(cache.get(words.join(' ')) ?? null);
+    if (cache.has(`${moment?.event_slug ?? ''}|${words.join(' ')}`)) {
+      setNext(cache.get(`${moment?.event_slug ?? ''}|${words.join(' ')}`) ?? null);
       return;
     }
 
@@ -43,7 +48,12 @@ export function useNextEdition(moment: Moment | null) {
       let found: GhanaEvent | null = null;
       try {
         const supabase = createClient();
-        const { data } = await supabase
+        // A clip tied to an upcoming event (e.g. an act's set used to promote their own show) points there first
+        if (moment?.event_slug) {
+          const { data: own } = await supabase.from('events').select('*, ticket_tiers(*)').eq('slug', moment.event_slug).eq('status', 'published').gte('date', today).maybeSingle();
+          if (own) found = supabaseToGhanaEvent(own as SupabaseEvent);
+        }
+        const { data } = found || !key ? { data: [] } : await supabase
           .from('events')
           .select('*, ticket_tiers(*)')
           .eq('status', 'published')
@@ -56,13 +66,13 @@ export function useNextEdition(moment: Moment | null) {
       } catch {
         /* fall through to static */
       }
-      if (!found) {
+      if (!found && words.length) {
         found =
           staticEvents
             .filter((e) => e.date >= today && allWords(e.title))
             .sort((a, b) => a.date.localeCompare(b.date))[0] ?? null;
       }
-      cache.set(words.join(' '), found);
+      cache.set(`${moment?.event_slug ?? ''}|${words.join(' ')}`, found);
       if (!cancelled) {
         setNext(found);
         setLoading(false);
@@ -72,7 +82,7 @@ export function useNextEdition(moment: Moment | null) {
     return () => {
       cancelled = true;
     };
-  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [key, moment?.event_slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { next, loading };
 }
