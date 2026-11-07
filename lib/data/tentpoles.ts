@@ -25,6 +25,7 @@ export type Tentpole = {
 export const TENTPOLES: Tentpole[] = [
   { date: '2026-11-14', title: 'Tidal Rave', blurb: 'The beach festival that opens the season, all day into the night', venue: 'La Palm Royal Beach Hotel', match: /tidal\s*rave/i },
   { date: '2026-11-20', title: 'The O’Live Experience', artist: 'olivetheboy', blurb: 'Olivetheboy’s own show, with a live band and guests', venue: 'National Theatre', match: /o['’]?\s*live\s*experience|olivetheboy/i, source: '3music.tv' },
+  { date: '2026-11-21', title: 'Shay Concert', artist: 'wendy-shay', blurb: 'Wendy Shay’s own concert, The Boss on the throne', venue: 'West Hills Mall', match: /\bshay\s*concert|wendy\s*shay/i },
   { date: '2026-12-04', title: 'Crazy World', artist: 'kidi', blurb: 'KiDi’s first headline concert of his own', venue: 'Ghud Park, Accra Mall', match: /crazy\s*world/i, tickets: '*714*567#', source: 'myjoyonline.com' },
   { date: '2026-12-11', title: 'Higher Grounds', artist: 'essumann', blurb: 'Essumann headlines his own night', venue: 'Untamed Empire', match: /essum+an/i },
   { date: '2026-12-17', title: 'BYK Concert', blurb: 'The Spaceship Edition', venue: 'Untamed Empire', match: /\bbyk\b/i },
