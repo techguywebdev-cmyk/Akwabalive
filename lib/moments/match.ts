@@ -36,7 +36,7 @@ export function momentsForEvent(event: { slug: string; title: string }, all: Mom
   const own = all.filter((m) => m.event_slug === event.slug);
   const sameSeries = (m: Moment) => {
     const n = seriesName(m.event_name);
-    if (!n || !name || n.length < 4 || GENERIC.test(n) || GENERIC.test(name)) return false;
+    if (!n || !name || n.length < 3 || GENERIC.test(n) || GENERIC.test(name)) return false;
     return n === name || name.startsWith(`${n} `) || n.startsWith(`${name} `);
   };
   const series = all.filter((m) => m.event_slug !== event.slug && sameSeries(m));
