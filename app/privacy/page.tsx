@@ -8,6 +8,12 @@ export default function PrivacyPage() {
       eyebrow="Akwaaba"
       title="Privacy policy"
       intro="This explains what information Akwaaba collects, how we use it and the choices you have. We collect only what the app needs, we do not sell your information, and we handle it in line with Ghana’s Data Protection Act, 2012 (Act 843)."
+      summary={[
+        'We collect only what the app needs to work.',
+        'We never see or store your card or mobile money details.',
+        'We don’t sell your information, to anyone.',
+        'Your email and phone number stay private; your location stays on your device.',
+      ]}
       sections={[
         { title: 'What we collect', body: [
           [

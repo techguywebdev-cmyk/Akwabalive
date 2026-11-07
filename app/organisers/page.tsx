@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
-import { Megaphone, Flame, Clapperboard, BarChart3, ScanLine, ImagePlus, CheckCircle2, BadgeCheck, ArrowRight } from 'lucide-react';
+import { Flame, Eye, ScanLine, ImagePlus, CheckCircle2, BadgeCheck, ArrowRight } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import { shareMeta } from '@/lib/og';
-import { T, FONT, GROUND, GRAD } from '@/lib/thiscene';
+import { T, FONT, GROUND, GRAD, BTN } from '@/lib/thiscene';
 
 export const revalidate = 600;
 export const metadata = shareMeta({
@@ -19,23 +19,22 @@ async function numbers() {
   if (!url || !key) return null;
   const db = createClient(url, key);
   const today = new Date().toISOString().slice(0, 10);
-  const [{ count: events }, { count: moments }] = await Promise.all([
+  const [{ count: events }, { count: moments }, { data: hot }] = await Promise.all([
     db.from('events').select('id', { count: 'exact', head: true }).eq('status', 'published').gte('date', today),
     db.from('moments').select('id', { count: 'exact', head: true }).eq('status', 'live'),
+    db.from('events').select('title, image_url, venue, date').eq('status', 'published').eq('is_hot', true).gte('date', today).not('image_url', 'is', null).order('date').limit(3),
   ]);
-  return { events: events ?? 0, moments: moments ?? 0 };
+  return { events: events ?? 0, moments: moments ?? 0, flyers: (hot ?? []) as { title: string; image_url: string; venue: string; date: string }[] };
 }
 
 const eyebrow: React.CSSProperties = { margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
 const h2: React.CSSProperties = { margin: '6px 0 0', fontFamily: FONT.display, fontSize: 'clamp(26px, 6vw, 34px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05, color: T.white };
-const primary: React.CSSProperties = { height: 54, padding: '0 24px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, textDecoration: 'none', boxShadow: '0 10px 30px rgba(123,227,168,0.2)' };
-const ghost: React.CSSProperties = { height: 54, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.display, fontSize: 15, fontWeight: 600, textDecoration: 'none' };
 
 const WHY = [
-  { icon: Megaphone, title: 'Seen where people decide', body: 'Akwaaba is where people look for what to do this weekend: every show in Ghana in one feed, with your full flyer, line-up and a ticket button.' },
-  { icon: Flame, title: 'Get on the Hot list', body: 'Shows people are going to rise to the Hot screen and the top of the feed, with real numbers like “1.2k checked this out”.' },
-  { icon: Clapperboard, title: 'Last year sells this year', body: 'Clips from your past editions play right on your event. People see the energy before they buy.' },
-  { icon: BarChart3, title: 'Know what’s working', body: 'See views, saves and who’s going on every event, so you know when to push and where.' },
+  { title: 'Seen where people decide', body: 'Akwaaba is where people look for what to do this weekend: every show in Ghana in one feed, with your full flyer, line-up and a ticket button.' },
+  { title: 'Get on the Hot list', body: 'Shows people are going to rise to the Hot screen and the top of the feed, with real numbers like “1.2k checked this out”.' },
+  { title: 'Last year sells this year', body: 'Clips from your past editions play right on your event. People see the energy before they buy.' },
+  { title: 'Know what’s working', body: 'See views, saves and who’s going on every event, so you know when to push and where.' },
 ];
 const STEPS = [
   { icon: ImagePlus, title: 'Upload your flyer', body: 'We read the date, venue, line-up and contacts off it for you.' },
@@ -49,83 +48,127 @@ const FAQ = [
   { q: 'Who checks events?', a: 'We check your first event before it goes live, to keep the feed real. After that, you publish straight away.' },
 ];
 
+const gradText: React.CSSProperties = { background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' };
+const mintText: React.CSSProperties = { background: GRAD.mint, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' };
+
 export default async function OrganisersPage() {
   const n = await numbers().catch(() => null);
+  const flyers = n?.flyers ?? [];
+  const lead = flyers[0];
   return (
-    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
+    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed', overflowX: 'hidden' }}>
       <Nav back="/" />
-      <main style={{ maxWidth: 760, margin: '0 auto', padding: 'calc(96px + env(safe-area-inset-top, 0px)) 20px 20px' }}>
+
+      {/* Hero: real flyers from this season fanned out behind the header, in the northern-lights wash */}
+      <div style={{ position: 'relative' }}>
+        <div aria-hidden style={{ position: 'absolute', inset: '0 0 -160px', background: GRAD.aurora, pointerEvents: 'none' }} />
+        {flyers.length > 0 && (
+          <div aria-hidden style={{ position: 'relative', height: 'calc(min(58vw, 300px) * 1.25 + 20px + env(safe-area-inset-top, 0px))', overflow: 'hidden', maskImage: 'linear-gradient(180deg, #000 70%, transparent 100%)', WebkitMaskImage: 'linear-gradient(180deg, #000 70%, transparent 100%)' }}>
+            {[{ l: '50%', r: 0, w: 58, z: 3, y: 0 }, { l: '13%', r: -10, w: 46, z: 2, y: 46 }, { l: '87%', r: 10, w: 46, z: 1, y: 46 }].map((sp, i) => flyers[i] ? (
+              <span key={i} style={{ position: 'absolute', top: `calc(${sp.y - 6}px + env(safe-area-inset-top, 0px))`, left: sp.l, width: `${sp.w}%`, maxWidth: sp.w === 58 ? 300 : 230, aspectRatio: '4 / 5', transform: `translateX(-50%) rotate(${sp.r}deg)`, zIndex: sp.z, borderRadius: 18, overflow: 'hidden', boxShadow: i === 0 ? '0 30px 70px -10px rgba(0,0,0,0.7), 0 0 80px -20px rgba(91,217,154,0.45)' : '0 24px 50px rgba(0,0,0,0.6)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={flyers[i].image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: i ? 'brightness(0.72)' : undefined }} />
+              </span>
+            ) : null)}
+          </div>
+        )}
+      </div>
+
+      <main style={{ maxWidth: 760, margin: '0 auto', padding: flyers.length ? '0 20px 20px' : 'calc(110px + env(safe-area-inset-top, 0px)) 20px 20px', position: 'relative', zIndex: 2 }}>
         <p style={eyebrow}>For organisers</p>
-        <h1 style={{ margin: '10px 0 0', fontFamily: FONT.display, fontSize: 'clamp(40px, 10vw, 64px)', fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 0.98, color: T.white }}>
-          Put your night in front of everyone going out.
+        <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(44px, 12.5vw, 78px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.92 }}>
+          <span style={gradText}>Put your night in front of </span><span style={mintText}>everyone going out.</span>
         </h1>
-        <p style={{ margin: '16px 0 0', maxWidth: 560, fontFamily: FONT.sans, fontSize: 17, lineHeight: 1.55, color: T.text }}>
-          List your show on Akwaaba for free. Flyer to live in two minutes, your past moments on the page, and real numbers on who’s seen it.
+        <p style={{ margin: '20px 0 0', maxWidth: 540, fontFamily: FONT.sans, fontSize: 18, lineHeight: 1.5, color: T.text }}>
+          List your show free. Flyer to live in two minutes, last year’s moments on the page, and real numbers on who’s seen it.
         </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 26 }}>
-          <Link href="/organizer/events/new" style={primary}>List your event <ArrowRight size={18} /></Link>
-          <Link href="/organisers/claim" style={ghost}><BadgeCheck size={18} color={T.mintText} /> Claim an event</Link>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 28 }}>
+          <Link href="/organizer/events/new" style={{ ...BTN.primary, height: 54, padding: '0 26px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 15.5, textDecoration: 'none' }}>List your event <ArrowRight size={18} /></Link>
+          <Link href="/organisers/claim" style={{ ...BTN.ghost, height: 54, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 15, textDecoration: 'none' }}><BadgeCheck size={18} color={T.mintText} /> Claim an event</Link>
         </div>
 
         {n && n.events > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 34 }}>
-            {[{ v: n.events, l: 'upcoming events listed' }, { v: n.moments, l: 'moments from past shows' }].map((s) => (
-              <div key={s.l} style={{ padding: '18px 18px 16px', borderRadius: 20, background: T.surface, border: 'none' }}>
-                <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 34, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>{s.v.toLocaleString()}</p>
-                <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>{s.l}</p>
+          <div style={{ display: 'flex', gap: 'clamp(28px, 10vw, 64px)', marginTop: 52 }}>
+            {[{ v: n.events, l: 'upcoming shows listed' }, { v: n.moments, l: 'moments from past nights' }].map((x) => (
+              <div key={x.l}>
+                <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(48px, 13vw, 72px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.9, ...mintText }}>{x.v.toLocaleString()}</p>
+                <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>{x.l}</p>
               </div>
             ))}
           </div>
         )}
 
-        <section style={{ marginTop: 56 }}>
+        {/* What a listing looks like, then why it works */}
+        <section style={{ marginTop: 88 }}>
           <p style={eyebrow}>Why Akwaaba</p>
-          <h2 style={h2}>More people at the door</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, marginTop: 20 }}>
-            {WHY.map(({ icon: I, title, body }) => (
-              <div key={title} style={{ padding: 18, borderRadius: 20, background: T.surface, border: 'none' }}>
-                <span style={{ width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.12)', color: T.mintText }}><I size={20} /></span>
-                <p style={{ margin: '14px 0 0', fontFamily: FONT.display, fontSize: 17, fontWeight: 700, color: T.white }}>{title}</p>
-                <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.55, color: T.text2 }}>{body}</p>
+          <h2 style={{ ...h2, fontSize: 'clamp(32px, 8.5vw, 48px)', letterSpacing: '-0.04em' }}>More people at the door.</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 40, alignItems: 'center', marginTop: 30 }}>
+            {lead && (
+              <div aria-hidden style={{ position: 'relative', width: '100%', maxWidth: 340, aspectRatio: '4 / 5.4', margin: '0 auto', borderRadius: 26, overflow: 'hidden', boxShadow: '0 40px 80px -30px rgba(0,0,0,0.85), 0 0 90px -30px rgba(91,217,154,0.4)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={lead.image_url} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '72%', objectFit: 'cover', objectPosition: 'center top' }} />
+                <span style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(9,16,12,0) 45%, rgba(9,18,13,0.92) 66%, #0A140F 100%)' }} />
+                <span style={{ position: 'absolute', left: 18, right: 18, bottom: 18, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ display: 'flex', gap: 6 }}>
+                    <span style={{ height: 24, padding: '0 9px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4, background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 800 }}><Flame size={12} /> Hot</span>
+                    <span style={{ height: 24, padding: '0 9px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.1)', color: T.white, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 700 }}><Eye size={12} /> 1.2k</span>
+                  </span>
+                  <span style={{ fontFamily: FONT.display, fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{lead.title}</span>
+                  <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>{lead.venue}</span>
+                  <span style={{ marginTop: 4, height: 42, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 14, fontWeight: 800, boxShadow: '0 10px 26px -10px rgba(91,217,154,0.7)' }}>Get tickets</span>
+                </span>
               </div>
-            ))}
+            )}
+            <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 30 }}>
+              {WHY.map(({ title, body }, i) => (
+                <li key={title} style={{ display: 'flex', gap: 18 }}>
+                  <span style={{ fontFamily: FONT.display, fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1, minWidth: 40, ...mintText }}>{String(i + 1).padStart(2, '0')}</span>
+                  <span>
+                    <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{title}</span>
+                    <span style={{ display: 'block', marginTop: 6, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{body}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
           </div>
         </section>
 
-        <section style={{ marginTop: 56 }}>
+        <section style={{ marginTop: 96 }}>
           <p style={eyebrow}>How it works</p>
-          <h2 style={h2}>Live in two minutes</h2>
-          <ol style={{ listStyle: 'none', margin: '20px 0 0', padding: 0, display: 'grid', gap: 10 }}>
+          <h2 style={{ ...h2, fontSize: 'clamp(32px, 8.5vw, 48px)', letterSpacing: '-0.04em' }}>Live in two minutes.</h2>
+          <ol style={{ listStyle: 'none', margin: '34px 0 0', padding: 0, position: 'relative' }}>
+            <span aria-hidden style={{ position: 'absolute', left: 21, top: 30, bottom: 30, width: 2, borderRadius: 1, background: 'linear-gradient(180deg, rgba(123,227,168,0.7), rgba(123,227,168,0.08))' }} />
             {STEPS.map(({ icon: I, title, body }, i) => (
-              <li key={title} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '16px 18px', borderRadius: 20, background: T.surface, border: 'none' }}>
-                <span style={{ width: 34, height: 34, borderRadius: 17, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 800 }}>{i + 1}</span>
-                <span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: FONT.display, fontSize: 16.5, fontWeight: 700, color: T.white }}><I size={17} color={T.mintText} /> {title}</span>
-                  <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.5, color: T.text2 }}>{body}</span>
+              <li key={title} style={{ position: 'relative', display: 'flex', gap: 20, alignItems: 'flex-start', paddingBottom: i === STEPS.length - 1 ? 0 : 34 }}>
+                <span style={{ width: 44, height: 44, borderRadius: 14, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, boxShadow: '0 10px 26px -10px rgba(91,217,154,0.7), inset 0 1px 0 rgba(255,255,255,0.7)' }}><I size={20} /></span>
+                <span style={{ paddingTop: 2 }}>
+                  <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>Step {i + 1}</span>
+                  <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.display, fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{title}</span>
+                  <span style={{ display: 'block', marginTop: 6, maxWidth: 520, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{body}</span>
                 </span>
               </li>
             ))}
           </ol>
         </section>
 
-        <section style={{ marginTop: 56 }}>
+        <section style={{ marginTop: 96 }}>
           <p style={eyebrow}>Questions</p>
-          <div style={{ marginTop: 14, borderRadius: 20, background: T.surface, border: 'none', overflow: 'hidden' }}>
-            {FAQ.map((f, i) => (
-              <details key={f.q} style={{ padding: '16px 18px', borderTop: i ? `1px solid ${T.hairline}` : 'none' }}>
-                <summary style={{ cursor: 'pointer', fontFamily: FONT.sans, fontSize: 15.5, fontWeight: 600, color: T.white, listStyle: 'none' }}>{f.q}</summary>
-                <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.55, color: T.text2 }}>{f.a}</p>
-              </details>
+          <h2 style={{ ...h2, fontSize: 'clamp(32px, 8.5vw, 48px)', letterSpacing: '-0.04em' }}>Good to know.</h2>
+          <div style={{ marginTop: 28, display: 'grid', gap: 28 }}>
+            {FAQ.map((f) => (
+              <div key={f.q}>
+                <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 18.5, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{f.q}</p>
+                <p style={{ margin: '8px 0 0', maxWidth: 580, fontFamily: FONT.sans, fontSize: 15.5, lineHeight: 1.6, color: T.text2 }}>{f.a}</p>
+              </div>
             ))}
           </div>
         </section>
 
-        <section style={{ marginTop: 48, padding: '26px 22px', borderRadius: 24, background: 'radial-gradient(120% 120% at 0% 0%, rgba(123,227,168,0.16) 0%, rgba(123,227,168,0.03) 60%), #0D1210', border: 'none'}}>
-          <h2 style={{ ...h2, marginTop: 0 }}>Got a show coming up?</h2>
-          <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 15, color: T.text }}>List it now. It’s free, and it takes two minutes.</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 18 }}>
-            <Link href="/organizer/events/new" style={primary}>List your event <ArrowRight size={18} /></Link>
-          </div>
+        <section style={{ position: 'relative', marginTop: 110, padding: '40px 0 30px', textAlign: 'center' }}>
+          <div aria-hidden style={{ position: 'absolute', inset: '-60px -40px -20px', background: GRAD.aurora, pointerEvents: 'none' }} />
+          <h2 style={{ position: 'relative', margin: 0, fontFamily: FONT.display, fontSize: 'clamp(38px, 10vw, 60px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.95, ...gradText }}>Got a show coming up?</h2>
+          <p style={{ position: 'relative', margin: '14px 0 0', fontFamily: FONT.sans, fontSize: 17, color: T.text }}>List it now. It’s free, and it takes two minutes.</p>
+          <Link href="/organizer/events/new" style={{ position: 'relative', ...BTN.primary, marginTop: 26, height: 56, padding: '0 30px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 16, textDecoration: 'none' }}>List your event <ArrowRight size={18} /></Link>
         </section>
       </main>
       <Footer />
