@@ -70,7 +70,7 @@ function shorten(t: string, max = 46) {
 }
 
 const roundBtn: React.CSSProperties = {
-  width: 50, height: 50, flexShrink: 0, borderRadius: 25, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+  width: 46, height: 46, flexShrink: 0, borderRadius: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
   background: 'rgba(20,24,22,0.62)', border: 'none', color: T.white,
   transition: 'background 200ms ease, color 200ms ease, border-color 200ms ease',
 };
@@ -287,16 +287,20 @@ function EventCard({
 
         {/* When and where: two quiet lines, no boxes */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 2 }}>
-          <span style={{ fontFamily: FONT.sans, fontSize: 15.5, fontWeight: 600, color: T.white }}>{label === 'Ended' ? `${when} · ended` : when}</span>
+          <span style={{ fontFamily: FONT.sans, fontSize: 15.5, fontWeight: 600, color: T.white }}>
+            {label === 'Ended' ? `${when} · ended` : when}
+            {/* On phones the price sits here, so the ticket button never gets squeezed */}
+            {!wide && priceNote && <span style={{ fontWeight: 500, color: T.text2 }}>{` · ${priceNote}`}</span>}
+          </span>
           <span style={{ fontFamily: FONT.sans, fontSize: 14, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[event.venue, place].filter(Boolean).join(' · ')}</span>
         </div>
 
         {/* Tickets, plus save and share. The card itself opens the event. */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, pointerEvents: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, pointerEvents: 'auto' }}>
           {label !== 'Ended' ? (
             <button type="button" onClick={() => onTickets(a)} style={{ ...BTN.primary, flex: wide ? undefined : 1, minWidth: wide ? 240 : 0, paddingLeft: 16, paddingRight: 16, whiteSpace: 'nowrap', overflow: 'hidden' }}>
               {label === 'Free' && !listed ? 'Reserve a free spot' : 'Get tickets'}
-              {priceNote && <span style={{ fontWeight: 500, opacity: 0.62, marginLeft: 8 }}>{priceNote}</span>}
+              {wide && priceNote && <span style={{ fontWeight: 500, opacity: 0.62, marginLeft: 8 }}>{priceNote}</span>}
             </button>
           ) : (
             <Link href={`/events/${event.slug}`} style={{ ...BTN.secondary, flex: wide ? undefined : 1 }}>See photos & details</Link>
