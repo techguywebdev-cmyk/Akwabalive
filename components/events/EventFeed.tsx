@@ -323,7 +323,8 @@ function EventCard({
           height={Math.max(blockH + bottom + 18, 320)}
           title={event.title}
           comments={thread.comments}
-          onSend={(uid, t) => thread.send(uid, t)}
+          onSend={(uid, t, prof) => thread.send(uid, t, prof)}
+          onDelete={(id) => thread.remove(id)}
           onClose={() => setChatOpen(false)}
           momentHref={threadClip ? `/moments?id=${threadClip.id}&from=${encodeURIComponent('/events')}` : undefined}
         />
@@ -477,6 +478,7 @@ export default function EventFeed({
       <div
         ref={scroller}
         className="no-scrollbar"
+        data-feed-scroller
         style={{ position: 'fixed', top: frameTop ? `calc(${frameTop}px + env(safe-area-inset-top, 0px))` : 0, left: 0, right: 0, bottom: 0, zIndex: 40, overflowY: 'auto', overflowX: 'hidden', scrollSnapType: 'y mandatory', overscrollBehavior: 'contain', background: T.bg }}
       >
         {slides.map((sl, i) => sl.kind === 'hot' || sl.kind === 'friends' ? (

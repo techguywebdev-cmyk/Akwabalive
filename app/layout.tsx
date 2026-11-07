@@ -32,6 +32,8 @@ export const viewport = {
   userScalable: false,
   viewportFit: 'cover',
   themeColor: '#0B0F0D',
+  // The keyboard floats over the page instead of shrinking it, so the feed doesn't jump to the next card
+  interactiveWidget: 'resizes-visual',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

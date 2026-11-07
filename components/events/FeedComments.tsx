@@ -22,42 +22,65 @@ const nameOf = (c: Comment) => c.profiles?.full_name || c.profiles?.username || 
  * on the Moments page) or, for events with no clips yet, the event's chat.
  */
 export default function FeedComments({
-  height, title, comments, onSend, onClose, momentHref,
+  height, title, comments, onSend, onDelete, onClose, momentHref,
 }: {
   height: number;
   title: string;
   comments: Comment[];
-  onSend: (userId: string, text: string) => Promise<void> | void;
+  onSend: (userId: string, text: string, profile?: Comment['profiles']) => Promise<void> | void;
+  onDelete?: (id: string) => void;
   onClose: () => void;
   /** Where the full thread lives (the Moments page), when it's a clip's thread */
   momentHref?: string;
 }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [text, setText] = useState('');
-  const [sending, setSending] = useState(false);
   const list = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+
+  // The keyboard floats over the page: lift the panel above it and keep it no taller than what's left
+  const [kb, setKb] = useState(0);
+  const [room, setRoom] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const on = () => { setKb(Math.max(0, window.innerHeight - vv.height - vv.offsetTop)); setRoom(vv.height); };
+    on();
+    vv.addEventListener('resize', on); vv.addEventListener('scroll', on);
+    return () => { vv.removeEventListener('resize', on); vv.removeEventListener('scroll', on); };
+  }, []);
+  // The feed stays put while the panel is open
+  useEffect(() => {
+    const sc = panel.current?.closest('[data-feed-scroller]') as HTMLElement | null;
+    if (!sc) return;
+    const prev = sc.style.overflowY;
+    sc.style.overflowY = 'hidden';
+    return () => { sc.style.overflowY = prev; };
+  }, []);
 
   useEffect(() => { list.current?.scrollTo({ top: list.current.scrollHeight }); }, [comments.length]);
 
-  const send = async () => {
-    if (!user || !text.trim() || sending) return;
-    setSending(true);
-    try { await onSend(user.id, text); setText(''); } finally { setSending(false); }
+  const send = () => {
+    if (!user || !text.trim()) return;
+    const t = text;
+    setText('');
+    onSend(user.id, t, profile ? { username: profile.username, full_name: profile.full_name ?? null, avatar_url: profile.avatar_url ?? null } : undefined);
   };
 
   return (
     <div
+      ref={panel}
       role="dialog"
       aria-label={`Comments on ${title}`}
       onClick={(e) => e.stopPropagation()}
       style={{
-        position: 'absolute', zIndex: 6, left: 0, right: 0, bottom: 0, height,
+        position: 'absolute', zIndex: 6, left: 0, right: 0, bottom: kb, height: room ? Math.min(height, room - 90) : height, transition: 'bottom 120ms ease',
         display: 'flex', flexDirection: 'column',
         background: 'linear-gradient(180deg, rgba(14,30,22,0.94) 0%, rgba(9,18,13,0.97) 100%)',
         backdropFilter: 'blur(20px) saturate(140%)', WebkitBackdropFilter: 'blur(20px) saturate(140%)',
         borderRadius: '22px 22px 0 0', boxShadow: '0 -20px 50px rgba(0,0,0,0.45)',
         animation: 'fcUp 260ms cubic-bezier(0.22,1,0.36,1)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingBottom: kb ? 0 : 'env(safe-area-inset-bottom, 0px)',
       }}
     >
       <style>{'@keyframes fcUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}'}</style>
@@ -81,7 +104,12 @@ export default function FeedComments({
               {c.profiles?.avatar_url ? <img src={c.profiles.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : nameOf(c).charAt(0).toUpperCase()}
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.text2 }}>{nameOf(c)} <span style={{ fontWeight: 500, color: T.text3 }}>· {ago(c.created_at)}</span></span>
+              <span style={{ display: 'flex', alignItems: 'baseline', gap: 6, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.text2 }}>
+                <span>{nameOf(c)} <span style={{ fontWeight: 500, color: T.text3 }}>· {c.id.startsWith('temp-') ? 'sending' : ago(c.created_at)}</span></span>
+                {user?.id === c.user_id && onDelete && !c.id.startsWith('temp-') && (
+                  <button type="button" onClick={() => onDelete(c.id)} style={{ marginLeft: 'auto', padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3 }}>Delete</button>
+                )}
+              </span>
               <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.4, color: T.white, wordBreak: 'break-word' }}>{c.content}</span>
             </span>
           </div>
@@ -99,7 +127,7 @@ export default function FeedComments({
               maxLength={500}
               style={{ flex: 1, minWidth: 0, height: '100%', border: 'none', outline: 'none', background: 'transparent', color: T.white, fontFamily: FONT.sans, fontSize: 15 }}
             />
-            <button type="button" onClick={send} disabled={!text.trim() || sending} aria-label="Send" style={{ width: 36, height: 36, borderRadius: 12, border: 'none', cursor: 'pointer', background: text.trim() ? GRAD.mint : 'rgba(255,255,255,0.08)', color: text.trim() ? T.onMint : T.text3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button type="button" onClick={send} disabled={!text.trim()} aria-label="Send" style={{ width: 36, height: 36, borderRadius: 12, border: 'none', cursor: 'pointer', background: text.trim() ? GRAD.mint : 'rgba(255,255,255,0.08)', color: text.trim() ? T.onMint : T.text3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <ArrowUp size={18} strokeWidth={2.4} />
             </button>
           </div>
