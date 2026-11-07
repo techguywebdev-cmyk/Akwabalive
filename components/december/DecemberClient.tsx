@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Flame, Eye, Users, Car, Smartphone, Ticket, MapPin, Share2, ArrowRight, CalendarDays, ChevronRight } from 'lucide-react';
+import { Flame, Eye, Users, Car, Smartphone, Ticket, MapPin, Share2, ArrowRight, CalendarDays, ChevronRight, ChevronLeft } from 'lucide-react';
 import type { GhanaEvent } from '@/lib/types';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
@@ -25,6 +25,8 @@ const untilLabel = (n: number) => (n <= 0 ? 'Today' : n === 1 ? 'Tomorrow' : `In
 const eyebrow: React.CSSProperties = { margin: 0, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
 const h2: React.CSSProperties = { margin: '6px 0 0', fontFamily: FONT.display, fontSize: 'clamp(26px, 6.5vw, 36px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, color: T.white };
 /** ALL-CAPS titles shout in a list; set them in title case, keeping short acronyms (BYK, DJ, ATW) */
+const LIMIT = 5;
+const SPECIAL: Record<string, string> = { '2026-12-24': 'Christmas Eve', '2026-12-25': 'Christmas Day', '2026-12-26': 'Boxing Day', '2026-12-31': 'New Year’s Eve', '2027-01-01': 'New Year’s Day' };
 const SMALL = new Set(['the', 'and', 'of', 'in', 'at', 'for', 'is', 'on', 'to', 'a', 'an', 'by', 'with']);
 const calmTitle = (t: string) => {
   if (t !== t.toUpperCase() || !/[A-Z]{4}/.test(t)) return t;
@@ -63,27 +65,28 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
     m.forEach((v) => v.sort((a, b) => b.score - a.score));
     return m;
   }, [list]);
-  const [day, setDay] = useState<string | null>(null);
-  const strip = useRef<HTMLDivElement>(null);
-
-  // The chip for the day you're reading lights up as you scroll
+  // The calendar: whole weeks (Monday to Sunday) around the season, one night picked at a time
+  const grid = useMemo(() => {
+    const start = new Date(`${from}T12:00:00Z`); start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() + 6) % 7));
+    const end = new Date(`${to}T12:00:00Z`); end.setUTCDate(end.getUTCDate() + ((7 - end.getUTCDay()) % 7));
+    const out: string[] = [];
+    for (const d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) out.push(d.toISOString().slice(0, 10));
+    return out;
+  }, [from, to]);
+  const showDays = useMemo(() => days.filter((d) => byDay.has(d)), [days, byDay]);
+  const [sel, setSel] = useState<string | null>(null);
+  const [all, setAll] = useState(false);
   useEffect(() => {
-    const io = new IntersectionObserver((entries) => {
-      const vis = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-      if (vis) setDay((vis.target as HTMLElement).dataset.day ?? null);
-    }, { rootMargin: '-140px 0px -60% 0px' });
-    document.querySelectorAll('[data-day]').forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, [list]);
-  useEffect(() => {
-    if (!day) return;
-    strip.current?.querySelector(`[data-chip="${day}"]`)?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
-  }, [day]);
+    if (sel || !showDays.length) return;
+    const t = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Accra' });
+    setSel(showDays.find((d) => d >= t) ?? showDays[0]);
+  }, [showDays, sel]);
+  const dayList = sel ? byDay.get(sel) ?? [] : [];
+  const shown = all ? dayList : dayList.slice(0, LIMIT);
+  const si = sel ? showDays.indexOf(sel) : -1;
+  const prevDay = si > 0 ? showDays[si - 1] : null;
+  const nextDay = si >= 0 && si < showDays.length - 1 ? showDays[si + 1] : null;
 
-  const jump = (d: string) => {
-    const el = document.getElementById(`day-${d}`);
-    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 128, behavior: 'smooth' });
-  };
   const share = async () => {
     const data = { title: 'Detty December in Accra', text: 'Every big show this December, day by day', url: `${location.origin}/december` };
     try { if (navigator.share) await navigator.share(data); else await navigator.clipboard.writeText(data.url); } catch { /* dismissed */ }
@@ -219,43 +222,58 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
           </section>
         )}
 
-        {/* Day by day */}
-        <section style={{ marginTop: 46 }}>
+        {/* Day by day: a month view of the season; tap a night to see what's on */}
+        <section id="calendar" style={{ marginTop: 56, scrollMarginTop: 90 }}>
           <p style={eyebrow}>Day by day</p>
           <h2 style={h2}>Every night of the season</h2>
-        </section>
-      </main>
+          <div role="grid" aria-label="December calendar" style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6 }}>
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((w, i) => (
+              <span key={i} aria-hidden style={{ textAlign: 'center', paddingBottom: 4, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: T.text3 }}>{w}</span>
+            ))}
+            {grid.map((d) => {
+              const inSeason = d >= from && d <= to;
+              const n = inSeason ? byDay.get(d)?.length ?? 0 : 0;
+              const on = sel === d;
+              const dt = new Date(`${d}T12:00:00Z`);
+              const special = SPECIAL[d];
+              return (
+                <button key={d} type="button" role="gridcell" disabled={!n} aria-selected={on} aria-label={`${dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}: ${n} ${n === 1 ? 'show' : 'shows'}`}
+                  onClick={() => { setSel(d); setAll(false); }}
+                  style={{
+                    position: 'relative', aspectRatio: '1 / 1.08', padding: 0, border: 'none', borderRadius: 12, cursor: n ? 'pointer' : 'default',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+                    background: on ? GRAD.mint : n ? `rgba(123,227,168,${Math.min(0.06 + n * 0.035, 0.26)})` : 'transparent',
+                    boxShadow: on ? '0 10px 26px -10px rgba(91,217,154,0.7), inset 0 1px 0 rgba(255,255,255,0.6)' : 'none',
+                    color: on ? T.onMint : n ? T.white : inSeason ? T.text3 : 'rgba(255,255,255,0.14)', transition: 'background 160ms ease',
+                  }}>
+                  {dt.getUTCDate() === 1 && <span style={{ position: 'absolute', top: 5, fontFamily: FONT.sans, fontSize: 8, fontWeight: 800, letterSpacing: '0.08em', opacity: 0.8 }}>{dt.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' }).toUpperCase()}</span>}
+                  <span style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 800, lineHeight: 1, marginTop: dt.getUTCDate() === 1 ? 9 : 0 }}>{dt.getUTCDate()}</span>
+                  <span style={{ height: 11, fontFamily: FONT.sans, fontSize: 10, fontWeight: 700, opacity: n ? 0.85 : 0 }}>{n || ''}</span>
+                  {special && !on && <span aria-hidden style={{ position: 'absolute', top: 6, right: 6, width: 5, height: 5, borderRadius: 1.5, background: T.mint }} />}
+                </button>
+              );
+            })}
+          </div>
 
-      <div style={{ position: 'sticky', top: 'calc(70px + env(safe-area-inset-top, 0px))', zIndex: 20, marginTop: 14, background: 'linear-gradient(180deg, rgba(12,26,19,0.86) 0%, rgba(10,22,16,0.86) 100%)', backdropFilter: 'blur(18px) saturate(140%)', WebkitBackdropFilter: 'blur(18px) saturate(140%)', padding: '10px 0 12px' }}>
-        <div ref={strip} className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', maxWidth: 760, margin: '0 auto', padding: '0 20px' }}>
-          {days.map((d) => {
-            const n = byDay.get(d)?.length ?? 0;
-            const dt = new Date(`${d}T12:00:00Z`);
-            const on = day === d;
-            return (
-              <button key={d} type="button" data-chip={d} onClick={() => n && jump(d)} disabled={!n} aria-current={on}
-                style={{ flexShrink: 0, width: 54, height: 66, borderRadius: 16, cursor: n ? 'pointer' : 'default', border: 'none', background: on ? GRAD.mint : n ? GRAD.glass : 'transparent', boxShadow: on ? BTN.primary.boxShadow : n ? 'inset 0 1px 0 rgba(255,255,255,0.08)' : 'none', color: on ? T.onMint : n ? T.white : 'rgba(255,255,255,0.28)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', opacity: 0.8 }}>{dt.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })}</span>
-                <span style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 800, lineHeight: 1 }}>{dt.getUTCDate()}</span>
-                <span style={{ fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 700, opacity: n ? 0.85 : 0 }}>{n} {n === 1 ? 'show' : 'shows'}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <main style={{ maxWidth: 760, margin: '0 auto', padding: '0 20px 20px' }}>
-        {days.filter((d) => byDay.has(d)).map((d) => {
-          const dt = new Date(`${d}T12:00:00Z`);
-          const special = d === '2026-12-24' ? 'Christmas Eve' : d === '2026-12-25' ? 'Christmas Day' : d === '2026-12-26' ? 'Boxing Day' : d === '2026-12-31' ? 'New Year’s Eve' : d === '2027-01-01' ? 'New Year’s Day' : '';
-          return (
-            <section key={d} id={`day-${d}`} data-day={d} style={{ scrollMarginTop: 170, paddingTop: 22 }}>
-              <h3 style={{ margin: 0, display: 'flex', alignItems: 'baseline', gap: 10, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.text3 }}>
-                {dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' })}
-                {special && <span style={{ color: T.mintText }}>{special}</span>}
-              </h3>
-              <ul style={{ listStyle: 'none', margin: '12px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {byDay.get(d)!.map((x) => {
+          {sel && (
+            <div style={{ marginTop: 26 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {SPECIAL[sel] && <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>{SPECIAL[sel]}</p>}
+                  <p style={{ margin: SPECIAL[sel] ? '3px 0 0' : 0, fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.025em', color: T.white }}>
+                    {new Date(`${sel}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}
+                  </p>
+                  <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13.5, color: T.text3 }}>{dayList.length} {dayList.length === 1 ? 'show' : 'shows'}</p>
+                </div>
+                {[{ d: prevDay, I: ChevronLeft, l: 'Previous night' }, { d: nextDay, I: ChevronRight, l: 'Next night' }].map(({ d, I, l }) => (
+                  <button key={l} type="button" aria-label={l} disabled={!d} onClick={() => { if (d) { setSel(d); setAll(false); } }}
+                    style={{ width: 40, height: 40, borderRadius: 13, border: 'none', cursor: d ? 'pointer' : 'default', background: 'rgba(255,255,255,0.07)', color: d ? T.white : T.text3, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: d ? 1 : 0.4 }}>
+                    <I size={19} />
+                  </button>
+                ))}
+              </div>
+              <ul style={{ listStyle: 'none', margin: '18px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {shown.map((x) => {
                   const hot = x.event.hot || x.score >= 60;
                   const time = x.event.time && !/tba/i.test(x.event.time) ? x.event.time.replace(':00 ', ' ').toLowerCase() : '';
                   const price = x.event.priceUnknown ? '' : x.event.price === 0 ? 'Free' : `GH₵ ${x.event.price.toLocaleString()}`;
@@ -281,9 +299,14 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
                   );
                 })}
               </ul>
-            </section>
-          );
-        })}
+              {dayList.length > LIMIT && !all && (
+                <button type="button" onClick={() => setAll(true)} style={{ marginTop: 18, height: 44, padding: '0 18px', borderRadius: 999, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.07)', color: T.white, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
+                  Show all {dayList.length}
+                </button>
+              )}
+            </div>
+          )}
+        </section>
 
         {/* First December in Ghana */}
         <section style={{ marginTop: 56 }}>
