@@ -40,8 +40,10 @@ export function momentsForEvent(event: { slug: string; title: string }, all: Mom
     return n === name || name.startsWith(`${n} `) || n.startsWith(`${name} `);
   };
   const series = all.filter((m) => m.event_slug !== event.slug && sameSeries(m));
-  const byYear = (a: Moment, b: Moment) => (b.year ?? 0) - (a.year ?? 0);
-  return [...own.sort(byYear), ...series.sort(byYear)];
+  // Clips we've picked (is_featured) lead, then newest first
+  const byYear = (a: Moment, b: Moment) => Number(!!b.is_featured) - Number(!!a.is_featured) || (b.year ?? 0) - (a.year ?? 0);
+  return [...own, ...series].sort(byYear).filter((m, i, arr) => arr.findIndex((x) => x.youtube_id === m.youtube_id) === i)
+    .sort((a, b) => Number(!!b.is_featured) - Number(!!a.is_featured) || Number(b.event_slug === event.slug) - Number(a.event_slug === event.slug) || (b.year ?? 0) - (a.year ?? 0));
 }
 
 export const ytThumb = (id: string, size: 'mq' | 'hq' = 'mq') => `https://i.ytimg.com/vi/${id}/${size}default.jpg`;
