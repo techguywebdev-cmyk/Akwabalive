@@ -564,28 +564,21 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
                 if (img.src.includes('maxresdefault')) img.src = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
               }}
             />
-            <style>{'@keyframes cpLoad{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@keyframes cpPulse{0%,100%{transform:scale(1);opacity:.95}50%{transform:scale(1.08);opacity:1}}@keyframes cpRing{0%{transform:scale(.8);opacity:.6}100%{transform:scale(1.9);opacity:0}}'}</style>
+            <style>{'@keyframes cpDot{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}'}</style>
             <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {paused ? (
                 <span style={{ width: 58, height: 58, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(5,10,8,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', color: '#fff' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.2-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" /></svg>
                 </span>
               ) : (
-                <span style={{ position: 'relative', width: 52, height: 52 }}>
-                  <span style={{ position: 'absolute', inset: 0, borderRadius: 16, background: 'rgba(123,227,168,0.35)', animation: 'cpRing 1.4s ease-out infinite' }} />
-                  <svg width="52" height="52" viewBox="0 0 24 24" aria-hidden style={{ position: 'relative', animation: 'cpPulse 1.4s ease-in-out infinite', filter: 'drop-shadow(0 6px 18px rgba(91,217,154,0.5))' }}>
-                    <rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" />
-                    <path d="M7.5 18.5V11a4.5 4.5 0 0 1 9 0v7.5" fill="none" stroke="#06140D" strokeWidth="2.4" strokeLinecap="round" />
-                    <path d="M7.5 14.5h9" fill="none" stroke="#06140D" strokeWidth="2.4" strokeLinecap="round" />
-                  </svg>
+                /* Loading: three small dots, one after another */
+                <span role="status" aria-label="Loading" style={{ display: 'flex', gap: 8 }}>
+                  {[0, 1, 2].map((i) => (
+                    <span key={i} style={{ width: 8, height: 8, borderRadius: 4, background: '#7BE3A8', animation: `cpDot 1.2s ease-in-out ${i * 0.16}s infinite` }} />
+                  ))}
                 </span>
               )}
             </span>
-            {!paused && (
-              <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, overflow: 'hidden', background: 'rgba(255,255,255,0.08)' }}>
-                <span style={{ position: 'absolute', top: 0, bottom: 0, width: '40%', background: 'linear-gradient(90deg, rgba(123,227,168,0), #7BE3A8, rgba(123,227,168,0))', animation: 'cpLoad 1.1s ease-in-out infinite' }} />
-              </span>
-            )}
           </div>
         )}
       </div>
