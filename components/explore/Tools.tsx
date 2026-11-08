@@ -16,12 +16,12 @@ const capBtn = (on: boolean): React.CSSProperties => ({
 /** Search | filter icons in one capsule (same as the events feed) */
 export function ToolsCapsule({ searchOn, filtersOn, onSearch, onFilter }: { searchOn: boolean; filtersOn: boolean; onSearch: () => void; onFilter: () => void }) {
   return (
-    <div role="group" aria-label="Search and filter" style={{ display: 'flex', alignItems: 'center', height: 44, borderRadius: 22, overflow: 'hidden', background: 'rgba(8,10,9,0.5)', border: 'none', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
-      <button type="button" aria-label="Search" aria-pressed={searchOn} onClick={onSearch} style={capBtn(searchOn)}><Icon name="search" size={21} /></button>
+    <div role="group" aria-label="Search and filter" style={{ display: 'flex', alignItems: 'center', height: 44, borderRadius: 15, overflow: 'hidden', background: 'rgba(8,10,9,0.5)', border: 'none', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
+      <button type="button" aria-label="Search" aria-pressed={searchOn} onClick={onSearch} style={capBtn(searchOn)}><Icon name="search" size={21} strokeWidth={1.9} /></button>
       <span aria-hidden style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.14)' }} />
       <button type="button" aria-label={filtersOn ? 'Filters (on)' : 'Filters'} onClick={onFilter} style={capBtn(filtersOn)}>
-        <Icon name="sliders" size={21} />
-        {filtersOn && <span aria-hidden style={{ position: 'absolute', top: 9, right: 10, width: 7, height: 7, borderRadius: 4, background: T.mint, boxShadow: '0 0 0 2px rgba(8,10,9,0.9)' }} />}
+        <Icon name="sliders" size={21} strokeWidth={1.9} />
+        {filtersOn && <span aria-hidden style={{ position: 'absolute', top: 9, right: 10, width: 7, height: 7, borderRadius: 2, background: T.mint, boxShadow: '0 0 0 2px rgba(8,10,9,0.9)' }} />}
       </button>
     </div>
   );
