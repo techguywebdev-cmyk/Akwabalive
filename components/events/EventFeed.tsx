@@ -183,16 +183,18 @@ function EventCard({
       {watching && moments[clip] && (
         <div style={wide
           ? { position: 'absolute', zIndex: 3, top: topInset + 16, bottom: 40, right: '6%', left: '48%', display: 'flex', alignItems: 'center' }
-          : { position: 'absolute', zIndex: 3, top: 0, bottom: blockH + bottom + 18, left: 0, right: 0, display: 'flex', flexDirection: 'column', background: '#050606' }}>
+          : { position: 'absolute', zIndex: 3, top: 0, bottom: blockH + bottom + 18, left: 0, right: 0, display: 'flex', flexDirection: 'column', background: '#09100C' }}>
           {/* The top of the flyer fills the space above the video, so the card stays full height */}
           {event.image && !wide ? (
             <div aria-hidden style={{ position: 'relative', flex: '1 1 0', minHeight: 0, overflow: 'hidden' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={hiRes(event.image, 1200) ?? event.image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
+              {/* The flyer dissolves into the card's ground before the video, so the two never butt together */}
+              <span style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(9,16,12,0) 45%, rgba(9,16,12,0.7) 78%, #09100C 100%)' }} />
             </div>
           ) : <Glow src={ytThumb(moments[clip].youtube_id, 'hq')} />}
           {/* The Moments player: our player, mint progress line, a dot per clip; the next clip follows on */}
-          <div style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' }}>
+          <div style={wide ? { position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' } : { position: 'relative', width: 'calc(100% - 28px)', margin: '0 14px', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', borderRadius: 18, overflow: 'hidden', boxShadow: '0 18px 40px -12px rgba(0,0,0,0.7)' }}>
             <CustomPlayer key={moments[clip].youtube_id} youtubeId={moments[clip].youtube_id} title={moments[clip].title} fit="contain" active={active}
               onTimeUpdate={(cur, len) => setProg(len ? Math.min(100, (cur / len) * 100) : 0)}
               onEnded={() => { if (clip < moments.length - 1) { setClip(clip + 1); setProg(0); } else setWatching(false); }} />
