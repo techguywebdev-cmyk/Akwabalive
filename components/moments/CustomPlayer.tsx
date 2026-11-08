@@ -119,10 +119,12 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
     // Frames actually on screen: YouTube reports "playing" while its own grey loading card is still up,
     // so the poster stays until the clock has moved
     const [shown, setShown] = useState(false);
+    // Paused: our own cover goes back over the video so YouTube's title bar and logo never show
+    const [paused, setPaused] = useState(false);
     useEffect(() => {
       if (!playing || shown) return;
       const t = setInterval(() => {
-        try { if ((playerRef.current?.getCurrentTime?.() ?? 0) > 0.3) setShown(true); } catch { /* ignore */ }
+        try { if ((playerRef.current?.getCurrentTime?.() ?? 0) > 2.2) setShown(true); } catch { /* ignore */ } // past YouTube's opening title
       }, 120);
       return () => clearInterval(t);
     }, [playing, shown]);
@@ -329,6 +331,7 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
               if (cancelled) return;
               const state = e.data;
               setPlaying(state === 1);
+              setPaused(state === 2 && userPausedRef.current);
               if (state === 1) {
                 userPausedRef.current = false;
               }
@@ -399,6 +402,7 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
       userPausedRef.current = false;
       setPlaying(false);
       setShown(false);
+      setPaused(false);
       if (!p || typeof p.loadVideoById !== 'function') return;
       try {
         p.mute();
@@ -546,31 +550,42 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
           {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>}
 
-        {/* Poster until real frames are playing, with a thin mint loading line so it never looks broken */}
-        {!shown && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 5,
-              background: '#000',
-              pointerEvents: 'none',
-            }}
-          >
+        {/* Our cover: a branded loading moment until real frames are on screen (and past YouTube's opening
+            title), and again whenever it's paused, so YouTube's own title bar and logo never show */}
+        {(!shown || paused) && (
+          <div style={{ position: 'absolute', inset: 0, zIndex: 5, background: '#000', pointerEvents: 'none', overflow: 'hidden' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`}
               alt={title}
-              style={{ width: '100%', height: '100%', objectFit: fit === 'fill' ? 'cover' : 'contain' }}
+              style={{ width: '100%', height: '100%', objectFit: fit === 'fill' ? 'cover' : 'contain', filter: paused ? 'brightness(0.7)' : 'brightness(0.5) saturate(1.1)', transform: paused ? 'none' : 'scale(1.04)', transition: 'filter 300ms ease' }}
               onError={(e) => {
                 const img = e.target as HTMLImageElement;
                 if (img.src.includes('maxresdefault')) img.src = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
               }}
             />
-            <style>{'@keyframes cpLoad{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}'}</style>
-            <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, overflow: 'hidden', background: 'rgba(255,255,255,0.08)' }}>
-              <span style={{ position: 'absolute', top: 0, bottom: 0, width: '40%', background: 'linear-gradient(90deg, rgba(123,227,168,0), #7BE3A8, rgba(123,227,168,0))', animation: 'cpLoad 1.1s ease-in-out infinite' }} />
+            <style>{'@keyframes cpLoad{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}@keyframes cpPulse{0%,100%{transform:scale(1);opacity:.95}50%{transform:scale(1.08);opacity:1}}@keyframes cpRing{0%{transform:scale(.8);opacity:.6}100%{transform:scale(1.9);opacity:0}}'}</style>
+            <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {paused ? (
+                <span style={{ width: 58, height: 58, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(5,10,8,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', color: '#fff' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.2-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" /></svg>
+                </span>
+              ) : (
+                <span style={{ position: 'relative', width: 52, height: 52 }}>
+                  <span style={{ position: 'absolute', inset: 0, borderRadius: 16, background: 'rgba(123,227,168,0.35)', animation: 'cpRing 1.4s ease-out infinite' }} />
+                  <svg width="52" height="52" viewBox="0 0 24 24" aria-hidden style={{ position: 'relative', animation: 'cpPulse 1.4s ease-in-out infinite', filter: 'drop-shadow(0 6px 18px rgba(91,217,154,0.5))' }}>
+                    <rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" />
+                    <path d="M7.5 18.5V11a4.5 4.5 0 0 1 9 0v7.5" fill="none" stroke="#06140D" strokeWidth="2.4" strokeLinecap="round" />
+                    <path d="M7.5 14.5h9" fill="none" stroke="#06140D" strokeWidth="2.4" strokeLinecap="round" />
+                  </svg>
+                </span>
+              )}
             </span>
+            {!paused && (
+              <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, overflow: 'hidden', background: 'rgba(255,255,255,0.08)' }}>
+                <span style={{ position: 'absolute', top: 0, bottom: 0, width: '40%', background: 'linear-gradient(90deg, rgba(123,227,168,0), #7BE3A8, rgba(123,227,168,0))', animation: 'cpLoad 1.1s ease-in-out infinite' }} />
+              </span>
+            )}
           </div>
         )}
       </div>

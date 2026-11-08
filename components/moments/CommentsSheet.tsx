@@ -101,6 +101,18 @@ export default function CommentsSheet({
   const [shown, setShown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // The keyboard floats over the page: lift the sheet above it and fit it in what's left of the screen
+  const [kb, setKb] = useState(0);
+  const [room, setRoom] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const on = () => { setKb(Math.max(0, window.innerHeight - vv.height - vv.offsetTop)); setRoom(vv.height); };
+    on();
+    vv.addEventListener('resize', on); vv.addEventListener('scroll', on);
+    return () => { vv.removeEventListener('resize', on); vv.removeEventListener('scroll', on); };
+  }, []);
+
   useEffect(() => {
     const raf = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
     return () => cancelAnimationFrame(raf);
@@ -135,7 +147,7 @@ export default function CommentsSheet({
         background: 'rgba(0,0,0,0.45)', opacity: shown ? 1 : 0, transition: 'opacity 280ms ease',
       }} />
       <section aria-label="Comments" style={{
-        position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 41, height: '74%', maxHeight: 680, maxWidth: 640, margin: '0 auto',
+        position: 'absolute', left: 0, right: 0, bottom: kb, zIndex: 41, height: kb && room ? Math.min(room - 24, 680) : '74%', maxHeight: 680, maxWidth: 640, margin: '0 auto',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
         borderRadius: '26px 26px 0 0', borderTop: '1px solid rgba(255,255,255,0.14)',
         // The video's colour at the top, settling into near-black
@@ -239,7 +251,7 @@ export default function CommentsSheet({
           })}
         </div>
 
-        <div style={{ padding: '10px 14px calc(14px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(11,13,12,0.92)' }}>
+        <div style={{ padding: kb ? '10px 14px 10px' : '10px 14px calc(14px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(11,13,12,0.92)' }}>
           {user ? (
             <>
               <div className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 10 }}>
