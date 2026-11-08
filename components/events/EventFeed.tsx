@@ -194,7 +194,7 @@ function EventCard({
             </div>
           ) : <Glow src={ytThumb(moments[clip].youtube_id, 'hq')} />}
           {/* The Moments player: our player, mint progress line, a dot per clip; the next clip follows on */}
-          <div style={wide ? { position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' } : { position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000' }}>
+          <div style={wide ? { position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' } : { position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', borderRadius: 16, overflow: 'hidden' }}>
             <CustomPlayer key={moments[clip].youtube_id} youtubeId={moments[clip].youtube_id} title={moments[clip].title} fit="contain" active={active}
               onTimeUpdate={(cur, len) => setProg(len ? Math.min(100, (cur / len) * 100) : 0)}
               onEnded={() => { if (clip < moments.length - 1) { setClip(clip + 1); setProg(0); } else setWatching(false); }} />
