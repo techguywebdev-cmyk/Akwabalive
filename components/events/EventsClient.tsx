@@ -367,14 +367,14 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   // One capsule: search | filters (the cards/list switch lives in the filter sheet)
   const capBtn = (on: boolean): CSSProperties => ({ position: 'relative', width: 46, height: 44, padding: 0, border: 'none', background: on ? 'rgba(123,227,168,0.14)' : 'transparent', color: on ? T.mintText : T.text, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' });
   const headerActions = (
-    <div role="group" aria-label="Search and filter" style={{ display: 'flex', alignItems: 'center', height: 44, borderRadius: 22, overflow: 'hidden', background: 'rgba(3,10,6,0.38)', border: 'none', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
+    <div role="group" aria-label="Search and filter" style={{ display: 'flex', alignItems: 'center', height: 44, borderRadius: 15, overflow: 'hidden', background: 'rgba(3,10,6,0.38)', border: 'none', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
       <button type="button" aria-label="Search" aria-pressed={searchOpen} onClick={() => setSearchOpen((s) => !s)} style={capBtn(searchOpen || !!filters.search)}>
-        <Icon name="search" size={21} />
+        <Icon name="search" size={21} strokeWidth={1.9} />
       </button>
       <span aria-hidden style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.14)' }} />
       <button type="button" aria-label={filtersOn ? `Sort and filter, ${summary.length || 1} on` : 'Sort and filter'} onClick={() => setFilterOpen(true)} style={capBtn(filtersOn)}>
-        <Icon name="sliders" size={21} />
-        {filtersOn && <span aria-hidden style={{ position: 'absolute', top: 9, right: 10, width: 7, height: 7, borderRadius: 4, background: T.mint, boxShadow: '0 0 0 2px rgba(3,8,6,0.9)' }} />}
+        <Icon name="sliders" size={21} strokeWidth={1.9} />
+        {filtersOn && <span aria-hidden style={{ position: 'absolute', top: 9, right: 10, width: 7, height: 7, borderRadius: 2, background: T.mint, boxShadow: '0 0 0 2px rgba(3,8,6,0.9)' }} />}
       </button>
     </div>
   );

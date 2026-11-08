@@ -36,7 +36,7 @@ export function HeaderIconButton({
   pressed?: boolean;
 }) {
   const style: React.CSSProperties = {
-    position: 'relative', width: 44, height: 44, borderRadius: 22, flexShrink: 0, padding: 0, cursor: 'pointer',
+    position: 'relative', width: 44, height: 44, borderRadius: 15, flexShrink: 0, padding: 0, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none',
     color: active ? T.mintText : T.text,
     ...GLASS,
@@ -45,8 +45,8 @@ export function HeaderIconButton({
   };
   const inner = (
     <>
-      <Icon name={icon} size={22} />
-      {dot && <span aria-hidden style={{ position: 'absolute', top: 9, right: 9, width: 7, height: 7, borderRadius: 4, background: T.mint, boxShadow: '0 0 0 2px rgba(3,8,6,0.9)' }} />}
+      <Icon name={icon} size={22} strokeWidth={1.9} />
+      {dot && <span aria-hidden style={{ position: 'absolute', top: 9, right: 9, width: 7, height: 7, borderRadius: 2, background: T.mint, boxShadow: '0 0 0 2px rgba(3,8,6,0.9)' }} />}
     </>
   );
   if (href) return <Link href={href} aria-label={label} title={label} style={style}>{inner}</Link>;
@@ -151,7 +151,7 @@ export default function Nav({
     : [];
 
   const avatar = user ? (
-    <Link href={profileHref} aria-label="My profile" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 22, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: '#26302B', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
+    <Link href={profileHref} aria-label="My profile" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 15, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: '#26302B', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
       {profile?.avatar_url
         // eslint-disable-next-line @next/next/no-img-element
         ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
