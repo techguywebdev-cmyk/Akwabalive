@@ -270,6 +270,17 @@ const MomentSlide = forwardRef<SlideHandle, {
               <h2 style={{ margin: '5px 0 0', fontFamily: FONT.display, fontSize: 'clamp(22px, 6vw, 30px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.1, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                 {clip.title}
               </h2>
+              {/* Who posted the clip: right under the title, like a byline */}
+              {clip.posted_by ? (
+                <Link href={clip.channel_url ?? '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 7, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text2 }}>
+                  <BadgeCheck size={14} color={T.mint} />From the organiser{clip.channel_name ? ` · ${clip.channel_name}` : ''}
+                </Link>
+              ) : clip.channel_name && (
+                <a href={isX ? clip.source_url ?? '#' : clip.channel_url ?? `https://www.youtube.com/watch?v=${clip.youtube_id}`} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 7, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text2 }}>
+                  {clip.official ? <BadgeCheck size={14} color={T.mint} /> : null}{clip.official ? clip.channel_name : `via ${clip.channel_name}`}{isX ? ' on X' : ''}
+                </a>
+              )}
             </div>
             {/* Comments, share and tickets, kept small */}
             <div style={{ display: 'flex', gap: 8, paddingTop: 2 }}>
@@ -314,16 +325,6 @@ const MomentSlide = forwardRef<SlideHandle, {
                 {series?.stars ? <>{series.stars % 1 ? series.stars.toFixed(1) : series.stars}/5 <span style={{ fontWeight: 500, color: T.text3 }}>· every year</span></> : 'Not rated yet'}
               </span>
             </Link>
-          )}
-          {clip.posted_by ? (
-            <Link href={clip.channel_url ?? '#'} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 12, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3, verticalAlign: 'middle' }}>
-              <BadgeCheck size={13} color={T.mint} />From the organiser{clip.channel_name ? ` · ${clip.channel_name}` : ''}
-            </Link>
-          ) : clip.channel_name && (
-            <a href={isX ? clip.source_url ?? '#' : clip.channel_url ?? `https://www.youtube.com/watch?v=${clip.youtube_id}`} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginLeft: 12, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3, verticalAlign: 'middle' }}>
-              {clip.official ? <BadgeCheck size={13} color={T.mint} /> : null}{clip.official ? clip.channel_name : `via ${clip.channel_name}`}{isX ? ' on X' : ''}
-            </a>
           )}
 
           {recapClip?.recap && (
