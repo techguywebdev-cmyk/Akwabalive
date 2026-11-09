@@ -253,6 +253,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         background: `radial-gradient(120% 40% at 0% 34%, rgba(123,227,168,0.14) 0%, rgba(123,227,168,0) 70%), radial-gradient(120% 40% at 100% 62%, rgba(45,190,140,0.11) 0%, rgba(45,190,140,0) 70%), linear-gradient(180deg, ${washA(0.9)} 0%, ${washA(0.62)} 25%, ${washA(0.3)} 55%, ${washA(0.08)} 82%, rgba(3,8,6,0) 100%)`,
       }} />
       <Nav
+        transparent
         active="Events"
         back="/events"
         tabs={false}
