@@ -60,6 +60,8 @@ export default function CalendarClient({ slug }: { slug: string }) {
   const [liked, setLiked] = useState(false);
   const [ratings, setRatings] = useState<{ user_id: string; stars: number }[]>([]);
   const [chat, setChat] = useState(false);
+  // From a comment notification: open the comments straight away
+  useEffect(() => { if (new URLSearchParams(window.location.search).get('comments') === '1') setChat(true); }, []);
   const [finding, setFinding] = useState(false);
   const [findDay, setFindDay] = useState<string | undefined>();
   // Taken out from the calendar grid: a few seconds to put it back

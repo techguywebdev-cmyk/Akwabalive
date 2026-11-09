@@ -7,6 +7,7 @@ import { T, FONT, GRAD, GROUND } from '@/lib/thiscene';
 import { Icon, PAGE_ICONS, type IconName } from '@/components/ui/Icon';
 import Wordmark from '@/components/brand/Wordmark';
 import SearchSheet from '@/components/search/SearchSheet';
+import { useUnreadCount } from '@/hooks/useNotifications';
 
 /** Main sections. On phones they live in the bottom tab bar; on desktop, in the header. */
 const SECTIONS: { href: string; label: string; icon: IconName }[] = [
@@ -85,6 +86,7 @@ export default function Nav({
   const { user, profile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searching, setSearching] = useState(false);
+  const unread = useUnreadCount();
   const [isMobile, setIsMobile] = useState(true);
   const [tabsHidden, setTabsHidden] = useState(false);
   // Once the page scrolls, the header turns into frosted green glass so content never reads through behind it
@@ -145,6 +147,7 @@ export default function Nav({
   const accountLinks = user
     ? [
         { label: 'My profile', href: profileHref },
+        { label: unread ? `Notifications (${unread})` : 'Notifications', href: '/notifications' },
         { label: 'My tickets', href: '/account/tickets' },
         { label: 'Find friends', href: '/people' },
         { label: 'Saved events', href: user ? `/u/${profile?.username ?? ''}?tab=saved` : '/auth' },
@@ -153,11 +156,12 @@ export default function Nav({
     : [];
 
   const avatar = user ? (
-    <Link href={profileHref} aria-label="My profile" style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 15, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: '#26302B', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
+    <Link href={unread ? '/notifications' : profileHref} aria-label={unread ? `My profile, ${unread} new notification${unread > 1 ? 's' : ''}` : 'My profile'} style={{ position: 'relative', overflow: 'visible', width: 44, height: 44, flexShrink: 0, borderRadius: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: '#26302B', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
       {profile?.avatar_url
         // eslint-disable-next-line @next/next/no-img-element
-        ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 15 }} />
         : (profile?.username?.[0] ?? 'U').toUpperCase()}
+      {unread > 0 && <span aria-hidden style={{ position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 7, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#7BE3A8', color: '#03130B', fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 800, boxShadow: '0 0 0 2px rgba(3,8,6,0.9)' }}>{unread > 9 ? '9+' : unread}</span>}
     </Link>
   ) : (
     <HeaderIconButton label="Sign in" icon="user" href="/auth" />
