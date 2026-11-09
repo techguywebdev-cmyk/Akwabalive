@@ -30,7 +30,11 @@ function until(day: string) {
  * The calendar as a calendar: one month at a time, each night with a show wearing its flyer, like a wall
  * planner. Tap a night to see what's on below.
  */
-export default function MonthGrid({ events, onRemove }: { events: GridEvent[]; onRemove?: (e: GridEvent) => void }) {
+export default function MonthGrid({ events, onRemove, renderSheet }: {
+  events: GridEvent[]; onRemove?: (e: GridEvent) => void;
+  /** The Months view: their whole calendar as one sheet; gets a callback that opens a night in Days */
+  renderSheet?: (pick: (iso: string) => void) => React.ReactNode;
+}) {
   const byDay = useMemo(() => {
     const m: Record<string, GridEvent[]> = {};
     for (const e of events) (m[e.date.slice(0, 10)] ??= []).push(e);
@@ -98,65 +102,12 @@ export default function MonthGrid({ events, onRemove }: { events: GridEvent[]; o
         ))}
       </div>
 
-      {view === 'months' && (
-        <div>
-          <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.text3 }}>
-            {tiles[0][0] === tiles[tiles.length - 1][0] ? tiles[0][0] : `${tiles[0][0]}–${String(tiles[tiles.length - 1][0]).slice(2)}`} · {days.length} {days.length === 1 ? 'night' : 'nights'} out
-          </p>
-          <h2 style={{ margin: '4px 0 0', fontFamily: FONT.display, fontSize: 'clamp(34px, 9vw, 46px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, ...gradText }}>
-            {MONTHS[tiles[0][1]].slice(0, 3)} – {MONTHS[tiles[tiles.length - 1][1]].slice(0, 3)}
-          </h2>
-          {/* A year planner: small month calendars, the nights with shows marked in mint */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '26px 18px', marginTop: 22 }}>
-            {tiles.map(([ty, tm], k) => {
-              const pre = iso(ty, tm, 1).slice(0, 7);
-              const n = days.filter((d) => d.startsWith(pre)).length;
-              const lead2 = (new Date(ty, tm, 1).getDay() + 6) % 7;
-              const len = new Date(ty, tm + 1, 0).getDate();
-              const mc: (number | null)[] = [...Array(lead2).fill(null), ...Array.from({ length: len }, (_, i) => i + 1)];
-              const yr = ty !== new Date().getFullYear() ? ` ’${String(ty).slice(2)}` : '';
-              const idx = months.findIndex(([a2, b2]) => a2 === ty && b2 === tm);
-              return (
-                <div key={pre} style={{ animation: `mgIn 320ms cubic-bezier(0.22,1,0.36,1) ${k * 50}ms both` }}>
-                  <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: n ? T.white : T.text3 }}>{MONTHS[tm]}{yr}</span>
-                    {n > 0 && <span style={{ height: 18, padding: '0 6px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', background: 'rgba(123,227,168,0.16)', color: T.mintText, fontFamily: FONT.sans, fontSize: 11, fontWeight: 800 }}>{n}</span>}
-                  </p>
-                  <div aria-hidden style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginTop: 8 }}>
-                    {WEEK.map((w, i) => <span key={i} style={{ textAlign: 'center', fontFamily: FONT.sans, fontSize: 9.5, fontWeight: 700, color: i >= 5 ? 'rgba(168,240,198,0.6)' : 'rgba(255,255,255,0.28)' }}>{w}</span>)}
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginTop: 3 }}>
-                    {mc.map((d, i) => {
-                      if (d == null) return <span key={`x${i}`} />;
-                      const key = iso(ty, tm, d);
-                      const has = !!byDay[key];
-                      const past = key < today;
-                      const cell: React.CSSProperties = { aspectRatio: '1', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: 11, fontWeight: has ? 800 : 600 };
-                      if (!has) {
-                        return (
-                          <span key={key} style={{ ...cell, position: 'relative', color: key === today ? T.mintText : past ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.45)' }}>
-                            {d}
-                            {key === today && <span style={{ position: 'absolute', bottom: 1, width: 3, height: 3, borderRadius: 1, background: T.mint }} />}
-                          </span>
-                        );
-                      }
-                      return (
-                        <button key={key} type="button" aria-label={`${d} ${MONTHS[tm]}: ${byDay[key].map((e) => e.title).join(', ')}`}
-                          onClick={() => { if (idx >= 0) setMi(idx); setSel(key); pickView('days'); }}
-                          style={{ ...cell, padding: 0, border: 'none', cursor: 'pointer', background: GRAD.mint, color: T.onMint, opacity: past ? 0.45 : 1, boxShadow: '0 4px 10px -3px rgba(91,217,154,0.55)' }}>
-                          {d}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <p style={{ margin: '22px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Tap a marked night to see what’s on.</p>
-          <style>{'@keyframes mgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}'}</style>
-        </div>
-      )}
+      {view === 'months' && (renderSheet ? renderSheet((key) => {
+        const k = months.findIndex(([a2, b2]) => key.startsWith(iso(a2, b2, 1).slice(0, 7)));
+        if (k >= 0) setMi(k);
+        setSel(key); pickView('days');
+        window.scrollTo({ top: Math.max(0, window.scrollY - 200), behavior: 'smooth' });
+      }) : null)}
 
       {view === 'days' && (<>
       {/* Month header */}
