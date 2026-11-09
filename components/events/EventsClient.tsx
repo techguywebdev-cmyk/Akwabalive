@@ -292,14 +292,15 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   }, [events]);
   const ordered = useMemo(() => {
     if (!untouched) return filtered;
-    // Through the season the big nights lead the feed, in date order; everything else follows mixed
+    // Through the season the big nights lead the feed (shuffled each visit); everything else follows mixed
     if (Date.now() < Date.parse('2027-01-06T00:00:00Z')) {
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Accra' });
       const picked = linkTentpoles(filtered).map((t) => t.event).filter(Boolean) as GhanaEvent[];
-      // Big nights with moments to watch come first, then the other big nights, each in date order
-      const majors = Array.from(new Set([...picked, ...filtered.filter((e) => e.hot)]))
-        .filter((e) => (e.date ?? '') >= today)
-        .sort((a, b) => Number(withClips.has(b.slug)) - Number(withClips.has(a.slug)) || (a.date ?? '').localeCompare(b.date ?? ''));
+      // Big nights with moments to watch come first, then the other big nights. Each group is shuffled per visit
+      // (sooner and featured ones lean to the top), so a reload doesn't open on the same show every time.
+      const all = Array.from(new Set([...picked, ...filtered.filter((e) => e.hot)])).filter((e) => (e.date ?? '') >= today);
+      const seed = feedSeed(seedProp);
+      const majors = [...mix(all.filter((e) => withClips.has(e.slug)), seed), ...mix(all.filter((e) => !withClips.has(e.slug)), seed + 7)];
       const lead = new Set(majors.map((e) => e.slug));
       return [...majors, ...mix(filtered.filter((e) => !lead.has(e.slug)), feedSeed(seedProp))];
     }
