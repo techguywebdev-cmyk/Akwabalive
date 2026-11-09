@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/supabase/AuthProvider';
 import { T, FONT, GRAD, GROUND } from '@/lib/thiscene';
 import { Icon, PAGE_ICONS, type IconName } from '@/components/ui/Icon';
 import Wordmark from '@/components/brand/Wordmark';
+import SearchSheet from '@/components/search/SearchSheet';
 
 /** Main sections. On phones they live in the bottom tab bar; on desktop, in the header. */
 const SECTIONS: { href: string; label: string; icon: IconName }[] = [
@@ -83,6 +84,7 @@ export default function Nav({
 }) {
   const { user, profile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
   const [tabsHidden, setTabsHidden] = useState(false);
   // Once the page scrolls, the header turns into frosted green glass so content never reads through behind it
@@ -226,7 +228,7 @@ export default function Nav({
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
-          {actions ?? (plain ? null : <HeaderIconButton label="Search events" icon="search" href="/events?search=1" />)}
+          {actions ?? (plain ? null : <HeaderIconButton label="Search events" icon="search" onClick={() => setSearching(true)} />)}
           {(!isMobile || !actions) && avatar}
         </div>
       </header>
@@ -358,6 +360,7 @@ export default function Nav({
           </nav>
         </div>
       )}
+      {searching && <SearchSheet onClose={() => setSearching(false)} />}
     </>
   );
 }
