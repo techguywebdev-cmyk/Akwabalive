@@ -35,7 +35,7 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
   const slugs = c.calendar_events.map((e) => e.event_slug);
   const events = slugs.length ? (await rest<SheetEvent[]>(`events?select=slug,title,date,image_url&slug=in.(${slugs.map((s) => `"${s}"`).map(encodeURIComponent).join(',')})&order=date`)) ?? [] : [];
   const months = sheetMonths(events);
-  const who = c.profiles?.full_name || c.profiles?.username || 'Someone';
+  const who = params.slug.startsWith('akwaaba-') ? 'Akwaaba' : c?.profiles?.full_name || c?.profiles?.username || 'Someone';
 
   const body = months.reduce((h, mo) => h + MONTH_HEAD + mo.weeks.reduce((s, w) => s + (w.full ? FULL_ROW : THIN_ROW) + GAP, 0) + 30, 0);
   const H = Math.max(1350, Math.min(3200, 300 + body + 150));

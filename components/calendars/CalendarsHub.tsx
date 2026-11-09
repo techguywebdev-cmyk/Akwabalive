@@ -9,7 +9,7 @@ import Footer from '@/components/layout/Footer';
 import FlyerWall from '@/components/ui/FlyerWall';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
-import { CAL_SELECT, calendarStats, createCalendar, ownerName, type Calendar, type CalendarStats } from '@/lib/calendars';
+import { CAL_SELECT, calendarStats, createCalendar, isCurated, ownerName, type Calendar, type CalendarStats } from '@/lib/calendars';
 import { hiRes } from '@/lib/events/image';
 import { T, FONT, GROUND, GRAD, BTN } from '@/lib/thiscene';
 
@@ -17,25 +17,70 @@ type Row = Calendar & { calendar_events: { event_slug: string }[] };
 const gradText: React.CSSProperties = { background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' };
 const eyebrow: React.CSSProperties = { margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
 
-/** A calendar as a tile: its flyers fanned on top, name, who made it, likes and stars */
-function Tile({ c, flyers, stats }: { c: Row; flyers: string[]; stats?: CalendarStats }) {
+type TileEvent = { date: string; img: string | null };
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const iso = (y: number, m: number, d: number) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+/**
+ * A calendar as a little desk calendar: binding on top, the month with the most shows, each show's flyer in its
+ * date square. Name, who made it, likes and stars below.
+ */
+function Tile({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarStats }) {
+  // The busiest month (the soonest when tied); this month when it's empty
+  const byMonth: Record<string, TileEvent[]> = {};
+  for (const e of evs) (byMonth[e.date.slice(0, 7)] ??= []).push(e);
+  const months = Object.keys(byMonth).sort();
+  const today = new Date().toISOString().slice(0, 10);
+  const pick = months.sort((x, y) => byMonth[y].length - byMonth[x].length || x.localeCompare(y))[0] ?? today.slice(0, 7);
+  const y = +pick.slice(0, 4), m = +pick.slice(5, 7) - 1;
+  const lead = (new Date(y, m, 1).getDay() + 6) % 7;
+  const len = new Date(y, m + 1, 0).getDate();
+  const cells: (number | null)[] = [...Array(lead).fill(null), ...Array.from({ length: len }, (_, i) => i + 1)];
+  while (cells.length < 42) cells.push(null);
+  const day: Record<string, TileEvent> = {};
+  for (const e of byMonth[pick] ?? []) if (!day[e.date.slice(0, 10)] || (!day[e.date.slice(0, 10)].img && e.img)) day[e.date.slice(0, 10)] = e;
+  const span = Object.keys(byMonth).length;
+
   return (
     <Link href={`/c/${c.slug}`} style={{ display: 'block', textDecoration: 'none' }}>
-      <span style={{ position: 'relative', display: 'block', aspectRatio: '4 / 3', borderRadius: 18, overflow: 'hidden', background: GRAD.card }}>
-        {flyers.slice(0, 3).map((f, i, a) => {
-          const off = i - (a.length - 1) / 2;
-          return (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={f} src={f} alt="" style={{ position: 'absolute', left: '50%', top: '14%', width: '42%', aspectRatio: '3 / 4', objectFit: 'cover', borderRadius: 12, transform: `translateX(calc(-50% + ${off * 46}%)) rotate(${off * 8}deg)`, zIndex: 3 - Math.abs(Math.round(off)), boxShadow: '0 14px 30px -10px rgba(0,0,0,0.8)' }} />
-          );
-        })}
-        {!c.is_public && <span style={{ position: 'absolute', top: 10, left: 10, zIndex: 5, height: 26, padding: '0 9px', borderRadius: 9, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(5,10,8,0.6)', color: T.white, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700 }}><Lock size={12} />Private</span>}
+      <span style={{ position: 'relative', display: 'block', paddingTop: 7 }}>
+        {/* Binding */}
+        <span aria-hidden style={{ position: 'absolute', top: 0, left: '24%', width: 8, height: 15, borderRadius: 4, background: 'linear-gradient(180deg, #C9F6DC, #5AD99A)', boxShadow: '0 2px 4px rgba(0,0,0,0.5)', zIndex: 2 }} />
+        <span aria-hidden style={{ position: 'absolute', top: 0, right: '24%', width: 8, height: 15, borderRadius: 4, background: 'linear-gradient(180deg, #C9F6DC, #5AD99A)', boxShadow: '0 2px 4px rgba(0,0,0,0.5)', zIndex: 2 }} />
+        <span style={{ display: 'block', borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%)', boxShadow: '0 18px 36px -18px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+          {/* Month header */}
+          <span style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6, padding: '12px 12px 8px', background: 'linear-gradient(180deg, rgba(123,227,168,0.16), rgba(123,227,168,0.04))' }}>
+            <span style={{ fontFamily: FONT.display, fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>
+              {MONTHS[m]}{span > 1 && <span style={{ marginLeft: 5, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, color: T.mintText }}>+{span - 1}</span>}
+            </span>
+            <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, color: T.text3 }}>{y}</span>
+          </span>
+          {/* The month, with flyers on the nights out */}
+          <span style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 3, padding: '4px 9px 10px' }}>
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((w, i) => <span key={`w${i}`} style={{ textAlign: 'center', fontFamily: FONT.sans, fontSize: 8.5, fontWeight: 700, color: i >= 5 ? 'rgba(168,240,198,0.6)' : 'rgba(255,255,255,0.28)', paddingBottom: 2 }}>{w}</span>)}
+            {cells.map((d, i) => {
+              if (d == null) return <span key={i} style={{ aspectRatio: '1' }} />;
+              const k = iso(y, m, d);
+              const e = day[k];
+              if (!e) return <span key={i} style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: 8.5, fontWeight: 600, color: k === today ? T.mintText : 'rgba(255,255,255,0.3)' }}>{d}</span>;
+              return (
+                <span key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: 5, overflow: 'hidden', background: GRAD.mint, boxShadow: '0 3px 8px -2px rgba(0,0,0,0.6)' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {e.img && <img src={e.img} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+                </span>
+              );
+            })}
+          </span>
+        </span>
       </span>
-      <span style={{ display: 'block', marginTop: 10, fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</span>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 3, fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ownerName(c)} · {c.calendar_events.length} shows</span>
-        {!!stats?.likes && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Heart size={12} />{stats.likes}</span>}
-        {stats?.rating != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.mintText }}><Star size={12} fill="currentColor" strokeWidth={0} />{Number(stats.rating).toFixed(1)}</span>}
+      <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10 }}>
+        {!c.is_public && <Lock size={13} color={T.text3} style={{ flexShrink: 0 }} aria-label="Private" />}
+        <span style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</span>
+      </span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 3, fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isCurated(c.slug) ? 'Akwaaba' : ownerName(c)} · {c.calendar_events.length} {c.calendar_events.length === 1 ? 'show' : 'shows'}</span>
+        {!!stats?.likes && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0 }}><Heart size={11} />{stats.likes}</span>}
+        {stats?.rating != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.mintText, flexShrink: 0 }}><Star size={11} fill="currentColor" strokeWidth={0} />{Number(stats.rating).toFixed(1)}</span>}
       </span>
     </Link>
   );
@@ -48,8 +93,10 @@ export default function CalendarsHub() {
   const { user } = useAuth();
   const [mine, setMine] = useState<Row[]>([]);
   const [popular, setPopular] = useState<Row[]>([]);
+  const [ours, setOurs] = useState<Row[]>([]);
   const [stats, setStats] = useState<Record<string, CalendarStats>>({});
   const [flyers, setFlyers] = useState<Record<string, string>>({});
+  const [dates, setDates] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -69,12 +116,15 @@ export default function CalendarsHub() {
       const score = (c: Row) => (st[c.id]?.likes ?? 0) * 3 + (st[c.id]?.ratings ?? 0) * 2 + (st[c.id]?.comments ?? 0) + c.calendar_events.length * 0.2;
       p.sort((a, b) => score(b) - score(a));
       const slugs = Array.from(new Set(all.flatMap((c) => c.calendar_events.map((e) => e.event_slug))));
-      const ev = slugs.length ? await db.from('events').select('slug, image_url').in('slug', slugs.slice(0, 200)) : { data: [] };
+      const ev = slugs.length ? await db.from('events').select('slug, image_url, date').in('slug', slugs.slice(0, 300)) : { data: [] };
       if (!live) return;
-      setPopular(p.filter((c) => c.owner_id !== user?.id).slice(0, 12));
-      setMine(o);
+      setOurs(p.filter((c) => isCurated(c.slug)));
+      setPopular(p.filter((c) => c.owner_id !== user?.id && !isCurated(c.slug)).slice(0, 12));
+      setMine(o.filter((c) => !isCurated(c.slug)));
       setStats(st);
-      setFlyers(Object.fromEntries(((ev.data ?? []) as { slug: string; image_url: string | null }[]).filter((e) => e.image_url).map((e) => [e.slug, hiRes(e.image_url, 300) ?? e.image_url!])));
+      const evRows = (ev.data ?? []) as { slug: string; image_url: string | null; date: string }[];
+      setFlyers(Object.fromEntries(evRows.filter((e) => e.image_url).map((e) => [e.slug, hiRes(e.image_url, 300) ?? e.image_url!])));
+      setDates(Object.fromEntries(evRows.map((e) => [e.slug, e.date])));
     })();
     return () => { live = false; };
   }, [user, db]);
@@ -89,8 +139,9 @@ export default function CalendarsHub() {
     setBusy(true);
     try { const c = await createCalendar(db, user.id, name, isPublic); router.push(`/c/${c.slug}`); } catch { setBusy(false); }
   };
-  const wall = Object.values(flyers).slice(0, 10);
-  const fl = (c: Row) => c.calendar_events.map((e) => flyers[e.event_slug]).filter(Boolean);
+  // Header: flyers from the public calendars on show (never from someone's private one)
+  const wall = Array.from(new Set([...ours, ...popular].flatMap((c) => c.calendar_events.map((e) => flyers[e.event_slug])).filter(Boolean))).slice(0, 10);
+  const fl = (c: Row): TileEvent[] => c.calendar_events.filter((e) => dates[e.event_slug]).map((e) => ({ date: dates[e.event_slug], img: flyers[e.event_slug] ?? null }));
   const grid: React.CSSProperties = { marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(46%, 220px), 1fr))', gap: '22px 14px' };
 
   return (
@@ -121,16 +172,26 @@ export default function CalendarsHub() {
         {mine.length > 0 && (
           <section aria-label="Your calendars" style={{ marginTop: 56 }}>
             <p style={eyebrow}>Yours</p>
-            <div style={grid}>{mine.map((c) => <Tile key={c.id} c={c} flyers={fl(c)} stats={stats[c.id]} />)}</div>
+            <div style={grid}>{mine.map((c) => <Tile key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} />)}</div>
+          </section>
+        )}
+
+        {ours.length > 0 && (
+          <section aria-label="Starter calendars from Akwaaba" style={{ marginTop: 56 }}>
+            <p style={eyebrow}>Start from one of ours</p>
+            <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14.5, color: T.text2 }}>Open one, tap “Copy to mine”, then add and remove shows.</p>
+            <div className="no-scrollbar" style={{ display: 'flex', gap: 14, overflowX: 'auto', margin: '16px -20px 0', padding: '0 20px 4px' }}>
+              {ours.map((c) => <div key={c.id} style={{ width: 'min(62vw, 240px)', flexShrink: 0 }}><Tile c={c} evs={fl(c)} stats={stats[c.id]} /></div>)}
+            </div>
           </section>
         )}
 
         <section aria-label="Popular calendars" style={{ marginTop: 56 }}>
           <p style={{ ...eyebrow, display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} />Popular now</p>
           {popular.length ? (
-            <div style={grid}>{popular.map((c) => <Tile key={c.id} c={c} flyers={fl(c)} stats={stats[c.id]} />)}</div>
+            <div style={grid}>{popular.map((c) => <Tile key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} />)}</div>
           ) : (
-            <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15.5, lineHeight: 1.55, color: T.text2 }}>No public calendars yet. Be the first, and share it with the squad.</p>
+            <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15.5, lineHeight: 1.55, color: T.text2 }}>No one’s shared a calendar yet. Be the first, and send it to the squad.</p>
           )}
         </section>
       </main>

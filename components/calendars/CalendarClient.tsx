@@ -13,7 +13,7 @@ import CalendarSheet from '@/components/calendars/CalendarSheet';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { useCalendarComments } from '@/hooks/useCalendarComments';
-import { CAL_SELECT, createCalendar, ownerName, setInCalendar, type Calendar } from '@/lib/calendars';
+import { CAL_SELECT, createCalendar, isCurated, ownerName, setInCalendar, type Calendar } from '@/lib/calendars';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { listTitle } from '@/lib/titles';
@@ -33,6 +33,15 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 
 function Avatar({ c, size = 30 }: { c: Calendar; size?: number }) {
   const name = ownerName(c);
+  if (isCurated(c.slug)) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden style={{ flexShrink: 0 }}>
+        <rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" />
+        <path d="M7.5 18.5V11a4.5 4.5 0 0 1 9 0v7.5" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M7.5 14.5h9" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" />
+      </svg>
+    );
+  }
   const url = c.profiles?.avatar_url;
   // eslint-disable-next-line @next/next/no-img-element
   if (url) return <img src={url} alt="" width={size} height={size} style={{ width: size, height: size, borderRadius: size * 0.32, objectFit: 'cover', flexShrink: 0 }} />;
@@ -200,7 +209,7 @@ export default function CalendarClient({ slug }: { slug: string }) {
               <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Avatar c={cal} size={38} />
                 <div style={{ minWidth: 0 }}>
-                  {cal.profiles?.username
+                  {cal.profiles?.username && !isCurated(cal.slug)
                     ? <Link href={`/u/${cal.profiles.username}`} style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 700, color: T.white, textDecoration: 'none' }}>{ownerName(cal)}</Link>
                     : <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 700, color: T.white }}>{ownerName(cal)}</span>}
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text3, flexWrap: 'wrap' }}>
