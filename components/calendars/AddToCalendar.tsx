@@ -20,7 +20,7 @@ export default function AddToCalendar({ eventSlug, eventTitle, onClose }: { even
   const db = createClient();
   const [cals, setCals] = useState<(Calendar & { calendar_events: { event_slug: string }[] })[] | null>(null);
   const [making, setMaking] = useState(false);
-  const [title, setTitle] = useState(IDEAS[0]);
+  const [title, setTitle] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [busy, setBusy] = useState(false);
   const [made, setMade] = useState<Calendar | null>(null);
@@ -104,7 +104,7 @@ export default function AddToCalendar({ eventSlug, eventTitle, onClose }: { even
             {making ? (
               <div style={{ marginTop: 20 }}>
                 <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>New calendar</p>
-                <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} aria-label="Calendar name" placeholder="Name it"
+                <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80} aria-label="Calendar name" placeholder="Name it anything, e.g. Owambe szn"
                   style={{ marginTop: 10, width: '100%', height: 50, padding: '0 16px', borderRadius: 14, border: 'none', outline: 'none', background: 'rgba(255,255,255,0.07)', color: T.white, fontFamily: FONT.sans, fontSize: 16, boxSizing: 'border-box' }} />
                 <div className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', marginTop: 10 }}>
                   {IDEAS.map((i) => (
