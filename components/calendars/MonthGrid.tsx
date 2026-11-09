@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronLeft, ChevronRight, MapPin, X } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Plus, X } from 'lucide-react';
 import { hiRes } from '@/lib/events/image';
 import { listTitle } from '@/lib/titles';
 import { T, FONT, GRAD } from '@/lib/thiscene';
@@ -30,8 +30,10 @@ function until(day: string) {
  * The calendar as a calendar: one month at a time, each night with a show wearing its flyer, like a wall
  * planner. Tap a night to see what's on below.
  */
-export default function MonthGrid({ events, onRemove, renderSheet }: {
+export default function MonthGrid({ events, onRemove, onAddDay, renderSheet }: {
   events: GridEvent[]; onRemove?: (e: GridEvent) => void;
+  /** Owner: an empty night was tapped (or "add another" on a night): find a show for it */
+  onAddDay?: (iso: string) => void;
   /** The Months view: their whole calendar as one sheet; gets a callback that opens a night in Days */
   renderSheet?: (pick: (iso: string) => void) => React.ReactNode;
 }) {
@@ -140,6 +142,16 @@ export default function MonthGrid({ events, onRemove, renderSheet }: {
           const isSel = key === sel;
           const past = key < today;
           const src = evs?.find((e) => e.image_url);
+          if (!evs && onAddDay && !past) {
+            // Owner: tap an empty night to find a show for it
+            return (
+              <button key={key} type="button" onClick={() => onAddDay(key)} aria-label={`Add a show on ${d} ${MONTHS[m]}`}
+                style={{ position: 'relative', aspectRatio: '3 / 4', padding: 0, border: 'none', borderRadius: 11, cursor: 'pointer', background: 'rgba(255,255,255,0.035)' }}>
+                <span style={{ position: 'absolute', top: 5, left: 0, right: 0, textAlign: 'center', fontFamily: FONT.display, fontSize: 12.5, fontWeight: 700, color: key === today ? T.mintText : T.text3 }}>{d}</span>
+                <Plus size={13} strokeWidth={2.4} style={{ position: 'absolute', left: '50%', bottom: 8, transform: 'translateX(-50%)', color: 'rgba(168,240,198,0.45)' }} />
+              </button>
+            );
+          }
           if (!evs) {
             return (
               <span key={key} style={{ position: 'relative', aspectRatio: '3 / 4', borderRadius: 11, background: 'rgba(255,255,255,0.035)', opacity: past ? 0.45 : 1 }}>
@@ -195,6 +207,11 @@ export default function MonthGrid({ events, onRemove, renderSheet }: {
               </div>
             ))}
           </div>
+          {onAddDay && sel >= today && (
+            <button type="button" onClick={() => onAddDay(sel)} style={{ marginTop: 18, height: 42, padding: '0 14px', borderRadius: 13, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.06)', color: T.white, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+              <Plus size={15} />Add another show this night
+            </button>
+          )}
         </div>
       )}
       </>)}

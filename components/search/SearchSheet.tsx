@@ -63,7 +63,9 @@ const clean = (s: string) => s.replace(/[%,()*"]/g, ' ').replace(/\s+/g, ' ').tr
  * (pool party, church, kids, tech…) and a time. With nothing picked, the big nights and this weekend.
  * Browse mode opens the event; add mode (a calendar) puts +/✓ on each show instead.
  */
-export default function SearchSheet({ onClose, title = 'Search shows', isIn, onToggle }: {
+export default function SearchSheet({ onClose, title = 'Search shows', isIn, onToggle, day }: {
+  /** Open on one night (YYYY-MM-DD): what's on then, or nearby nights when nothing is */
+  day?: string;
   onClose: () => void;
   title?: string;
   isIn?: (slug: string) => boolean;
@@ -72,7 +74,8 @@ export default function SearchSheet({ onClose, title = 'Search shows', isIn, onT
   const db = useMemo(() => createClient(), []);
   const [q, setQ] = useState('');
   const [vibe, setVibe] = useState<Vibe | null>(null);
-  const [when, setWhen] = useState('any');
+  const [when, setWhen] = useState(day ? 'day' : 'any');
+  const [nearby, setNearby] = useState(false);
   const [hot, setHot] = useState<FoundEvent[]>([]);
   const [weekend, setWeekend] = useState<FoundEvent[]>([]);
   const [found, setFound] = useState<FoundEvent[] | null>(null);
@@ -105,7 +108,7 @@ export default function SearchSheet({ onClose, title = 'Search shows', isIn, onT
     setLoading(true);
     const t = setTimeout(async () => {
       let qb = db.from('events').select(SELECT).eq('status', 'published');
-      const r = range(when);
+      const r = when === 'day' && day ? [day, day] as [string, string] : range(when);
       qb = r ? qb.gte('date', r[0] < today ? today : r[0]).lte('date', r[1]) : qb.gte('date', today);
       if (vibe) {
         const parts = [...(vibe.cats ?? []).map((c) => `category.eq.${c}`), ...(vibe.re ? [`title.imatch."${vibe.re}"`] : []), ...(vibe.desc ? [`description.imatch."${vibe.desc}"`] : [])];
@@ -121,11 +124,19 @@ export default function SearchSheet({ onClose, title = 'Search shows', isIn, onT
         const w = term.toLowerCase();
         list = list.filter((e) => [e.title, e.venue, e.city, e.area].some((x) => x?.toLowerCase().includes(w)));
       }
+      // Nothing listed that night: show the nights around it
+      if (!list.length && when === 'day' && day && !term && !vibe) {
+        const t0 = Date.parse(`${day}T12:00:00Z`);
+        const d = (n: number) => new Date(t0 + n * 86400000).toISOString().slice(0, 10);
+        const { data: near } = await db.from('events').select(SELECT).eq('status', 'published').gte('date', d(-3) < today ? today : d(-3)).lte('date', d(3)).order('date').limit(30);
+        list = (near ?? []) as FoundEvent[];
+        setNearby(true);
+      } else setNearby(false);
       setFound(list);
       setLoading(false);
     }, term ? 220 : 0);
     return () => clearTimeout(t);
-  }, [q, vibe, when, db, today, browsing]);
+  }, [q, vibe, when, db, today, browsing, day]);
 
   const chip = (on: boolean): React.CSSProperties => ({
     flexShrink: 0, height: 38, padding: '0 14px', borderRadius: 12, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -185,7 +196,7 @@ export default function SearchSheet({ onClose, title = 'Search shows', isIn, onT
   };
 
   const heading = found
-    ? [vibe?.label, when !== 'any' ? WHENS.find((w) => w.key === when)?.label : null].filter(Boolean).join(' · ') || 'Results'
+    ? nearby ? `Nothing on ${shortDay(parseDay(day!)!)}, here’s what’s near` : [vibe?.label, when === 'day' && day ? shortDay(parseDay(day)!) : when !== 'any' ? WHENS.find((w) => w.key === when)?.label : null].filter(Boolean).join(' · ') || 'Results'
     : '';
 
   const sheet = (
@@ -218,6 +229,10 @@ export default function SearchSheet({ onClose, title = 'Search shows', isIn, onT
             })}
           </div>
           <div className="no-scrollbar" role="radiogroup" aria-label="When" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '8px 16px 0' }}>
+            {day && (
+              <button type="button" role="radio" aria-checked={when === 'day'} onClick={() => setWhen('day')}
+                style={{ ...chip(when === 'day'), height: 32, padding: '0 12px', fontSize: 13, background: when === 'day' ? 'rgba(123,227,168,0.14)' : 'transparent' }}>{shortDay(parseDay(day)!)}</button>
+            )}
             {WHENS.map((w) => (
               <button key={w.key} type="button" role="radio" aria-checked={when === w.key} onClick={() => setWhen(w.key)}
                 style={{ ...chip(when === w.key), height: 32, padding: '0 12px', fontSize: 13, background: when === w.key ? 'rgba(123,227,168,0.14)' : 'transparent' }}>{w.label}</button>

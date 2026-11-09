@@ -61,6 +61,7 @@ export default function CalendarClient({ slug }: { slug: string }) {
   const [ratings, setRatings] = useState<{ user_id: string; stars: number }[]>([]);
   const [chat, setChat] = useState(false);
   const [finding, setFinding] = useState(false);
+  const [findDay, setFindDay] = useState<string | undefined>();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ title: '', description: '' });
   const [picks, setPicks] = useState<Ev[]>([]);
@@ -288,13 +289,14 @@ export default function CalendarClient({ slug }: { slug: string }) {
             <p style={{ margin: '0 0 16px', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{mine ? 'Nothing in it yet. Find shows to add, or tap “Add to a calendar” on any event.' : 'Nothing in this calendar yet.'}</p>
           )}
           {mine && (
-            <button type="button" onClick={() => setFinding(true)} style={{ ...BTN.primary, marginBottom: 26, height: 50, padding: '0 22px', borderRadius: 999, cursor: 'pointer', fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <button type="button" onClick={() => { setFindDay(undefined); setFinding(true); }} style={{ ...BTN.primary, marginBottom: 26, height: 50, padding: '0 22px', borderRadius: 999, cursor: 'pointer', fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
               <Search size={18} strokeWidth={2.4} />Find shows to add
             </button>
           )}
           {cal && (
             <MonthGrid
               events={events}
+              onAddDay={mine ? (d) => { setFindDay(d); setFinding(true); } : undefined}
               onRemove={mine ? (g) => { const e = events.find((x) => x.slug === g.slug); if (e) drop(e); } : undefined}
               renderSheet={(pick) => <CalendarSheet events={events} title={cal.title} owner={ownerName(cal)} slug={cal.slug} isPublic={cal.is_public} onPick={pick} />}
             />
@@ -335,6 +337,7 @@ export default function CalendarClient({ slug }: { slug: string }) {
       {finding && cal && (
         <SearchSheet
           title={`Add to ${cal.title}`}
+          day={findDay}
           onClose={() => setFinding(false)}
           isIn={(slug) => events.some((e) => e.slug === slug)}
           onToggle={(f) => { const ev = { ...f } as Ev; if (events.some((e) => e.slug === f.slug)) drop(ev); else add(ev); }}
