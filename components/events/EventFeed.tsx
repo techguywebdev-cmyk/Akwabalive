@@ -22,7 +22,8 @@ import { statusText } from '@/components/thiscene/dates';
 import { parseDay, shortDay } from '@/lib/dates';
 import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { type CheckoutTier } from '@/lib/events/tiers';
-import { Heart, Share2, Mic2, Play, Image as ImageIcon, MessageSquareText } from 'lucide-react';
+import { Heart, Share2, Mic2, Play, Image as ImageIcon, MessageSquareText, CalendarPlus } from 'lucide-react';
+import AddToCalendar from '@/components/calendars/AddToCalendar';
 import FeedComments from '@/components/events/FeedComments';
 import { useMomentComments } from '@/hooks/useMomentComments';
 import { useEventComments } from '@/hooks/useEventComments';
@@ -103,6 +104,7 @@ function EventCard({
   // Comments: the clip's own thread (the same one as on the Moments page); the event chat when it has no clips.
   // Loaded for the card on screen only.
   const [chatOpen, setChatOpen] = useState(false);
+  const [calOpen, setCalOpen] = useState(false);
   useEffect(() => { if (!active) setChatOpen(false); }, [active]);
   const threadClip = moments.length ? moments[watching ? clip : 0] : null;
   const momentThread = useMomentComments(active && threadClip ? threadClip.id : undefined);
@@ -167,6 +169,8 @@ function EventCard({
   } : {};
 
   const a = toHex(rgb);
+  // Phones fit four round buttons beside the ticket button
+  const rb: React.CSSProperties = wide ? roundBtn : { ...roundBtn, width: 43, height: 43, minWidth: 43 };
   const split = splitEventTitle(event.title);
   const title = shorten(calmCase(split.title));
   const subtitle = shorten(calmCase(split.subtitle), 60);
@@ -307,8 +311,8 @@ function EventCard({
           <span style={{ fontFamily: FONT.sans, fontSize: 14, color: T.text2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[event.venue, place].filter(Boolean).join(' · ')}</span>
         </div>
 
-        {/* Tickets, plus save and share. The card itself opens the event. */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, pointerEvents: 'auto' }}>
+        {/* Tickets, plus save, add to a calendar, comments and share. The card itself opens the event. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: wide ? 8 : 6, marginTop: 4, pointerEvents: 'auto' }}>
           {label !== 'Ended' ? (
             <button type="button" onClick={() => onTickets(a)} style={{ ...BTN.primary, flex: wide ? undefined : 1, minWidth: wide ? 240 : 0, paddingLeft: 16, paddingRight: 16, whiteSpace: 'nowrap', overflow: 'hidden' }}>
               {label === 'Free' && !listed ? 'Reserve a free spot' : 'Get tickets'}
@@ -317,18 +321,23 @@ function EventCard({
           ) : (
             <Link href={`/events/${event.slug}`} style={{ ...BTN.secondary, flex: wide ? undefined : 1 }}>See photos & details</Link>
           )}
-          <button type="button" onClick={onSave} aria-label={saved ? 'Saved' : 'Save'} aria-pressed={saved} style={{ ...roundBtn, ...(saved ? { background: alpha(a, 0.2), borderColor: alpha(a, 0.5), color: a } : {}) }}>
+          <button type="button" onClick={onSave} aria-label={saved ? 'Saved' : 'Save'} aria-pressed={saved} style={{ ...rb, ...(saved ? { background: alpha(a, 0.2), borderColor: alpha(a, 0.5), color: a } : {}) }}>
             <Heart size={21} strokeWidth={2} fill={saved ? 'currentColor' : 'none'} />
           </button>
-          <button type="button" onClick={() => setChatOpen((o) => !o)} aria-label={chatCount ? `Comments, ${chatCount}` : 'Comments'} aria-expanded={chatOpen} style={{ ...roundBtn, position: 'relative', cursor: 'pointer', ...(chatOpen ? { background: alpha(a, 0.2), color: a } : {}) }}>
+          <button type="button" onClick={() => setCalOpen(true)} aria-label="Add to a calendar" style={rb}>
+            <CalendarPlus size={20} strokeWidth={2} />
+          </button>
+          <button type="button" onClick={() => setChatOpen((o) => !o)} aria-label={chatCount ? `Comments, ${chatCount}` : 'Comments'} aria-expanded={chatOpen} style={{ ...rb, position: 'relative', cursor: 'pointer', ...(chatOpen ? { background: alpha(a, 0.2), color: a } : {}) }}>
             <MessageSquareText size={20} strokeWidth={2} />
             {chatCount > 0 && <span style={{ position: 'absolute', top: 4, right: 2, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{chatCount > 99 ? '99+' : chatCount}</span>}
           </button>
-          <button type="button" onClick={onShare} aria-label="Share" style={roundBtn}>
+          <button type="button" onClick={onShare} aria-label="Share" style={rb}>
             <Share2 size={20} strokeWidth={2} />
           </button>
         </div>
       </div>
+
+      {calOpen && <AddToCalendar eventSlug={event.slug} eventTitle={event.title} onClose={() => setCalOpen(false)} />}
 
       {chatOpen && (
         <FeedComments

@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Copy, Globe, Heart, Lock, MessageSquareText, Plus, Settings2, Share2, Star } from 'lucide-react';
+import { Copy, Globe, Heart, Lock, MessageSquareText, Plus, Search, Settings2, Share2, Star } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import FeedComments from '@/components/events/FeedComments';
 import MonthGrid from '@/components/calendars/MonthGrid';
+import SearchSheet from '@/components/search/SearchSheet';
 import CalendarSheet from '@/components/calendars/CalendarSheet';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
@@ -50,6 +51,7 @@ export default function CalendarClient({ slug }: { slug: string }) {
   const [liked, setLiked] = useState(false);
   const [ratings, setRatings] = useState<{ user_id: string; stars: number }[]>([]);
   const [chat, setChat] = useState(false);
+  const [finding, setFinding] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ title: '', description: '' });
   const [picks, setPicks] = useState<Ev[]>([]);
@@ -274,7 +276,12 @@ export default function CalendarClient({ slug }: { slug: string }) {
         {/* The shows, as a month calendar */}
         <section aria-label="Shows" style={{ marginTop: 44 }}>
           {cal && !events.length && (
-            <p style={{ margin: '0 0 22px', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{mine ? 'Nothing in it yet. Add the big nights below, or tap “Add to a calendar” on any event.' : 'Nothing in this calendar yet.'}</p>
+            <p style={{ margin: '0 0 16px', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{mine ? 'Nothing in it yet. Find shows to add, or tap “Add to a calendar” on any event.' : 'Nothing in this calendar yet.'}</p>
+          )}
+          {mine && (
+            <button type="button" onClick={() => setFinding(true)} style={{ ...BTN.primary, marginBottom: 26, height: 50, padding: '0 22px', borderRadius: 999, cursor: 'pointer', fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <Search size={18} strokeWidth={2.4} />Find shows to add
+            </button>
           )}
           {cal && (
             <MonthGrid
@@ -315,6 +322,15 @@ export default function CalendarClient({ slug }: { slug: string }) {
         )}
       </main>
       <Footer />
+
+      {finding && cal && (
+        <SearchSheet
+          title={`Add to ${cal.title}`}
+          onClose={() => setFinding(false)}
+          isIn={(slug) => events.some((e) => e.slug === slug)}
+          onToggle={(f) => { const ev = { ...f } as Ev; if (events.some((e) => e.slug === f.slug)) drop(ev); else add(ev); }}
+        />
+      )}
 
       {chat && cal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 400 }}>
