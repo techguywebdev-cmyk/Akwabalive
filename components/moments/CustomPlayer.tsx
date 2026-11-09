@@ -344,6 +344,8 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
               if (cancelled) return;
               const state = e.data;
               setPlaying(state === 1);
+              // No auto-captions ("[music]"), even when the viewer's YouTube settings turn them on
+              if (state === 1) { try { e.target.unloadModule?.('captions'); e.target.unloadModule?.('cc'); } catch { /* ignore */ } }
               setPaused(state === 2 && userPausedRef.current);
               if (state === 1) {
                 userPausedRef.current = false;

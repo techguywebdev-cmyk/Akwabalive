@@ -234,7 +234,7 @@ const MomentSlide = forwardRef<SlideHandle, {
 
         {/* Clips from this night */}
         {clips.length > 1 && (
-          <div className="no-scrollbar" style={{ display: 'flex', gap: 8, padding: '10px 20px 0', overflowX: 'auto' }}>
+          <div className="no-scrollbar" style={{ display: 'flex', gap: 8, padding: '12px 20px 4px', overflowX: 'auto', flexShrink: 0 }}>
             {clips.map((c, i) => (
               <button key={c.id} type="button" onClick={() => goClip(i)} aria-label={`Play ${c.title}`} aria-current={i === ci} style={{
                 position: 'relative', width: 64, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, borderRadius: 8, overflow: 'hidden', cursor: 'pointer', background: '#000',
@@ -247,8 +247,8 @@ const MomentSlide = forwardRef<SlideHandle, {
           </div>
         )}
 
-        {/* About the night */}
-        <div style={{ padding: '14px 20px 0', minHeight: 0, overflow: 'hidden' }}>
+        {/* About the night: scrolls on short screens rather than cropping the faces under the next-edition card */}
+        <div className="no-scrollbar" style={{ padding: '14px 20px 6px', minHeight: 0, flex: '0 1 auto', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               {(fresh || tag) && (
