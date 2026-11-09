@@ -65,9 +65,9 @@ export function HeaderIconButton({
  * and the profile/sign-in button. Phones also get a floating glass tab bar at the bottom.
  */
 export default function Nav({
-  active, actions, back, tabs = false, plain = false, center,
+  active, actions, back, tabs = false, plain = false, center, transparent = false,
 }: {
-  /** kept for older call sites */
+  /** Never draw a header band (pages with a full-bleed image at the top, like an event's flyer): just the floating buttons */
   transparent?: boolean;
   variant?: 'default' | 'moments';
   onSearch?: () => void;
@@ -179,11 +179,11 @@ export default function Nav({
         style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
           padding: `calc(14px + env(safe-area-inset-top, 0px)) 16px ${scrolled ? 14 : 28}px`,
-          background: scrolled
+          background: transparent ? 'none' : scrolled
             ? 'linear-gradient(180deg, rgba(16,34,25,0.86) 0%, rgba(12,26,19,0.86) 100%)'
             : 'linear-gradient(to bottom, rgba(3,8,6,0.42) 0%, rgba(3,8,6,0.16) 60%, rgba(3,8,6,0) 100%)',
-          backdropFilter: scrolled ? 'blur(18px) saturate(140%)' : undefined,
-          WebkitBackdropFilter: scrolled ? 'blur(18px) saturate(140%)' : undefined,
+          backdropFilter: scrolled && !transparent ? 'blur(18px) saturate(140%)' : undefined,
+          WebkitBackdropFilter: scrolled && !transparent ? 'blur(18px) saturate(140%)' : undefined,
           transition: 'background 220ms ease, padding 220ms ease',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
           pointerEvents: 'none',
