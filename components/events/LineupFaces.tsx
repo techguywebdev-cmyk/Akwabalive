@@ -7,16 +7,23 @@ import { artistForName } from '@/lib/data/artists';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import { FONT } from '@/lib/thiscene';
 
+/** Groups billed by name: show the members' faces */
+const GROUPS: Record<string, string[]> = {
+  'asakaa boys': ['Yaw Tog', 'Kawabanga', 'Jay Bahd', "O'Kenneth", 'Kwaku DMC', 'Sean Lifer'],
+};
+
 /** The confirmed line-up as a row of round faces with names, for the feed card (only acts we have a photo of) */
 export default function LineupFaces({ event, size = 34 }: { event: GhanaEvent; size?: number }) {
   const acts = resolveLineupNames(event)
+    .flatMap((n) => GROUPS[n.toLowerCase().trim()] ?? [n])
     .map((name) => ({ name, slug: artistForName(name)?.slug }))
     .filter((x): x is { name: string; slug: string } => !!x.slug);
   const photos = useArtistPhotos(acts.map((x) => x.slug));
   const shown = acts.filter((x) => photos[x.slug]);
   if (!shown.length) return null;
   const faces = shown.slice(0, 4);
-  const names = shown.length <= 2 ? shown.map((x) => x.name).join(' & ') : `${shown[0].name}, ${shown[1].name} +${shown.length - 2}`;
+  const group = resolveLineupNames(event).find((n) => GROUPS[n.toLowerCase().trim()]);
+  const names = group && resolveLineupNames(event).length === 1 ? group : shown.length <= 2 ? shown.map((x) => x.name).join(' & ') : `${shown[0].name}, ${shown[1].name} +${shown.length - 2}`;
   const href = shown.length === 1 ? `/artists/${shown[0].slug}` : `/events/${event.slug}`;
   return (
     <Link href={href} aria-label={`Line-up: ${shown.map((x) => x.name).join(', ')}`}

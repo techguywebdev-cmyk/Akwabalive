@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { BadgeCheck, Bell, BellRing, CalendarDays, CalendarPlus, MapPin, MessageSquareText, Share2, Ticket } from 'lucide-react';
 import AddToCalendar from '@/components/calendars/AddToCalendar';
 import { useFollow } from '@/components/follow/useFollow';
+import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
 import CustomPlayer, { type CustomPlayerHandle } from '@/components/moments/CustomPlayer';
@@ -55,12 +56,15 @@ function XTile({ small = false }: { small?: boolean }) {
 
 /** No next edition on sale yet: follow the show (or the headline act) to hear when it's back.
  *  Same shape as the ticket card: label, name, one short line, one button. */
-function ShowFollowCard({ slug, name, artist, photo, tint, flash }: { slug: string; name: string; usually?: string; artist?: boolean; photo?: string | null; tint: string; flash: (m: string) => void }) {
+function ShowFollowCard({ slug, name, artist, photo, hosts = [], tint, flash }: { slug: string; name: string; usually?: string; artist?: boolean; photo?: string | null; hosts?: string[]; tint: string; flash: (m: string) => void }) {
   const { following, busy, toggle } = useFollow(artist ? 'artist' : 'series', slug);
+  // A show's card carries its host's face (Kweku Smoke on Revival)
+  const hostPhotos = useArtistPhotos(artist ? [] : hosts);
+  const face = artist ? photo ?? null : hosts.map((h) => hostPhotos[h]).find(Boolean) ?? null;
   const one: React.CSSProperties = { display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 12, borderRadius: 20, background: `linear-gradient(120deg, rgba(${tint}, 0.32) 0%, rgba(255,255,255,0.05) 70%)`, border: 'none' }}>
-      {artist ? <Portrait name={name} url={photo ?? null} size={46} /> : (
+      {face ? <Portrait name={name} url={face} size={46} /> : (
         <span aria-hidden style={{ width: 46, height: 46, borderRadius: 23, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', color: T.mintText }}><Bell size={19} /></span>
       )}
       <span style={{ flex: 1, minWidth: 0 }}>
@@ -387,7 +391,7 @@ const MomentSlide = forwardRef<SlideHandle, {
               </span>
             </Link>
           ) : series ? (
-            <ShowFollowCard slug={series.slug} name={series.name} usually={series.usually} tint={tint} flash={flash} />
+            <ShowFollowCard slug={series.slug} name={series.name} usually={series.usually} hosts={series.hosts} tint={tint} flash={flash} />
           ) : info.onStage[0] ? (
             <ShowFollowCard slug={info.onStage[0].slug} name={info.onStage[0].name} artist photo={info.onStage[0].photo} tint={tint} flash={flash} />
           ) : null}
