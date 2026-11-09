@@ -3,15 +3,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Copy, Globe, Heart, Lock, MessageSquareText, Pencil, Plus, Share2, Star, X } from 'lucide-react';
+import { Copy, Globe, Heart, Lock, MessageSquareText, Pencil, Plus, Share2, Star } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import FeedComments from '@/components/events/FeedComments';
+import MonthGrid from '@/components/calendars/MonthGrid';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { useCalendarComments } from '@/hooks/useCalendarComments';
 import { CAL_SELECT, createCalendar, ownerName, setInCalendar, type Calendar } from '@/lib/calendars';
-import { parseDay, longDay, shortDay } from '@/lib/dates';
+import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { listTitle } from '@/lib/titles';
 import { T, FONT, GROUND, GRAD, BTN } from '@/lib/thiscene';
@@ -90,11 +91,6 @@ export default function CalendarClient({ slug }: { slug: string }) {
       .then(({ data }) => setPicks((data ?? []) as Ev[]));
   }, [mine, db]);
 
-  const groups = useMemo((): [string, Ev[]][] => {
-    const m = new Map<string, Ev[]>();
-    for (const e of events) { const k = e.date.slice(0, 10); m.set(k, [...(m.get(k) ?? []), e]); }
-    return Array.from(m.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [events]);
   const avg = ratings.length ? ratings.reduce((s, r) => s + r.stars, 0) / ratings.length : 0;
   const myStars = ratings.find((r) => r.user_id === user?.id)?.stars ?? 0;
   const flyers = events.filter((e) => e.image_url).slice(0, 4);
@@ -252,40 +248,12 @@ export default function CalendarClient({ slug }: { slug: string }) {
           </section>
         )}
 
-        {/* The shows, night by night */}
+        {/* The shows, as a month calendar */}
         <section aria-label="Shows" style={{ marginTop: 44 }}>
           {cal && !events.length && (
-            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{mine ? 'Nothing in it yet. Add the big nights below, or tap “Add to a calendar” on any event.' : 'Nothing in this calendar yet.'}</p>
+            <p style={{ margin: '0 0 22px', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{mine ? 'Nothing in it yet. Add the big nights below, or tap “Add to a calendar” on any event.' : 'Nothing in this calendar yet.'}</p>
           )}
-          {groups.map(([day, list]) => {
-            const d = parseDay(day)!;
-            const past = day < todayIso();
-            return (
-              <div key={day} style={{ marginTop: 28, opacity: past ? 0.5 : 1 }}>
-                <p style={{ margin: 0, display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                  <span style={{ fontFamily: FONT.display, fontSize: 30, fontWeight: 800, letterSpacing: '-0.04em', color: T.white }}>{d.getDate()}</span>
-                  <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.mintText }}>{longDay(d).replace(/^\S+ \d+ /, '')} · {longDay(d).split(' ')[0]}</span>
-                </p>
-                <ul style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'grid', gap: 6 }}>
-                  {list.map((e) => (
-                    <li key={e.slug} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <Link href={`/events/${e.slug}`} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 14, padding: '8px 0', textDecoration: 'none' }}>
-                        {img(e, 200)
-                          // eslint-disable-next-line @next/next/no-img-element
-                          ? <img src={img(e, 200)!} alt="" width={54} height={68} style={{ width: 54, height: 68, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
-                          : <span style={{ width: 54, height: 68, borderRadius: 12, flexShrink: 0, background: GRAD.card }} />}
-                        <span style={{ minWidth: 0 }}>
-                          <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 17, fontWeight: 700, letterSpacing: '-0.015em', color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listTitle(e.title)}</span>
-                          <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 13.5, color: T.text3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[e.time, e.venue].filter(Boolean).join(' · ')}</span>
-                        </span>
-                      </Link>
-                      {mine && <button type="button" onClick={() => drop(e)} aria-label={`Remove ${e.title}`} style={{ width: 36, height: 36, borderRadius: 12, border: 'none', background: 'rgba(255,255,255,0.06)', color: T.text3, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><X size={16} /></button>}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+          {cal && <MonthGrid events={events} onRemove={mine ? (g) => { const e = events.find((x) => x.slug === g.slug); if (e) drop(e); } : undefined} />}
         </section>
 
         {/* Owner: one-tap adds from the season's big nights */}

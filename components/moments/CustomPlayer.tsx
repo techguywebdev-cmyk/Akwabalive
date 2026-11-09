@@ -304,8 +304,21 @@ const CustomPlayer = forwardRef<CustomPlayerHandle, CustomPlayerProps>(
               }
               if (activeRef.current) kickPlay();
               else {
-                // Warm up: start muted so the first frames buffer, then hold on the first frame
-                try { e.target.playVideo(); setTimeout(() => { if (!activeRef.current) { try { e.target.pauseVideo(); e.target.seekTo(start, true); } catch { /* ignore */ } } }, 700); } catch { /* ignore */ }
+                // Warm up while hidden: play muted past YouTube's opening title (and its grey loading card), then hold
+                // there, so when the slide comes on screen it starts straight away with real frames
+                try {
+                  e.target.playVideo();
+                  const began = Date.now();
+                  const hold = setInterval(() => {
+                    if (cancelled || activeRef.current) { clearInterval(hold); return; }
+                    let t = 0;
+                    try { t = e.target.getCurrentTime?.() ?? 0; } catch { /* ignore */ }
+                    if (t > 2.4 || Date.now() - began > 9000) {
+                      clearInterval(hold);
+                      try { e.target.pauseVideo(); } catch { /* ignore */ }
+                    }
+                  }, 150);
+                } catch { /* ignore */ }
               }
               startProgress();
               onReadyRef.current?.();
