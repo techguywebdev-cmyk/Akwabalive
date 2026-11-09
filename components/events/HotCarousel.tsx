@@ -56,7 +56,7 @@ export default function HotCarousel({ events, topInset, active, onNext, friends 
         {events.map((e) => {
           const c = counts[e.slug];
           const d = parseDay(e.date);
-          const stat = c && c.seen7d >= 30 ? <><Eye size={13} /> {compact(c.seen7d)} saw this week</>
+          const stat = c && c.views7d >= 30 ? <><Eye size={13} /> {compact(c.views7d)} visits this week</>
             : c && c.going >= 10 ? <><Users size={13} /> {compact(c.going)} going</> : null;
           return (
             <Link key={e.slug} href={`/events/${e.slug}`} style={{ flex: '0 0 auto', width: tileW ?? '80%', height: '100%', scrollSnapAlign: 'start', textDecoration: 'none', display: 'flex', flexDirection: 'column' }}>

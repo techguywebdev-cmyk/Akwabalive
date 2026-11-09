@@ -56,7 +56,7 @@ export default function HotRail({ events, top }: { events: GhanaEvent[]; top: nu
         {events.map((e) => {
           const c = counts[e.slug];
           const d = parseDay(e.date);
-          const stat = c && c.seen7d >= 30 ? <><Eye size={10} strokeWidth={2.6} /> {compact(c.seen7d)}</>
+          const stat = c && c.views7d >= 30 ? <><Eye size={10} strokeWidth={2.6} /> {compact(c.views7d)}</>
             : c && c.going >= 10 ? <><Users size={10} strokeWidth={2.6} /> {compact(c.going)}</>
               : null;
           const when = d ? shortDay(d).replace(/^\w+ /, '') : 'Soon';
