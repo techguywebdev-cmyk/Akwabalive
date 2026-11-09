@@ -3,7 +3,8 @@
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BadgeCheck, Bell, BellRing, CalendarDays, MapPin, MessageSquareText, Share2, Ticket } from 'lucide-react';
+import { BadgeCheck, Bell, BellRing, CalendarDays, CalendarPlus, MapPin, MessageSquareText, Share2, Ticket } from 'lucide-react';
+import AddToCalendar from '@/components/calendars/AddToCalendar';
 import { useFollow } from '@/components/follow/useFollow';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
@@ -34,7 +35,7 @@ const still = (id: string) => `https://i.ytimg.com/vi/${id}/hq720.jpg`;
 const thumb = (id: string) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
 
 const iconBtn = (on: boolean, mint = false): React.CSSProperties => ({
-  width: 38, height: 38, borderRadius: 19, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, textDecoration: 'none',
+  width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, textDecoration: 'none',
   ...(mint ? { background: GRAD.mint, color: T.onMint, border: 'none' }
     : on ? { background: 'rgba(123,227,168,0.14)', color: T.mintText, border: 'none'}
       : { background: 'rgba(255,255,255,0.07)', color: T.white, border: 'none' }),
@@ -111,6 +112,7 @@ const MomentSlide = forwardRef<SlideHandle, {
   const crowd = useMomentCrowd(mounted ? night.event_slug : undefined, next, commenterIds, user?.id);
 
   const [showComments, setShowComments] = useState(false);
+  const [calOpen, setCalOpen] = useState(false);
   const [giftTarget, setGiftTarget] = useState<Comment | null>(null);
   const [more, setMore] = useState(false);
   const [artistOpen, setArtistOpen] = useState<OnStage | null>(null);
@@ -294,6 +296,9 @@ const MomentSlide = forwardRef<SlideHandle, {
               </button>
               <button type="button" aria-label="Share" onClick={share} style={iconBtn(false)}><Share2 size={16} /></button>
               {next && (
+                <button type="button" aria-label={`Add ${next.title} to a calendar`} onClick={() => setCalOpen(true)} style={iconBtn(false)}><CalendarPlus size={17} /></button>
+              )}
+              {next && (
                 <a href={next.ticketUrl ?? `/events/${next.slug}?tickets=1`} aria-label="Get tickets for the next edition" {...(next.ticketUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})} style={iconBtn(false, true)}>
                   <Ticket size={17} />
                 </a>
@@ -399,6 +404,8 @@ const MomentSlide = forwardRef<SlideHandle, {
       )}
       {giftTarget && next && user && <GiftSheet comment={giftTarget} next={next} user={user} onClose={() => setGiftTarget(null)} />}
       {artistOpen && <ArtistQuickSheet slug={artistOpen.slug} name={artistOpen.name} photo={artistOpen.photo} currentId={clip.id} onClose={() => setArtistOpen(null)} />}
+      {calOpen && next && <AddToCalendar eventSlug={next.slug} eventTitle={next.title} onClose={() => setCalOpen(false)} />}
+
       {rate && night.event_slug && (
         <RateSheet slug={night.event_slug} title={night.event_name} status={rate} onClose={() => setRate(null)} onSaved={() => { setRate(null); flash('Thanks — your rating is live'); }} />
       )}
