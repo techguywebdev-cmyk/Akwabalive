@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { Flame, Eye, ScanLine, ImagePlus, CheckCircle2, BadgeCheck, ArrowRight } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
+import FlyerWall from '@/components/ui/FlyerWall';
+import { hiRes } from '@/lib/events/image';
 import Footer from '@/components/layout/Footer';
 import { shareMeta } from '@/lib/og';
 import { T, FONT, GROUND, GRAD, BTN } from '@/lib/thiscene';
@@ -22,7 +24,7 @@ async function numbers() {
   const [{ count: events }, { count: moments }, { data: hot }] = await Promise.all([
     db.from('events').select('id', { count: 'exact', head: true }).eq('status', 'published').gte('date', today),
     db.from('moments').select('id', { count: 'exact', head: true }).eq('status', 'live'),
-    db.from('events').select('title, image_url, venue, date').eq('status', 'published').eq('is_hot', true).gte('date', today).not('image_url', 'is', null).order('date').limit(3),
+    db.from('events').select('title, image_url, venue, date').eq('status', 'published').eq('is_hot', true).gte('date', today).not('image_url', 'is', null).order('date').limit(10),
   ]);
   return { events: events ?? 0, moments: moments ?? 0, flyers: (hot ?? []) as { title: string; image_url: string; venue: string; date: string }[] };
 }
@@ -59,20 +61,12 @@ export default async function OrganisersPage() {
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed', overflowX: 'hidden' }}>
       <Nav back="/" />
 
-      {/* Hero: real flyers from this season fanned out behind the header, in the northern-lights wash */}
-      <div style={{ position: 'relative' }}>
-        <div aria-hidden style={{ position: 'absolute', inset: '0 0 -160px', background: GRAD.aurora, pointerEvents: 'none' }} />
-        {flyers.length > 0 && (
-          <div aria-hidden style={{ position: 'relative', height: 'calc(min(58vw, 300px) * 1.25 + 20px + env(safe-area-inset-top, 0px))', overflow: 'hidden', maskImage: 'linear-gradient(180deg, #000 70%, transparent 100%)', WebkitMaskImage: 'linear-gradient(180deg, #000 70%, transparent 100%)' }}>
-            {[{ l: '50%', r: 0, w: 58, z: 3, y: 0 }, { l: '13%', r: -10, w: 46, z: 2, y: 46 }, { l: '87%', r: 10, w: 46, z: 1, y: 46 }].map((sp, i) => flyers[i] ? (
-              <span key={i} style={{ position: 'absolute', top: `calc(${sp.y - 6}px + env(safe-area-inset-top, 0px))`, left: sp.l, width: `${sp.w}%`, maxWidth: sp.w === 58 ? 300 : 230, aspectRatio: '4 / 5', transform: `translateX(-50%) rotate(${sp.r}deg)`, zIndex: sp.z, borderRadius: 18, overflow: 'hidden', boxShadow: i === 0 ? '0 30px 70px -10px rgba(0,0,0,0.7), 0 0 80px -20px rgba(91,217,154,0.45)' : '0 24px 50px rgba(0,0,0,0.6)' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={flyers[i].image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: i ? 'brightness(0.72)' : undefined }} />
-              </span>
-            ) : null)}
-          </div>
-        )}
-      </div>
+      {/* Hero: a wall of this season's flyers behind the headline, fading into the page */}
+      {flyers.length > 0 && (
+        <div style={{ position: 'relative', height: 'calc(min(60vw, 290px) + 70px + env(safe-area-inset-top, 0px))' }}>
+          <FlyerWall images={flyers.map((f) => hiRes(f.image_url, 360) ?? f.image_url)} height="calc(100% + 190px)" />
+        </div>
+      )}
 
       <main style={{ maxWidth: 760, margin: '0 auto', padding: flyers.length ? '0 20px 20px' : 'calc(110px + env(safe-area-inset-top, 0px)) 20px 20px', position: 'relative', zIndex: 2 }}>
         <p style={eyebrow}>For organisers</p>

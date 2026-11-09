@@ -7,6 +7,7 @@ import { Flame, Eye, Users, Car, Smartphone, Ticket, MapPin, Share2, ArrowRight,
 import type { GhanaEvent } from '@/lib/types';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
+import FlyerWall from '@/components/ui/FlyerWall';
 import { hiRes } from '@/lib/events/image';
 import { parseDay } from '@/lib/dates';
 import { compact } from '@/lib/events/track';
@@ -81,22 +82,14 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
     try { if (navigator.share) await navigator.share(data); else await navigator.clipboard.writeText(data.url); } catch { /* dismissed */ }
   };
 
-  const fan = big.slice(0, 3).map((x) => img(x.event, 500));
+  const wall = [...big, ...list].map((x) => img(x.event, 360)).filter(Boolean).filter((u, i, a) => a.indexOf(u) === i).slice(0, 10);
   return (
-    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
+    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed', overflowX: 'clip' }}>
       <Nav back="/" />
 
-      {/* Hero: northern-lights wash, the three biggest flyers fanned out behind the header */}
-      <div style={{ position: 'relative' }}>
-        <div aria-hidden style={{ position: 'absolute', inset: '0 0 -120px', background: GRAD.aurora, pointerEvents: 'none' }} />
-        <div aria-hidden style={{ position: 'relative', height: 'calc(min(64vw, 330px) * 1.25 + 30px + env(safe-area-inset-top, 0px))', overflow: 'hidden', maskImage: 'linear-gradient(180deg, #000 78%, transparent 100%)', WebkitMaskImage: 'linear-gradient(180deg, #000 78%, transparent 100%)' }}>
-          {[{ l: '50%', r: 0, w: 64, z: 3, y: 0 }, { l: '14%', r: -9, w: 50, z: 2, y: 40 }, { l: '86%', r: 9, w: 50, z: 1, y: 40 }].map((sp, i) => fan[i] ? (
-            <span key={i} style={{ position: 'absolute', top: `calc(${sp.y - 4}px + env(safe-area-inset-top, 0px))`, left: sp.l, width: `${sp.w}%`, maxWidth: sp.w === 64 ? 330 : 250, aspectRatio: '4 / 5', transform: `translateX(-50%) rotate(${sp.r}deg)`, zIndex: sp.z, borderRadius: 18, overflow: 'hidden', boxShadow: i === 0 ? '0 30px 70px -10px rgba(0,0,0,0.7), 0 0 80px -20px rgba(91,217,154,0.45)' : '0 24px 50px rgba(0,0,0,0.6)' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={fan[i]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: 18, filter: i ? 'brightness(0.78)' : undefined }} />
-            </span>
-          ) : null)}
-        </div>
+      {/* Hero: a wall of the season's big-night flyers behind the title, fading into the page */}
+      <div style={{ position: 'relative', height: 'calc(min(60vw, 290px) + 70px + env(safe-area-inset-top, 0px))' }}>
+        <FlyerWall images={wall} height="calc(100% + 190px)" />
       </div>
 
       <main style={{ maxWidth: 760, margin: '0 auto', padding: '0 20px 20px', position: 'relative', zIndex: 2 }}>

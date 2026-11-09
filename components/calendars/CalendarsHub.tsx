@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Globe, Heart, Lock, Plus, Star } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
+import FlyerWall from '@/components/ui/FlyerWall';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { CAL_SELECT, calendarStats, createCalendar, ownerName, type Calendar, type CalendarStats } from '@/lib/calendars';
@@ -88,15 +89,22 @@ export default function CalendarsHub() {
     setBusy(true);
     try { const c = await createCalendar(db, user.id, name, isPublic); router.push(`/c/${c.slug}`); } catch { setBusy(false); }
   };
+  const wall = Object.values(flyers).slice(0, 10);
   const fl = (c: Row) => c.calendar_events.map((e) => flyers[e.event_slug]).filter(Boolean);
   const grid: React.CSSProperties = { marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(46%, 220px), 1fr))', gap: '22px 14px' };
 
   return (
-    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
+    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed', overflowX: 'clip' }}>
       <Nav back="/" />
       <main style={{ maxWidth: 960, margin: '0 auto', padding: 'calc(100px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
-        <header style={{ position: 'relative' }}>
-          <div aria-hidden style={{ position: 'absolute', inset: '-80px -20px auto', height: 320, background: GRAD.aurora, opacity: 0.5, filter: 'blur(30px)', pointerEvents: 'none' }} />
+        <header style={{ position: 'relative', paddingTop: wall.length ? 'min(50vw, 240px)' : 0 }}>
+          {wall.length > 0 ? (
+            <div aria-hidden style={{ position: 'absolute', top: 'calc(-100px - env(safe-area-inset-top, 0px))', left: '50%', width: '100vw', transform: 'translateX(-50%)', height: 'calc(min(50vw, 240px) + 100px + 190px)', pointerEvents: 'none' }}>
+              <FlyerWall images={wall} height="100%" />
+            </div>
+          ) : (
+            <div aria-hidden style={{ position: 'absolute', inset: '-80px -20px auto', height: 320, background: GRAD.aurora, opacity: 0.5, filter: 'blur(30px)', pointerEvents: 'none' }} />
+          )}
           <p style={{ ...eyebrow, position: 'relative' }}>Calendars</p>
           <h1 style={{ position: 'relative', margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(38px, 10.5vw, 64px)', fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>Your season, your line-up.</h1>
           <p style={{ position: 'relative', margin: '14px 0 0', maxWidth: 540, fontFamily: FONT.sans, fontSize: 16.5, lineHeight: 1.55, color: T.text2 }}>
