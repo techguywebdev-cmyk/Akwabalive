@@ -184,6 +184,12 @@ export const artists: Artist[] = [
     ['kofi-mole', 'Kofi Mole', ['kofi mole'], 'Kofi Mole'],
     ['kweku-flick', 'Kweku Flick', ['kweku flick'], 'Kweku Flick'],
     ['yaw-tog', 'Yaw Tog', ['yaw tog'], 'Yaw Tog'],
+    // The rest of the Asakaa Boys (Kumasi drill)
+    ['kawabanga', 'Kawabanga', ['kawabanga'], 'Kawabanga'],
+    ['jay-bahd', 'Jay Bahd', ['jay bahd'], 'Jay Bahd'],
+    ['okenneth', "O'Kenneth", ["o'kenneth", 'o’kenneth', 'okenneth'], "O'Kenneth"],
+    ['kwaku-dmc', 'Kwaku DMC', ['kwaku dmc'], 'Kwaku DMC'],
+    ['sean-lifer', 'Sean Lifer', ['sean lifer'], 'Sean Lifer'],
     ['oseikrom-sikanii', 'Oseikrom Sikanii', ['oseikrom sikanii'], 'Oseikrom Sikanii'],
     ['pappy-kojo', 'Pappy Kojo', ['pappy kojo'], 'Pappy Kojo'],
     ['mr-drew', 'Mr Drew', ['mr drew', 'mr. drew'], 'Mr Drew'],
