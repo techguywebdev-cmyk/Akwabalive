@@ -5,12 +5,13 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { eventInfo } from '@/lib/events/contacts';
 import { isListedEvent, type GhanaEvent } from '@/lib/types';
+import { ticketDial } from '@/lib/events/dial';
 
 /** Nothing announced yet: no ticket link, dial code, prices or gate price */
 export function noTicketsYet(e: GhanaEvent) {
   const listed = isListedEvent(e) && !!e.ticketUrl;
   const gate = eventInfo(e.description, e.listingInfo, e.ticketSource, e.flyerText).gatePrice;
-  return !listed && !(e.tiers?.length) && !!e.priceUnknown && !gate && !e.ticketSource;
+  return !listed && !(e.tiers?.length) && !!e.priceUnknown && !gate && !e.ticketSource && !ticketDial(e);
 }
 
 /** "Notify me when tickets drop" for one show: whether you asked, and turning it on or off */

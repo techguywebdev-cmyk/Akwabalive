@@ -32,6 +32,7 @@ import { extractYoutubeId } from '@/lib/events/rank';
 import { cityLabel } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { noTicketsYet } from '@/hooks/useTicketAlert';
+import { dialHref, ticketDial } from '@/lib/events/dial';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import StatTip from '@/components/events/StatTip';
@@ -230,6 +231,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const info = eventInfo(event.description, event.listingInfo, event.ticketSource, event.flyerText);
   // Nothing announced yet: the button just says Tickets
   const noTickets = noTicketsYet(event);
+  const dial = ticketDial(event);
   const infoRow: CSSProperties = { display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: -1 };
   const infoLabel: CSSProperties = { display: 'block', fontFamily: FONT.sans, fontSize: 12, color: T.text3 };
   const infoValue: CSSProperties = { display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
@@ -598,6 +600,17 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           </span>}
           {daysAway != null && daysAway < 0 ? (
             <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
+          ) : dial && (listed || !event.tiers?.length) ? (
+            // A short code leads: dialling (MoMo) is how most people buy; the website is the small button beside it
+            <>
+              <a href={dialHref(dial)} style={{ ...primary, minWidth: 200 }}><Phone size={17} /> Dial {dial}</a>
+              {listed && (
+                <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" aria-label={`Buy on ${event.ticketSource && !/^dial\b/i.test(event.ticketSource) ? event.ticketSource : 'the website'}`}
+                  style={{ width: 52, height: 52, borderRadius: 18, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', color: T.white, textDecoration: 'none' }}>
+                  <Globe size={20} />
+                </a>
+              )}
+            </>
           ) : listed ? (
             <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={{ ...primary, minWidth: 200 }}>
               {/^dial\b/i.test(event.ticketSource ?? '') ? event.ticketSource : `Tickets on ${event.ticketSource || 'the official site'}`} <Icon name="open" size={16} />
