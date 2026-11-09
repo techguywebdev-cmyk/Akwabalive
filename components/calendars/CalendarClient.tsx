@@ -94,7 +94,7 @@ export default function CalendarClient({ slug }: { slug: string }) {
 
   const avg = ratings.length ? ratings.reduce((s, r) => s + r.stars, 0) / ratings.length : 0;
   const myStars = ratings.find((r) => r.user_id === user?.id)?.stars ?? 0;
-  const flyers = events.filter((e) => e.image_url).slice(0, 4);
+  const wall = events.filter((e) => e.image_url).slice(0, 8);
   const first = parseDay(events[0]?.date), last = parseDay(events[events.length - 1]?.date);
   const pickList = picks.filter((p) => !events.some((e) => e.slug === p.slug)).slice(0, 8);
 
@@ -162,25 +162,32 @@ export default function CalendarClient({ slug }: { slug: string }) {
   }
 
   return (
-    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
+    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed', overflowX: 'clip' }}>
       <Nav back="/calendars" />
       <main style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(92px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
-        {/* Hero: a fan of the flyers in it, the name, who made it */}
-        <header style={{ position: 'relative' }}>
-          <div aria-hidden style={{ position: 'absolute', inset: '-60px -20px auto', height: 340, background: GRAD.aurora, opacity: 0.55, filter: 'blur(30px)', pointerEvents: 'none' }} />
-          <div style={{ position: 'relative', height: flyers.length ? 210 : 40, marginBottom: 6 }}>
-            {flyers.map((e, i) => {
-              const n = flyers.length, mid = (n - 1) / 2, off = i - mid;
-              return (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={e.slug} src={img(e, 400)!} alt="" style={{
-                  position: 'absolute', left: '50%', top: 10 + Math.abs(off) * 10, width: 128, height: 170, objectFit: 'cover', borderRadius: 16,
-                  transform: `translateX(calc(-50% + ${off * 74}px)) rotate(${off * 7}deg)`, zIndex: 10 - Math.abs(Math.round(off)),
-                  boxShadow: '0 22px 50px -16px rgba(0,0,0,0.8)',
-                }} />
-              );
-            })}
-          </div>
+        {/* Hero: a wall of the calendar's flyers behind the name, fading into the page */}
+        <header style={{ position: 'relative', paddingTop: wall.length ? 'min(62vw, 300px)' : 20 }}>
+          {wall.length > 0 ? (
+            <div aria-hidden style={{ position: 'absolute', top: 'calc(-92px - env(safe-area-inset-top, 0px))', left: '50%', width: '100vw', maxWidth: 1100, transform: 'translateX(-50%)', height: 'calc(min(62vw, 300px) + 92px + 150px)', overflow: 'hidden', pointerEvents: 'none', WebkitMaskImage: 'linear-gradient(180deg, #000 0%, #000 50%, transparent 96%)', maskImage: 'linear-gradient(180deg, #000 0%, #000 50%, transparent 96%)' }}>
+              <div style={{ position: 'absolute', inset: '-12% -18%', display: 'flex', gap: 10, transform: 'rotate(-8deg)', animation: 'wallIn 900ms cubic-bezier(0.22,1,0.36,1) both' }}>
+                {[0, 1, 2, 3, 4].map((col) => (
+                  <div key={col} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, transform: `translateY(${[-30, 40, -60, 20, -10][col]}px)` }}>
+                    {[0, 1, 2].map((row) => {
+                      const e = wall[(col * 3 + row + col) % wall.length];
+                      // eslint-disable-next-line @next/next/no-img-element
+                      return <img key={row} src={img(e, 360)!} alt="" style={{ width: '100%', aspectRatio: '4 / 5', objectFit: 'cover', borderRadius: 16, display: 'block', boxShadow: '0 16px 36px -14px rgba(0,0,0,0.8)' }} />;
+                    })}
+                  </div>
+                ))}
+              </div>
+              {/* Dim enough for the nav up top, then dissolve into the page under the title */}
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,13,10,0.78) 0%, rgba(8,13,10,0.42) 24%, rgba(8,13,10,0.55) 48%, rgba(8,13,10,0.88) 72%, rgba(8,13,10,0.95) 100%)' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(70% 50% at 20% 85%, rgba(70,220,150,0.18) 0%, rgba(70,220,150,0) 70%)' }} />
+              <style>{'@keyframes wallIn{from{opacity:0;transform:rotate(-8deg) scale(1.06)}to{opacity:1;transform:rotate(-8deg) scale(1)}}'}</style>
+            </div>
+          ) : (
+            <div aria-hidden style={{ position: 'absolute', inset: '-60px -20px auto', height: 340, background: GRAD.aurora, opacity: 0.55, filter: 'blur(30px)', pointerEvents: 'none' }} />
+          )}
           <div style={{ position: 'relative' }}>
             <p style={{ ...eyebrow, display: 'flex', alignItems: 'center', gap: 7 }}>
               {cal?.is_public === false ? <Lock size={12} /> : <Globe size={12} />}{cal?.is_public === false ? 'Private calendar' : 'Calendar'}

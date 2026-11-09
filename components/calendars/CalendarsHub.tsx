@@ -78,10 +78,15 @@ export default function CalendarsHub() {
     return () => { live = false; };
   }, [user, db]);
 
-  const start = async () => {
-    if (!user) return router.push('/auth?next=/calendars');
+  // Starting one: they name it first (anything they like), and pick who sees it
+  const [naming, setNaming] = useState(false);
+  const [name, setName] = useState('');
+  const [isPublic, setIsPublic] = useState(true);
+  const start = () => { if (!user) return router.push('/auth?next=/calendars'); setNaming(true); };
+  const create = async () => {
+    if (!user || !name.trim() || busy) return;
     setBusy(true);
-    try { const c = await createCalendar(db, user.id, 'My Detty December', true); router.push(`/c/${c.slug}`); } catch { setBusy(false); }
+    try { const c = await createCalendar(db, user.id, name, isPublic); router.push(`/c/${c.slug}`); } catch { setBusy(false); }
   };
   const fl = (c: Row) => c.calendar_events.map((e) => flyers[e.event_slug]).filter(Boolean);
   const grid: React.CSSProperties = { marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(46%, 220px), 1fr))', gap: '22px 14px' };
@@ -99,7 +104,7 @@ export default function CalendarsHub() {
           </p>
           <div style={{ position: 'relative', marginTop: 22, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
             <button type="button" onClick={start} disabled={busy} style={{ ...BTN.primary, height: 50, padding: '0 22px', borderRadius: 999, cursor: 'pointer', fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 8, opacity: busy ? 0.7 : 1 }}>
-              <Plus size={18} strokeWidth={2.6} />{busy ? 'Creating…' : 'Start My Detty December'}
+              <Plus size={18} strokeWidth={2.6} />Start a calendar
             </button>
             <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.text3 }}>Or tap “Add to a calendar” on any event</span>
           </div>
@@ -122,6 +127,35 @@ export default function CalendarsHub() {
         </section>
       </main>
       <Footer />
+
+      {naming && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 400 }}>
+          <button type="button" aria-label="Close" onClick={() => setNaming(false)} style={{ position: 'absolute', inset: 0, border: 'none', background: 'rgba(0,0,0,0.5)', cursor: 'pointer' }} />
+          <section role="dialog" aria-label="Name your calendar" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxWidth: 560, margin: '0 auto', padding: '20px 20px calc(22px + env(safe-area-inset-bottom, 0px))', borderRadius: '24px 24px 0 0', background: 'linear-gradient(180deg, rgba(16,34,25,0.98) 0%, rgba(9,18,13,0.99) 100%)', boxShadow: '0 -20px 60px rgba(0,0,0,0.5)', animation: 'nmUp 280ms cubic-bezier(0.22,1,0.36,1)' }}>
+            <style>{'@keyframes nmUp{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}'}</style>
+            <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.025em', color: T.white }}>Name your calendar</p>
+            <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>Call it anything. You can change it later.</p>
+            <input autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') create(); }} maxLength={80} placeholder="e.g. Owambe szn with the girls" aria-label="Calendar name"
+              style={{ marginTop: 16, width: '100%', boxSizing: 'border-box', height: 54, padding: '0 16px', borderRadius: 15, border: 'none', outline: 'none', background: 'rgba(255,255,255,0.08)', color: T.white, fontFamily: FONT.display, fontSize: 18, fontWeight: 700 }} />
+            <div className="no-scrollbar" style={{ display: 'flex', gap: 8, overflowX: 'auto', marginTop: 10 }}>
+              {['My Detty December', 'Christmas week', 'Shows with the squad', 'Kumasi nights', 'Birthday month'].map((i) => (
+                <button key={i} type="button" onClick={() => setName(i)} style={{ flexShrink: 0, height: 32, padding: '0 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: name === i ? 'rgba(123,227,168,0.16)' : 'rgba(255,255,255,0.06)', color: name === i ? T.mintText : T.text2, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600 }}>{i}</button>
+              ))}
+            </div>
+            <div role="radiogroup" aria-label="Who can see it" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
+              {([[true, Globe, 'Public', 'Anyone with the link'], [false, Lock, 'Private', 'Only you']] as const).map(([v, I, l, d]) => (
+                <button key={l} type="button" role="radio" aria-checked={isPublic === v} onClick={() => setIsPublic(v)} style={{ padding: '12px 14px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: isPublic === v ? 'rgba(123,227,168,0.14)' : 'rgba(255,255,255,0.05)', color: isPublic === v ? T.mintText : T.text2 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 14.5, fontWeight: 700 }}><I size={15} />{l}</span>
+                  <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>{d}</span>
+                </button>
+              ))}
+            </div>
+            <button type="button" onClick={create} disabled={busy || !name.trim()} style={{ ...BTN.primary, marginTop: 18, width: '100%', height: 50, borderRadius: 999, cursor: 'pointer', fontSize: 15, opacity: busy || !name.trim() ? 0.6 : 1 }}>
+              {busy ? 'Creating…' : 'Create calendar'}
+            </button>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
