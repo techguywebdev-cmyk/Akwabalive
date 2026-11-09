@@ -1,5 +1,6 @@
 'use client';
 
+import { calmTitle } from '@/lib/titles';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Flame, Eye, Users, Car, Smartphone, Ticket, MapPin, Share2, ArrowRight, CalendarDays, ChevronRight, ChevronLeft } from 'lucide-react';
@@ -24,20 +25,8 @@ const untilLabel = (n: number) => (n <= 0 ? 'Today' : n === 1 ? 'Tomorrow' : `In
 
 const eyebrow: React.CSSProperties = { margin: 0, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
 const h2: React.CSSProperties = { margin: '6px 0 0', fontFamily: FONT.display, fontSize: 'clamp(26px, 6.5vw, 36px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, color: T.white };
-/** ALL-CAPS titles shout in a list; set them in title case, keeping short acronyms (BYK, DJ, ATW) */
 const LIMIT = 5;
 const SPECIAL: Record<string, string> = { '2026-12-24': 'Christmas Eve', '2026-12-25': 'Christmas Day', '2026-12-26': 'Boxing Day', '2026-12-31': 'New Year’s Eve', '2027-01-01': 'New Year’s Day' };
-const SMALL = new Set(['the', 'and', 'of', 'in', 'at', 'for', 'is', 'on', 'to', 'a', 'an', 'by', 'with']);
-const calmTitle = (t: string) => {
-  if (t !== t.toUpperCase() || !/[A-Z]{4}/.test(t)) return t;
-  let first = true;
-  return t.toLowerCase().replace(/[a-z0-9’']+/g, (w) => {
-    const isFirst = first; first = false;
-    if (/^[bcdfghjklmnpqrstvwxyz]{2,3}$/.test(w)) return w.toUpperCase(); // BYK, DJ, ATW: no vowels, an acronym
-    if (!isFirst && SMALL.has(w)) return w;
-    return w.charAt(0).toUpperCase() + w.slice(1);
-  });
-};
 const priceOf = (e: GhanaEvent) => (e.priceUnknown ? 'Tickets' : e.price === 0 ? 'Free' : `From GH₵ ${e.price.toLocaleString()}`);
 const img = (e: GhanaEvent, w = 700) => (e.image ? hiRes(e.image, w) ?? e.image : '');
 
@@ -306,6 +295,14 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
               )}
             </div>
           )}
+        </section>
+
+        {/* Make your own: the calendars feature */}
+        <section style={{ marginTop: 56 }}>
+          <p style={eyebrow}>Your own line-up</p>
+          <h2 style={h2}>Make your Detty December calendar</h2>
+          <p style={{ margin: '10px 0 0', maxWidth: 520, fontFamily: FONT.sans, fontSize: 15.5, lineHeight: 1.55, color: T.text2 }}>Pick your nights, share the link with the squad, and see whose line-up gets the most love.</p>
+          <Link href="/calendars" style={{ marginTop: 18, height: 48, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', textDecoration: 'none', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>Start yours</Link>
         </section>
 
         {/* First December in Ghana */}

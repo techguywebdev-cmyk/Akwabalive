@@ -34,6 +34,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import StatTip from '@/components/events/StatTip';
+import AddToCalendar from '@/components/calendars/AddToCalendar';
 
 export type { CheckoutTier } from '@/lib/events/tiers';
 
@@ -67,6 +68,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
     return () => { live = false; };
   }, [event.slug]);
   const [ticketOpen,     setTicketOpen]     = useState(false);
+  const [calOpen,        setCalOpen]        = useState(false);
   const [inDreamList,    setInDreamList]    = useState(false);
   const [isGoing,        setIsGoing]        = useState(false);
   const [ticketsOpen,    setTicketsOpen]    = useState(false);
@@ -314,8 +316,10 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           <button type="button" onClick={toggleDreamList} aria-label={inDreamList ? 'Saved' : 'Save'} aria-pressed={inDreamList} disabled={dreamLoading} style={roundBtn(inDreamList)}>
             {inDreamList ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
           </button>
+          <button type="button" onClick={() => setCalOpen(true)} aria-label="Add to a calendar" title="Add to a calendar" style={roundBtn(false)}><CalendarPlus size={18} /></button>
           <button type="button" onClick={share} aria-label="Share" style={roundBtn(false)}><Share2 size={17} /></button>
         </div>
+        {calOpen && <AddToCalendar eventSlug={event.slug} eventTitle={event.title} onClose={() => setCalOpen(false)} />}
 
         <FriendsStrip slug={event.slug} variant="full" />
 
