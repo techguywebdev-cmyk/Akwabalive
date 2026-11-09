@@ -52,6 +52,10 @@ export default function MonthGrid({ events, onRemove }: { events: GridEvent[]; o
   const upcoming = days.find((d) => d >= todayIso()) ?? days[days.length - 1] ?? null;
   const [sel, setSel] = useState<string | null>(upcoming);
   const [mi, setMi] = useState(0);
+  // Days (one month) or Months (the whole season at a glance); remembered on this device
+  const [view, setView] = useState<'days' | 'months'>('days');
+  useEffect(() => { try { if (localStorage.getItem('cal-view') === 'months') setView('months'); } catch { /* private mode */ } }, []);
+  const pickView = (v: 'days' | 'months') => { setView(v); try { localStorage.setItem('cal-view', v); } catch { /* private mode */ } };
   useEffect(() => {
     if (sel && byDay[sel]) return;
     setSel(upcoming);
@@ -62,6 +66,11 @@ export default function MonthGrid({ events, onRemove }: { events: GridEvent[]; o
     if (k >= 0) setMi(k);
   }, [sel, months]);
 
+  const tiles = useMemo(() => {
+    const out = [...months];
+    while (out.length < 3) { const [ly, lm] = out[out.length - 1]; out.push(lm === 11 ? [ly + 1, 0] : [ly, lm + 1]); }
+    return out;
+  }, [months]);
   const [y, m] = months[Math.min(mi, months.length - 1)];
   const lead = (new Date(y, m, 1).getDay() + 6) % 7; // Monday first
   const count = new Date(y, m + 1, 0).getDate();
@@ -79,6 +88,65 @@ export default function MonthGrid({ events, onRemove }: { events: GridEvent[]; o
 
   return (
     <div>
+      {/* Days / Months */}
+      <div role="tablist" aria-label="Calendar view" style={{ display: 'inline-flex', padding: 4, borderRadius: 15, background: 'rgba(255,255,255,0.06)', marginBottom: 22 }}>
+        {(['days', 'months'] as const).map((v) => (
+          <button key={v} type="button" role="tab" aria-selected={view === v} onClick={() => pickView(v)} style={{
+            height: 36, padding: '0 16px', borderRadius: 11, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700,
+            background: view === v ? 'rgba(123,227,168,0.18)' : 'transparent', color: view === v ? T.mintText : T.text2, transition: 'background 200ms ease, color 200ms ease',
+          }}>{v === 'days' ? 'Days' : 'Months'}</button>
+        ))}
+      </div>
+
+      {view === 'months' && (
+        <div>
+          <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.text3 }}>
+            {tiles[0][0] === tiles[tiles.length - 1][0] ? tiles[0][0] : `${tiles[0][0]}–${String(tiles[tiles.length - 1][0]).slice(2)}`} · {days.length} {days.length === 1 ? 'night' : 'nights'} out
+          </p>
+          <h2 style={{ margin: '4px 0 0', fontFamily: FONT.display, fontSize: 'clamp(34px, 9vw, 46px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, ...gradText }}>
+            {MONTHS[tiles[0][1]].slice(0, 3)} – {MONTHS[tiles[tiles.length - 1][1]].slice(0, 3)}
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 20 }}>
+            {tiles.map(([ty, tm], k) => {
+              const pre = iso(ty, tm, 1).slice(0, 7);
+              const evs = events.filter((e) => e.date.startsWith(pre)).sort((p, q) => p.date.localeCompare(q.date));
+              const pics = evs.filter((e) => e.image_url).slice(0, 4);
+              const past = iso(ty, tm, new Date(ty, tm + 1, 0).getDate()) < today;
+              const yr = ty !== new Date().getFullYear() ? ` ’${String(ty).slice(2)}` : '';
+              if (!evs.length) {
+                return (
+                  <span key={pre} style={{ position: 'relative', aspectRatio: '3 / 4', borderRadius: 16, background: 'rgba(255,255,255,0.035)', opacity: past ? 0.45 : 1 }}>
+                    <span style={{ position: 'absolute', left: 12, bottom: 12, fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: T.text3 }}>{MONTHS[tm].slice(0, 3)}{yr}</span>
+                  </span>
+                );
+              }
+              const idx = months.findIndex(([a2, b2]) => a2 === ty && b2 === tm);
+              return (
+                <button key={pre} type="button" onClick={() => { if (idx >= 0) setMi(idx); setSel(evs.find((e) => e.date.slice(0, 10) >= today)?.date.slice(0, 10) ?? evs[0].date.slice(0, 10)); pickView('days'); }}
+                  aria-label={`${MONTHS[tm]} ${ty}: ${evs.length} ${evs.length === 1 ? 'show' : 'shows'}`}
+                  style={{ position: 'relative', aspectRatio: '3 / 4', padding: 0, border: 'none', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', background: '#000', opacity: past ? 0.55 : 1, boxShadow: '0 10px 24px -10px rgba(0,0,0,0.8)', animation: `mgIn 320ms cubic-bezier(0.22,1,0.36,1) ${k * 40}ms both` }}>
+                  {/* One flyer fills it; two to four make a mosaic, like a month of nights out */}
+                  <span style={{ position: 'absolute', inset: 0, display: 'grid', gap: 2, gridTemplateColumns: pics.length > 1 ? 'minmax(0, 1fr) minmax(0, 1fr)' : 'minmax(0, 1fr)', gridTemplateRows: pics.length > 2 ? 'minmax(0, 1fr) minmax(0, 1fr)' : 'minmax(0, 1fr)', overflow: 'hidden' }}>
+                    {(pics.length ? pics : []).map((e, j) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={e.slug} src={flyer(e, 240)!} alt="" style={{ width: '100%', height: '100%', minHeight: 0, objectFit: 'cover', display: 'block', gridColumn: pics.length === 3 && j === 0 ? 'span 2' : undefined }} />
+                    ))}
+                    {!pics.length && <span style={{ background: GRAD.mint }} />}
+                  </span>
+                  <span style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(4,10,7,0.92) 100%)' }} />
+                  <span style={{ position: 'absolute', left: 10, right: 10, bottom: 10, textAlign: 'left' }}>
+                    <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.025em', color: T.white }}>{MONTHS[tm].slice(0, 3)}{yr}</span>
+                    <span style={{ display: 'block', marginTop: 1, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: T.mintText }}>{evs.length} {evs.length === 1 ? 'show' : 'shows'}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <style>{'@keyframes mgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}'}</style>
+        </div>
+      )}
+
+      {view === 'days' && (<>
       {/* Month header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -166,6 +234,7 @@ export default function MonthGrid({ events, onRemove }: { events: GridEvent[]; o
           </div>
         </div>
       )}
+      </>)}
     </div>
   );
 }
