@@ -11,7 +11,8 @@ import { useMyFollows } from '@/components/follow/useFollow';
 import { useRatingSummaries, type RatingSummary } from '@/lib/ratings';
 import { ScoreChip } from '@/components/ratings/Stars';
 import { SectionTitle, FollowPill, Portrait, countdown, initials, type SeriesSummary } from '@/components/artists/parts';
-import { T, FONT, GROUND } from '@/lib/thiscene';
+import { T, FONT, GROUND, GRAD } from '@/lib/thiscene';
+import FlyerWall from '@/components/ui/FlyerWall';
 
 /** Cover image; YouTube stills fall back to the always-available smaller still */
 function Cover({ src, name, style }: { src: string | null; name: string; style?: React.CSSProperties }) {
@@ -177,6 +178,10 @@ export default function ShowsIndexClient({ series, calendar = [] }: { series: Se
   const festivals = list.filter((s) => s.festival);
   const best = list.filter((s) => rate(s)).sort((a, b) => (rate(b)?.overall ?? 0) - (rate(a)?.overall ?? 0)).slice(0, 5);
 
+  // The header wall: this season's flyers, then show covers
+  const wall = Array.from(new Set([...calendar.map((c) => c.image), ...series.map((x) => x.image)]
+    .filter((u): u is string => !!u && !/ytimg|youtube/.test(u)).map((u) => hiRes(u, 360) ?? u))).slice(0, 10);
+
   function onHeroScroll() {
     const el = heroRef.current;
     if (!el) return;
@@ -185,12 +190,21 @@ export default function ShowsIndexClient({ series, calendar = [] }: { series: Se
   }
 
   return (
-    <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
+    <div style={{ position: 'relative', minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed', overflowX: 'clip' }}>
+      {!query && <FlyerWall images={wall} strength={0.65} height="calc(min(50vw, 240px) + 260px + env(safe-area-inset-top, 0px))" />}
       <Nav active="Shows" tabs plain center={<ExploreSwitch active="shows" />}
         actions={<ToolsCapsule searchOn={searchOpen || !!query} filtersOn={filtersOn} onSearch={() => setSearchOpen((x) => !x)} onFilter={() => setFilterOpen(true)} />} />
       <SearchDrop open={searchOpen} value={q} onChange={setQ} onClose={() => setSearchOpen(false)} placeholder="Search shows or artists" />
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: `calc(${searchOpen ? 140 : 80}px + env(safe-area-inset-top, 0px)) 20px 120px`, transition: 'padding 200ms ease' }}>
-        <h1 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Shows</h1>
+      <main style={{ position: 'relative', zIndex: 1, maxWidth: 720, margin: '0 auto', padding: `calc(${searchOpen ? 140 : 80}px + env(safe-area-inset-top, 0px)) 20px 120px`, transition: 'padding 200ms ease' }}>
+        {query ? (
+          <h1 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Shows</h1>
+        ) : (
+          <header style={{ paddingTop: wall.length ? 'min(36vw, 170px)' : 20, marginBottom: 22 }}>
+            <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>Shows</p>
+            <h1 style={{ margin: '10px 0 0', fontFamily: FONT.display, fontSize: 'clamp(36px, 10vw, 56px)', fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.045em', paddingBottom: '0.06em', background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>The nights Ghana plans around</h1>
+            <p style={{ margin: '10px 0 0', maxWidth: 520, fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.5, color: T.text2 }}>The concerts and festivals that come back every year. Follow one and we’ll tell you when the next date drops.</p>
+          </header>
+        )}
 
         {query ? (
           <section>
