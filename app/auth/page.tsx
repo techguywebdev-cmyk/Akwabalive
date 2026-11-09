@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, type CSSProperties, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import FlyerWall from '@/components/ui/FlyerWall';
 import { createClient } from '@/lib/supabase/client';
 import Wordmark from '@/components/brand/Wordmark';
 import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, AtSign } from 'lucide-react';
@@ -19,28 +20,18 @@ const field: CSSProperties = {
 };
 const fieldIcon: CSSProperties = { position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: T.text3, pointerEvents: 'none', display: 'flex' };
 
-/** A few real flyers from what's on, fanned out at the top */
+/** A wall of real flyers from what's on, at the top */
 function FlyerFan() {
   const [flyers, setFlyers] = useState<string[]>([]);
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
     createClient().from('events').select('image_url, is_hot, is_featured').eq('status', 'published').gte('date', today).not('image_url', 'is', null)
-      .order('is_hot', { ascending: false }).order('date', { ascending: true }).limit(3)
-      .then(({ data }) => setFlyers(((data ?? []) as { image_url: string }[]).map((r) => hiRes(r.image_url, 500) ?? r.image_url)));
+      .order('is_hot', { ascending: false }).order('date', { ascending: true }).limit(10)
+      .then(({ data }) => setFlyers(((data ?? []) as { image_url: string }[]).map((r) => hiRes(r.image_url, 360) ?? r.image_url)));
   }, []);
-  const spots = [
-    { left: '50%', rot: 0, w: 70, z: 3, y: 0 },
-    { left: '15%', rot: -8, w: 54, z: 2, y: 40 },
-    { left: '85%', rot: 8, w: 54, z: 1, y: 40 },
-  ];
   return (
-    <div aria-hidden style={{ position: 'relative', height: 'calc(min(70vw, 340px) * 1.25 + 34px + env(safe-area-inset-top, 0px))', overflow: 'hidden', maskImage: 'linear-gradient(180deg, #000 86%, transparent 100%)', WebkitMaskImage: 'linear-gradient(180deg, #000 86%, transparent 100%)' }}>
-      {spots.map((sp, i) => (
-        <span key={i} style={{ position: 'absolute', top: `calc(${sp.y - 6}px + env(safe-area-inset-top, 0px))`, left: sp.left, width: `${sp.w}%`, maxWidth: sp.w === 70 ? 340 : 262, aspectRatio: '4 / 5', transform: `translateX(-50%) rotate(${sp.rot}deg)`, zIndex: sp.z, borderRadius: 18, overflow: 'hidden', background: 'linear-gradient(160deg, #16201B, #0B0F0D)', border: 'none', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', opacity: flyers[i] ? 1 : 0.6, transition: 'opacity 400ms ease' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {flyers[i] && <img src={flyers[i]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
-        </span>
-      ))}
+    <div aria-hidden style={{ position: 'relative', height: 'calc(min(66vw, 320px) + 60px + env(safe-area-inset-top, 0px))' }}>
+      <FlyerWall images={flyers} height="100%" />
     </div>
   );
 }
