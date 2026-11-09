@@ -31,7 +31,7 @@ export const SERIES: EventSeries[] = [
     blurb: 'The beach festival at Kokrobite: big Ghanaian line-ups, sand, sea and a crowd that doesn’t sleep.' },
   { slug: 'afro-future', stars: 4.5, name: 'AfroFuture', keywords: ['afro future', 'afrofuture', 'afrochella'], hosts: [], usually: 'Every December · Accra', wiki: 'Afrochella',
     blurb: 'Accra’s December culture festival (formerly Afrochella): music, fashion, art and food from across the diaspora.' },
-  { slug: 'bhim-concert', stars: 5, name: 'Bhim Concert', keywords: ['bhim concert'], hosts: ['stonebwoy'], usually: 'Accra',
+  { slug: 'bhim-concert', stars: 5, name: 'Bhim Concert', keywords: ['bhim concert', 'bhim festival', 'bhim fest', 'bhimfest'], hosts: ['stonebwoy'], usually: 'Accra',
     blurb: 'Stonebwoy’s own concert, with the Bhim Nation out in full.' },
   { slug: 'ashaiman-to-the-world', stars: 4, name: 'Ashaiman To The World', keywords: ['ashaiman to the world'], hosts: ['stonebwoy'], usually: 'Ashaiman',
     blurb: 'Stonebwoy brings the show home to Ashaiman.' },
