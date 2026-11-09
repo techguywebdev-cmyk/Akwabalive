@@ -40,8 +40,8 @@ function groupNights(list: Moment[]): Moment[] {
     else { const ng = [m]; candidates.push(ng); byKey.set(key, candidates); groups.push(ng); }
   }
   return groups.map((g) => {
-    // Lead with an official clip, then the earliest posted (usually the opening or the full set)
-    const clips = [...g].sort((a, b) => Number(!!b.official) - Number(!!a.official) || (time(a) ?? 0) - (time(b) ?? 0));
+    // Featured first, then clips that play here (YouTube) ahead of X posts, then official, then oldest first
+    const clips = [...g].sort((a, b) => Number(!!b.is_featured) - Number(!!a.is_featured) || Number(a.source === 'x') - Number(b.source === 'x') || Number(!!b.official) - Number(!!a.official) || (time(a) ?? 0) - (time(b) ?? 0));
     return { ...clips[0], _clips: clips };
   });
 }
