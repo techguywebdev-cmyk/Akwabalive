@@ -215,14 +215,13 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
           </section>
         )}
 
-        {photo && (photo.credit || photo.license) && (
+        {/* Spotify photos are credited by the Spotify button up top; Creative Commons photos need their credit here */}
+        {photo && photo.source !== 'spotify' && (photo.credit || photo.license) && (
           <p style={{ margin: '40px 0 0', fontFamily: FONT.sans, fontSize: 11, lineHeight: 1.4, color: T.text3, textAlign: 'center' }}>
-            {photo.source === 'spotify'
-              ? <>Photo: <a href={photo.sourceUrl ?? '#'} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>Spotify</a></>
-              : <>Photo{photo.credit ? `: ${photo.credit.length > 60 ? `${photo.credit.slice(0, 58)}…` : photo.credit}` : ''}
-                {photo.license && <> · {photo.sourceUrl
-                  ? <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>{photo.license}, via Wikimedia Commons</a>
-                  : photo.license}</>}</>}
+            Photo{photo.credit ? `: ${photo.credit.length > 60 ? `${photo.credit.slice(0, 58)}…` : photo.credit}` : ''}
+            {photo.license && <> · {photo.sourceUrl
+              ? <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>{photo.license}, via Wikimedia Commons</a>
+              : photo.license}</>}
           </p>
         )}
       </main>
