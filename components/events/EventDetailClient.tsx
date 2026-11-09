@@ -300,9 +300,9 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           <p style={{ margin: '8px 0 0', fontFamily: FONT.display, fontSize: 19, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)' }}>{short.subtitle}</p>
         )}
         <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>{eventBlurb(event, 160)}</p>
-        {counts && (counts.seen7d >= 30 || counts.going >= 10) && (
+        {counts && (counts.views7d >= 30 || counts.going >= 10) && (
           <p style={{ margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>
-            {counts.seen7d >= 30 && <StatTip icon={<Eye size={16} />} value={compact(counts.seen7d)} tip="people checked this out this week" intro />}
+            {counts.views7d >= 30 && <StatTip icon={<Eye size={16} />} value={compact(counts.views7d)} tip="visits to this page this week" intro />}
             {counts.going >= 10 && <StatTip icon={<Users size={16} />} value={compact(counts.going)} tip="people are going" />}
           </p>
         )}
