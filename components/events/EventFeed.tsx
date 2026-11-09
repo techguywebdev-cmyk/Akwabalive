@@ -389,7 +389,7 @@ export default function EventFeed({
   const [tickets, setTickets] = useState<{ event: GhanaEvent; accent: string } | null>(null);
   const [checkout, setCheckout] = useState<{ event: GhanaEvent; tiers: CheckoutTier[] } | null>(null);
   const hasItems = items.length > 0;
-  // Event cards with the Hot carousel screen woven in
+  // Event cards, with the friends' plans screen after the 2nd when you follow people (the Hot screen is gone: the big nights already lead the feed)
   type Slide = { kind: 'event'; item: FeedItem } | { kind: 'hot'; key: string } | { kind: 'friends'; key: string };
   const friendCount = friendPlans?.events.length ?? 0;
   const slides = useMemo<Slide[]>(() => {
@@ -397,10 +397,9 @@ export default function EventFeed({
     items.forEach((item, i) => {
       out.push({ kind: 'event', item });
       if (friendCount > 0 && i === 1 && i < items.length - 1) out.push({ kind: 'friends', key: 'friends' });
-      if (hot.length >= 3 && (i === 2 || (i > 2 && (i - 2) % 6 === 0)) && i < items.length - 1) out.push({ kind: 'hot', key: `hot-${i}` });
     });
     return out;
-  }, [items, hot.length, friendCount]);
+  }, [items, friendCount]);
   const eventAt = (i: number) => { const s = slides[i]; return s && s.kind === 'event' ? s.item : undefined; };
 
   useEffect(() => {
