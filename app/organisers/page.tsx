@@ -76,9 +76,12 @@ export default async function OrganisersPage() {
         <p style={{ margin: '16px 0 0', maxWidth: 480, fontFamily: FONT.sans, fontSize: 17, lineHeight: 1.5, color: T.text2 }}>
           List it free. Flyer to live in two minutes.
         </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 28 }}>
-          <Link href="/organizer/events/new" style={{ ...BTN.primary, height: 54, padding: '0 26px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 15.5, textDecoration: 'none' }}>List your event <ArrowRight size={18} /></Link>
-          <Link href="/organisers/claim" style={{ ...BTN.ghost, height: 54, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 15, textDecoration: 'none' }}><BadgeCheck size={18} color={T.mintText} /> Claim an event</Link>
+        {/* One main action; claiming is for organisers whose show we already listed, so it's a quiet line under it */}
+        <div style={{ marginTop: 28, maxWidth: 380 }}>
+          <Link href="/organizer/events/new" style={{ ...BTN.primary, width: '100%', boxSizing: 'border-box', height: 56, padding: '0 26px', borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 16, textDecoration: 'none' }}>List your event <ArrowRight size={18} /></Link>
+          <Link href="/organisers/claim" style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: FONT.sans, fontSize: 14.5, color: T.text2, textDecoration: 'none' }}>
+            <BadgeCheck size={16} color={T.mintText} />Already listed? <span style={{ color: T.mintText, fontWeight: 700 }}>Claim your event</span>
+          </Link>
         </div>
 
         {n && n.events > 0 && (
