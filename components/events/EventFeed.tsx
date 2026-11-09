@@ -225,7 +225,6 @@ function EventCard({
             <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
               {moments[clip].event_name}{moments[clip].year ? ` · ${moments[clip].year}` : ''}
             </p>
-            <p style={{ margin: '3px 0 0', fontFamily: FONT.display, fontSize: 16, fontWeight: 700, lineHeight: 1.25, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{moments[clip].title}</p>
             {moments.length > 1 && (
               <div className="no-scrollbar" style={{ display: 'flex', gap: 8, marginTop: 10, overflowX: 'auto' }}>
                 {moments.map((m, k) => (
