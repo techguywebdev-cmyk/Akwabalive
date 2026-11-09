@@ -77,8 +77,10 @@ const roundBtn: React.CSSProperties = {
 
 /* ── One event, full screen ────────────────────────────────────────── */
 function EventCard({
-  item, active, near, wide, saved, going, onSave, onGoing, onShare, onTickets, topInset, performer,
+  item, active, near, next, wide, saved, going, onSave, onGoing, onShare, onTickets, topInset, performer,
 }: {
+  /** The card after the one on screen: its clips load in the background */
+  next?: boolean;
   /** From a search for an artist: who is performing here */
   performer?: { name: string; slug: string } | null;
   item: FeedItem; active: boolean; near: boolean; wide: boolean;
@@ -108,12 +110,20 @@ function EventCard({
   const thread = threadClip ? momentThread : eventThread;
   const chatCount = thread.comments.length;
   const series = useMemo(() => seriesForEvent(event), [event]);
+  // The player for this card and the next one loads hidden behind the flyer, so the clip is ready the moment it starts
+  const [lite, setLite] = useState(false);
+  useEffect(() => {
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
+    setLite(!!nav.connection?.saveData || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  }, []);
+  const warm = moments.length > 0 && !lite && (active || !!next);
+  const showPlayer = watching || warm;
   // After a few seconds on a card with moments, the clips start by themselves (muted, like the Moments feed)
   useEffect(() => {
     if (!active || watching || autoDone || !moments.length) return;
     const nav = typeof navigator !== 'undefined' ? (navigator as Navigator & { connection?: { saveData?: boolean } }) : null;
     if (nav?.connection?.saveData || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    const t = setTimeout(() => { setClip(0); setProg(0); setWatching(true); setAutoDone(true); }, 1800);
+    const t = setTimeout(() => { setClip(0); setProg(0); setWatching(true); setAutoDone(true); }, 900);
     return () => clearTimeout(t);
   }, [active, watching, autoDone, moments.length]);
   const block = useRef<HTMLDivElement>(null);
@@ -180,10 +190,10 @@ function EventCard({
       aria-label={event.title}
       style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', background: ambient(a), color: T.text, scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
     >
-      {watching && moments[clip] && (
-        <div style={wide
+      {showPlayer && moments[clip] && (
+        <div aria-hidden={!watching} style={{ ...(watching ? {} : { opacity: 0, pointerEvents: 'none' as const, zIndex: 0 }), ...(wide
           ? { position: 'absolute', zIndex: 3, top: topInset + 16, bottom: 40, right: '6%', left: '48%', display: 'flex', alignItems: 'center' }
-          : { position: 'absolute', zIndex: 3, top: 0, bottom: blockH + bottom + 18, left: 0, right: 0, display: 'flex', flexDirection: 'column', background: '#09100C' }}>
+          : { position: 'absolute', zIndex: 3, top: 0, bottom: blockH + bottom + 18, left: 0, right: 0, display: 'flex', flexDirection: 'column', background: '#09100C' }), ...(watching ? {} : { zIndex: 0 }) }}>
           {/* The top of the flyer fills the space above the video, so the card stays full height */}
           {event.image && !wide ? (
             <div aria-hidden style={{ position: 'relative', flex: '1 1 0', minHeight: 0, overflow: 'hidden' }}>
@@ -195,7 +205,7 @@ function EventCard({
           ) : <Glow src={ytThumb(moments[clip].youtube_id, 'hq')} />}
           {/* The Moments player: our player, mint progress line, a dot per clip; the next clip follows on */}
           <div style={wide ? { position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' } : { position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', borderRadius: 16, overflow: 'hidden' }}>
-            <CustomPlayer key={moments[clip].youtube_id} youtubeId={moments[clip].youtube_id} title={moments[clip].title} fit="contain" active={active}
+            <CustomPlayer key={moments[clip].youtube_id} youtubeId={moments[clip].youtube_id} title={moments[clip].title} fit="contain" active={active && watching}
               onTimeUpdate={(cur, len) => setProg(len ? Math.min(100, (cur / len) * 100) : 0)}
               onEnded={() => { if (clip < moments.length - 1) { setClip(clip + 1); setProg(0); } else setWatching(false); }} />
             {moments.length > 1 && (
@@ -493,6 +503,7 @@ export default function EventFeed({
             performer={performerFor?.(sl.item.event) ?? null}
             active={i === active}
             near={Math.abs(i - active) <= 1}
+            next={i === active + 1}
             wide={wide}
             saved={saved.has(sl.item.event.slug)}
             going={going.has(sl.item.event.slug)}
