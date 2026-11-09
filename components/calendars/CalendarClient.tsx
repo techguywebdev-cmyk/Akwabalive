@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Copy, Globe, Heart, Lock, MessageSquareText, Plus, Search, Settings2, Share2, Star } from 'lucide-react';
@@ -62,6 +62,9 @@ export default function CalendarClient({ slug }: { slug: string }) {
   const [chat, setChat] = useState(false);
   const [finding, setFinding] = useState(false);
   const [findDay, setFindDay] = useState<string | undefined>();
+  // Taken out from the calendar grid: a few seconds to put it back
+  const [undo, setUndo] = useState<Ev | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ title: '', description: '' });
   const [picks, setPicks] = useState<Ev[]>([]);
@@ -297,7 +300,13 @@ export default function CalendarClient({ slug }: { slug: string }) {
             <MonthGrid
               events={events}
               onAddDay={mine ? (d) => { setFindDay(d); setFinding(true); } : undefined}
-              onRemove={mine ? (g) => { const e = events.find((x) => x.slug === g.slug); if (e) drop(e); } : undefined}
+              onRemove={mine ? (g) => {
+                const e = events.find((x) => x.slug === g.slug);
+                if (!e) return;
+                drop(e); setUndo(e);
+                if (undoTimer.current) clearTimeout(undoTimer.current);
+                undoTimer.current = setTimeout(() => setUndo(null), 5000);
+              } : undefined}
               renderSheet={(pick) => <CalendarSheet events={events} title={cal.title} owner={ownerName(cal)} slug={cal.slug} isPublic={cal.is_public} onPick={pick} />}
             />
           )}
@@ -333,6 +342,14 @@ export default function CalendarClient({ slug }: { slug: string }) {
         )}
       </main>
       <Footer />
+
+      {undo && (
+        <div role="status" style={{ position: 'fixed', left: '50%', bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))', transform: 'translateX(-50%)', zIndex: 420, maxWidth: 'calc(100vw - 32px)', display: 'flex', alignItems: 'center', gap: 14, padding: '10px 10px 10px 16px', borderRadius: 16, background: 'rgba(22,34,28,0.96)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', boxShadow: '0 14px 40px rgba(0,0,0,0.55)', animation: 'udIn 220ms cubic-bezier(0.22,1,0.36,1)' }}>
+          <style>{'@keyframes udIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}'}</style>
+          <span style={{ minWidth: 0, fontFamily: FONT.sans, fontSize: 14, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Removed {undo.title}</span>
+          <button type="button" onClick={() => { add(undo); setUndo(null); }} style={{ flexShrink: 0, height: 34, padding: '0 14px', borderRadius: 11, border: 'none', cursor: 'pointer', background: 'rgba(123,227,168,0.16)', color: T.mintText, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 }}>Undo</button>
+        </div>
+      )}
 
       {finding && cal && (
         <SearchSheet

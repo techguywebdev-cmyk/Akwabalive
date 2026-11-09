@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Plus, X } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Minus, Plus } from 'lucide-react';
 import { hiRes } from '@/lib/events/image';
 import { listTitle } from '@/lib/titles';
 import { T, FONT, GRAD } from '@/lib/thiscene';
@@ -161,19 +161,27 @@ export default function MonthGrid({ events, onRemove, onAddDay, renderSheet }: {
             );
           }
           return (
-            <button key={key} type="button" role="gridcell" aria-selected={isSel} aria-label={`${d} ${MONTHS[m]}: ${evs.map((e) => e.title).join(', ')}`} onClick={() => setSel(key)}
-              style={{
-                position: 'relative', aspectRatio: '3 / 4', padding: 0, border: 'none', borderRadius: 11, overflow: 'hidden', cursor: 'pointer',
-                background: src ? '#000' : GRAD.mint, opacity: past && !isSel ? 0.5 : 1,
-                transform: isSel ? 'translateY(-3px) scale(1.06)' : 'none', zIndex: isSel ? 2 : 1,
-                boxShadow: isSel ? '0 14px 30px -8px rgba(123,227,168,0.6), 0 6px 14px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.35)',
-                transition: 'transform 220ms cubic-bezier(0.22,1,0.36,1), box-shadow 220ms ease',
-              }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {src && <img src={flyer(src, 160)!} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
-              <span style={{ position: 'absolute', top: 3, left: 3, minWidth: 20, height: 20, padding: '0 4px', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', background: src ? 'rgba(5,10,8,0.72)' : 'transparent', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', fontFamily: FONT.display, fontSize: 11.5, fontWeight: 800, color: src ? T.white : T.onMint }}>{d}</span>
-              {evs.length > 1 && <span style={{ position: 'absolute', right: 4, bottom: 4, minWidth: 18, height: 18, padding: '0 4px', borderRadius: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+{evs.length - 1}</span>}
-            </button>
+            <div key={key} style={{ position: 'relative', aspectRatio: '3 / 4', transform: isSel ? 'translateY(-3px) scale(1.06)' : 'none', zIndex: isSel ? 2 : 1, transition: 'transform 220ms cubic-bezier(0.22,1,0.36,1)' }}>
+              <button type="button" role="gridcell" aria-selected={isSel} aria-label={`${d} ${MONTHS[m]}: ${evs.map((e) => e.title).join(', ')}`} onClick={() => setSel(key)}
+                style={{
+                  position: 'absolute', inset: 0, padding: 0, border: 'none', borderRadius: 11, overflow: 'hidden', cursor: 'pointer',
+                  background: src ? '#000' : GRAD.mint, opacity: past && !isSel ? 0.5 : 1,
+                  boxShadow: isSel ? '0 14px 30px -8px rgba(123,227,168,0.6), 0 6px 14px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.35)',
+                  transition: 'box-shadow 220ms ease',
+                }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {src && <img src={flyer(src, 160)!} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+                <span style={{ position: 'absolute', top: 3, left: 3, minWidth: 20, height: 20, padding: '0 4px', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', background: src ? 'rgba(5,10,8,0.72)' : 'transparent', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', fontFamily: FONT.display, fontSize: 11.5, fontWeight: 800, color: src ? T.white : T.onMint }}>{d}</span>
+                {evs.length > 1 && <span style={{ position: 'absolute', right: 4, bottom: 4, minWidth: 18, height: 18, padding: '0 4px', borderRadius: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+{evs.length - 1}</span>}
+              </button>
+              {/* Owner: take it out (one show), or open the night to choose (several) */}
+              {onRemove && !past && (
+                <button type="button" onClick={() => (evs.length === 1 ? onRemove(evs[0]) : setSel(key))} aria-label={evs.length === 1 ? `Remove ${evs[0].title}` : `Remove a show on ${d} ${MONTHS[m]}`}
+                  style={{ position: 'absolute', top: -5, right: -5, zIndex: 3, width: 22, height: 22, padding: 0, border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1B2620', color: T.white, boxShadow: '0 3px 8px rgba(0,0,0,0.6)' }}>
+                  <Minus size={13} strokeWidth={3} />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
@@ -188,7 +196,13 @@ export default function MonthGrid({ events, onRemove, onAddDay, renderSheet }: {
           </p>
           <div style={{ marginTop: 14, display: 'grid', gap: 18 }}>
             {list.map((e) => (
-              <div key={e.slug} style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+              <div key={e.slug} style={{ position: 'relative', display: 'flex', gap: 16, alignItems: 'stretch', paddingRight: onRemove ? 44 : 0 }}>
+                {onRemove && (
+                  <button type="button" onClick={() => onRemove(e)} aria-label={`Remove ${e.title}`}
+                    style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: 12, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.07)', color: T.white }}>
+                    <Minus size={17} />
+                  </button>
+                )}
                 <Link href={`/events/${e.slug}`} style={{ flexShrink: 0, width: 104, aspectRatio: '4 / 5', borderRadius: 16, overflow: 'hidden', background: GRAD.card, boxShadow: '0 14px 30px -12px rgba(0,0,0,0.8)' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {flyer(e, 360) && <img src={flyer(e, 360)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
@@ -201,7 +215,7 @@ export default function MonthGrid({ events, onRemove, onAddDay, renderSheet }: {
                   {e.venue && <span style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3, fontFamily: FONT.sans, fontSize: 13.5, color: T.text3, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}><MapPin size={13} style={{ flexShrink: 0 }} />{e.venue}</span>}
                   <span style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12 }}>
                     <Link href={`/events/${e.slug}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700, color: T.mintText, textDecoration: 'none' }}>See the event <ArrowRight size={14} /></Link>
-                    {onRemove && <button type="button" onClick={() => onRemove(e)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text3 }}><X size={13} />Remove</button>}
+
                   </span>
                 </div>
               </div>
