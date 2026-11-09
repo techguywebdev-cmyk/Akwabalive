@@ -12,8 +12,11 @@ import { T, FONT, EASE } from '@/lib/thiscene';
 /* ── Data: every moment, loaded once per visit and shared ─────────────── */
 
 let all: Promise<Moment[]> | null = null;
+let loadedAt = 0;
 export function loadAll(): Promise<Moment[]> {
-  if (!all) {
+  // Shared across the visit, refreshed after a few minutes so newly added clips show without a full reload
+  if (!all || Date.now() - loadedAt > 3 * 60 * 1000) {
+    loadedAt = Date.now();
     all = Promise.resolve(createClient().from('moments').select(MOMENT_FIELDS).eq('status', 'live').eq('source', 'youtube').neq('available', false).order('year', { ascending: false }).limit(500))
       .then(({ data }) => (data ?? []) as Moment[])
       .catch(() => []);

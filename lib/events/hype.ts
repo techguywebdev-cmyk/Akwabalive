@@ -29,8 +29,7 @@ export function hypeTags(e: GhanaEvent, opts: { returning?: boolean; max?: numbe
     else if (tiers.some((t) => t.quantity > 0 && t.sold / t.quantity >= 0.7)) out.push({ kind: 'fast', text: 'Selling fast' });
   }
 
-  // Marked hot by Akwaaba: always in demand
-  if (e.hot && !e.isFeatured && !out.some((h) => WARM.includes(h.kind))) out.push({ kind: 'hot', text: 'Hot' });
+  // (No "Hot" chip: being marked hot only decides what leads the feed)
 
   // Student-run: SRC weeks, hall weeks, artiste nights
   const school = campusOf(e);
