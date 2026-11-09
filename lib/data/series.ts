@@ -41,8 +41,8 @@ export const SERIES: EventSeries[] = [
     blurb: 'Kweku Smoke’s headline concert.' },
   { slug: 'gadam-nation', stars: 4, name: 'Gadam Nation Concert', keywords: ['gadam nation', 'gadam concert'], hosts: ['fancy-gadam'], usually: 'Tamale',
     blurb: 'Fancy Gadam’s yearly concert for the north.' },
-  { slug: 'byk-concert', stars: 4, name: 'BYK Concert', keywords: ['byk concert'], hosts: [], usually: 'Accra, December',
-    blurb: 'BYK’s own December concert, a new theme every year.' },
+  { slug: 'byk-concert', stars: 4, name: 'BYK Concert', keywords: ['byk concert', 'beyond kontrol'], hosts: ['medikal'], usually: 'Accra, December',
+    blurb: 'Medikal’s own December concert, Beyond Kontrol, a new theme every year.' },
   { slug: 'shay-concert', stars: 4, name: 'Shay Concert', keywords: ['shay concert'], hosts: ['wendy-shay'], usually: 'Accra, November',
     blurb: 'Wendy Shay headlines her own night, hits back to back.' },
 ];
