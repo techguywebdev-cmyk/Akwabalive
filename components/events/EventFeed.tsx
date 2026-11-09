@@ -24,6 +24,7 @@ import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { type CheckoutTier } from '@/lib/events/tiers';
 import { Heart, Share2, Mic2, Play, Image as ImageIcon, MessageSquareText, CalendarPlus } from 'lucide-react';
 import AddToCalendar from '@/components/calendars/AddToCalendar';
+import LineupFaces from '@/components/events/LineupFaces';
 import FeedComments from '@/components/events/FeedComments';
 import { useMomentComments } from '@/hooks/useMomentComments';
 import { useEventComments } from '@/hooks/useEventComments';
@@ -297,6 +298,7 @@ function EventCard({
           {subtitle && <span style={{ fontFamily: FONT.display, fontSize: wide ? 20 : 16, fontWeight: 600, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.82)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</span>}
           {excerpt && <span style={{ marginTop: 4, fontFamily: FONT.sans, fontSize: wide ? 16 : 14.5, lineHeight: 1.45, color: 'rgba(255,255,255,0.72)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{excerpt}</span>}
         </Link>
+        {!performer && <LineupFaces event={event} size={wide ? 38 : 34} />}
 
         <div style={{ pointerEvents: 'auto' }}><FriendsStrip slug={event.slug} enabled={near} /></div>
 
