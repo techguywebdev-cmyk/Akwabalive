@@ -68,7 +68,7 @@ export default function MonthGrid({ events, onRemove }: { events: GridEvent[]; o
 
   const tiles = useMemo(() => {
     const out = [...months];
-    while (out.length < 3) { const [ly, lm] = out[out.length - 1]; out.push(lm === 11 ? [ly + 1, 0] : [ly, lm + 1]); }
+    while (out.length < 4) { const [ly, lm] = out[out.length - 1]; out.push(lm === 11 ? [ly + 1, 0] : [ly, lm + 1]); }
     return out;
   }, [months]);
   const [y, m] = months[Math.min(mi, months.length - 1)];
@@ -106,42 +106,54 @@ export default function MonthGrid({ events, onRemove }: { events: GridEvent[]; o
           <h2 style={{ margin: '4px 0 0', fontFamily: FONT.display, fontSize: 'clamp(34px, 9vw, 46px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, ...gradText }}>
             {MONTHS[tiles[0][1]].slice(0, 3)} – {MONTHS[tiles[tiles.length - 1][1]].slice(0, 3)}
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 20 }}>
+          {/* A year planner: small month calendars, the nights with shows marked in mint */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '26px 18px', marginTop: 22 }}>
             {tiles.map(([ty, tm], k) => {
               const pre = iso(ty, tm, 1).slice(0, 7);
-              const evs = events.filter((e) => e.date.startsWith(pre)).sort((p, q) => p.date.localeCompare(q.date));
-              const pics = evs.filter((e) => e.image_url).slice(0, 4);
-              const past = iso(ty, tm, new Date(ty, tm + 1, 0).getDate()) < today;
+              const n = days.filter((d) => d.startsWith(pre)).length;
+              const lead2 = (new Date(ty, tm, 1).getDay() + 6) % 7;
+              const len = new Date(ty, tm + 1, 0).getDate();
+              const mc: (number | null)[] = [...Array(lead2).fill(null), ...Array.from({ length: len }, (_, i) => i + 1)];
               const yr = ty !== new Date().getFullYear() ? ` ’${String(ty).slice(2)}` : '';
-              if (!evs.length) {
-                return (
-                  <span key={pre} style={{ position: 'relative', aspectRatio: '3 / 4', borderRadius: 16, background: 'rgba(255,255,255,0.035)', opacity: past ? 0.45 : 1 }}>
-                    <span style={{ position: 'absolute', left: 12, bottom: 12, fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: T.text3 }}>{MONTHS[tm].slice(0, 3)}{yr}</span>
-                  </span>
-                );
-              }
               const idx = months.findIndex(([a2, b2]) => a2 === ty && b2 === tm);
               return (
-                <button key={pre} type="button" onClick={() => { if (idx >= 0) setMi(idx); setSel(evs.find((e) => e.date.slice(0, 10) >= today)?.date.slice(0, 10) ?? evs[0].date.slice(0, 10)); pickView('days'); }}
-                  aria-label={`${MONTHS[tm]} ${ty}: ${evs.length} ${evs.length === 1 ? 'show' : 'shows'}`}
-                  style={{ position: 'relative', aspectRatio: '3 / 4', padding: 0, border: 'none', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', background: '#000', opacity: past ? 0.55 : 1, boxShadow: '0 10px 24px -10px rgba(0,0,0,0.8)', animation: `mgIn 320ms cubic-bezier(0.22,1,0.36,1) ${k * 40}ms both` }}>
-                  {/* One flyer fills it; two to four make a mosaic, like a month of nights out */}
-                  <span style={{ position: 'absolute', inset: 0, display: 'grid', gap: 2, gridTemplateColumns: pics.length > 1 ? 'minmax(0, 1fr) minmax(0, 1fr)' : 'minmax(0, 1fr)', gridTemplateRows: pics.length > 2 ? 'minmax(0, 1fr) minmax(0, 1fr)' : 'minmax(0, 1fr)', overflow: 'hidden' }}>
-                    {(pics.length ? pics : []).map((e, j) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={e.slug} src={flyer(e, 240)!} alt="" style={{ width: '100%', height: '100%', minHeight: 0, objectFit: 'cover', display: 'block', gridColumn: pics.length === 3 && j === 0 ? 'span 2' : undefined }} />
-                    ))}
-                    {!pics.length && <span style={{ background: GRAD.mint }} />}
-                  </span>
-                  <span style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(4,10,7,0.92) 100%)' }} />
-                  <span style={{ position: 'absolute', left: 10, right: 10, bottom: 10, textAlign: 'left' }}>
-                    <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.025em', color: T.white }}>{MONTHS[tm].slice(0, 3)}{yr}</span>
-                    <span style={{ display: 'block', marginTop: 1, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: T.mintText }}>{evs.length} {evs.length === 1 ? 'show' : 'shows'}</span>
-                  </span>
-                </button>
+                <div key={pre} style={{ animation: `mgIn 320ms cubic-bezier(0.22,1,0.36,1) ${k * 50}ms both` }}>
+                  <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: n ? T.white : T.text3 }}>{MONTHS[tm]}{yr}</span>
+                    {n > 0 && <span style={{ height: 18, padding: '0 6px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', background: 'rgba(123,227,168,0.16)', color: T.mintText, fontFamily: FONT.sans, fontSize: 11, fontWeight: 800 }}>{n}</span>}
+                  </p>
+                  <div aria-hidden style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginTop: 8 }}>
+                    {WEEK.map((w, i) => <span key={i} style={{ textAlign: 'center', fontFamily: FONT.sans, fontSize: 9.5, fontWeight: 700, color: i >= 5 ? 'rgba(168,240,198,0.6)' : 'rgba(255,255,255,0.28)' }}>{w}</span>)}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2, marginTop: 3 }}>
+                    {mc.map((d, i) => {
+                      if (d == null) return <span key={`x${i}`} />;
+                      const key = iso(ty, tm, d);
+                      const has = !!byDay[key];
+                      const past = key < today;
+                      const cell: React.CSSProperties = { aspectRatio: '1', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: 11, fontWeight: has ? 800 : 600 };
+                      if (!has) {
+                        return (
+                          <span key={key} style={{ ...cell, position: 'relative', color: key === today ? T.mintText : past ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.45)' }}>
+                            {d}
+                            {key === today && <span style={{ position: 'absolute', bottom: 1, width: 3, height: 3, borderRadius: 1, background: T.mint }} />}
+                          </span>
+                        );
+                      }
+                      return (
+                        <button key={key} type="button" aria-label={`${d} ${MONTHS[tm]}: ${byDay[key].map((e) => e.title).join(', ')}`}
+                          onClick={() => { if (idx >= 0) setMi(idx); setSel(key); pickView('days'); }}
+                          style={{ ...cell, padding: 0, border: 'none', cursor: 'pointer', background: GRAD.mint, color: T.onMint, opacity: past ? 0.45 : 1, boxShadow: '0 4px 10px -3px rgba(91,217,154,0.55)' }}>
+                          {d}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>
+          <p style={{ margin: '22px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Tap a marked night to see what’s on.</p>
           <style>{'@keyframes mgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}'}</style>
         </div>
       )}
