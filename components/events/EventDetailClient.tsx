@@ -20,7 +20,7 @@ import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import { useEventComments } from '@/hooks/useEventComments';
 import CommentsSheet from '@/components/moments/CommentsSheet';
 import { Portrait } from '@/components/artists/parts';
-import { ArrowRight, AtSign, Bookmark, BookmarkCheck, CalendarDays, CalendarPlus, MapPin, Check, ExternalLink, Eye, Globe, Info, Mail, MessageCircle, MessageSquareText, Navigation, Phone, Play, Share2, Shirt, ShieldCheck, UserPlus, Users } from 'lucide-react';
+import { ArrowRight, AtSign, BellRing, Bookmark, BookmarkCheck, CalendarDays, CalendarPlus, MapPin, Check, ExternalLink, Eye, Globe, Info, Mail, MessageCircle, MessageSquareText, Navigation, Phone, Play, Share2, Shirt, ShieldCheck, UserPlus, Users } from 'lucide-react';
 import { eventInfo, hasInfo } from '@/lib/events/contacts';
 import { trackEvent, eventCounts, compact, type EventCounts } from '@/lib/events/track';
 import { TicketsSheet } from '@/components/events/EventActions';
@@ -31,6 +31,7 @@ import { isListedEvent } from '@/lib/types';
 import { extractYoutubeId } from '@/lib/events/rank';
 import { cityLabel } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { noTicketsYet, useTicketAlert } from '@/hooks/useTicketAlert';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import StatTip from '@/components/events/StatTip';
@@ -227,6 +228,9 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const eyebrow: CSSProperties = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 6px' };
   const eyebrowMint: CSSProperties = { ...eyebrow, color: T.mintText };
   const info = eventInfo(event.description, event.listingInfo, event.ticketSource, event.flyerText);
+  // Nothing announced yet: offer "Notify me when tickets drop" instead of a ticket button
+  const noTickets = noTicketsYet(event);
+  const { on: alerted, toggle: toggleAlert } = useTicketAlert(event.slug, noTickets);
   const infoRow: CSSProperties = { display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px 12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: -1 };
   const infoLabel: CSSProperties = { display: 'block', fontFamily: FONT.sans, fontSize: 12, color: T.text3 };
   const infoValue: CSSProperties = { display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
@@ -600,8 +604,13 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             </a>
           ) : daysAway != null && daysAway < 0 ? (
             <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
+          ) : noTickets ? (
+            <button type="button" onClick={toggleAlert} aria-pressed={alerted}
+              style={{ ...primary, flex: 1, ...(alerted ? { background: 'rgba(123,227,168,0.14)', color: T.mintText, boxShadow: 'none', border: 'none' } : {}) }}>
+              {alerted ? <><Check size={18} strokeWidth={2.6} /> We’ll tell you when tickets drop</> : <><BellRing size={18} /> Notify me when tickets drop</>}
+            </button>
           ) : (
-            <button type="button" onClick={() => setTicketsOpen(true)} style={primary}>
+            <button type="button" onClick={() => setTicketsOpen(true)} style={{ ...primary, ...(event.priceUnknown && !info.gatePrice ? { flex: 1 } : {}) }}>
               {free ? 'Reserve a spot' : 'Get tickets'}
             </button>
           )}
