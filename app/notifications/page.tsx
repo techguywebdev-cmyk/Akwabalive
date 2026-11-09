@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Heart, MessageSquareText, Reply, Star } from 'lucide-react';
+import { Heart, MessageSquareText, Reply, Star, Ticket } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import { createClient } from '@/lib/supabase/client';
@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/supabase/AuthProvider';
 import { T, FONT, GROUND, GRAD, BTN } from '@/lib/thiscene';
 
 type Note = {
-  id: string; kind: 'calendar_like' | 'calendar_rating' | 'calendar_comment' | 'comment_reply'; created_at: string; read_at: string | null; stars: number | null;
+  id: string; kind: 'calendar_like' | 'calendar_rating' | 'calendar_comment' | 'comment_reply' | 'tickets_out'; created_at: string; read_at: string | null; stars: number | null; event_slug: string | null;
   profiles: { username: string | null; full_name: string | null; avatar_url: string | null } | null;
   calendars: { slug: string; title: string } | null;
   calendar_comments: { content: string } | null;
@@ -25,23 +25,31 @@ const ago = (iso: string) => {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 };
 
-const ICON = { calendar_like: Heart, calendar_rating: Star, calendar_comment: MessageSquareText, comment_reply: Reply } as const;
+const ICON = { calendar_like: Heart, calendar_rating: Star, calendar_comment: MessageSquareText, comment_reply: Reply, tickets_out: Ticket } as const;
 
 /** What people did with your calendars and comments: likes, stars, comments and replies, newest first */
 export default function NotificationsPage() {
   const { user, loading } = useAuth();
   const db = useMemo(() => createClient(), []);
   const [notes, setNotes] = useState<Note[] | null>(null);
+  const [shows, setShows] = useState<Record<string, { title: string; image_url: string | null }>>({});
 
   useEffect(() => {
     if (!user) return;
     let live = true;
     db.from('notifications')
-      .select('id, kind, created_at, read_at, stars, profiles!notifications_actor_profile_fkey(username, full_name, avatar_url), calendars(slug, title), calendar_comments(content)')
+      .select('id, kind, created_at, read_at, stars, event_slug, profiles!notifications_actor_profile_fkey(username, full_name, avatar_url), calendars(slug, title), calendar_comments(content)')
       .eq('user_id', user.id).order('created_at', { ascending: false }).limit(80)
       .then(async ({ data }) => {
         if (!live) return;
-        setNotes((data ?? []) as unknown as Note[]);
+        const list = (data ?? []) as unknown as Note[];
+        setNotes(list);
+        // Shows named in "tickets are out" notifications
+        const slugs = Array.from(new Set(list.map((n) => n.event_slug).filter(Boolean))) as string[];
+        if (slugs.length) {
+          const { data: ev } = await db.from('events').select('slug, title, image_url').in('slug', slugs);
+          if (live) setShows(Object.fromEntries(((ev ?? []) as { slug: string; title: string; image_url: string | null }[]).map((e) => [e.slug, e])));
+        }
         // Seeing them counts as read
         if ((data ?? []).some((n: { read_at: string | null }) => !n.read_at)) {
           await db.from('notifications').update({ read_at: new Date().toISOString() }).eq('user_id', user.id).is('read_at', null);
@@ -60,6 +68,7 @@ export default function NotificationsPage() {
       case 'calendar_rating': return <>{b(who)} rated {b(cal)} {n.stars}★</>;
       case 'calendar_comment': return <>{b(who)} commented on {b(cal)}</>;
       case 'comment_reply': return <>{b(who)} replied to your comment on {b(cal)}</>;
+      case 'tickets_out': return <>Tickets are out for {b(shows[n.event_slug ?? '']?.title ?? 'a show you’re waiting on')}</>;
     }
   };
 
@@ -78,7 +87,7 @@ export default function NotificationsPage() {
 
         {notes && !notes.length && (
           <div style={{ marginTop: 22 }}>
-            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>Nothing yet. Share one of your calendars and you’ll see likes, stars and comments here.</p>
+            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>Nothing yet. Share one of your calendars, or tap “Notify me when tickets drop” on a show, and updates land here.</p>
             <Link href="/calendars" style={{ ...BTN.primary, marginTop: 18, height: 50, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', textDecoration: 'none', fontSize: 15 }}>Your calendars</Link>
           </div>
         )}
@@ -90,10 +99,13 @@ export default function NotificationsPage() {
               const name = n.profiles?.full_name || n.profiles?.username || '?';
               return (
                 <li key={n.id}>
-                  <Link href={n.calendars ? `/c/${n.calendars.slug}${n.kind === 'calendar_comment' || n.kind === 'comment_reply' ? '?comments=1' : ''}` : '#'}
+                  <Link href={n.kind === 'tickets_out' && n.event_slug ? `/events/${n.event_slug}` : n.calendars ? `/c/${n.calendars.slug}${n.kind === 'calendar_comment' || n.kind === 'comment_reply' ? '?comments=1' : ''}` : '#'}
                     style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '12px 12px', margin: '0 -12px', borderRadius: 16, textDecoration: 'none', background: n.read_at ? 'transparent' : 'rgba(123,227,168,0.07)' }}>
                     <span style={{ position: 'relative', flexShrink: 0 }}>
-                      {n.profiles?.avatar_url
+                      {n.kind === 'tickets_out' && shows[n.event_slug ?? '']?.image_url
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={shows[n.event_slug ?? '']!.image_url!} alt="" width={44} height={44} style={{ width: 44, height: 44, borderRadius: 14, objectFit: 'cover', display: 'block' }} />
+                        : n.profiles?.avatar_url
                         // eslint-disable-next-line @next/next/no-img-element
                         ? <img src={n.profiles.avatar_url} alt="" width={44} height={44} style={{ width: 44, height: 44, borderRadius: 14, objectFit: 'cover', display: 'block' }} />
                         : <span style={{ width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#26302B', color: '#D6FBE6', fontFamily: FONT.display, fontSize: 17, fontWeight: 800 }}>{name.charAt(0).toUpperCase()}</span>}

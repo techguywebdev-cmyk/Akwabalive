@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import type { GhanaEvent } from '@/lib/types';
 import { isListedEvent } from '@/lib/types';
+import { noTicketsYet, useTicketAlert } from '@/hooks/useTicketAlert';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { T, FONT, EASE, alpha, GRAD } from '@/lib/thiscene';
 import { getTiers, type CheckoutTier } from '@/lib/events/tiers';
@@ -103,6 +104,8 @@ export function TicketsSheet({
   const past = !!d && d.getTime() < new Date(new Date().toDateString()).getTime();
   const sellable = tiers.some((t) => t.id && t.available);
   const free = tiers.length > 0 && tiers.every((t) => t.price === 0);
+  const noTickets = !past && noTicketsYet(event);
+  const alert = useTicketAlert(event.slug, noTickets);
 
   const cta = { flex: 1, height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', color: T.onMint, background: GRAD.mint, border: 'none' } as const;
 
@@ -136,6 +139,11 @@ export function TicketsSheet({
         </div>
 
         <div style={{ marginTop: 16 }}>
+          {noTickets && (
+            <p style={{ margin: '8px 0 4px', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.6, color: T.text }}>
+              Tickets aren’t out yet. Tap below and we’ll tell you the moment they drop.
+            </p>
+          )}
           {listed && (
             <p style={{ margin: '8px 0 4px', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
               Tickets are sold by {event.ticketSource || 'the organiser'}, not on Akwaaba. Buy only on the official page.
@@ -158,7 +166,7 @@ export function TicketsSheet({
           )}
         </div>
 
-        {!listed && !past && (
+        {!listed && !past && !noTickets && (
           <p style={{ margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 8, fontFamily: FONT.sans, fontSize: 12.5, color: 'rgba(255,255,255,0.5)' }}>
             <Icon name="lock" size={15} /> MoMo or card · secured by Paystack · QR ticket sent instantly
           </p>
@@ -167,6 +175,10 @@ export function TicketsSheet({
         <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
           {past ? (
             <span style={{ ...cta, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default' }}>This event has ended</span>
+          ) : noTickets ? (
+            <button type="button" onClick={alert.toggle} aria-pressed={alert.on} style={{ ...cta, ...(alert.on ? { background: 'rgba(123,227,168,0.14)', color: T.mintText } : {}) }}>
+              {alert.on ? 'We’ll tell you when tickets drop' : 'Notify me when tickets drop'}
+            </button>
           ) : listed ? (
             <a href={event.ticketUrl!} target="_blank" rel="noopener noreferrer" style={cta}>Buy on {event.ticketSource || 'official site'} <Icon name="open" size={16} /></a>
           ) : free && onRsvp ? (
