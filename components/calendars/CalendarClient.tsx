@@ -8,6 +8,7 @@ import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import FeedComments from '@/components/events/FeedComments';
 import MonthGrid from '@/components/calendars/MonthGrid';
+import CalendarSheet from '@/components/calendars/CalendarSheet';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { useCalendarComments } from '@/hooks/useCalendarComments';
@@ -253,7 +254,13 @@ export default function CalendarClient({ slug }: { slug: string }) {
           {cal && !events.length && (
             <p style={{ margin: '0 0 22px', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{mine ? 'Nothing in it yet. Add the big nights below, or tap “Add to a calendar” on any event.' : 'Nothing in this calendar yet.'}</p>
           )}
-          {cal && <MonthGrid events={events} onRemove={mine ? (g) => { const e = events.find((x) => x.slug === g.slug); if (e) drop(e); } : undefined} />}
+          {cal && (
+            <MonthGrid
+              events={events}
+              onRemove={mine ? (g) => { const e = events.find((x) => x.slug === g.slug); if (e) drop(e); } : undefined}
+              renderSheet={(pick) => <CalendarSheet events={events} title={cal.title} owner={ownerName(cal)} slug={cal.slug} isPublic={cal.is_public} onPick={pick} />}
+            />
+          )}
         </section>
 
         {/* Owner: one-tap adds from the season's big nights */}
