@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 /**
- * Day-before reminders by email: tomorrow's shows for everyone with a ticket, a "going", or a save.
+ * Day-before reminders by email: tomorrow's shows for everyone with a ticket, a "going", a save, or the show in one of
+ * their calendars (the email names the calendar and links back to it).
  * Sends through Resend when RESEND_API_KEY and REMINDER_FROM are set (a verified sending domain is needed);
  * until then it only reports who would get one. Each person gets one email per show (reminder_log).
  */
@@ -22,15 +23,20 @@ export async function GET(req: Request) {
   if (!events?.length) return NextResponse.json({ tomorrow, events: 0, people: 0, sent: 0 });
   const slugs = events.map((e) => e.slug);
 
-  const [{ data: t }, { data: g }, { data: s }, { data: done }] = await Promise.all([
+  const [{ data: t }, { data: g }, { data: s }, { data: done }, { data: ce }] = await Promise.all([
     db.from('tickets').select('user_id, event_slug').eq('status', 'active').in('event_slug', slugs),
     db.from('event_attendance').select('user_id, event_slug').eq('status', 'going').in('event_slug', slugs),
     db.from('dream_events').select('user_id, event_slug').in('event_slug', slugs),
     db.from('reminder_log').select('user_id, event_slug').eq('kind', 'day_before').in('event_slug', slugs),
+    db.from('calendar_events').select('event_slug, calendars!inner(owner_id, title, slug)').in('event_slug', slugs),
   ]);
+  // Shows in someone's calendar (starter calendars by Akwaaba don't count: they belong to everyone)
+  const cal = new Map<string, { title: string; slug: string }>();
+  const calRows = ((ce ?? []) as any[]).filter((r) => r.calendars && !String(r.calendars.slug).startsWith('akwaaba-'))
+    .map((r) => { cal.set(`${r.calendars.owner_id}|${r.event_slug}`, { title: r.calendars.title, slug: r.calendars.slug }); return { user_id: r.calendars.owner_id, event_slug: r.event_slug }; });
   const sentBefore = new Set((done ?? []).map((r: any) => `${r.user_id}|${r.event_slug}`));
   const want = new Map<string, { user_id: string; event_slug: string; ticket: boolean }>();
-  for (const [rows, ticket] of [[s, false], [g, false], [t, true]] as const) {
+  for (const [rows, ticket] of [[calRows, false], [s, false], [g, false], [t, true]] as const) {
     for (const r of (rows ?? []) as any[]) {
       const k = `${r.user_id}|${r.event_slug}`;
       if (!sentBefore.has(k)) want.set(k, { user_id: r.user_id, event_slug: r.event_slug, ticket: ticket || !!want.get(k)?.ticket });
@@ -47,6 +53,7 @@ export async function GET(req: Request) {
     const email = u?.user?.email;
     const e = bySlug.get(w.event_slug);
     if (!email || !e) continue;
+    const inCal = cal.get(`${w.user_id}|${w.event_slug}`);
     const url = `${SITE_URL}/${w.ticket ? 'account/tickets' : `events/${e.slug}`}`;
     const time = e.time && !/tba/i.test(e.time) ? ` at ${e.time}` : '';
     const html = `<div style="background:#050606;padding:32px 20px;font-family:Inter,Arial,sans-serif;color:#fff">
@@ -56,7 +63,8 @@ export async function GET(req: Request) {
         <p style="margin:0 0 18px;color:rgba(255,255,255,.6);font-size:15px">${e.venue ?? ''}</p>
         ${e.image_url ? `<img src="${e.image_url}" alt="" style="width:100%;border-radius:16px;display:block;margin-bottom:20px">` : ''}
         <a href="${url}" style="display:inline-block;background:#7BE3A8;color:#03130B;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:999px">${w.ticket ? 'Open your ticket' : 'See the details'}</a>
-        <p style="margin:24px 0 0;color:rgba(255,255,255,.4);font-size:12px">You’re getting this because you ${w.ticket ? 'have a ticket for' : 'saved or are going to'} this show on Akwaaba.</p>
+        ${inCal && !w.ticket ? `<p style="margin:18px 0 0;font-size:14px;color:rgba(255,255,255,.7)">It’s on your calendar <a href="${SITE_URL}/c/${inCal.slug}" style="color:#A8F0C6;font-weight:700;text-decoration:none">${inCal.title}</a>.</p>` : ''}
+        <p style="margin:24px 0 0;color:rgba(255,255,255,.4);font-size:12px">You’re getting this because you ${w.ticket ? 'have a ticket for' : inCal ? 'added' : 'saved or are going to'} this show on Akwaaba.</p>
       </div></div>`;
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
