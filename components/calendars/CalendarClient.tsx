@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Copy, Globe, Heart, Lock, MessageSquareText, Pencil, Plus, Share2, Star } from 'lucide-react';
+import { Copy, Globe, Heart, Lock, MessageSquareText, Plus, Settings2, Share2, Star } from 'lucide-react';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import FeedComments from '@/components/events/FeedComments';
@@ -23,9 +23,9 @@ const EV_SELECT = 'slug, title, date, time, venue, city, image_url';
 
 const gradText: React.CSSProperties = { background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' };
 const eyebrow: React.CSSProperties = { margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
-const softBtn = (on = false): React.CSSProperties => ({
-  height: 44, padding: '0 15px', borderRadius: 15, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7,
-  background: on ? 'rgba(123,227,168,0.16)' : 'rgba(255,255,255,0.07)', color: on ? T.mintText : T.white, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700,
+const iconBtn = (on = false): React.CSSProperties => ({
+  minWidth: 48, height: 48, padding: '0 14px', borderRadius: 15, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+  background: on ? 'rgba(123,227,168,0.16)' : 'rgba(255,255,255,0.07)', color: on ? T.mintText : T.white, fontFamily: FONT.sans, fontSize: 14.5, fontWeight: 700,
 });
 const img = (e: Ev, w = 500) => (e.image_url ? hiRes(e.image_url, w) ?? e.image_url : null);
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -182,71 +182,86 @@ export default function CalendarClient({ slug }: { slug: string }) {
             })}
           </div>
           <div style={{ position: 'relative' }}>
-            <p style={{ ...eyebrow, display: 'flex', alignItems: 'center', gap: 8 }}>
-              {cal?.is_public === false ? <><Lock size={12} /> Private calendar</> : <><Globe size={12} /> Calendar</>}
-              {first && <span style={{ color: T.text3, letterSpacing: '0.08em' }}>{first === last || !last ? shortDay(first) : `${shortDay(first)} – ${shortDay(last)}`}</span>}
+            <p style={{ ...eyebrow, display: 'flex', alignItems: 'center', gap: 7 }}>
+              {cal?.is_public === false ? <Lock size={12} /> : <Globe size={12} />}{cal?.is_public === false ? 'Private calendar' : 'Calendar'}
             </p>
-            {editing ? (
-              <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
-                <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={80} aria-label="Name"
-                  style={{ height: 52, padding: '0 16px', borderRadius: 14, border: 'none', outline: 'none', background: 'rgba(255,255,255,0.08)', color: T.white, fontFamily: FONT.display, fontSize: 20, fontWeight: 800 }} />
-                <textarea value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} maxLength={400} rows={3} aria-label="About" placeholder="What’s the plan? (optional)"
-                  style={{ padding: '12px 16px', borderRadius: 14, border: 'none', outline: 'none', resize: 'vertical', background: 'rgba(255,255,255,0.08)', color: T.white, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5 }} />
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" onClick={saveEdit} style={{ ...BTN.primary, height: 44, padding: '0 20px', borderRadius: 999, cursor: 'pointer', fontSize: 14 }}>Save</button>
-                  <button type="button" onClick={() => setEditing(false)} style={softBtn()}>Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(36px, 10vw, 58px)', fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>{cal?.title ?? ' '}</h1>
-                {cal?.description && <p style={{ margin: '12px 0 0', maxWidth: 560, fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{cal.description}</p>}
-              </>
-            )}
+            <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(38px, 10.5vw, 60px)', fontWeight: 800, lineHeight: 1.0, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>{cal?.title ?? ' '}</h1>
+            {cal?.description && <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{cal.description}</p>}
             {cal && (
-              <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 10, fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>
-                <Avatar c={cal} />
-                <span>By {cal.profiles?.username ? <Link href={`/u/${cal.profiles.username}`} style={{ color: T.white, fontWeight: 700, textDecoration: 'none' }}>{ownerName(cal)}</Link> : <b style={{ color: T.white }}>{ownerName(cal)}</b>}</span>
-                <span style={{ color: T.text3 }}>· {events.length} {events.length === 1 ? 'show' : 'shows'}</span>
+              <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Avatar c={cal} size={38} />
+                <div style={{ minWidth: 0 }}>
+                  {cal.profiles?.username
+                    ? <Link href={`/u/${cal.profiles.username}`} style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 700, color: T.white, textDecoration: 'none' }}>{ownerName(cal)}</Link>
+                    : <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 700, color: T.white }}>{ownerName(cal)}</span>}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text3, flexWrap: 'wrap' }}>
+                    <span>{events.length} {events.length === 1 ? 'show' : 'shows'}</span>
+                    {first && <><span aria-hidden>·</span><span>{first === last || !last ? shortDay(first) : `${shortDay(first).replace(/^\S+ /, '')} – ${shortDay(last).replace(/^\S+ /, '')}`}</span></>}
+                    {ratings.length > 0 && <><span aria-hidden>·</span><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.mintText, fontWeight: 700 }}><Star size={12} fill="currentColor" strokeWidth={0} />{avg.toFixed(1)}</span></>}
+                  </span>
+                </div>
               </div>
             )}
           </div>
         </header>
 
-        {/* Like, rate, talk, share */}
+        {/* One quiet row: react on the left, your own move on the right */}
         {cal && (
           <section aria-label="React" style={{ marginTop: 24 }}>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" onClick={toggleLike} aria-pressed={liked} style={softBtn(liked)}><Heart size={17} fill={liked ? 'currentColor' : 'none'} />{likes || 'Like'}</button>
-              <button type="button" onClick={() => (user ? setChat(true) : needSignIn())} style={softBtn()}><MessageSquareText size={17} />{comments.length || 'Comment'}</button>
-              <button type="button" onClick={share} style={softBtn()}><Share2 size={17} />{copied || 'Share'}</button>
-              {!mine && <button type="button" onClick={makeCopy} style={softBtn()}><Copy size={16} />Copy to mine</button>}
-              {mine && !editing && <button type="button" onClick={() => setEditing(true)} style={softBtn()}><Pencil size={16} />Edit</button>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button type="button" onClick={toggleLike} aria-pressed={liked} aria-label={liked ? 'Unlike' : 'Like'} style={iconBtn(liked)}>
+                <Heart size={19} fill={liked ? 'currentColor' : 'none'} />{likes > 0 && <span>{likes}</span>}
+              </button>
+              <button type="button" onClick={() => (user ? setChat(true) : needSignIn())} aria-label="Comments" style={iconBtn()}>
+                <MessageSquareText size={19} />{comments.length > 0 && <span>{comments.length}</span>}
+              </button>
+              <button type="button" onClick={share} aria-label="Share link" style={iconBtn()}><Share2 size={18} /></button>
+              <span style={{ flex: 1 }} />
+              {copied && <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.mintText }}>{copied}</span>}
+              {mine
+                ? <button type="button" onClick={() => setEditing(true)} aria-label="Calendar settings" style={iconBtn()}><Settings2 size={19} /></button>
+                : <button type="button" onClick={makeCopy} style={{ ...iconBtn(), padding: '0 16px', fontSize: 14 }}><Copy size={16} />Copy to mine</button>}
             </div>
-            <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-              <div role="radiogroup" aria-label="Rate this calendar" style={{ display: 'flex', gap: 2 }}>
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button key={n} type="button" role="radio" aria-checked={myStars === n} aria-label={`${n} star${n > 1 ? 's' : ''}`} onClick={() => !mine && rate(n)} disabled={mine}
-                    style={{ width: 34, height: 34, border: 'none', background: 'none', padding: 0, cursor: mine ? 'default' : 'pointer', color: (myStars || Math.round(avg)) >= n ? T.mint : 'rgba(255,255,255,0.22)' }}>
-                    <Star size={24} fill="currentColor" strokeWidth={0} />
-                  </button>
-                ))}
-              </div>
-              <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.text3 }}>
-                {ratings.length ? <><b style={{ color: T.white }}>{avg.toFixed(1)}</b> from {ratings.length} {ratings.length === 1 ? 'rating' : 'ratings'}</> : mine ? 'Ratings show here' : 'Be the first to rate it'}
-                {myStars > 0 && !mine && ' · yours saved'}
-              </span>
-            </div>
-            {mine && (
-              <div role="radiogroup" aria-label="Who can see it" style={{ marginTop: 16, display: 'inline-flex', padding: 4, borderRadius: 15, background: 'rgba(255,255,255,0.06)' }}>
-                {([[true, Globe, 'Public'], [false, Lock, 'Private']] as const).map(([v, I, l]) => (
-                  <button key={l} type="button" role="radio" aria-checked={cal.is_public === v} onClick={() => setPrivacy(v)} style={{ height: 36, padding: '0 14px', borderRadius: 11, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, background: cal.is_public === v ? 'rgba(123,227,168,0.18)' : 'transparent', color: cal.is_public === v ? T.mintText : T.text2, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700 }}>
-                    <I size={14} />{l}
-                  </button>
-                ))}
+            {!mine && (
+              <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.text3 }}>{myStars ? 'Your rating' : 'Rate this line-up'}</span>
+                <div role="radiogroup" aria-label="Rate this calendar" style={{ display: 'flex', gap: 2 }}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button key={n} type="button" role="radio" aria-checked={myStars === n} aria-label={`${n} star${n > 1 ? 's' : ''}`} onClick={() => rate(n)}
+                      style={{ width: 28, height: 28, border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: myStars >= n ? T.mint : 'rgba(255,255,255,0.2)', transition: 'color 150ms ease' }}>
+                      <Star size={20} fill="currentColor" strokeWidth={0} />
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </section>
+        )}
+
+        {/* Owner settings: name, note, who can see it */}
+        {editing && cal && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 400 }}>
+            <button type="button" aria-label="Close" onClick={() => setEditing(false)} style={{ position: 'absolute', inset: 0, border: 'none', background: 'rgba(0,0,0,0.5)', cursor: 'pointer' }} />
+            <section role="dialog" aria-label="Calendar settings" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, maxWidth: 560, margin: '0 auto', padding: '20px 20px calc(22px + env(safe-area-inset-bottom, 0px))', borderRadius: '24px 24px 0 0', background: 'linear-gradient(180deg, rgba(16,34,25,0.98) 0%, rgba(9,18,13,0.99) 100%)', boxShadow: '0 -20px 60px rgba(0,0,0,0.5)', animation: 'csUp 280ms cubic-bezier(0.22,1,0.36,1)' }}>
+              <style>{'@keyframes csUp{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}'}</style>
+              <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 21, fontWeight: 800, letterSpacing: '-0.025em', color: T.white }}>Calendar settings</p>
+              <label style={{ display: 'block', marginTop: 18, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.text3 }}>Name</label>
+              <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={80}
+                style={{ marginTop: 8, width: '100%', boxSizing: 'border-box', height: 50, padding: '0 16px', borderRadius: 14, border: 'none', outline: 'none', background: 'rgba(255,255,255,0.08)', color: T.white, fontFamily: FONT.sans, fontSize: 16, fontWeight: 600 }} />
+              <label style={{ display: 'block', marginTop: 16, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.text3 }}>About it</label>
+              <textarea value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} maxLength={400} rows={2} placeholder="What’s the plan? (optional)"
+                style={{ marginTop: 8, width: '100%', boxSizing: 'border-box', padding: '12px 16px', borderRadius: 14, border: 'none', outline: 'none', resize: 'none', background: 'rgba(255,255,255,0.08)', color: T.white, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5 }} />
+              <div role="radiogroup" aria-label="Who can see it" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
+                {([[true, Globe, 'Public', 'Anyone with the link'], [false, Lock, 'Private', 'Only you']] as const).map(([v, I, l, d]) => (
+                  <button key={l} type="button" role="radio" aria-checked={cal.is_public === v} onClick={() => setPrivacy(v)} style={{ padding: '12px 14px', borderRadius: 14, border: 'none', cursor: 'pointer', textAlign: 'left', background: cal.is_public === v ? 'rgba(123,227,168,0.14)' : 'rgba(255,255,255,0.05)', color: cal.is_public === v ? T.mintText : T.text2 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 14.5, fontWeight: 700 }}><I size={15} />{l}</span>
+                    <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>{d}</span>
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={saveEdit} disabled={!draft.title.trim()} style={{ ...BTN.primary, marginTop: 18, width: '100%', height: 50, borderRadius: 999, cursor: 'pointer', fontSize: 15 }}>Save</button>
+            </section>
+          </div>
         )}
 
         {/* The shows, as a month calendar */}
