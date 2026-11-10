@@ -38,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(e.updated_at ?? e.created_at ?? now),
       changeFrequency: e.date >= today ? 'daily' : 'monthly',
       priority: e.date >= today ? 0.8 : 0.4,
-      ...(e.image_url?.startsWith('http') ? { images: [e.image_url] } : {}),
+      ...(e.image_url ? { images: [e.image_url.startsWith('/') ? `${SITE_URL}${e.image_url}` : e.image_url.replace('https://akwabalive.vercel.app', SITE_URL)] } : {}),
     }));
     calendars = (cal ?? []).map((c) => ({ url: `${SITE_URL}/c/${c.slug}`, lastModified: new Date(c.updated_at ?? c.created_at ?? now), changeFrequency: 'weekly', priority: 0.5 }));
   }
