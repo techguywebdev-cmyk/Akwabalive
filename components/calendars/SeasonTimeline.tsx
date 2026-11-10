@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, Plus } from 'lucide-react';
+import Countdown, { startsAt } from '@/components/events/Countdown';
 import { createClient } from '@/lib/supabase/client';
 import { FlyerPop, type GridEvent } from '@/components/calendars/MonthGrid';
 import { parseDay } from '@/lib/dates';
@@ -26,7 +28,10 @@ function until(date: string) {
 }
 
 /**
- * A calendar as a season: nights grouped by month, the date once on the left like a diary,
+ * A calendar as your wallet of nights out: the next one is a full pass with a live countdown,
+ * the rest are passes stacked underneath, each tinted by its own flyer; tap one to open it.
+ * Nights gone by become a row of flyers at the end.
+ * (old note:
  * with who's going. The next night glows with a countdown; nights gone by fade back.
  * Tap a stub for the flyer pop-up.
  */
@@ -61,90 +66,126 @@ export default function SeasonTimeline({ events, onRemove, onAdd }: { events: Gr
   }, [key, db]); // eslint-disable-line react-hooks/exhaustive-deps
 
 
-  // Group by month, then by day: nights on the same date share one date
-  const months: { label: string; count: number; days: { date: string; list: GridEvent[] }[] }[] = [];
-  events.forEach((e) => {
-    const d = parseDay(e.date);
-    const label = d ? MONTH[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ` ${d.getFullYear()}` : '') : 'Dates to come';
-    let m = months[months.length - 1];
-    if (m?.label !== label) { m = { label, count: 0, days: [] }; months.push(m); }
-    m.count++;
-    const day = m.days[m.days.length - 1];
-    if (day?.date === e.date.slice(0, 10)) day.list.push(e); else m.days.push({ date: e.date.slice(0, 10), list: [e] });
-  });
+  const upcoming = events.filter((e) => e.date >= today);
+  const been = events.filter((e) => e.date < today).reverse();
+  const [open, setOpen] = useState<string | null>(null);
+  const openSlug = open ?? nextSlug ?? null;
 
-  let n = 0;
+  const where = (e: GridEvent) => [e.time && !/tba/i.test(e.time) ? e.time : null, e.venue && !/to be announced|tba/i.test(e.venue) ? e.venue : null].filter(Boolean).join(' · ') || 'Details soon';
+  const flyerOf = (e: GridEvent, w = 600) => (e.image_url ? hiRes(e.image_url, w) ?? e.image_url : null);
+  const Faces = ({ slug, size = 22 }: { slug: string; size?: number }) => {
+    const g = going[slug];
+    if (!g?.n) return null;
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+        {g.faces.map((f, j) => f.avatar
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img key={f.id} src={f.avatar} alt="" style={{ width: size, height: size, borderRadius: 999, objectFit: 'cover', marginLeft: j ? -7 : 0, border: '2px solid rgba(10,16,13,0.9)' }} />
+          : <span key={f.id} aria-hidden style={{ width: size, height: size, borderRadius: 999, marginLeft: j ? -7 : 0, border: '2px solid rgba(10,16,13,0.9)', background: FACE_BG[j % 4], display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: size * 0.46, fontWeight: 800, color: '#08120C' }}>{f.name.charAt(0).toUpperCase()}</span>)}
+        <span style={{ marginLeft: 7, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.mintText }}>{g.n} going</span>
+      </span>
+    );
+  };
+  // The flyer, blurred, as each pass's own colour
+  const Tint = ({ e, strong = false }: { e: GridEvent; strong?: boolean }) => {
+    const f = flyerOf(e, 200);
+    return (
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {f && <img src={f} alt="" aria-hidden style={{ position: 'absolute', inset: '-30%', width: '160%', height: '160%', objectFit: 'cover', filter: `blur(${strong ? 46 : 34}px) saturate(1.4)`, opacity: strong ? 0.75 : 0.6, pointerEvents: 'none' }} />}
+        <span aria-hidden style={{ position: 'absolute', inset: 0, background: strong ? 'linear-gradient(180deg, rgba(6,10,8,0.35) 0%, rgba(6,10,8,0.72) 55%, rgba(6,10,8,0.9) 100%)' : 'linear-gradient(90deg, rgba(6,10,8,0.55), rgba(6,10,8,0.82))', pointerEvents: 'none' }} />
+      </>
+    );
+  };
+
   return (
     <div>
-      {months.map((m, mi) => (
-        <section key={m.label} aria-label={m.label} style={{ marginTop: mi ? 30 : 0 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>{m.label}</h3>
-            <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{m.count} {m.count === 1 ? 'night' : 'nights'}</span>
-          </div>
-
-          {m.days.map((day) => {
-            const d = parseDay(day.date);
-            const past = day.date < today;
+      {upcoming.length > 0 && (
+        <div style={{ position: 'relative' }}>
+          {upcoming.map((e, i) => {
+            const d = parseDay(e.date);
+            const isOpen = e.slug === openSlug, isNext = e.slug === nextSlug;
+            const at = startsAt(e.date, e.time);
+            const dateLine = d ? `${WD[d.getDay()].charAt(0) + WD[d.getDay()].slice(1).toLowerCase()} ${d.getDate()} ${MONTH[d.getMonth()]}` : e.date;
             return (
-              <div key={day.date} style={{ display: 'flex', gap: 14, marginBottom: 10, opacity: past ? 0.5 : 1 }}>
-                {/* the date, once per day */}
-                <div style={{ width: 44, flexShrink: 0, paddingTop: 12, textAlign: 'center' }}>
-                  <div style={{ fontFamily: FONT.display, fontSize: 26, fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 1, color: T.white }}>{d ? d.getDate() : '?'}</div>
-                  <div style={{ marginTop: 4, fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', color: T.text3 }}>{d ? WD[d.getDay()] : ''}</div>
-                </div>
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {day.list.map((e) => {
-                    const next = e.slug === nextSlug;
-                    const g = going[e.slug];
-                    const flyer = e.image_url ? hiRes(e.image_url, 240) ?? e.image_url : null;
-                    const where = [e.time && !/tba/i.test(e.time) ? e.time : null, e.venue && !/to be announced|tba/i.test(e.venue) ? e.venue : null].filter(Boolean).join(' · ') || 'Details soon';
-                    const i = n++;
-                    return (
-                      <button key={e.slug} type="button" className="ak-rise" onClick={() => setPop(day.date)} aria-label={`${e.title}, ${d ? `${WD[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}` : e.date}`}
-                        style={{
-                          animationDelay: `${Math.min(i, 8) * 50}ms`, width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: 10, border: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 20,
-                          background: next ? 'linear-gradient(120deg, rgba(123,227,168,0.16), rgba(123,227,168,0.05))' : 'rgba(255,255,255,0.045)',
-                          boxShadow: next ? 'inset 0 0 0 1px rgba(123,227,168,0.35)' : 'none',
-                        }}>
-                        <span style={{ width: 52, height: 65, flexShrink: 0, borderRadius: 12, overflow: 'hidden', background: GRAD.card }}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          {flyer && <img src={flyer} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
-                        </span>
-                        <span style={{ flex: 1, minWidth: 0 }}>
-                          <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.2, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listTitle(e.title)}</span>
-                          <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 12.5, color: T.text3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{where}</span>
-                          {(next || g?.n) ? (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 7 }}>
-                              {next && <span style={{ padding: '2px 8px', borderRadius: 999, fontFamily: FONT.sans, fontSize: 11, fontWeight: 800, background: GRAD.mint, color: T.onMint }}>{until(e.date)}</span>}
-                              {g?.n ? (
-                                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                                  {g.faces.map((f, j) => (
-                                    f.avatar
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      ? <img key={f.id} src={f.avatar} alt="" style={{ width: 20, height: 20, borderRadius: 999, objectFit: 'cover', marginLeft: j ? -6 : 0, border: '2px solid #0E1612' }} />
-                                      : <span key={f.id} aria-hidden style={{ width: 20, height: 20, borderRadius: 999, marginLeft: j ? -6 : 0, border: '2px solid #0E1612', background: FACE_BG[j % 4], display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: 9.5, fontWeight: 800, color: '#08120C' }}>{f.name.charAt(0).toUpperCase()}</span>
-                                  ))}
-                                  <span style={{ marginLeft: 6, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: T.mintText }}>{g.n} going</span>
-                                </span>
-                              ) : null}
-                            </span>
-                          ) : null}
-                        </span>
+              <div key={e.slug} id={`pass-${e.slug}`} style={{ position: 'relative', zIndex: i + 1, marginTop: i === 0 ? 0 : isOpen ? 14 : -16 }}>
+                {isOpen ? (
+                  /* An open pass */
+                  <article className="ak-fade" style={{ position: 'relative', borderRadius: 30, overflow: 'hidden', background: '#0A100D', boxShadow: '0 -10px 30px -12px rgba(0,0,0,0.6), 0 30px 60px -30px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(255,255,255,0.08)' }}>
+                    <Tint e={e} strong />
+                    <div style={{ position: 'relative', padding: '18px 18px 0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                        <span style={{ fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: T.mintText }}>{isNext ? 'Up next' : 'You’re going'}</span>
+                        <span style={{ padding: '5px 11px', borderRadius: 999, background: 'rgba(255,255,255,0.1)', fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.white }}>{until(e.date)}</span>
+                      </div>
+                      {/* the whole flyer, never cropped */}
+                      <button type="button" onClick={() => setPop(e.date.slice(0, 10))} aria-label={`See the ${e.title} flyer`} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: 14, padding: 0, border: 'none', background: 'none', cursor: 'zoom-in' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {flyerOf(e) && <img src={flyerOf(e)!} alt="" style={{ display: 'block', maxWidth: '100%', maxHeight: 'min(62vw, 340px)', borderRadius: 16, boxShadow: '0 24px 50px -18px rgba(0,0,0,0.85)' }} />}
                       </button>
-                    );
-                  })}
-                </div>
+                      <h3 style={{ margin: '18px 0 0', fontFamily: FONT.display, fontSize: 'clamp(24px, 7vw, 30px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>{listTitle(e.title)}</h3>
+                      <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>{dateLine} · {where(e)}</p>
+                      {at && <div style={{ marginTop: 16 }}><Countdown at={at} compact /></div>}
+                    </div>
+                    {/* perforation */}
+                    <div aria-hidden style={{ position: 'relative', height: 26, marginTop: 16 }}>
+                      <span style={{ position: 'absolute', left: -13, top: 0, width: 26, height: 26, borderRadius: 999, background: '#070B09' }} />
+                      <span style={{ position: 'absolute', right: -13, top: 0, width: 26, height: 26, borderRadius: 999, background: '#070B09' }} />
+                      <span style={{ position: 'absolute', left: 22, right: 22, top: 12, borderTop: '2px dashed rgba(255,255,255,0.16)' }} />
+                    </div>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '4px 18px 18px' }}>
+                      <span style={{ minWidth: 0 }}>{going[e.slug]?.n ? <Faces slug={e.slug} /> : <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Tell your people</span>}</span>
+                      <Link href={`/events/${e.slug}`} style={{ flexShrink: 0, height: 40, padding: '0 16px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+                        See the event <ArrowRight size={15} />
+                      </Link>
+                    </div>
+                  </article>
+                ) : (
+                  /* A pass in the stack: just its top edge */
+                  <button type="button" onClick={() => { setOpen(e.slug); requestAnimationFrame(() => document.getElementById(`pass-${e.slug}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })); }} aria-label={`${e.title}, ${dateLine}`}
+                    style={{ position: 'relative', width: '100%', height: 84, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 14, border: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 24, overflow: 'hidden', background: '#0A100D', boxShadow: '0 -10px 26px -10px rgba(0,0,0,0.75), inset 0 0 0 1px rgba(255,255,255,0.07)' }}>
+                    <Tint e={e} />
+                    <span style={{ position: 'relative', width: 40, flexShrink: 0, textAlign: 'center' }}>
+                      <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 24, fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 1, color: T.white }}>{d ? d.getDate() : '?'}</span>
+                      <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: T.mintText }}>{d ? MON[d.getMonth()] : ''}</span>
+                    </span>
+                    <span style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listTitle(e.title)}</span>
+                      <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 12.5, color: 'rgba(255,255,255,0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{until(e.date)} · {where(e)}</span>
+                    </span>
+                    {flyerOf(e, 160) && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={flyerOf(e, 160)!} alt="" style={{ position: 'relative', width: 44, height: 55, objectFit: 'cover', borderRadius: 9, flexShrink: 0, boxShadow: '0 6px 14px rgba(0,0,0,0.5)' }} />
+                    )}
+                  </button>
+                )}
               </div>
             );
           })}
-        </section>
-      ))}
+        </div>
+      )}
 
       {onAdd && (
-        <button type="button" onClick={onAdd} style={{ marginTop: 14, marginLeft: 58, height: 44, padding: '0 16px', borderRadius: 999, border: 'none', background: 'rgba(123,227,168,0.1)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, color: T.mintText, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 }}>
+        <button type="button" onClick={onAdd} style={{ marginTop: 16, height: 44, padding: '0 16px', borderRadius: 999, border: 'none', background: 'rgba(123,227,168,0.1)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, color: T.mintText, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 }}>
           <Plus size={17} strokeWidth={2.4} /> Add a night
         </button>
+      )}
+
+      {/* Nights gone by: a quiet row of flyers */}
+      {been.length > 0 && (
+        <section aria-label="Been" style={{ marginTop: 34 }}>
+          <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.text3 }}>Been · {been.length} {been.length === 1 ? 'night' : 'nights'}</p>
+          <div className="no-scrollbar" style={{ display: 'flex', gap: 10, overflowX: 'auto', margin: '12px -20px 0', padding: '0 20px' }}>
+            {been.map((e) => (
+              <button key={e.slug} type="button" onClick={() => setPop(e.date.slice(0, 10))} aria-label={e.title} style={{ flexShrink: 0, width: 84, padding: 0, border: 'none', background: 'none', cursor: 'pointer', opacity: 0.7 }}>
+                <span style={{ display: 'block', width: 84, height: 105, borderRadius: 14, overflow: 'hidden', background: GRAD.card }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  {flyerOf(e, 200) && <img src={flyerOf(e, 200)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(0.4)' }} />}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       {pop && (
