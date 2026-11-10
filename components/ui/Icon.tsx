@@ -12,7 +12,8 @@ const PATHS = {
   // Nov 2026 header set: a lens with a glint, filter lines that narrow, a menu that steps in
   search: ['M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13z', 'M19.5 19.5l-4.4-4.4', 'M7.6 9.2a3.1 3.1 0 0 1 2.3-2'],
   close: ['M6.5 6.5l11 11', 'M17.5 6.5l-11 11'],
-  sliders: ['M4 7h16', 'M7 12h10', 'M10 17h4'],
+  // Two switches on rails: filters and sorting
+  sliders: ['M4 8h9', 'M19 8h1', 'M18.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z', 'M4 16h1', 'M11 16h9', 'M10.5 16a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z'],
   heart: 'M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.3a4.2 4.2 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z',
   star: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
   chat: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',

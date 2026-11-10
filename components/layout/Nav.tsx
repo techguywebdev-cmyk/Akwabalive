@@ -171,6 +171,10 @@ export default function Nav({
     { href: profileHref, label: user ? 'My profile' : 'Sign in', icon: 'user', key: 'Profile' },
   ];
 
+  const toolsLeft = isMobile && !back
+    ? (actions ?? (plain ? null : <HeaderIconButton label="Search events" icon="search" onClick={() => setSearching(true)} />))
+    : null;
+
   return (
     <>
       <header
@@ -191,6 +195,8 @@ export default function Nav({
           {back
             ? <HeaderIconButton label="Back" icon="arrowLeft" href={back} />
             : <HeaderIconButton label="Menu" icon="menu" onClick={() => setMenuOpen(true)} />}
+          {/* Phones: search and filters sit with the menu button */}
+          {toolsLeft}
           {!isMobile && <span style={{ marginLeft: 8 }}><Wordmark /></span>}
 
           {!isMobile && (
@@ -230,7 +236,7 @@ export default function Nav({
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
-          {actions ?? (plain ? null : <HeaderIconButton label="Search events" icon="search" onClick={() => setSearching(true)} />)}
+          {!toolsLeft && (actions ?? (plain ? null : <HeaderIconButton label="Search events" icon="search" onClick={() => setSearching(true)} />))}
           {(!isMobile || !actions) && avatar}
         </div>
       </header>
