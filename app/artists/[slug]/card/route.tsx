@@ -16,7 +16,8 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   const artist = getArtistBySlug(params.slug);
   if (!artist) return new Response('Not found', { status: 404 });
   const q = new URL(req.url).searchParams;
-  const og = q.get('format') === 'og';
+  const format = q.get('format') === 'og' ? 'og' : q.get('format') === 'story' ? 'story' : 'post';
+  const og = format === 'og';
   const u = cleanUser(q.get('u'));
   const today = new Date().toISOString().slice(0, 10);
   const name = artist.name.replace(/[,()*]/g, ' ').trim();
@@ -24,7 +25,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   const [font, prof, shows, p] = await Promise.all([
     displayFont(),
     rest<{ spotify_image: string | null; photo_url: string | null }[]>(`artist_profiles?select=spotify_image,photo_url&slug=eq.${encodeURIComponent(artist.slug)}&limit=1`),
-    rest<Show[]>(`events?select=slug,title,date,venue,city,image_url&status=eq.published&date=gte.${today}&or=${encodeURIComponent(`(artist_slugs.cs.{${artist.slug}},title.ilike.*${name}*)`)}&order=date&limit=${og ? 2 : 3}`),
+    rest<Show[]>(`events?select=slug,title,date,venue,city,image_url&status=eq.published&date=gte.${today}&or=${encodeURIComponent(`(artist_slugs.cs.{${artist.slug}},title.ilike.*${name}*)`)}&order=date&limit=${format === 'story' ? 3 : 2}`),
     getPerson(u),
   ]);
   const photo = prof?.[0]?.spotify_image || prof?.[0]?.photo_url || null;
@@ -65,8 +66,8 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   );
 
   const greeting = (k: number) => p
-    ? <PersonPill p={p} line={`${firstName(p)} says`} tail={list.length ? 'catch them live.' : 'keep an eye out.'} scale={k} />
-    : <div style={{ display: 'flex', padding: `${12 * k}px ${26 * k}px`, borderRadius: 999, background: 'rgba(8,13,10,0.72)', fontSize: 24 * k, letterSpacing: 5 * k, color: MINT_TEXT }}>{list.length ? 'CATCH THEM LIVE' : 'ON TSACOAL'}</div>;
+    ? <PersonPill p={p} line={`${firstName(p)} says`} tail={list.length ? `catch ${artist.name} live.` : `watch ${artist.name}.`} scale={k} />
+    : <div style={{ display: 'flex', padding: `${12 * k}px ${26 * k}px`, borderRadius: 999, background: 'rgba(8,13,10,0.72)', fontSize: 24 * k, letterSpacing: 5 * k, color: MINT_TEXT }}>{list.length ? `CATCH ${artist.name.toUpperCase()} LIVE` : `${artist.name.toUpperCase()} ON TSACOAL`}</div>;
 
   if (og) {
     const W = 1200, H = 630;
@@ -90,29 +91,31 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
     );
   }
 
-  const W = 1080, H = 1920;
+  // Post (1080×1350, whole on X, Instagram and WhatsApp) or story (1080×1920)
+  const story = format === 'story';
+  const W = 1080, H = story ? 1920 : 1350, PH = story ? 1150 : 760;
   return new ImageResponse(
     (
       <div style={{ position: 'relative', width: W, height: H, display: 'flex', fontFamily: ff, background: '#070B09' }}>
         {/* The artist big at the top, fading into the page */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {photo && <img src={sized(photo, 1080)} alt="" width={W} height={1150} style={{ position: 'absolute', top: 0, left: 0, width: W, height: 1150, objectFit: 'cover', objectPosition: '50% 18%' }} />}
-        <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: H, background: 'linear-gradient(180deg, rgba(5,8,6,0.55) 0%, rgba(5,8,6,0) 16%, rgba(5,8,6,0) 36%, rgba(5,8,6,0.85) 54%, #060907 64%, #060907 100%)' }} />
-        <div style={{ display: 'flex', position: 'absolute', top: 1150, left: 0, width: W, height: H - 1150, background: 'radial-gradient(70% 50% at 100% 100%, rgba(40,190,200,0.16) 0%, rgba(40,190,200,0) 100%), radial-gradient(60% 40% at 0% 30%, rgba(70,220,150,0.16) 0%, rgba(70,220,150,0) 100%)' }} />
-        <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: 0, left: 0, width: W, height: H, padding: '78px 72px 72px' }}>
+        {photo && <img src={sized(photo, 1080)} alt="" width={W} height={PH} style={{ position: 'absolute', top: 0, left: 0, width: W, height: PH, objectFit: 'cover', objectPosition: '50% 18%' }} />}
+        <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: H, background: `linear-gradient(180deg, rgba(5,8,6,0.55) 0px, rgba(5,8,6,0) ${Math.round(PH * 0.22)}px, rgba(5,8,6,0) ${Math.round(PH * 0.55)}px, rgba(5,8,6,0.88) ${Math.round(PH * 0.88)}px, #060907 ${PH}px, #060907 100%)` }} />
+        <div style={{ display: 'flex', position: 'absolute', top: PH, left: 0, width: W, height: H - PH, background: 'radial-gradient(70% 60% at 100% 100%, rgba(40,190,200,0.16) 0%, rgba(40,190,200,0) 100%), radial-gradient(60% 50% at 0% 20%, rgba(70,220,150,0.16) 0%, rgba(70,220,150,0) 100%)' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: 0, left: 0, width: W, height: H, padding: story ? '78px 72px 64px' : '56px 64px 48px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', fontSize: 42, letterSpacing: -1.5, color: '#fff' }}>Tsacoal</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 24, letterSpacing: 4, color: 'rgba(255,255,255,0.75)' }}>
+            <div style={{ display: 'flex', fontSize: story ? 42 : 36, letterSpacing: -1.5, color: '#fff' }}>Tsacoal</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: story ? 24 : 21, letterSpacing: 4, color: 'rgba(255,255,255,0.75)' }}>
               <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, background: G_MINT }} />LIVE IN GHANA
             </div>
           </div>
           <div style={{ display: 'flex', flex: 1 }} />
-          <div style={{ display: 'flex' }}>{greeting(1)}</div>
-          {artist.genre && <div style={{ display: 'flex', marginTop: 34, fontSize: 26, letterSpacing: 6, ...gText(G_MINT) }}>{artist.genre.toUpperCase()}</div>}
-          <div style={{ display: 'flex', marginTop: 8, fontSize: nameSize(150), letterSpacing: -7, lineHeight: 0.92, ...gText(G_TEXT) }}>{artist.name}</div>
-          <div style={{ display: 'flex', marginTop: 44, fontSize: 24, letterSpacing: 5, color: 'rgba(255,255,255,0.5)' }}>{list.length ? (list.length === 1 ? 'NEXT SHOW' : 'NEXT SHOWS') : 'SHOWS'}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 18 }}>{list.length ? list.map((s) => stub(s, 1)) : empty(1)}</div>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40, fontSize: 26, color: 'rgba(255,255,255,0.5)' }}>tsacoal.com/artists/{artist.slug}</div>
+          <div style={{ display: 'flex' }}>{greeting(story ? 1 : 0.82)}</div>
+          {artist.genre && <div style={{ display: 'flex', marginTop: story ? 34 : 22, fontSize: story ? 26 : 22, letterSpacing: 6, ...gText(G_MINT) }}>{artist.genre.toUpperCase()}</div>}
+          <div style={{ display: 'flex', marginTop: 6, fontSize: nameSize(story ? 150 : 124), letterSpacing: -6, lineHeight: 0.92, ...gText(G_TEXT) }}>{artist.name}</div>
+          <div style={{ display: 'flex', marginTop: story ? 44 : 28, fontSize: story ? 24 : 20, letterSpacing: 5, color: 'rgba(255,255,255,0.5)' }}>{list.length ? (list.length === 1 ? 'NEXT SHOW' : 'NEXT SHOWS') : 'SHOWS'}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: story ? 18 : 12, marginTop: story ? 18 : 12 }}>{list.length ? list.map((s) => stub(s, story ? 1 : 0.84)) : empty(story ? 1 : 0.84)}</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 40 : 24, fontSize: story ? 26 : 22, color: 'rgba(255,255,255,0.5)' }}>tsacoal.com/artists/{artist.slug}</div>
         </div>
       </div>
     ),

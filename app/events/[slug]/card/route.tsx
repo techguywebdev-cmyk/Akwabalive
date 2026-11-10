@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { ticketDial } from '@/lib/events/dial';
-import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, G_MINT, G_TEXT, G_TICKET, gText } from '@/lib/shareCard';
+import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, ON_MINT, G_MINT, G_TEXT, G_TICKET, gText } from '@/lib/shareCard';
 
 export const runtime = 'edge';
 
@@ -17,7 +17,8 @@ type Row = {
  */
 export async function GET(req: Request, { params }: { params: { slug: string } }) {
   const q = new URL(req.url).searchParams;
-  const og = q.get('format') === 'og';
+  const format = q.get('format') === 'og' ? 'og' : q.get('format') === 'story' ? 'story' : 'post';
+  const og = format === 'og';
   const u = cleanUser(q.get('u'));
 
   const [font, rows, p] = await Promise.all([
@@ -106,27 +107,63 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
     );
   }
 
-  const W = 1080, H = 1920;
+  // Post (1080×1350, shows whole on X, Instagram and WhatsApp) and story (1080×1920): a poster.
+  // The flyer whole and tilted, a mint date sticker slapped on its corner, the name in the brand gradient beneath.
+  const story = format === 'story';
+  const W = 1080, H = story ? 1920 : 1350;
+  const FW = story ? 820 : 600, FH = Math.round(FW * 1.25);
+  const sticker = (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: -60, bottom: -50, width: story ? 250 : 210, height: story ? 250 : 210, borderRadius: 999, background: G_MINT, transform: 'rotate(10deg)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', border: '6px solid rgba(255,255,255,0.35)' }}>
+      <div style={{ display: 'flex', fontSize: story ? 30 : 26, letterSpacing: 4, color: ON_MINT }}>{day}</div>
+      <div style={{ display: 'flex', fontSize: story ? 104 : 88, letterSpacing: -5, lineHeight: 0.95, color: ON_MINT }}>{num}</div>
+      <div style={{ display: 'flex', fontSize: story ? 30 : 26, letterSpacing: 4, color: ON_MINT }}>{month}</div>
+    </div>
+  );
   return new ImageResponse(
     (
       <div style={{ position: 'relative', width: W, height: H, display: 'flex', fontFamily: ff }}>
         <Backdrop src={flyer} w={W} h={H} />
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'absolute', top: 0, left: 0, width: W, height: H, padding: '78px 72px 72px' }}>
-          <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', fontSize: 42, letterSpacing: -1.5, color: '#fff' }}>Tsacoal</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 24, letterSpacing: 4, color: 'rgba(255,255,255,0.6)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: 0, left: 0, width: W, height: H, padding: story ? '78px 72px 64px' : '56px 64px 52px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', fontSize: story ? 42 : 36, letterSpacing: -1.5, color: '#fff' }}>Tsacoal</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: story ? 24 : 21, letterSpacing: 4, color: 'rgba(255,255,255,0.65)' }}>
               <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, background: G_MINT }} />LIVE IN GHANA
             </div>
           </div>
-          <div style={{ display: 'flex', marginTop: 48 }}>{greeting(1)}</div>
-          <div style={{ display: 'flex', position: 'relative', marginTop: 44, width: 880, height: 1100, borderRadius: 34, overflow: 'hidden', background: '#111815', boxShadow: '0 50px 90px rgba(0,0,0,0.65)', transform: 'rotate(-2deg)', border: '8px solid rgba(255,255,255,0.08)' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {flyer && <img src={flyer} alt="" width={880} height={1100} style={{ position: 'absolute', top: 0, left: 0, width: 880, height: 1100, objectFit: 'cover', opacity: 0.35 }} />}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {flyer && <img src={flyer} alt="" width={880} height={1100} style={{ position: 'absolute', top: 0, left: 0, width: 880, height: 1100, objectFit: 'contain' }} />}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 44 : 28 }}>{greeting(story ? 1 : 0.86)}</div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 50 : 34 }}>
+            <div style={{ display: 'flex', position: 'relative', width: FW, height: FH, transform: 'rotate(-3deg)' }}>
+              <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: FW, height: FH, borderRadius: 30, overflow: 'hidden', background: '#111815', boxShadow: '0 50px 90px rgba(0,0,0,0.7)', border: '6px solid rgba(255,255,255,0.1)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {flyer && <img src={flyer} alt="" width={FW} height={FH} style={{ position: 'absolute', top: 0, left: 0, width: FW, height: FH, objectFit: 'cover', opacity: 0.35 }} />}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {flyer && <img src={flyer} alt="" width={FW} height={FH} style={{ position: 'absolute', top: 0, left: 0, width: FW, height: FH, objectFit: 'contain' }} />}
+              </div>
+              {sticker}
+            </div>
           </div>
+
           <div style={{ display: 'flex', flex: 1 }} />
-          {ticket(1)}
+          <div style={{ display: 'flex', fontSize: fit(story ? 84 : 70), letterSpacing: -3.5, lineHeight: 0.98, ...gText(G_TEXT) }}>{e.title}</div>
+          {(time || place) && <div style={{ display: 'flex', marginTop: 14, fontSize: story ? 32 : 27, color: 'rgba(255,255,255,0.7)' }}>{[time, place].filter(Boolean).join(' · ')}</div>}
+          {(faces.length > 0 || acts) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: story ? 26 : 18 }}>
+              {faces.length > 0 && (
+                <div style={{ display: 'flex' }}>
+                  {faces.map((f, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={f} src={f} alt="" width={story ? 66 : 54} height={story ? 66 : 54} style={{ width: story ? 66 : 54, height: story ? 66 : 54, borderRadius: 999, objectFit: 'cover', marginLeft: i ? -18 : 0, border: '3px solid #0A110D' }} />
+                  ))}
+                </div>
+              )}
+              {acts && <div style={{ display: 'flex', fontSize: story ? 30 : 25, color: '#fff' }}>{acts}</div>}
+            </div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: story ? 40 : 26, padding: story ? '22px 34px' : '17px 28px', borderRadius: 999, background: G_MINT }}>
+            <div style={{ display: 'flex', fontSize: story ? 30 : 25, color: ON_MINT }}>{dial ? `Tickets: dial ${dial}` : 'Tickets & line-up on Tsacoal'}</div>
+            <div style={{ display: 'flex', fontSize: story ? 28 : 24, color: ON_MINT }}>tsacoal.com</div>
+          </div>
         </div>
       </div>
     ),
