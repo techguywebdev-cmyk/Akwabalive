@@ -76,7 +76,7 @@ function AuthForm() {
       } else { router.replace(next); router.refresh(); }
   };
   useEffect(() => {
-    const external = q.get('via') === 'google' || q.get('via') === 'link';
+    const external = q.get('via') === 'google' || q.get('via') === 'link' || q.get('pick') === '1';
     if (!external) return;
     afterSignIn();
     const { data } = supabase.auth.onAuthStateChange((event) => { if (event === 'SIGNED_IN') afterSignIn(); });

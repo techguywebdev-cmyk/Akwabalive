@@ -152,7 +152,8 @@ export default function Nav({
     transition: `opacity 360ms ease ${120 + i * 45}ms, transform 420ms cubic-bezier(0.22,1,0.36,1) ${120 + i * 45}ms`,
   });
 
-  const profileHref = user ? `/u/${profile?.username ?? ''}` : '/auth';
+  // No username yet (e.g. signed in with Google): pick one first
+  const profileHref = user ? (profile?.username ? `/u/${profile.username}` : '/auth?pick=1') : '/auth';
   const ticketsHref = user ? '/account/tickets' : '/auth';
 
 
@@ -431,7 +432,7 @@ export default function Nav({
                 {([
                   { label: 'Notifications', href: '/notifications', icon: 'bell', count: unread },
                   { label: 'My tickets', href: '/account/tickets', icon: 'ticket' },
-                  { label: 'Saved events', href: `/u/${profile?.username ?? ''}?tab=saved`, icon: 'bookmark' },
+                  { label: 'Saved events', href: profile?.username ? `/u/${profile.username}?tab=saved` : '/auth?pick=1', icon: 'bookmark' },
                   { label: 'Find friends', href: '/people', icon: 'friends' },
                   { label: 'Organizer dashboard', href: '/organizer/dashboard', icon: 'dashboard' },
                 ] as { label: string; href: string; icon: IconName; count?: number }[]).map((l) => (
