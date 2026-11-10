@@ -1,6 +1,6 @@
 import LegalPage, { CONTACT_EMAIL } from '@/components/legal/LegalPage';
 
-export const metadata = { title: 'Privacy policy — Tsacoal', description: 'What Tsacoal collects, why, and the choices you have.' };
+export const metadata = { title: 'Privacy policy', description: 'What Tsacoal collects, why, and the choices you have.' };
 
 export default function PrivacyPage() {
   return (

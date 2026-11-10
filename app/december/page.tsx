@@ -36,6 +36,8 @@ async function counts(slugs: string[]) {
   return out;
 }
 
+import { JsonLd, eventListJsonLd } from '@/lib/seo';
+
 export default async function DecemberPage() {
   const season = (await fetchEventsBetween('2026-11-01', TO)).map(supabaseToGhanaEvent);
   const c = await counts(season.filter((e) => e.date >= '2026-11-14').map((e) => e.slug)).catch(() => ({} as Record<string, { seen: number; going: number }>));
@@ -69,5 +71,10 @@ export default async function DecemberPage() {
       poles.push({ date: e.date, title: e.title, blurb: e.highlight || (names.length ? `With ${names.join(', ')}` : ''), venue: e.venue ?? undefined, event: ref(e) });
     });
   poles.sort((a, b) => a.date.localeCompare(b.date));
-  return <DecemberClient list={list} poles={poles} expected={expected} from={FROM} to={TO} />;
+  return (
+    <>
+      <JsonLd data={eventListJsonLd('Detty December 2026 in Accra', '/december', list.map((x) => x.event))} />
+      <DecemberClient list={list} poles={poles} expected={expected} from={FROM} to={TO} />
+    </>
+  );
 }

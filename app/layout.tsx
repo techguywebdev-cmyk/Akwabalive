@@ -3,6 +3,7 @@ import { Inter, Inter_Tight } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/supabase/AuthProvider';
 import RefTracker from '@/components/social/RefTracker';
+import { JsonLd, siteJsonLd } from '@/lib/seo';
 
 /** Display face — titles, numerals, eyebrows */
 const interTight = Inter_Tight({
@@ -20,8 +21,19 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://tsacoal.com'),
-  title:       'Tsacoal — Ghana Events & Tickets', // rename via lib/theme BRAND_NAME
-  description: "Every event in Ghana in one place: concerts, festivals and parties, with tickets, line-ups and moments.",
+  // Pages give their own title; " | Tsacoal" is added to each
+  title: { default: 'Tsacoal: Events in Ghana, Concerts, Parties & Tickets', template: '%s | Tsacoal' },
+  description: 'Every event in Ghana in one place: concerts, festivals, parties and Detty December shows in Accra, Kumasi and beyond, with tickets, line-ups and clips from past nights.',
+  applicationName: 'Tsacoal',
+  keywords: ['events in Ghana', 'Accra events', 'things to do in Accra', 'concerts in Ghana', 'Ghana festivals', 'Detty December', 'Accra nightlife', 'parties in Accra', 'Ghana concert tickets', 'Kumasi events', 'Afrobeats concerts', 'Tsacoal'],
+  category: 'entertainment',
+  formatDetection: { telephone: false },
+  // Search Console / Bing Webmaster verification: set these env vars in Vercel
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    other: { ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } : {}) },
+  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   openGraph: { type: 'website', siteName: 'Tsacoal', title: 'Tsacoal — Ghana Events & Tickets', description: 'Every event in Ghana in one place: concerts, festivals and parties, with tickets, line-ups and moments.' },
   twitter: { card: 'summary_large_image' },
 };
@@ -44,6 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${inter.variable} ${interTight.variable}`}
     >
       <body>
+        <JsonLd data={siteJsonLd()} />
         <AuthProvider><RefTracker />{children}</AuthProvider>
       </body>
     </html>

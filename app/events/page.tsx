@@ -8,9 +8,12 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 export const metadata = {
-  title: 'Events in Ghana — Tsacoal',
-  description: 'Browse all events across Accra, Kumasi, Cape Coast, Tamale and more.',
+  title: 'Events in Ghana: Concerts, Parties & Festivals in Accra and Beyond',
+  description: 'Every upcoming event in Ghana by date: concerts, parties, festivals and nightlife in Accra, Kumasi, Cape Coast, Tamale and more. Tickets, prices and line-ups.',
+  alternates: { canonical: '/events' },
 };
+
+import { JsonLd, eventListJsonLd } from '@/lib/seo';
 
 export default async function EventsPage() {
   const supabaseEvents = await fetchPublishedEvents();
@@ -28,6 +31,7 @@ export default async function EventsPage() {
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
+      <JsonLd data={eventListJsonLd('Upcoming events in Ghana', '/events', dynamicEvents.filter((e) => e.date >= new Date().toISOString().slice(0, 10)).sort((a, b) => a.date.localeCompare(b.date)))} />
       <EventsClient events={allEvents} seed={Math.floor(Math.random() * 2 ** 31)} />
       <Footer />
     </div>

@@ -3,7 +3,7 @@ import FlyerWall from '@/components/ui/FlyerWall';
 import { T, FONT, GROUND, GRAD } from '@/lib/thiscene';
 import { hiRes } from '@/lib/events/image';
 
-export const metadata = { title: 'Not found — Tsacoal' };
+export const metadata = { title: 'Page not found' };
 export const revalidate = 600;
 
 type Soon = { slug: string; title: string; date: string; image_url: string };

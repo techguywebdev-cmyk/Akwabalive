@@ -9,6 +9,8 @@ import { shareMeta } from '@/lib/og';
 import { momentsForEvent } from '@/lib/moments/match';
 import type { Moment } from '@/components/moments/types';
 import { parseDay, shortDay } from '@/lib/dates';
+import { JsonLd, eventJsonLd, breadcrumbJsonLd } from '@/lib/seo';
+import { getArtistBySlug } from '@/lib/data/artists';
 
 // Event pages are kept for a minute and refreshed in the background, so they open instantly (and can be prefetched)
 export const revalidate = 60;
@@ -20,7 +22,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const staticEvent = staticEvents.find(e => e.slug === params.slug);
   if (staticEvent) {
     return {
-      title: `${staticEvent.title} — Tsacoal`,
+      title: staticEvent.title,
       description: `${staticEvent.dateLabel} · ${staticEvent.venue} · ${staticEvent.price === 0 ? 'Free entry' : `From ₵${staticEvent.price}`}`,
     };
   }
@@ -30,14 +32,18 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     const price = e.priceUnknown ? 'Tickets on Tsacoal' : e.price === 0 ? 'Free entry' : `From GH₵ ${e.price.toLocaleString()}`;
     const who = (e.lineup ?? []).slice(0, 4).join(', ');
     // Not personalised by ?by=: reading searchParams here makes the cached page dynamic and it 500s
-    return shareMeta({
+    const meta = shareMeta({
       title: e.title,
       description: [[parseDay(e.date) ? shortDay(parseDay(e.date)!) : e.dateLabel, e.time && !/tba/i.test(e.time) ? e.time : ''].filter(Boolean).join(', '), e.venue, price].filter(Boolean).join(' · ') + (who ? `. With ${who}.` : ''),
       image: `/events/${e.slug}/card?format=og`,
       path: `/events/${e.slug}`,
     });
+    // In search results: what people type ("tidal rave 2026 tickets"); share previews keep the plain name
+    const city = e.city ? e.city.charAt(0).toUpperCase() + e.city.slice(1) : 'Ghana';
+    const long = `${e.title}: Tickets, Date & Line-up`;
+    return { ...meta, title: long.length <= 58 ? long : e.title.length <= 46 ? `${e.title} · ${city} Tickets` : e.title };
   }
-  return { title: 'Event not found — Tsacoal' };
+  return { title: 'Event not found', robots: { index: false } };
 }
 
 /** The latest clip from an earlier edition of the same series (same rules as the feed), for "Watch the last edition" */
@@ -61,6 +67,7 @@ export default async function EventPage({ params }: { params: { slug: string } }
     const related: GhanaEvent[] = [];
     return (
       <div style={{ background: 'transparent', minHeight: '100vh' }}>
+        <JsonLd data={eventJsonLd(staticEvent)} />
         <EventDetailClient event={staticEvent} related={related} seriesMomentId={seriesMomentId} />
         <Footer />
         <div aria-hidden style={{ height: 'calc(96px + env(safe-area-inset-bottom, 0px))' }} />
@@ -103,9 +110,11 @@ export default async function EventPage({ params }: { params: { slug: string } }
 
   const seriesMomentId = await findSeriesMoment(event);
   const related: GhanaEvent[] = [];
+  const performers = (event.artistSlugs ?? []).map((s) => getArtistBySlug(s)).filter(Boolean).map((a) => ({ name: a!.name, slug: a!.slug }));
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
+      <JsonLd data={[eventJsonLd(event, { performers }), breadcrumbJsonLd([['Events', '/events'], [event.title, `/events/${event.slug}`]])]} />
       <EventDetailClient event={event} related={related} seriesMomentId={seriesMomentId} />
       <Footer />
       <div aria-hidden style={{ height: 'calc(96px + env(safe-area-inset-bottom, 0px))' }} />

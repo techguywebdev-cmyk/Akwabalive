@@ -2,7 +2,7 @@ import { shareMeta } from '@/lib/og';
 import CalendarsHub from '@/components/calendars/CalendarsHub';
 
 export const metadata = shareMeta({
-  title: 'Calendars · Tsacoal',
+  title: 'Event Calendars for Ghana: Make Your Detty December Plan',
   description: 'Make your own calendar of shows, like My Detty December. Keep it private or share it, and see what everyone else is lining up.',
   path: '/calendars',
 });
