@@ -1,11 +1,12 @@
 import { ImageResponse } from 'next/og';
+import { getArtistBySlug } from '@/lib/data/artists';
 import { rest, person as getPerson, cleanUser, sized, dayParts, PersonPill, firstName, MINT_TEXT, ON_MINT, G_MINT, G_TEXT, G_TICKET, gText, setOrigin } from '@/lib/shareCard';
 
 export const runtime = 'edge';
 
 const displayFont = () => fetch(new URL('../../../assets/InterTight-800.woff', import.meta.url)).then((r) => r.arrayBuffer()).catch(() => null);
 
-type M = { title: string; event_name: string | null; year: number | null; youtube_id: string | null; thumbnail_url: string | null; source: string | null };
+type M = { title: string; event_name: string | null; year: number | null; youtube_id: string | null; thumbnail_url: string | null; source: string | null; performers: string[] | null };
 type Ev = { slug: string; title: string; date: string; venue: string | null; city: string | null; image_url: string | null };
 
 const clean = (s: string) => s.replace(/\s*[|｜].*$/, '').replace(/\s*\((official|live|full)[^)]*\)/gi, '').replace(/#\S+/g, '').trim();
@@ -23,21 +24,26 @@ export async function GET(req: Request) {
   const u = cleanUser(q.get('u'));
   const nextSlug = q.get('next')?.replace(/[^a-zA-Z0-9-]/g, '').slice(0, 120) || null;
 
+  // Shorts have a vertical frame of their own; their wide still is mostly black bars
+  const vertical = (yt: string) => fetch(`https://i.ytimg.com/vi/${yt}/oar2.jpg`, { method: 'HEAD' }).then((r) => r.ok).catch(() => false);
   const [font, rows, evs, p] = await Promise.all([
     displayFont(),
-    rest<M[]>(`moments?select=title,event_name,year,youtube_id,thumbnail_url,source&id=eq.${id}&limit=1`),
+    rest<M[]>(`moments?select=title,event_name,year,youtube_id,thumbnail_url,source,performers&id=eq.${id}&limit=1`),
     nextSlug ? rest<Ev[]>(`events?select=slug,title,date,venue,city,image_url&slug=eq.${nextSlug}&status=eq.published&limit=1`) : Promise.resolve(null),
     getPerson(u),
   ]);
   const m = rows?.[0];
   if (!m) return new Response('Not found', { status: 404 });
   const next = evs?.[0] && evs[0].date >= new Date().toISOString().slice(0, 10) ? evs[0] : null;
-  const still = m.youtube_id ? `https://i.ytimg.com/vi/${m.youtube_id}/maxresdefault.jpg` : m.thumbnail_url;
-  const title = clean(m.title) || m.title;
-  const night = [m.event_name, m.year].filter(Boolean).join(' · ').toUpperCase();
+  const tall = m.youtube_id ? await vertical(m.youtube_id) : false;
+  const still = m.youtube_id ? `https://i.ytimg.com/vi/${m.youtube_id}/${tall ? 'oar2' : 'maxresdefault'}.jpg` : m.thumbnail_url;
+  // The night's name as the headline, and a short line under it: who was on and when (never the long video title)
+  const title = m.event_name || clean(m.title) || m.title;
+  const acts = (m.performers ?? []).map((x) => getArtistBySlug(x)?.name).filter(Boolean).slice(0, 2) as string[];
+  const summary = [acts.length ? `${acts.join(' & ')} live` : 'Live', m.year].filter(Boolean).join(' · ');
   const ff = font ? 'Inter Tight' : undefined;
   const fonts = font ? [{ name: 'Inter Tight', data: font, weight: 800 as const, style: 'normal' as const }] : undefined;
-  const tSize = (base: number) => (title.length > 46 ? base * 0.62 : title.length > 28 ? base * 0.78 : base);
+  const tSize = (base: number) => (title.length > 22 ? base * 0.72 : title.length > 14 ? base * 0.86 : base);
   const where = (s: Ev) => [s.venue && !/to be announced|tba/i.test(s.venue) ? s.venue : null, s.city ? s.city.charAt(0).toUpperCase() + s.city.slice(1) : null].filter(Boolean).join(', ');
   const headers = { 'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' };
 
@@ -86,9 +92,9 @@ export async function GET(req: Request) {
           <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: 50, left: 56, width: 680, height: 530 }}>
             <div style={{ display: 'flex', fontSize: 34, letterSpacing: -1.4, color: '#fff' }}>Tsacoal</div>
             <div style={{ display: 'flex', flex: 1 }} />
-            {night && <div style={{ display: 'flex', fontSize: 22, letterSpacing: 5, ...gText(G_MINT) }}>{night}</div>}
-            <div style={{ display: 'flex', marginTop: 10, fontSize: tSize(76), letterSpacing: -3, lineHeight: 0.98, ...gText(G_TEXT) }}>{title}</div>
-            <div style={{ display: 'flex', marginTop: 26 }}>{next ? stub(next, 0.7) : greeting(0.7)}</div>
+            <div style={{ display: 'flex', fontSize: tSize(84), letterSpacing: -3.5, lineHeight: 0.98, ...gText(G_TEXT) }}>{title}</div>
+            <div style={{ display: 'flex', marginTop: 12, fontSize: 28, color: 'rgba(255,255,255,0.62)' }}>{summary}</div>
+            <div style={{ display: 'flex', marginTop: 30 }}>{next ? stub(next, 0.7) : greeting(0.7)}</div>
           </div>
         </div>
       ),
@@ -103,9 +109,9 @@ export async function GET(req: Request) {
     (
       <div style={{ position: 'relative', width: W, height: H, display: 'flex', fontFamily: ff, background: '#070B09' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        {still && <img src={sized(still, 1080)} alt="" width={W} height={VH} style={{ position: 'absolute', top: 0, left: 0, width: W, height: VH, objectFit: 'cover' }} />}
+        {still && <img src={sized(still, 1080)} alt="" width={W} height={VH} style={{ position: 'absolute', top: 0, left: 0, width: W, height: VH, objectFit: 'cover', objectPosition: tall ? '50% 30%' : '50% 50%' }} />}
         <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: H, background: `linear-gradient(180deg, rgba(5,8,6,0.6) 0px, rgba(5,8,6,0) ${Math.round(VH * 0.25)}px, rgba(5,8,6,0) ${Math.round(VH * 0.55)}px, rgba(5,8,6,0.9) ${Math.round(VH * 0.9)}px, #060907 ${VH}px, #060907 100%)` }} />
-        <div style={{ display: 'flex', position: 'absolute', top: VH, left: 0, width: W, height: H - VH, background: 'radial-gradient(70% 60% at 100% 100%, rgba(40,190,200,0.16) 0%, rgba(40,190,200,0) 100%), radial-gradient(60% 50% at 0% 20%, rgba(70,220,150,0.16) 0%, rgba(70,220,150,0) 100%)' }} />
+        <div style={{ display: 'flex', position: 'absolute', top: VH, left: 0, width: W, height: H - VH, background: 'radial-gradient(70% 60% at 100% 100%, rgba(40,190,200,0.16) 0%, rgba(40,190,200,0) 100%), radial-gradient(60% 50% at 0% 70%, rgba(70,220,150,0.14) 0%, rgba(70,220,150,0) 100%)' }} />
         <div style={{ display: 'flex', position: 'absolute', top: Math.round(VH * 0.42) - (story ? 80 : 65), left: W / 2 - (story ? 80 : 65) }}>{play(story ? 160 : 130)}</div>
         <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: 0, left: 0, width: W, height: H, padding: story ? '78px 72px 64px' : '56px 64px 48px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -116,10 +122,12 @@ export async function GET(req: Request) {
           </div>
           <div style={{ display: 'flex', flex: 1 }} />
           <div style={{ display: 'flex' }}>{greeting(story ? 1 : 0.82)}</div>
-          {night && <div style={{ display: 'flex', marginTop: story ? 34 : 24, fontSize: story ? 26 : 22, letterSpacing: 6, ...gText(G_MINT) }}>{night}</div>}
-          <div style={{ display: 'flex', marginTop: 8, fontSize: tSize(story ? 118 : 96), letterSpacing: -4.5, lineHeight: 0.95, ...gText(G_TEXT) }}>{title}</div>
+          <div style={{ display: 'flex', marginTop: story ? 56 : 40, fontSize: tSize(story ? 132 : 108), letterSpacing: -5, lineHeight: 0.95, ...gText(G_TEXT) }}>{title}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: story ? 22 : 16, fontSize: story ? 36 : 30, color: 'rgba(255,255,255,0.62)' }}>
+            <div style={{ display: 'flex', width: 10, height: 10, borderRadius: 5, backgroundImage: G_MINT }} />{summary}
+          </div>
           {next && <div style={{ display: 'flex', marginTop: story ? 44 : 30 }}>{stub(next, story ? 1 : 0.84)}</div>}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 40 : 26, fontSize: story ? 26 : 22, color: 'rgba(255,255,255,0.5)' }}>Watch it on tsacoal.com</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 56 : 40, fontSize: story ? 26 : 22, color: 'rgba(255,255,255,0.45)' }}>Watch it on tsacoal.com</div>
         </div>
       </div>
     ),
