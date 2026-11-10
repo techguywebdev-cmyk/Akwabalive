@@ -37,7 +37,7 @@ import { useAuth } from '@/lib/supabase/AuthProvider';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import StatTip from '@/components/events/StatTip';
 import AddToCalendar from '@/components/calendars/AddToCalendar';
-import ShareCardSheet from '@/components/events/ShareCardSheet';
+import ShareCardSheet, { useWarmShareCard } from '@/components/events/ShareCardSheet';
 
 export type { CheckoutTier } from '@/lib/events/tiers';
 
@@ -220,6 +220,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
   // Share opens the card sheet: a designed picture of the show (with your name) and a personal link
   const [sharing, setSharing] = useState(false);
+  useWarmShareCard('event', event.slug);
   function share() { setSharing(true); }
 
   const eyebrow: CSSProperties = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 6px' };

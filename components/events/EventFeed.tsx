@@ -24,7 +24,7 @@ import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { type CheckoutTier } from '@/lib/events/tiers';
 import { Heart, Share2, Mic2, Play, Image as ImageIcon, MessageSquareText, CalendarPlus } from 'lucide-react';
 import AddToCalendar from '@/components/calendars/AddToCalendar';
-import ShareCardSheet from '@/components/events/ShareCardSheet';
+import ShareCardSheet, { useWarmShareCard } from '@/components/events/ShareCardSheet';
 import LineupFaces from '@/components/events/LineupFaces';
 import FeedComments from '@/components/events/FeedComments';
 import { useMomentComments } from '@/hooks/useMomentComments';
@@ -93,6 +93,8 @@ function EventCard({
 }) {
   const { event, dist } = item;
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
+  // While this card is on screen, make its share picture in the background so Share opens instantly
+  useWarmShareCard('event', event.slug, active);
   const [more, setMore] = useState(false);
   // Watching a past edition's clips right on the card, in place of the flyer
   const [watching, setWatching] = useState(false);
