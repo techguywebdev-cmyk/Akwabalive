@@ -238,7 +238,7 @@ export default function MonthGrid({ events, onRemove, onAddDay, renderSheet }: {
 }
 
 /** The night's flyer, popped up big: springs in from small and tilted, swipe across when there's more than one show */
-function FlyerPop({ day, events, onClose, onRemove }: { day: string; events: GridEvent[]; onClose: () => void; onRemove?: (e: GridEvent) => void }) {
+export function FlyerPop({ day, events, onClose, onRemove }: { day: string; events: GridEvent[]; onClose: () => void; onRemove?: (e: GridEvent) => void }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
