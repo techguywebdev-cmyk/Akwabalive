@@ -477,8 +477,15 @@ export default function EventFeed({
 
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2200); };
   // Share opens the card sheet: the show as a designed picture (with your name) and a personal link
-  const [sharing, setSharing] = useState<GhanaEvent | null>(null);
-  const share = useCallback((e: GhanaEvent) => setSharing(e), []);
+  const [sharing, setSharing] = useState<{ e: GhanaEvent; intro?: string } | null>(null);
+  const share = useCallback((e: GhanaEvent) => setSharing({ e }), []);
+  const { user: me } = useAuth();
+  // Saying "going" from the feed: their card comes up straight after
+  const goingThenShare = useCallback(async (e: GhanaEvent) => {
+    const was = going.has(e.slug);
+    await onToggleGoing(e);
+    if (!was && me) setSharing({ e, intro: "You're going. Bring your people." });
+  }, [going, onToggleGoing, me]);
 
   if (!hasItems) {
     return (
@@ -516,7 +523,7 @@ export default function EventFeed({
             saved={saved.has(sl.item.event.slug)}
             going={going.has(sl.item.event.slug)}
             onSave={() => onToggleSave(sl.item.event)}
-            onGoing={() => onToggleGoing(sl.item.event)}
+            onGoing={() => goingThenShare(sl.item.event)}
             onShare={() => share(sl.item.event)}
             onTickets={(accent) => setTickets({ event: sl.item.event, accent })}
             topInset={topInset}
@@ -564,7 +571,7 @@ export default function EventFeed({
           {toast}
         </div>
       )}
-      {sharing && <ShareCardSheet slug={sharing.slug} title={sharing.title} onClose={() => setSharing(null)} />}
+      {sharing && <ShareCardSheet slug={sharing.e.slug} title={sharing.e.title} intro={sharing.intro} onClose={() => setSharing(null)} />}
     </>
   );
 }

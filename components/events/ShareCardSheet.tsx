@@ -37,7 +37,7 @@ export function useWarmShareCard(kind: Kind, slug: string, enabled = true) {
  * Share a show as a designed card: story-size picture (with your face and "Leo's going" when you're signed in),
  * shared straight to WhatsApp/Instagram or saved, plus a link whose preview carries your name too.
  */
-export default function ShareCardSheet({ slug, title, onClose, kind = 'event' }: { slug: string; title: string; onClose: () => void; kind?: 'event' | 'artist' }) {
+export default function ShareCardSheet({ slug, title, onClose, kind = 'event', intro }: { slug: string; title: string; onClose: () => void; kind?: 'event' | 'artist'; intro?: string }) {
   const base = kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`;
   const { profile } = useAuth();
   const u = profile?.username ?? null;
@@ -95,7 +95,7 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event' }:
       style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', background: 'rgba(2,6,4,0.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, margin: '0 auto', padding: '18px 24px calc(22px + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box', borderRadius: '28px 28px 0 0', background: '#0C1210' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{kind === 'artist' ? `Share ${title}` : 'Share this show'}</p>
+          <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{intro ?? (kind === 'artist' ? `Share ${title}` : 'Share this show')}</p>
           <button type="button" onClick={onClose} aria-label="Close" style={{ width: 38, height: 38, borderRadius: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', color: T.white }}><X size={18} /></button>
         </div>
 

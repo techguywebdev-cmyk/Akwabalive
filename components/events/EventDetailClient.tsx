@@ -215,13 +215,16 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
       ? await supabase.from('event_attendance').delete().eq('user_id', user.id).eq('event_slug', event.slug)
       : await supabase.from('event_attendance').upsert({ user_id: user.id, event_slug: event.slug, status: 'going', is_public: true }, { onConflict: 'user_id,event_slug' });
     if (error) setIsGoing(on);
-    else showToast(on ? 'Removed from your plans' : "You're going — friends can see it");
+    else if (on) showToast('Removed from your plans');
+    // Just said yes: hand them their card while they're excited
+    else { setSharingIntro("You're going. Bring your people."); setSharing(true); }
   }
 
   // Share opens the card sheet: a designed picture of the show (with your name) and a personal link
   const [sharing, setSharing] = useState(false);
+  const [sharingIntro, setSharingIntro] = useState<string | undefined>(undefined);
   useWarmShareCard('event', event.slug);
-  function share() { setSharing(true); }
+  function share() { setSharingIntro(undefined); setSharing(true); }
 
   const eyebrow: CSSProperties = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 6px' };
   const eyebrowMint: CSSProperties = { ...eyebrow, color: T.mintText };
@@ -323,7 +326,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           <button type="button" onClick={share} aria-label="Share" style={roundBtn(false)}><Share2 size={17} /></button>
         </div>
         {calOpen && <AddToCalendar eventSlug={event.slug} eventTitle={event.title} onClose={() => setCalOpen(false)} />}
-        {sharing && <ShareCardSheet slug={event.slug} title={event.title} onClose={() => setSharing(false)} />}
+        {sharing && <ShareCardSheet slug={event.slug} title={event.title} intro={sharingIntro} onClose={() => setSharing(false)} />}
 
         <FriendsStrip slug={event.slug} variant="full" />
 
