@@ -8,6 +8,7 @@ import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import FeedComments from '@/components/events/FeedComments';
 import MonthGrid from '@/components/calendars/MonthGrid';
+import SeasonTimeline from '@/components/calendars/SeasonTimeline';
 import SearchSheet from '@/components/search/SearchSheet';
 import CalendarSheet from '@/components/calendars/CalendarSheet';
 import { createClient } from '@/lib/supabase/client';
@@ -71,6 +72,10 @@ export default function CalendarClient({ slug }: { slug: string }) {
   const [draft, setDraft] = useState({ title: '', description: '' });
   const [picks, setPicks] = useState<Ev[]>([]);
   const [copied, setCopied] = useState('');
+  // Timeline by default; the month grid is a quiet switch, remembered on this device
+  const [view, setViewState] = useState<'line' | 'month'>('line');
+  useEffect(() => { try { if (localStorage.getItem('ak-cal-view') === 'month') setViewState('month'); } catch { /* storage off */ } }, []);
+  const setView = (v: 'line' | 'month') => { setViewState(v); try { localStorage.setItem('ak-cal-view', v); } catch { /* storage off */ } };
   const { comments, send, edit, remove } = useCalendarComments(cal?.id);
 
   const mine = !!user && cal?.owner_id === user.id;
@@ -288,17 +293,40 @@ export default function CalendarClient({ slug }: { slug: string }) {
           </div>
         )}
 
-        {/* The shows, as a month calendar */}
-        <section aria-label="Shows" style={{ marginTop: 44 }}>
+        {/* The shows: a season timeline, or the month grid */}
+        <section aria-label="Shows" style={{ marginTop: 40 }}>
           {cal && !events.length && (
             <p style={{ margin: '0 0 16px', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{mine ? 'Nothing in it yet. Find shows to add, or tap “Add to a calendar” on any event.' : 'Nothing in this calendar yet.'}</p>
           )}
-          {mine && (
-            <button type="button" onClick={() => { setFindDay(undefined); setFinding(true); }} style={{ ...BTN.primary, marginBottom: 26, height: 50, padding: '0 22px', borderRadius: 999, cursor: 'pointer', fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <Search size={18} strokeWidth={2.4} />Find shows to add
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 20 }}>
+            {mine
+              ? <button type="button" onClick={() => { setFindDay(undefined); setFinding(true); }} style={{ ...BTN.primary, boxShadow: 'none', height: 42, padding: '0 18px', borderRadius: 999, cursor: 'pointer', fontSize: 14.5, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                  <Search size={16} strokeWidth={2.4} />Find shows
+                </button>
+              : <span style={{ fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>The line-up</span>}
+            {events.length > 0 && (
+              <div role="tablist" aria-label="View" style={{ display: 'flex', padding: 3, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
+                {([['line', 'Timeline'], ['month', 'Month']] as const).map(([v, l]) => (
+                  <button key={v} type="button" role="tab" aria-selected={view === v} onClick={() => setView(v)}
+                    style={{ height: 32, padding: '0 13px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, background: view === v ? 'rgba(123,227,168,0.16)' : 'transparent', color: view === v ? T.mintText : T.text3 }}>{l}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          {cal && events.length > 0 && view === 'line' && (
+            <SeasonTimeline
+              events={events}
+              onAdd={mine ? () => { setFindDay(undefined); setFinding(true); } : undefined}
+              onRemove={mine ? (g) => {
+                const e = events.find((x) => x.slug === g.slug);
+                if (!e) return;
+                drop(e); setUndo(e);
+                if (undoTimer.current) clearTimeout(undoTimer.current);
+                undoTimer.current = setTimeout(() => setUndo(null), 5000);
+              } : undefined}
+            />
           )}
-          {cal && (
+          {cal && (view === 'month' || !events.length) && (
             <MonthGrid
               events={events}
               onAddDay={mine ? (d) => { setFindDay(d); setFinding(true); } : undefined}
