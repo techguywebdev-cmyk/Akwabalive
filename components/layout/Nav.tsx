@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { T, FONT, GRAD, GROUND } from '@/lib/thiscene';
-import { Icon, PAGE_ICONS, type IconName } from '@/components/ui/Icon';
+import { Icon, type IconName } from '@/components/ui/Icon';
 import Wordmark from '@/components/brand/Wordmark';
 import SearchSheet from '@/components/search/SearchSheet';
 import { useUnreadCount } from '@/hooks/useNotifications';
@@ -144,16 +144,6 @@ export default function Nav({
   const profileHref = user ? `/u/${profile?.username ?? ''}` : '/auth';
   const ticketsHref = user ? '/account/tickets' : '/auth';
 
-  const accountLinks = user
-    ? [
-        { label: 'My profile', href: profileHref },
-        { label: unread ? `Notifications (${unread})` : 'Notifications', href: '/notifications' },
-        { label: 'My tickets', href: '/account/tickets' },
-        { label: 'Find friends', href: '/people' },
-        { label: 'Saved events', href: user ? `/u/${profile?.username ?? ''}?tab=saved` : '/auth' },
-        { label: 'Organizer dashboard', href: '/organizer/dashboard' },
-      ]
-    : [];
 
   const avatar = user ? (
     <Link href={unread ? '/notifications' : profileHref} aria-label={unread ? `My profile, ${unread} new notification${unread > 1 ? 's' : ''}` : 'My profile'} style={{ position: 'relative', overflow: 'visible', width: 44, height: 44, flexShrink: 0, borderRadius: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', background: '#26302B', color: '#D6FBE6', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
@@ -301,53 +291,74 @@ export default function Nav({
             </div>
 
             {user && (
-              <Link href={profileHref} onClick={() => setMenuOpen(false)} style={{ ...stagger(0), display: 'flex', alignItems: 'center', gap: 12, marginTop: 28, textDecoration: 'none' }}>
-                <span style={{ width: 44, height: 44, borderRadius: 14, overflow: 'hidden', background: 'rgba(123,227,168,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.sans, fontWeight: 600 }}>
+              <Link href={profileHref} onClick={() => setMenuOpen(false)} style={{ ...stagger(0), display: 'flex', alignItems: 'center', gap: 12, marginTop: 22, padding: 12, borderRadius: 20, background: 'rgba(255,255,255,0.05)', textDecoration: 'none' }}>
+                <span style={{ width: 46, height: 46, borderRadius: 15, overflow: 'hidden', flexShrink: 0, background: 'rgba(123,227,168,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.display, fontSize: 17, fontWeight: 800 }}>
                   {profile?.avatar_url
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : (profile?.username?.[0] ?? 'U').toUpperCase()}
                 </span>
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>{profile?.full_name || profile?.username}</span>
-                  <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>@{profile?.username}</span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: FONT.display, fontSize: 16, fontWeight: 700, color: T.white }}>{profile?.full_name || profile?.username}</span>
+                  <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>@{profile?.username}</span>
                 </span>
+                <Icon name="arrowRight" size={18} color="rgba(255,255,255,0.4)" />
               </Link>
             )}
 
-            <div style={{ marginTop: 36, display: 'flex', flexDirection: 'column' }}>
-              {[...SECTIONS, ...(new Date() < new Date('2027-01-06') ? [{ href: '/december', label: 'December', icon: 'calendar' as IconName }] : []), { href: '/artists', label: 'Artists', icon: 'music' as IconName }, { href: '/shows', label: 'Shows', icon: 'calendar' as IconName }, { href: '/calendars', label: 'Calendars', icon: 'calendar' as IconName }].map((l, i) => {
+            {/* Where to go: a December tile while the season's on, then the rest as a two-by-two grid */}
+            <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+              {[
+                ...(new Date() < new Date('2027-01-06') ? [{ href: '/december', label: 'December', hint: 'The big nights this season', icon: 'sparkle' as IconName, wide: true }] : []),
+                { href: '/', label: 'Discover', hint: 'Swipe what’s on', icon: 'compass' as IconName },
+                { href: '/events', label: 'Events', hint: 'Every show by date', icon: 'calendar' as IconName },
+                { href: '/moments', label: 'Moments', hint: 'Clips from past nights', icon: 'moments' as IconName },
+                { href: '/calendars', label: 'Calendars', hint: 'Plan your season', icon: 'calendarAdd' as IconName },
+                { href: '/artists', label: 'Artists', hint: 'Who’s playing', icon: 'music' as IconName },
+                { href: '/shows', label: 'Shows', hint: 'Nights that come back', icon: 'star' as IconName },
+              ].map((l, i) => {
                 const on = active === l.label;
+                const wide = 'wide' in l && l.wide;
                 return (
-                  <Link
-                    key={l.label}
-                    href={l.href}
-                    onClick={() => setMenuOpen(false)}
-                    aria-current={on ? 'page' : undefined}
-                    style={{ ...stagger(i + 1), display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', textDecoration: 'none', fontFamily: FONT.display, fontSize: 34, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, color: on ? T.mint : T.white, ...(on ? { background: GRAD.mint, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' } : {}) }}
-                  >
-                    {l.label}
-                    {on
-                      ? <span aria-hidden style={{ width: 8, height: 8, borderRadius: 2, background: T.mint, boxShadow: `0 0 12px ${T.mint}` }} />
-                      : <Icon name="arrowRight" size={22} color="rgba(255,255,255,0.35)" />}
+                  <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} aria-current={on ? 'page' : undefined}
+                    style={{
+                      ...stagger(i + 1), gridColumn: wide ? '1 / -1' : undefined, display: 'flex', flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: wide ? 14 : 12,
+                      padding: 14, borderRadius: 20, textDecoration: 'none',
+                      background: wide ? 'linear-gradient(120deg, rgba(123,227,168,0.22) 0%, rgba(123,227,168,0.06) 100%)' : on ? 'rgba(123,227,168,0.14)' : 'rgba(255,255,255,0.05)',
+                    }}>
+                    <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: wide || on ? GRAD.mint : 'rgba(123,227,168,0.12)', color: wide || on ? T.onMint : T.mint }}>
+                      <Icon name={l.icon} size={19} strokeWidth={1.9} />
+                    </span>
+                    <span style={{ minWidth: 0, flex: wide ? 1 : undefined }}>
+                      <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: on ? T.mint : T.white }}>{l.label}</span>
+                      <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 12.5, lineHeight: 1.35, color: T.text2 }}>{l.hint}</span>
+                    </span>
+                    {wide && <Icon name="arrowRight" size={20} color="rgba(255,255,255,0.55)" />}
                   </Link>
                 );
               })}
             </div>
 
-            {accountLinks.length > 0 && (
-              <div style={{ ...stagger(5), marginTop: 30 }}>
-                <p style={{ margin: '0 0 6px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>Your Akwaaba</p>
-                {accountLinks.map((l) => (
-                  <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 46, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 16, fontWeight: 500, color: active === l.label ? T.mint : 'rgba(255,255,255,0.82)' }}>
-                    <Icon name={PAGE_ICONS[l.label] ?? 'dots'} size={19} color="rgba(255,255,255,0.55)" />
-                    {l.label}
+            {user && (
+              <div style={{ ...stagger(9), marginTop: 26 }}>
+                <p style={{ margin: '0 0 4px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>You</p>
+                {([
+                  { label: 'Notifications', href: '/notifications', icon: 'bell', count: unread },
+                  { label: 'My tickets', href: '/account/tickets', icon: 'ticket' },
+                  { label: 'Saved events', href: `/u/${profile?.username ?? ''}?tab=saved`, icon: 'bookmark' },
+                  { label: 'Find friends', href: '/people', icon: 'friends' },
+                  { label: 'Organizer dashboard', href: '/organizer/dashboard', icon: 'dashboard' },
+                ] as { label: string; href: string; icon: IconName; count?: number }[]).map((l) => (
+                  <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 48, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 15.5, fontWeight: 500, color: active === l.label ? T.mint : 'rgba(255,255,255,0.86)' }}>
+                    <Icon name={l.icon} size={19} color="rgba(255,255,255,0.5)" />
+                    <span style={{ flex: 1 }}>{l.label}</span>
+                    {!!l.count && <span style={{ minWidth: 22, height: 22, padding: '0 7px', borderRadius: 8, boxSizing: 'border-box', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 12, fontWeight: 800 }}>{l.count > 9 ? '9+' : l.count}</span>}
                   </Link>
                 ))}
               </div>
             )}
 
-            <div style={{ ...stagger(6), marginTop: 'auto', paddingTop: 28, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ ...stagger(10), marginTop: 'auto', paddingTop: 28, display: 'flex', flexDirection: 'column', gap: 10 }}>
               <Link href="/organisers" onClick={() => setMenuOpen(false)} style={{ height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
                 <Icon name="plus" size={18} strokeWidth={2} /> List an event
               </Link>
