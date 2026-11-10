@@ -10,6 +10,8 @@ export type MenuPeek = {
   shows: { n: number; when: 'tonight' | 'this week' } | null;
   clip: string | null;         // newest clip's YouTube id
   artists: number | null;      // how many artists have pages
+  next: string | null;         // the soonest show's flyer
+  calendars: number | null;    // public calendars people made
 };
 
 let cache: MenuPeek | null = null;
@@ -29,7 +31,9 @@ export function useMenuPeek(open: boolean): MenuPeek | null {
       db.from('events').select('id', { count: 'exact', head: true }).eq('status', 'published').gte('date', today).lte('date', week),
       db.from('moments').select('youtube_id').eq('status', 'live').not('youtube_id', 'is', null).order('created_at', { ascending: false }).limit(1),
       db.from('artist_profiles').select('slug', { count: 'exact', head: true }),
-    ]).then(([hot, tonight, thisWeek, clip, artists]) => {
+      db.from('events').select('image_url').eq('status', 'published').gte('date', today).not('image_url', 'is', null).order('date').order('is_hot', { ascending: false }).limit(1),
+      db.from('calendars').select('id', { count: 'exact', head: true }).eq('is_public', true),
+    ]).then(([hot, tonight, thisWeek, clip, artists, next, cals]) => {
       if (!live) return;
       const t = tonight.count ?? 0, w = thisWeek.count ?? 0;
       cache = {
@@ -38,6 +42,8 @@ export function useMenuPeek(open: boolean): MenuPeek | null {
         shows: t >= 3 ? { n: t, when: 'tonight' } : w ? { n: w, when: 'this week' } : null,
         clip: ((clip.data ?? []) as { youtube_id: string }[])[0]?.youtube_id ?? null,
         artists: artists.count ?? null,
+        next: ((next.data ?? []) as { image_url: string }[])[0]?.image_url ?? null,
+        calendars: cals.count ?? null,
       };
       setPeek(cache);
     });
