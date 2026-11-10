@@ -16,7 +16,7 @@ const FRESH = 60;
 /** Built the first time someone opens each event, then served from cache */
 export async function generateStaticParams() { return []; }
 
-export async function generateMetadata({ params, searchParams }: { params: { slug: string }; searchParams?: { by?: string } }) {
+export async function generateMetadata({ params }: { params: { slug: string } }) {
   const staticEvent = staticEvents.find(e => e.slug === params.slug);
   if (staticEvent) {
     return {
@@ -29,12 +29,11 @@ export async function generateMetadata({ params, searchParams }: { params: { slu
     const e = supabaseToGhanaEvent(dbEvent);
     const price = e.priceUnknown ? 'Tickets on Tsacoal' : e.price === 0 ? 'Free entry' : `From GH₵ ${e.price.toLocaleString()}`;
     const who = (e.lineup ?? []).slice(0, 4).join(', ');
-    // Shared by someone: their name on the preview card
-    const by = searchParams?.by?.replace(/[^a-zA-Z0-9_.-]/g, '').slice(0, 40) || null;
+    // Not personalised by ?by=: reading searchParams here makes the cached page dynamic and it 500s
     return shareMeta({
       title: e.title,
       description: [[parseDay(e.date) ? shortDay(parseDay(e.date)!) : e.dateLabel, e.time && !/tba/i.test(e.time) ? e.time : ''].filter(Boolean).join(', '), e.venue, price].filter(Boolean).join(' · ') + (who ? `. With ${who}.` : ''),
-      image: `/events/${e.slug}/card?format=og${by ? `&u=${by}` : ''}`,
+      image: `/events/${e.slug}/card?format=og`,
       path: `/events/${e.slug}`,
     });
   }
