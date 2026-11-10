@@ -285,7 +285,7 @@ export default function Nav({
             aria-modal="true"
             aria-label="Menu"
             style={{
-              position: 'absolute', top: 0, bottom: 0, left: 0, width: 'min(400px, 88vw)', display: 'flex', flexDirection: 'column',
+              position: 'absolute', top: 0, bottom: 0, left: 0, width: isMobile ? '100%' : 420, display: 'flex', flexDirection: 'column',
               padding: 'calc(14px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))',
               background: GROUND,
               boxShadow: '30px 0 80px rgba(0,0,0,0.5)',
