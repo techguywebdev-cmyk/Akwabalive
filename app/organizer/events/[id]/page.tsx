@@ -29,6 +29,7 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
         city: e.city ?? 'accra', venue: e.venue ?? '', area: e.area ?? '',
         date: (e.date ?? '').slice(0, 10), start: to24h(e.time), end: to24h(e.end_time),
         image: e.image_url ?? '',
+        promoVideo: e.promo_video_url ?? '',
         listing: e.listing_type === 'listed' ? 'listed' : 'hosted', ticketUrl: e.ticket_url ?? '', ticketSource: e.ticket_source ?? '',
         lineup: { enabled: slugs.length > 0 || extras.length > 0, artistSlugs: slugs, extraNames: extras.join(', ') },
         tiers: [...(e.ticket_tiers ?? [])].sort((a: any, b: any) => a.price - b.price).map((t: any) => ({ id: t.id, name: t.name, price: String(t.price), quantity: String(t.quantity), description: t.description ?? '', sold: t.sold ?? 0 })),

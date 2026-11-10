@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { ArrowLeft, ImagePlus, Link2, Plus, Trash2, X, Ticket, ExternalLink, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { majorArtists } from '@/lib/data/artists';
+import { extractYoutubeId } from '@/lib/events/rank';
 import { lineupPayload, type LineupValue } from '@/components/organizer/LineupPicker';
 import { Icon, CATEGORY_ICONS } from '@/components/ui/Icon';
 import { card } from '@/components/organizer/ui';
@@ -33,6 +34,8 @@ export type EventDraft = {
   city: string; venue: string; area: string;
   date: string; start: string; end: string; // HH:MM (24h) in the inputs
   image: string;
+  /** YouTube link (or an .mp4) that plays on the event page instead of the still flyer */
+  promoVideo?: string;
   listing: 'hosted' | 'listed'; ticketUrl: string; ticketSource: string;
   lineup: LineupValue;
   tiers: TierDraft[];
@@ -46,6 +49,8 @@ export const emptyDraft = (): EventDraft => ({
   lineup: { enabled: false, artistSlugs: [], extraNames: '' },
   tiers: [{ name: 'Regular', price: '', quantity: '200', description: '', sold: 0 }],
 });
+
+const promoOk = (u: string) => !!extractYoutubeId(u) || /^https:\/\/\S+\.(mp4|webm)(\?\S*)?$/i.test(u);
 
 /** "20:00" → "8:00 PM" */
 export function to12h(hhmm: string) {
@@ -189,6 +194,9 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
       if (!d.venue.trim()) p.push('the venue');
       if (!d.category) p.push('a category');
       if (d.listing === 'listed' && !/^https?:\/\//.test(d.ticketUrl.trim())) p.push('the ticket link');
+    }
+    if ((d.promoVideo ?? '').trim() && !promoOk((d.promoVideo ?? '').trim())) p.push('a YouTube link for the promo video');
+    if (publish) {
       if (d.listing === 'hosted') {
         const real = d.tiers.filter((t) => t.name.trim());
         if (!real.length) p.push('at least one ticket type');
@@ -209,7 +217,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
         title: d.title.trim(), description: d.description.trim() || null, highlight: d.highlight.trim().slice(0, 32) || null, ...(d.flyerText !== undefined ? { flyer_text: d.flyerText.slice(0, 4000) || null } : {}), category: d.category || 'concert',
         city: d.city, region: REGIONS[d.city] ?? d.city, venue: d.venue.trim() || 'Venue to be announced', area: d.area.trim() || null,
         date: d.date || null, date_label: d.date ? dayLabel(d.date) : null, time: d.start ? to12h(d.start) : 'Time TBA', end_time: d.end ? to12h(d.end) : null,
-        image_url: d.image.trim() || null, status: target,
+        image_url: d.image.trim() || null, status: target, promo_video_url: (d.promoVideo ?? '').trim() || null,
         listing_type: d.listing, ticket_url: d.listing === 'listed' ? d.ticketUrl.trim() : null, ticket_source: d.listing === 'listed' ? (d.ticketSource.trim() || hostOf(d.ticketUrl)) : null,
         artist_slugs: bill.artist_slugs, lineup: bill.lineup,
       };
@@ -286,6 +294,24 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
                   {dateNew && <button type="button" onClick={() => { set('date', dateNew); setFlyerRead({ ...flyerRead, date: null }); }} style={{ height: 36, padding: '0 14px', borderRadius: 999, border: 'none', background: 'transparent', color: T.white, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Use this date</button>}
                   <button type="button" onClick={() => setFlyerRead(null)} style={{ height: 36, padding: '0 10px', border: 'none', background: 'transparent', color: T.text2, fontFamily: FONT.sans, fontSize: 13.5, cursor: 'pointer' }}>Ignore</button>
                 </div>
+              </div>
+            );
+          })()}
+
+          {/* A promo video plays on the event page; the flyer stays as the cover */}
+          <Field label="Promo video (optional)" hint="A YouTube link to your trailer or last year’s highlights. It plays at the top of your event page.">
+            <input type="url" inputMode="url" value={d.promoVideo ?? ''} onChange={(e) => set('promoVideo', e.target.value)} placeholder="https://youtu.be/…" style={field} />
+          </Field>
+          {(() => {
+            const yt = d.promoVideo ? extractYoutubeId(d.promoVideo.trim()) : null;
+            if (!yt) return d.promoVideo?.trim() && !promoOk(d.promoVideo.trim())
+              ? <p style={{ margin: '-4px 2px 0', fontFamily: FONT.sans, fontSize: 13, color: '#FF8A7A' }}>That doesn’t look like a YouTube link.</p> : null;
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: -2 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`https://i.ytimg.com/vi/${yt}/mqdefault.jpg`} alt="" style={{ width: 112, aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 10, display: 'block' }} />
+                <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.mintText, fontWeight: 600 }}>Video added</span>
+                <button type="button" onClick={() => set('promoVideo', '')} aria-label="Remove promo video" style={{ marginLeft: 'auto', width: 34, height: 34, borderRadius: 17, border: 'none', background: 'rgba(255,255,255,0.06)', color: T.text2, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={16} /></button>
               </div>
             );
           })()}
