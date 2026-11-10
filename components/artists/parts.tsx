@@ -12,6 +12,7 @@ import { parseDay, longDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { cityLabel } from '@/lib/utils';
 import { useFollow } from '@/components/follow/useFollow';
+import Countdown, { startsAt } from '@/components/events/Countdown';
 import { T, FONT, GRAD } from '@/lib/thiscene';
 import { ScoreChip } from '@/components/ratings/Stars';
 import type { RatingSummary } from '@/lib/ratings';
@@ -115,23 +116,33 @@ export function FollowPill({ kind, slug, label }: { kind: 'artist' | 'series'; s
 export function NextShow({ event }: { event: GhanaEvent }) {
   const d = parseDay(event.date);
   const soon = countdown(event.date);
+  const at = startsAt(event.date, event.time);
+  const free = event.price === 0 && !event.priceUnknown && event.listingType !== 'listed';
   return (
     <Link href={`/events/${event.slug}`} style={{ display: 'block', textDecoration: 'none' }}>
-      <span style={{ position: 'relative', display: 'block', borderRadius: 24, overflow: 'hidden', background: 'rgba(255,255,255,0.05)' }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={hiRes(event.image, 1200) ?? event.image} alt="" style={{ width: '100%', height: 'auto', display: 'block' }} />
-        {soon && (
-          <span style={{ position: 'absolute', top: 14, left: 14, padding: '6px 12px', borderRadius: 999, background: 'rgba(3,10,6,0.62)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, color: T.mintText }}>{soon}</span>
-        )}
+      {/* The flyer whole on the left, what and where on the right */}
+      <span style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+        <span style={{ position: 'relative', width: 'min(38%, 150px)', flexShrink: 0, borderRadius: 18, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', boxShadow: '0 14px 34px rgba(0,0,0,0.45)', alignSelf: 'flex-start' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={hiRes(event.image, 600) ?? event.image} alt="" style={{ width: '100%', height: 'auto', display: 'block' }} />
+        </span>
+        <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, paddingTop: 2 }}>
+          {soon && <span style={{ alignSelf: 'flex-start', height: 24, padding: '0 10px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', background: 'rgba(123,227,168,0.14)', color: T.mint, fontFamily: FONT.sans, fontSize: 12, fontWeight: 800, letterSpacing: '0.02em' }}>{soon}</span>}
+          <span style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginTop: 10, fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.12, color: T.white }}>{event.title}</span>
+          <span style={{ display: 'block', marginTop: 8, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>
+            {[d ? shortDay(d) : event.dateLabel, event.time && !/tba|tbc/i.test(event.time) ? event.time : null].filter(Boolean).join(' · ')}
+          </span>
+          <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.4, color: T.text2 }}>{place(event)}</span>
+        </span>
       </span>
-      <span style={{ display: 'block', marginTop: 16, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>
-        {[d ? longDay(d) : event.dateLabel, event.time].filter(Boolean).join(' · ')}
-      </span>
-      <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.display, fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.15, color: T.white }}>{event.title}</span>
-      <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.sans, fontSize: 15, color: T.text2 }}>{place(event)}</span>
-      <span style={{ ...BTN.primary, width: '100%', marginTop: 16, boxSizing: 'border-box' }}>
-        {event.price === 0 && !event.priceUnknown && event.listingType !== 'listed' ? 'Reserve a free spot' : 'Get tickets'}
-        <span style={{ opacity: 0.65, fontWeight: 600 }}>· {priceLine(event)}</span>
+
+      {at && <span style={{ display: 'block', marginTop: 18 }}><Countdown at={at} /></span>}
+
+      <span style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
+        <span style={{ height: 44, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>
+          {free ? 'Reserve a free spot' : 'Get tickets'}
+        </span>
+        <span style={{ fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>{priceLine(event)}</span>
       </span>
     </Link>
   );
