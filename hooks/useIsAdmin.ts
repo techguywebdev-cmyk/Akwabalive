@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/supabase/AuthProvider';
 
 let cached: { id: string; admin: boolean } | null = null;
 
-/** True when the signed-in person is the Akwaaba admin (checked in the database) */
+/** True when the signed-in person is the Tsacoal admin (checked in the database) */
 export function useIsAdmin() {
   const { user } = useAuth();
   const [admin, setAdmin] = useState(!!user && cached?.id === user.id ? cached.admin : false);

@@ -1,5 +1,5 @@
 /**
- * Thiscene design system — the basis for Akwaaba's event surfaces.
+ * Thiscene design system — the basis for Tsacoal's event surfaces.
  * Source: the "Thiscene" Design System artifact (tokens.json + component docs).
  *
  * Oct 2026 rework: a dark green → black ground everywhere. Each event keeps an accent,

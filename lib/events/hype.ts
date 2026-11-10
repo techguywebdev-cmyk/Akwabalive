@@ -19,7 +19,7 @@ export function hypeTags(e: GhanaEvent, opts: { returning?: boolean; max?: numbe
   const past = !!day && day.getTime() < new Date(new Date().toDateString()).getTime();
   if (past) return [];
 
-  // Demand, from real ticket sales on Akwaaba
+  // Demand, from real ticket sales on Tsacoal
   const tiers = e.tiers ?? [];
   if (tiers.length) {
     const left = tiers.reduce((n, t) => n + Math.max(0, t.quantity - t.sold), 0);
@@ -39,7 +39,7 @@ export function hypeTags(e: GhanaEvent, opts: { returning?: boolean; max?: numbe
   if (e.highlight?.trim()) out.push({ kind: 'special', text: e.highlight.trim() });
 
   // Admin pick
-  if (e.isFeatured) out.push({ kind: 'pick', text: 'Akwaaba pick' });
+  if (e.isFeatured) out.push({ kind: 'pick', text: 'Tsacoal pick' });
 
   // Big names on the bill
   const stars = (() => { try { return artistsForEvent(e).length; } catch { return 0; } })();

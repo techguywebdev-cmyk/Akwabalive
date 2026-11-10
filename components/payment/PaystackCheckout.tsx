@@ -85,7 +85,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
 
   function handlePaystack() {
     if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
-    if (!onSale) { setError('Tickets for this event are not on sale on Akwaaba yet.'); return; }
+    if (!onSale) { setError('Tickets for this event are not on sale on Tsacoal yet.'); return; }
     if (!sdkReady || !window.PaystackPop) { setError('Payment is still loading — try again in a moment.'); return; }
     if (!email) { setError('Please enter your email.'); return; }
     setError('');
@@ -121,7 +121,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
 
   async function handleFreeTicket() {
     if (!user) { window.location.href = `/auth?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
-    if (!onSale) { setError('RSVPs for this event are not open on Akwaaba yet.'); return; }
+    if (!onSale) { setError('RSVPs for this event are not open on Tsacoal yet.'); return; }
     setError('');
     setLoading(true);
     try {
@@ -224,7 +224,7 @@ export default function PaystackCheckout({ event, tiers, onClose, onSuccess }: P
                 {loading ? <Loader2 size={14} className="animate-spin" /> : !onSale ? (tier.id ? 'Sold Out' : 'Not on sale yet') : tier.price === 0 ? 'Reserve My Spot \u2192' : 'Continue to Payment \u2192'}
               </button>
               {error && <p role="alert" style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 12, color: '#f87171', textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>{error}</p>}
-              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3, textAlign: 'center', marginTop: 10 }}>{onSale ? 'QR ticket delivered instantly' : 'Tickets go on sale once the organizer publishes them on Akwaaba.'}</p>
+              <p style={{ fontFamily: 'var(--font-inter,sans-serif)', fontSize: 11, color: C.c3, textAlign: 'center', marginTop: 10 }}>{onSale ? 'QR ticket delivered instantly' : 'Tickets go on sale once the organizer publishes them on Tsacoal.'}</p>
             </div>
           </div>
         )}

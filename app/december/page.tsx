@@ -16,7 +16,7 @@ export async function generateMetadata() {
   const top = rows.find((r) => r.is_hot && r.image_url) ?? rows.find((r) => r.image_url);
   return shareMeta({
     title: 'Detty December 2026 in Accra',
-    description: `${rows.length} concerts, festivals and parties from 15 December to 5 January: the big shows, day by day, all on Akwaaba.`,
+    description: `${rows.length} concerts, festivals and parties from 15 December to 5 January: the big shows, day by day, all on Tsacoal.`,
     image: top?.image_url ? hiRes(top.image_url, 1200) ?? top.image_url : null,
     path: '/december',
   });
@@ -48,7 +48,7 @@ export default async function DecemberPage() {
   });
   const list: DecEvent[] = scored.filter((x) => x.event.image && x.event.date >= FROM);
 
-  // The big nights: our checked picks, expected shows once they're listed, and the biggest listings on Akwaaba
+  // The big nights: our checked picks, expected shows once they're listed, and the biggest listings on Tsacoal
   const ref = (e: (typeof season)[number]) => ({ slug: e.slug, image: e.image ?? null, venue: e.venue ?? null, going: c[e.slug]?.going ?? 0 });
   const picked = linkTentpoles(season);
   const used = new Set(picked.map((p) => p.event?.slug).filter(Boolean) as string[]);

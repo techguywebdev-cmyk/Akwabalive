@@ -81,7 +81,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
   async function share() {
     const url = `${window.location.origin}/artists/${artist.slug}`;
     try {
-      if (navigator.share) { await navigator.share({ title: `${artist.name} shows on Akwaaba`, url }); return; }
+      if (navigator.share) { await navigator.share({ title: `${artist.name} shows on Tsacoal`, url }); return; }
       await navigator.clipboard.writeText(url);
       setCopied(true); setTimeout(() => setCopied(false), 1800);
     } catch { /* dismissed */ }

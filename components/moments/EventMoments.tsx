@@ -26,7 +26,7 @@ export function loadAll(): Promise<Moment[]> {
 
 /**
  * Moments to show when an event has none of its own: the line-up's performances first,
- * then the latest moments on Akwaaba, so every event page ends on something to watch.
+ * then the latest moments on Tsacoal, so every event page ends on something to watch.
  */
 export function useLineupMoments(slugs: string[], names: string[], exclude: string[], enabled = true) {
   const [list, setList] = useState<{ moments: Moment[]; fromLineup: boolean }>({ moments: [], fromLineup: false });

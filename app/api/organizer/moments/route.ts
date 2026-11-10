@@ -7,7 +7,7 @@ export const fetchCache = 'force-no-store';
 
 const noStore = { fetch: (i: RequestInfo | URL, init?: RequestInit) => fetch(i, { ...init, cache: 'no-store' }) };
 
-/** The signed-in organiser (anyone with a published event, or the Akwaaba admin), or null */
+/** The signed-in organiser (anyone with a published event, or the Tsacoal admin), or null */
 async function organiser(req: Request): Promise<{ db: SupabaseClient; id: string; name: string; username: string | null } | null> {
   const token = (req.headers.get('authorization') || '').replace(/^Bearer /, '');
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!, service = process.env.SUPABASE_SERVICE_ROLE_KEY;

@@ -1,6 +1,6 @@
 /**
  * The season's big nights. Our own picks: each confirmed show is checked against the organiser,
- * press or a ticket page (see `source`), and links to its listing once it's on Akwaaba.
+ * press or a ticket page (see `source`), and links to its listing once it's on Tsacoal.
  * Shows people expect but nobody has confirmed yet stay in `EXPECTED`, without dates.
  */
 export type Tentpole = {

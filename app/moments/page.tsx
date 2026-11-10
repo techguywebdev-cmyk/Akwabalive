@@ -13,7 +13,7 @@ export async function generateMetadata({ searchParams }: { searchParams: { id?: 
   if (!m) return base;
   return shareMeta({
     title: m.title,
-    description: `${[m.event_name, m.year].filter(Boolean).join(' ')} · Watch on Akwaaba`,
+    description: `${[m.event_name, m.year].filter(Boolean).join(' ')} · Watch on Tsacoal`,
     image: m.youtube_id ? `https://i.ytimg.com/vi/${m.youtube_id}/hqdefault.jpg` : null,
     path: `/moments?id=${encodeURIComponent(id)}`,
   });

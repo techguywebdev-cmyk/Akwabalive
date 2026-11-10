@@ -57,7 +57,7 @@ export interface GhanaEvent {
   recurring: boolean;
   badge: string;
   attending?: number;
-  /** hosted = sold on Akwaaba. listed = tickets sold elsewhere. */
+  /** hosted = sold on Tsacoal. listed = tickets sold elsewhere. */
   listingType?: ListingType;
   ticketUrl?: string | null;
   ticketSource?: string | null;
@@ -91,7 +91,7 @@ export interface GhanaEvent {
   listingInfo?: string | null;
   /** Free-text description / caption (also searched for artist names) */
   description?: string | null;
-  /** Real ticket tiers (Supabase events only). Needed to sell tickets on Akwaaba. */
+  /** Real ticket tiers (Supabase events only). Needed to sell tickets on Tsacoal. */
   tiers?: EventTicketTier[];
   /** Listed event with no ticket types entered: we don't know the price (it is not free) */
   priceUnknown?: boolean;

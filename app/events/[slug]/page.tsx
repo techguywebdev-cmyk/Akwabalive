@@ -21,14 +21,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const staticEvent = staticEvents.find(e => e.slug === params.slug);
   if (staticEvent) {
     return {
-      title: `${staticEvent.title} — Akwaaba`,
+      title: `${staticEvent.title} — Tsacoal`,
       description: `${staticEvent.dateLabel} · ${staticEvent.venue} · ${staticEvent.price === 0 ? 'Free entry' : `From ₵${staticEvent.price}`}`,
     };
   }
   const dbEvent = await fetchEventBySlug(params.slug, FRESH);
   if (dbEvent) {
     const e = supabaseToGhanaEvent(dbEvent);
-    const price = e.priceUnknown ? 'Tickets on Akwaaba' : e.price === 0 ? 'Free entry' : `From GH₵ ${e.price.toLocaleString()}`;
+    const price = e.priceUnknown ? 'Tickets on Tsacoal' : e.price === 0 ? 'Free entry' : `From GH₵ ${e.price.toLocaleString()}`;
     const who = (e.lineup ?? []).slice(0, 4).join(', ');
     return shareMeta({
       title: e.title,
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       path: `/events/${e.slug}`,
     });
   }
-  return { title: 'Event not found — Akwaaba' };
+  return { title: 'Event not found — Tsacoal' };
 }
 
 /** The latest clip from an earlier edition of the same series (same rules as the feed), for "Watch the last edition" */

@@ -45,7 +45,7 @@ export async function GET(req: Request) {
 
   if (reason.size < 12) {
     const { data: recent } = await db.from('profiles').select('id').eq('is_public', true).order('created_at', { ascending: false }).limit(30);
-    (recent ?? []).forEach((r: any) => { if (!reason.has(r.id)) add(r.id, 'New on Akwaaba', 1); });
+    (recent ?? []).forEach((r: any) => { if (!reason.has(r.id)) add(r.id, 'New on Tsacoal', 1); });
   }
 
   const ids = Array.from(reason.entries()).sort((a, b) => b[1].score - a[1].score).slice(0, 20).map(([id]) => id);

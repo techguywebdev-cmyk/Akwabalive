@@ -14,7 +14,7 @@
  */
 import type { CSSProperties } from 'react';
 
-export const BRAND_NAME = 'Akwaaba';
+export const BRAND_NAME = 'Tsacoal';
 export const BRAND_MARK = BRAND_NAME.toUpperCase();
 export const BRAND_TAGLINE = "Ghana's events — discover, list, go.";
 

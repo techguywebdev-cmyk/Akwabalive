@@ -16,12 +16,12 @@ async function publicCalendar(slug: string) {
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const c = await publicCalendar(params.slug);
-  if (!c) return { title: 'Calendar · Akwaaba', robots: { index: false } };
-  const who = params.slug.startsWith('akwaaba-') ? 'Akwaaba' : c.profiles?.full_name || c.profiles?.username || 'Someone';
+  if (!c) return { title: 'Calendar · Tsacoal', robots: { index: false } };
+  const who = params.slug.startsWith('akwaaba-') ? 'Tsacoal' : c.profiles?.full_name || c.profiles?.username || 'Someone';
   const n = c.calendar_events?.length ?? 0;
   return shareMeta({
     title: `${c.title} · ${who}’s calendar`,
-    description: c.description || `${n} ${n === 1 ? 'show' : 'shows'} ${who} is lining up. Like it, rate it, or make your own on Akwaaba.`,
+    description: c.description || `${n} ${n === 1 ? 'show' : 'shows'} ${who} is lining up. Like it, rate it, or make your own on Tsacoal.`,
     image: `${SITE_URL}/c/${params.slug}/opengraph-image`,
     path: `/c/${params.slug}`,
   });
