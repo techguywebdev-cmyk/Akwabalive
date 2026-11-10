@@ -11,7 +11,7 @@ export function JsonLd({ data }: { data: Record<string, unknown> | Record<string
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }} />;
 }
 
-const abs = (u?: string | null) => (!u ? undefined : u.startsWith('http') ? u : `${SITE_URL}${u.startsWith('/') ? '' : '/'}${u}`);
+const abs = (u?: string | null) => (!u ? undefined : u.startsWith('http') ? u.replace('https://akwabalive.vercel.app', SITE_URL) : `${SITE_URL}${u.startsWith('/') ? '' : '/'}${u}`);
 const cap = (s?: string | null) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : undefined);
 const PUBLISHER = { '@type': 'Organization', name: 'Tsacoal', url: SITE_URL };
 
