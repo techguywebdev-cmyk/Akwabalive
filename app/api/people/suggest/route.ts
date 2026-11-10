@@ -1,3 +1,4 @@
+import { isHiddenPerson } from '@/lib/hiddenPeople';
 import { NextResponse } from 'next/server';
 import { getAdminClient } from '@/lib/payments/fulfill';
 
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
   if (!ids.length) return NextResponse.json({ people: [] });
   const { data: profiles } = await db.from('profiles').select('id, username, full_name, avatar_url').in('id', ids);
   const byId = new Map((profiles ?? []).map((p: any) => [p.id, p]));
-  const people: Suggestion[] = ids.map((id) => byId.get(id)).filter((p: any) => p?.username).map((p: any) => ({
+  const people: Suggestion[] = ids.map((id) => byId.get(id)).filter((p: any) => p?.username && !isHiddenPerson(p.username)).map((p: any) => ({
     id: p.id, username: p.username, name: p.full_name?.trim() || p.username, avatar: p.avatar_url, reason: reason.get(p.id)!.why,
   }));
   return NextResponse.json({ people }, { headers: { 'cache-control': 'private, max-age=30' } });

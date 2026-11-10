@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Search, Share2, Check, X } from 'lucide-react';
+import { isHiddenPerson } from '@/lib/hiddenPeople';
 import Nav from '@/components/layout/Nav';
 import PersonRow, { type Person } from '@/components/social/PersonRow';
 import { createClient } from '@/lib/supabase/client';
@@ -48,7 +49,7 @@ export default function PeoplePage() {
       const { data } = await supabase.from('profiles').select('id, username, full_name, avatar_url')
         .or(`username.ilike.%${term}%,full_name.ilike.%${term}%`).not('username', 'is', null).limit(25);
       if (!live) return;
-      setResults((data ?? []).filter((p) => p.id !== user?.id).map((p) => ({ id: p.id, username: p.username, name: p.full_name?.trim() || p.username, avatar: p.avatar_url })));
+      setResults((data ?? []).filter((p) => p.id !== user?.id && !isHiddenPerson(p.username)).map((p) => ({ id: p.id, username: p.username, name: p.full_name?.trim() || p.username, avatar: p.avatar_url })));
     }, 220);
     return () => { live = false; clearTimeout(t); };
   }, [q, supabase, user]);
