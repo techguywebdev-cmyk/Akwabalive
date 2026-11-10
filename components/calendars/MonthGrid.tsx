@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Minus, Plus } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Minus, Plus, X } from 'lucide-react';
 import { hiRes } from '@/lib/events/image';
 import { listTitle } from '@/lib/titles';
 import { T, FONT, GRAD } from '@/lib/thiscene';
@@ -57,6 +58,8 @@ export default function MonthGrid({ events, onRemove, onAddDay, renderSheet }: {
   // Opens on the next night out
   const upcoming = days.find((d) => d >= todayIso()) ?? days[days.length - 1] ?? null;
   const [sel, setSel] = useState<string | null>(upcoming);
+  // Tapping a night with a show: its flyer pops up big, to be sure it's the right one
+  const [pop, setPop] = useState<string | null>(null);
   const [mi, setMi] = useState(0);
   // Days (one month) or Months (the whole season at a glance); remembered on this device
   const [view, setView] = useState<'days' | 'months'>('days');
@@ -162,7 +165,7 @@ export default function MonthGrid({ events, onRemove, onAddDay, renderSheet }: {
           }
           return (
             <div key={key} style={{ position: 'relative', aspectRatio: '3 / 4', transform: isSel ? 'translateY(-3px) scale(1.06)' : 'none', zIndex: isSel ? 2 : 1, transition: 'transform 220ms cubic-bezier(0.22,1,0.36,1)' }}>
-              <button type="button" role="gridcell" aria-selected={isSel} aria-label={`${d} ${MONTHS[m]}: ${evs.map((e) => e.title).join(', ')}`} onClick={() => setSel(key)}
+              <button type="button" role="gridcell" aria-selected={isSel} aria-label={`${d} ${MONTHS[m]}: ${evs.map((e) => e.title).join(', ')}`} onClick={() => { setSel(key); setPop(key); }}
                 style={{
                   position: 'absolute', inset: 0, padding: 0, border: 'none', borderRadius: 11, overflow: 'hidden', cursor: 'pointer',
                   background: src ? '#000' : GRAD.mint, opacity: past && !isSel ? 0.5 : 1,
@@ -229,6 +232,58 @@ export default function MonthGrid({ events, onRemove, onAddDay, renderSheet }: {
         </div>
       )}
       </>)}
+      {pop && byDay[pop] && <FlyerPop day={pop} events={byDay[pop]} onClose={() => setPop(null)} onRemove={onRemove ? (e) => { setPop(null); onRemove(e); } : undefined} />}
     </div>
+  );
+}
+
+/** The night's flyer, popped up big: springs in from small and tilted, swipe across when there's more than one show */
+function FlyerPop({ day, events, onClose, onRemove }: { day: string; events: GridEvent[]; onClose: () => void; onRemove?: (e: GridEvent) => void }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
+    const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
+  }, [onClose]);
+  const d = new Date(`${day}T12:00:00`);
+  const e = events[i] ?? events[0];
+  return createPortal(
+    <div role="dialog" aria-modal="true" aria-label={e.title} onClick={onClose}
+      style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px', background: 'rgba(2,6,4,0.82)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', animation: 'ak-fade 200ms ease' }}>
+      <button type="button" onClick={onClose} aria-label="Close" style={{ position: 'absolute', top: 'calc(16px + env(safe-area-inset-top, 0px))', right: 16, width: 42, height: 42, borderRadius: 14, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.1)', color: T.white }}><X size={19} /></button>
+
+      <div onClick={(ev) => ev.stopPropagation()} style={{ width: 'min(84vw, 360px)' }}>
+        <div className="ak-noscroll" onScroll={(ev) => { const el = ev.currentTarget; setI(Math.round(el.scrollLeft / el.clientWidth)); }}
+          style={{ display: 'flex', alignItems: 'center', overflowX: 'auto', scrollSnapType: 'x mandatory', borderRadius: 22 }}>
+          {events.map((x, k) => (
+            <div key={x.slug} style={{ flex: '0 0 100%', scrollSnapAlign: 'center' }}>
+              <div className="ak-pop" style={{ borderRadius: 22, overflow: 'hidden', background: 'transparent', boxShadow: '0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(123,227,168,0.18)', animationDelay: `${k * 60}ms` }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {x.image_url ? <img src={flyer(x, 900)!} alt="" style={{ width: '100%', height: 'auto', maxHeight: '58vh', objectFit: 'contain', display: 'block' }} />
+                  : <div style={{ aspectRatio: '4 / 5', background: GRAD.mint }} />}
+              </div>
+            </div>
+          ))}
+        </div>
+        {events.length > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 12 }}>
+            {events.map((x, k) => <span key={x.slug} style={{ width: k === i ? 18 : 6, height: 6, borderRadius: 3, background: k === i ? T.mint : 'rgba(255,255,255,0.3)', transition: 'width 200ms ease' }} />)}
+          </div>
+        )}
+        <div className="ak-rise" style={{ marginTop: 16, textAlign: 'center' }}>
+          <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.mintText }}>{DAYS[d.getDay()]} {d.getDate()} {MONTHS[d.getMonth()]} · {until(day)}</p>
+          <p style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.15, color: T.white }}>{listTitle(e.title)}</p>
+          {(e.time || e.venue) && <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>{[e.time && !/tba/i.test(e.time) ? e.time : null, e.venue].filter(Boolean).join(' · ')}</p>}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: 16 }}>
+            <Link href={`/events/${e.slug}`} style={{ height: 44, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>See the event <ArrowRight size={16} /></Link>
+            {onRemove && (
+              <button type="button" onClick={() => onRemove(e)} style={{ height: 44, padding: '0 16px', borderRadius: 999, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.08)', color: T.white, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}><Minus size={15} /> Remove</button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }
