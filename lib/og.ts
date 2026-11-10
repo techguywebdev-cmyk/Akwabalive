@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-export const SITE_URL = 'https://akwabalive.vercel.app';
+export const SITE_URL = 'https://tsacoal.com';
 
 /** Title, description and picture for a shared link (WhatsApp, X, iMessage, Instagram DMs) */
 export function shareMeta({ title, description, image, path, square }: { title: string; description: string; image?: string | null; path: string; square?: boolean }): Metadata {

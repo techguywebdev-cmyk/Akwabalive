@@ -77,7 +77,7 @@ export const SOURCES: Source[] = [
 
 /* ── Fetching ─────────────────────────────────────────────────────────── */
 
-const UA = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36 AkwaabaBot/1.0 (+https://akwabalive.vercel.app)';
+const UA = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36 AkwaabaBot/1.0 (+https://tsacoal.com)';
 
 export async function fetchHtml(url: string, ms = 12000): Promise<string> {
   const ctl = new AbortController();
