@@ -291,56 +291,47 @@ export default function Nav({
             </div>
 
             {user && (
-              <Link href={profileHref} onClick={() => setMenuOpen(false)} style={{ ...stagger(0), display: 'flex', alignItems: 'center', gap: 12, marginTop: 22, padding: 12, borderRadius: 20, background: 'rgba(255,255,255,0.05)', textDecoration: 'none' }}>
-                <span style={{ width: 46, height: 46, borderRadius: 15, overflow: 'hidden', flexShrink: 0, background: 'rgba(123,227,168,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.display, fontSize: 17, fontWeight: 800 }}>
+              <Link href={profileHref} onClick={() => setMenuOpen(false)} style={{ ...stagger(0), display: 'flex', alignItems: 'center', gap: 12, marginTop: 24, textDecoration: 'none' }}>
+                <span style={{ width: 42, height: 42, borderRadius: 14, overflow: 'hidden', flexShrink: 0, background: 'rgba(123,227,168,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D6FBE6', fontFamily: FONT.display, fontSize: 16, fontWeight: 800 }}>
                   {profile?.avatar_url
                     // eslint-disable-next-line @next/next/no-img-element
                     ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : (profile?.username?.[0] ?? 'U').toUpperCase()}
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: FONT.display, fontSize: 16, fontWeight: 700, color: T.white }}>{profile?.full_name || profile?.username}</span>
-                  <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text2 }}>@{profile?.username}</span>
+                  <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, color: T.white }}>{profile?.full_name || profile?.username}</span>
+                  <span style={{ display: 'block', marginTop: 1, fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>View profile</span>
                 </span>
-                <Icon name="arrowRight" size={18} color="rgba(255,255,255,0.4)" />
               </Link>
             )}
 
-            {/* Where to go: a December tile while the season's on, then the rest as a two-by-two grid */}
-            <div style={{ marginTop: 18, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+            {/* Where to go: big names, a quiet line on what each is; the page you're on in mint */}
+            <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column' }}>
               {[
-                ...(new Date() < new Date('2027-01-06') ? [{ href: '/december', label: 'December', hint: 'The big nights this season', icon: 'sparkle' as IconName, wide: true }] : []),
-                { href: '/', label: 'Discover', hint: 'Swipe what’s on', icon: 'compass' as IconName },
-                { href: '/events', label: 'Events', hint: 'Every show by date', icon: 'calendar' as IconName },
-                { href: '/moments', label: 'Moments', hint: 'Clips from past nights', icon: 'moments' as IconName },
-                { href: '/calendars', label: 'Calendars', hint: 'Plan your season', icon: 'calendarAdd' as IconName },
-                { href: '/artists', label: 'Artists', hint: 'Who’s playing', icon: 'music' as IconName },
-                { href: '/shows', label: 'Shows', hint: 'Nights that come back', icon: 'star' as IconName },
-              ].map((l, i) => {
+                ...(new Date() < new Date('2027-01-06') ? [{ href: '/december', label: 'December', hint: 'The big nights this season', tag: 'Now' }] : []),
+                { href: '/', label: 'Discover', hint: 'Swipe through what’s on' },
+                { href: '/events', label: 'Events', hint: 'Every show, by date' },
+                { href: '/moments', label: 'Moments', hint: 'Clips from past nights' },
+                { href: '/calendars', label: 'Calendars', hint: 'Plan your season' },
+                { href: '/artists', label: 'Artists', hint: 'Who’s playing where' },
+                { href: '/shows', label: 'Shows', hint: 'The nights that come back' },
+              ].map((l: { href: string; label: string; hint: string; tag?: string }, i) => {
                 const on = active === l.label;
-                const wide = 'wide' in l && l.wide;
                 return (
                   <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} aria-current={on ? 'page' : undefined}
-                    style={{
-                      ...stagger(i + 1), gridColumn: wide ? '1 / -1' : undefined, display: 'flex', flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: wide ? 14 : 12,
-                      padding: 14, borderRadius: 20, textDecoration: 'none',
-                      background: wide ? 'linear-gradient(120deg, rgba(123,227,168,0.22) 0%, rgba(123,227,168,0.06) 100%)' : on ? 'rgba(123,227,168,0.14)' : 'rgba(255,255,255,0.05)',
-                    }}>
-                    <span style={{ width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: wide || on ? GRAD.mint : 'rgba(123,227,168,0.12)', color: wide || on ? T.onMint : T.mint }}>
-                      <Icon name={l.icon} size={19} strokeWidth={1.9} />
+                    style={{ ...stagger(i + 1), display: 'block', padding: '10px 0', textDecoration: 'none' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontFamily: FONT.display, fontSize: 27, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.1, color: T.white, ...(on ? { background: GRAD.mint, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' } : {}) }}>{l.label}</span>
+                      {l.tag && <span style={{ height: 20, padding: '0 8px', borderRadius: 7, display: 'inline-flex', alignItems: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{l.tag}</span>}
                     </span>
-                    <span style={{ minWidth: 0, flex: wide ? 1 : undefined }}>
-                      <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: on ? T.mint : T.white }}>{l.label}</span>
-                      <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 12.5, lineHeight: 1.35, color: T.text2 }}>{l.hint}</span>
-                    </span>
-                    {wide && <Icon name="arrowRight" size={20} color="rgba(255,255,255,0.55)" />}
+                    <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 13.5, color: on ? T.mintText : T.text3 }}>{l.hint}</span>
                   </Link>
                 );
               })}
             </div>
 
             {user && (
-              <div style={{ ...stagger(9), marginTop: 26 }}>
+              <div style={{ ...stagger(9), marginTop: 30 }}>
                 <p style={{ margin: '0 0 4px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>You</p>
                 {([
                   { label: 'Notifications', href: '/notifications', icon: 'bell', count: unread },
