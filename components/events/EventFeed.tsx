@@ -24,6 +24,7 @@ import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { type CheckoutTier } from '@/lib/events/tiers';
 import { Heart, Share2, Mic2, Play, Image as ImageIcon, MessageSquareText, CalendarPlus } from 'lucide-react';
 import AddToCalendar from '@/components/calendars/AddToCalendar';
+import ShareCardSheet from '@/components/events/ShareCardSheet';
 import LineupFaces from '@/components/events/LineupFaces';
 import FeedComments from '@/components/events/FeedComments';
 import { useMomentComments } from '@/hooks/useMomentComments';
@@ -473,13 +474,9 @@ export default function EventFeed({
   }, [rsvp, tickets, checkout]);
 
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 2200); };
-  const share = useCallback(async (e: GhanaEvent) => {
-    const url = `${window.location.origin}/events/${e.slug}`;
-    try {
-      if (navigator.share) { await navigator.share({ title: e.title, text: `${e.title} — ${e.dateLabel} · ${e.venue}`, url }); return; }
-    } catch (err: any) { if (err?.name === 'AbortError') return; }
-    try { await navigator.clipboard.writeText(url); flash('Link copied'); } catch { flash('Could not share — copy the link from the address bar.'); }
-  }, []);
+  // Share opens the card sheet: the show as a designed picture (with your name) and a personal link
+  const [sharing, setSharing] = useState<GhanaEvent | null>(null);
+  const share = useCallback((e: GhanaEvent) => setSharing(e), []);
 
   if (!hasItems) {
     return (
@@ -565,6 +562,7 @@ export default function EventFeed({
           {toast}
         </div>
       )}
+      {sharing && <ShareCardSheet slug={sharing.slug} title={sharing.title} onClose={() => setSharing(null)} />}
     </>
   );
 }
