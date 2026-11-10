@@ -10,7 +10,7 @@ import { ArrowLeft, Eye, EyeOff, Mail, Lock, User, AtSign } from 'lucide-react';
 import { hiRes } from '@/lib/events/image';
 import { T, FONT, GROUND, GRAD } from '@/lib/thiscene';
 
-type Mode = 'signin' | 'signup' | 'forgot' | 'reset';
+type Mode = 'signin' | 'signup' | 'forgot' | 'reset' | 'pick';
 
 const label: CSSProperties = { display: 'block', margin: '0 0 8px 2px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.text3 };
 const field: CSSProperties = {
@@ -64,6 +64,42 @@ function AuthForm() {
     return () => data.subscription.unsubscribe();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Back from Google or an emailed sign-in link: new people pick a username, everyone else carries on
+  useEffect(() => {
+    const external = q.get('via') === 'google' || q.get('via') === 'link';
+    if (!external) return;
+    const finish = async () => {
+      const { data: { user: u } } = await supabase.auth.getUser();
+      if (!u) return;
+      const { data: p } = await supabase.from('profiles').select('username').eq('id', u.id).maybeSingle();
+      if (!p?.username) {
+        const guess = (u.email ?? '').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 24);
+        setUsername(guess); setMode('pick');
+      } else { router.replace(next); router.refresh(); }
+    };
+    finish();
+    const { data } = supabase.auth.onAuthStateChange((event) => { if (event === 'SIGNED_IN') finish(); });
+    return () => data.subscription.unsubscribe();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function google() {
+    setError('');
+    const { error: err } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth?via=google&next=${encodeURIComponent(next)}` },
+    });
+    if (err) setError(/provider is not enabled|Unsupported provider/i.test(err.message) ? 'Google sign-in isn’t switched on yet. Use your email for now.' : err.message);
+  }
+
+  async function emailLink() {
+    setError(''); setInfo('');
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) { setError('Type your email first, then tap “Email me a sign-in link”.'); return; }
+    setBusy(true);
+    const { error: err } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/auth?via=link&next=${encodeURIComponent(next)}` } });
+    setBusy(false);
+    if (err) setError(err.message); else setInfo(`Check ${email.trim()}: we sent you a link that signs you straight in.`);
+  }
+
   const go = (m: Mode) => { setMode(m); setError(''); setInfo(''); };
 
   async function submit(e: FormEvent) {
@@ -99,6 +135,20 @@ function AuthForm() {
         return;
       }
 
+      if (mode === 'pick') {
+        const handle = username.trim().toLowerCase();
+        if (handle.length < 3) throw new Error('Pick a username with at least 3 letters or numbers.');
+        const { data: { user: u } } = await supabase.auth.getUser();
+        if (!u) throw new Error('Your sign-in expired. Please try again.');
+        const { data: taken } = await supabase.from('profiles').select('id').eq('username', handle).neq('id', u.id).maybeSingle();
+        if (taken) throw new Error('That username is taken. Try another.');
+        const meta = u.user_metadata ?? {};
+        const { error: pe } = await supabase.from('profiles').upsert({ id: u.id, username: handle, full_name: meta.full_name ?? meta.name ?? null, avatar_url: meta.avatar_url ?? meta.picture ?? null }, { onConflict: 'id' });
+        if (pe) throw new Error(pe.message);
+        router.replace(next); router.refresh();
+        return;
+      }
+
       if (mode === 'forgot') {
         const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/auth?mode=reset` });
         if (err) throw new Error(err.message);
@@ -120,14 +170,15 @@ function AuthForm() {
     }
   }
 
-  const heading = { signin: 'Welcome back', signup: 'Join Tsacoal', forgot: 'Reset your password', reset: 'Set a new password' }[mode];
+  const heading = { signin: 'Welcome back', signup: 'Join Tsacoal', forgot: 'Reset your password', reset: 'Set a new password', pick: 'One last thing' }[mode];
   const sub = {
     signin: 'Your tickets, plans and friends, all in one place.',
     signup: 'Find every event in Ghana, see who’s going and keep your tickets on your phone.',
     forgot: 'Enter your email and we’ll send you a link.',
     reset: 'Choose a new password for your account.',
+    pick: 'Pick a username so your friends can find you.',
   }[mode];
-  const cta = { signin: 'Sign in', signup: 'Create account', forgot: 'Send reset link', reset: 'Save password' }[mode];
+  const cta = { signin: 'Sign in', signup: 'Create account', forgot: 'Send reset link', reset: 'Save password', pick: 'Continue' }[mode];
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, display: 'flex', flexDirection: 'column' }}>
@@ -159,6 +210,21 @@ function AuthForm() {
           </div>
         )}
 
+        {(mode === 'signin' || mode === 'signup') && (
+          <>
+            <button type="button" onClick={google}
+              style={{ marginTop: 18, height: 50, borderRadius: 999, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, background: 'rgba(255,255,255,0.08)', color: T.white, fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>
+              <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+              Continue with Google
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 18 }}>
+              <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+              <span style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>or with your email</span>
+              <span style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+            </div>
+          </>
+        )}
+
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 24 }}>
           {mode === 'signup' && (
             <>
@@ -179,7 +245,17 @@ function AuthForm() {
             </>
           )}
 
-          {mode !== 'reset' && (
+          {mode === 'pick' && (
+            <div>
+              <label htmlFor="username" style={label}>Username</label>
+              <div className="ak-wrap" style={{ position: 'relative' }}>
+                <span className="ak-ic" style={fieldIcon}><AtSign size={18} /></span>
+                <input id="username" className="ak-field" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} required minLength={3} maxLength={24} placeholder="amamensah" style={field} />
+              </div>
+            </div>
+          )}
+
+          {mode !== 'reset' && mode !== 'pick' && (
             <div>
               <label htmlFor="email" style={label}>Email</label>
               <div className="ak-wrap" style={{ position: 'relative' }}>
@@ -189,7 +265,7 @@ function AuthForm() {
             </div>
           )}
 
-          {mode !== 'forgot' && (
+          {mode !== 'forgot' && mode !== 'pick' && (
             <div>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <label htmlFor="password" style={label}>{mode === 'reset' ? 'New password' : 'Password'}</label>
@@ -214,6 +290,11 @@ function AuthForm() {
             {busy ? 'One moment…' : cta}
           </button>
 
+          {mode === 'signin' && (
+            <button type="button" onClick={emailLink} disabled={busy} style={{ background: 'none', border: 'none', padding: 6, cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>
+              No password? Email me a sign-in link
+            </button>
+          )}
           {mode === 'signup' && (
             <p style={{ margin: 0, textAlign: 'center', fontFamily: FONT.sans, fontSize: 12.5, lineHeight: 1.5, color: T.text3 }}>
               By signing up you agree to Tsacoal’s <Link href="/terms" style={{ color: T.text2 }}>terms</Link> and <Link href="/privacy" style={{ color: T.text2 }}>privacy policy</Link>.
