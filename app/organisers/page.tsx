@@ -64,7 +64,7 @@ export default async function OrganisersPage() {
       {/* Hero: a wall of this season's flyers behind the headline, fading into the page */}
       {flyers.length > 0 && (
         <div style={{ position: 'relative', height: 'calc(min(60vw, 290px) + 70px + env(safe-area-inset-top, 0px))' }}>
-          <FlyerWall images={flyers.map((f) => hiRes(f.image_url, 360) ?? f.image_url)} height="calc(100% + 190px)" />
+          <FlyerWall images={flyers.map((f) => hiRes(f.image_url, 360) ?? f.image_url)} height="calc(100% + 30px)" />
         </div>
       )}
 
@@ -76,20 +76,20 @@ export default async function OrganisersPage() {
         <p style={{ margin: '16px 0 0', maxWidth: 480, fontFamily: FONT.sans, fontSize: 17, lineHeight: 1.5, color: T.text2 }}>
           List it free. Flyer to live in two minutes.
         </p>
-        {/* One main action; claiming is for organisers whose show we already listed, so it's a quiet line under it */}
-        <div style={{ marginTop: 28, maxWidth: 380 }}>
+        {/* One main action, with claiming as a quiet link beside it */}
+        <div style={{ marginTop: 26, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px 20px' }}>
           <Link href="/organizer/events/new" style={{ ...BTN.primary, boxShadow: 'none', height: 46, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 15, textDecoration: 'none' }}>List your event <ArrowRight size={16} /></Link>
-          <Link href="/organisers/claim" style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: FONT.sans, fontSize: 14.5, color: T.text2, textDecoration: 'none' }}>
-            <BadgeCheck size={16} color={T.mintText} />Already listed? <span style={{ color: T.mintText, fontWeight: 700 }}>Claim your event</span>
+          <Link href="/organisers/claim" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.text2, textDecoration: 'none' }}>
+            <BadgeCheck size={15} color={T.mintText} />Already listed? <span style={{ color: T.mintText }}>Claim it</span>
           </Link>
         </div>
 
         {n && n.events > 0 && (
-          <div style={{ display: 'flex', gap: 'clamp(28px, 10vw, 64px)', marginTop: 52 }}>
-            {[{ v: n.events, l: 'upcoming shows listed' }, { v: n.moments, l: 'moments from past nights' }].map((x) => (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, auto)', justifyContent: 'start', gap: 'clamp(22px, 8vw, 48px)', marginTop: 40, paddingTop: 22, borderTop: `1px solid ${T.hairline}` }}>
+            {[{ v: n.events.toLocaleString(), l: 'upcoming shows' }, { v: n.moments.toLocaleString(), l: 'moments' }, { v: 'Free', l: 'to list' }].map((x) => (
               <div key={x.l}>
-                <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(48px, 13vw, 72px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.9, ...mintText }}>{x.v.toLocaleString()}</p>
-                <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>{x.l}</p>
+                <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(26px, 7vw, 34px)', fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1, ...gradText }}>{x.v}</p>
+                <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{x.l}</p>
               </div>
             ))}
           </div>
