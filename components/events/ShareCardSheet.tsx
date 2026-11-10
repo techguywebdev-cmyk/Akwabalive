@@ -14,11 +14,14 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event' }:
   const base = kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`;
   const { profile } = useAuth();
   const u = profile?.username ?? null;
-  const card = `${base}/card${u ? `?u=${encodeURIComponent(u)}` : ''}`;
+  // Post size (4:5) shows whole on X, Instagram and WhatsApp; story size fills a phone screen
+  const [size, setSize] = useState<'post' | 'story'>('post');
+  const card = `${base}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}`;
   const [link, setLink] = useState(base);
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  useEffect(() => { setLoaded(false); }, [card]);
   useEffect(() => { setLink(`${window.location.origin}${base}${u ? `?by=${encodeURIComponent(u)}` : ''}`); }, [base, u]);
   useEffect(() => {
     const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
@@ -28,7 +31,7 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event' }:
   const file = async () => {
     const r = await fetch(card);
     const blob = await r.blob();
-    return new File([blob], `${slug}.png`, { type: 'image/png' });
+    return new File([blob], `${slug}-${size}.png`, { type: 'image/png' });
   };
 
   const shareCard = async () => {
@@ -62,10 +65,16 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event' }:
           <button type="button" onClick={onClose} aria-label="Close" style={{ width: 38, height: 38, borderRadius: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', color: T.white }}><X size={18} /></button>
         </div>
 
-        <div style={{ position: 'relative', width: 'min(62vw, 250px)', aspectRatio: '9 / 16', margin: '16px auto 0', borderRadius: 18, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+        <div style={{ position: 'relative', width: size === 'story' ? 'min(56vw, 230px)' : 'min(76vw, 330px)', aspectRatio: size === 'story' ? '9 / 16' : '4 / 5', margin: '16px auto 0', borderRadius: 18, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
           {!loaded && <span className="ak-sk" style={{ position: 'absolute', inset: 0 }} />}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={card} alt={`Share card for ${title}`} onLoad={() => setLoaded(true)} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: loaded ? 1 : 0, transition: 'opacity 240ms ease' }} />
+        </div>
+        <div role="tablist" aria-label="Picture size" style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 14 }}>
+          {([['post', 'Post · X, Instagram'], ['story', 'Story']] as const).map(([k, label]) => (
+            <button key={k} type="button" role="tab" aria-selected={size === k} onClick={() => setSize(k)}
+              style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 'none', cursor: 'pointer', background: size === k ? 'rgba(123,227,168,0.16)' : 'rgba(255,255,255,0.06)', color: size === k ? T.mint : T.text2, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>{label}</button>
+          ))}
         </div>
         {u && <p style={{ margin: '12px 0 0', textAlign: 'center', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Your name’s on it, and on the link preview.</p>}
 
