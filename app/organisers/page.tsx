@@ -78,7 +78,7 @@ export default async function OrganisersPage() {
         </p>
         {/* One main action; claiming is for organisers whose show we already listed, so it's a quiet line under it */}
         <div style={{ marginTop: 28, maxWidth: 380 }}>
-          <Link href="/organizer/events/new" style={{ ...BTN.primary, width: '100%', boxSizing: 'border-box', height: 56, padding: '0 26px', borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 16, textDecoration: 'none' }}>List your event <ArrowRight size={18} /></Link>
+          <Link href="/organizer/events/new" style={{ ...BTN.primary, boxShadow: 'none', height: 46, padding: '0 20px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 15, textDecoration: 'none' }}>List your event <ArrowRight size={16} /></Link>
           <Link href="/organisers/claim" style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: FONT.sans, fontSize: 14.5, color: T.text2, textDecoration: 'none' }}>
             <BadgeCheck size={16} color={T.mintText} />Already listed? <span style={{ color: T.mintText, fontWeight: 700 }}>Claim your event</span>
           </Link>
@@ -161,11 +161,12 @@ export default async function OrganisersPage() {
           </div>
         </section>
 
-        <section style={{ position: 'relative', marginTop: 110, padding: '40px 0 30px', textAlign: 'center' }}>
-          <div aria-hidden style={{ position: 'absolute', inset: '-60px -40px -20px', background: GRAD.aurora, pointerEvents: 'none' }} />
-          <h2 style={{ position: 'relative', margin: 0, fontFamily: FONT.display, fontSize: 'clamp(38px, 10vw, 60px)', fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.95, ...gradText }}>Got a show coming up?</h2>
-          <p style={{ position: 'relative', margin: '14px 0 0', fontFamily: FONT.sans, fontSize: 17, color: T.text }}>List it now. It’s free, and it takes two minutes.</p>
-          <Link href="/organizer/events/new" style={{ position: 'relative', ...BTN.primary, marginTop: 26, height: 56, padding: '0 30px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 16, textDecoration: 'none' }}>List your event <ArrowRight size={18} /></Link>
+        <section style={{ marginTop: 72, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>Got a show coming up?</p>
+            <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Free to list, and it takes two minutes.</p>
+          </div>
+          <Link href="/organizer/events/new" style={{ height: 42, padding: '0 18px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 14.5, fontWeight: 700, textDecoration: 'none' }}>List your event <ArrowRight size={16} /></Link>
         </section>
       </main>
       <Footer />

@@ -2,7 +2,7 @@ import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import { T, FONT, GROUND, GRAD } from '@/lib/thiscene';
 
-export const CONTACT_EMAIL = 'techguywebdev@gmail.com';
+export const CONTACT_EMAIL = 'hello@tsacoal.com';
 export const UPDATED = '6 November 2026';
 
 export type LegalSection = { title: string; body: (string | string[])[] };
@@ -79,13 +79,9 @@ export default function LegalPage({ eyebrow, title, intro, summary, sections }: 
           </section>
         ))}
 
-        <section style={{ marginTop: 80 }}>
-          <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(26px, 6.5vw, 32px)', fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>Questions?</p>
-          <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 16, color: T.text2 }}>We read every email.</p>
-          <a href={`mailto:${CONTACT_EMAIL}`} style={{ marginTop: 18, height: 50, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: '0 12px 32px -10px rgba(91,217,154,0.6)' }}>
-            {CONTACT_EMAIL}
-          </a>
-        </section>
+        <p style={{ margin: '64px 0 0', paddingTop: 22, borderTop: '1px solid rgba(255,255,255,0.08)', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.6, color: T.text2 }}>
+          Questions? Write to <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: T.mintText, fontWeight: 600, textDecoration: 'none' }}>{CONTACT_EMAIL}</a>. We read every email.
+        </p>
       </main>
       <Footer />
     </div>
