@@ -8,8 +8,9 @@ import { BRAND_NAME } from '@/lib/theme';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const metadata = {
-  title: `Artists — ${BRAND_NAME}`,
-  description: `Ghana’s biggest acts and their upcoming shows on ${BRAND_NAME}.`,
+  title: 'Ghanaian Artists: Upcoming Concerts & Shows',
+  description: `Sarkodie, Black Sherif, Stonebwoy, King Promise, Gyakie and more: where Ghana’s biggest artists are performing next, with tickets and clips, on ${BRAND_NAME}.`,
+  alternates: { canonical: '/artists' },
 };
 
 export default async function ArtistsPage() {

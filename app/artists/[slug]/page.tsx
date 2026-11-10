@@ -10,17 +10,18 @@ import { fetchMoments } from '@/lib/moments/server';
 import { getArtistPhotos } from '@/lib/artists/photos';
 import { shareMeta } from '@/lib/og';
 import { getArtistBio } from '@/lib/artists/bio';
+import { JsonLd, artistJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 export async function generateMetadata({ params, searchParams }: { params: { slug: string }; searchParams?: { by?: string } }) {
   const artist = getArtistBySlug(params.slug);
-  if (!artist) return { title: `Artist — ${BRAND_NAME}` };
+  if (!artist) return { title: 'Artist' };
   const by = searchParams?.by?.replace(/[^a-zA-Z0-9_.-]/g, '').slice(0, 40) || null;
   return shareMeta({
-    title: `${artist.name} shows in Ghana`,
-    description: `Upcoming dates, past shows and moments from ${artist.name} on ${BRAND_NAME}.`,
+    title: `${artist.name} Concerts & Shows in Ghana ${new Date().getFullYear()}`,
+    description: `Where to see ${artist.name} live: upcoming ${artist.name} concerts and shows in Ghana with dates, venues and tickets, plus clips from past performances, on ${BRAND_NAME}.`,
     image: `/artists/${artist.slug}/card?format=og${by ? `&u=${by}` : ''}`,
     path: `/artists/${artist.slug}`,
   });
@@ -50,6 +51,9 @@ export default async function ArtistPage({ params }: { params: { slug: string } 
     .map((a) => ({ slug: a.slug, name: a.name, photo: photos[a.slug]?.url ?? null, touring: events.some((e) => isUpcoming(e.date) && eventMatchesArtist(e, a)) }));
 
   return (
+    <>
+    <JsonLd data={[artistJsonLd(artist, { photo: photos[artist.slug]?.url ?? null, bio: bio?.text ?? null, events: matched }), breadcrumbJsonLd([['Artists', '/artists'], [artist.name, `/artists/${artist.slug}`]])]} />
     <ArtistPageClient artist={artist} events={matched} moments={moments} photo={photos[artist.slug] ?? null} hosted={hosted} similar={similar} bio={bio} />
+    </>
   );
 }

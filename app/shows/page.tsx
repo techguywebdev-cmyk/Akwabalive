@@ -13,7 +13,8 @@ import type { CalendarItem } from '@/components/series/ShowsIndexClient';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const metadata = {
-  title: `Shows — ${BRAND_NAME}`,
+  title: 'Ghana’s Biggest Yearly Shows & Festivals',
+  alternates: { canonical: '/shows' },
   description: 'Rapperholic, Detty Rave, Tidal Rave and the other nights that come back every year — with ratings from people who went.',
 };
 

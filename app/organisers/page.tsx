@@ -10,7 +10,7 @@ import { T, FONT, GROUND, GRAD, BTN } from '@/lib/thiscene';
 
 export const revalidate = 600;
 export const metadata = shareMeta({
-  title: 'List your event on Tsacoal',
+  title: 'List Your Event in Ghana for Free',
   description: 'Put your show in front of everyone going out in Ghana: free to list, flyer to live in two minutes, real numbers on who’s seen it.',
   path: '/organisers',
 });

@@ -1,6 +1,6 @@
 import LegalPage, { CONTACT_EMAIL } from '@/components/legal/LegalPage';
 
-export const metadata = { title: 'Terms of use — Tsacoal', description: 'The terms for using Tsacoal, the events app for Ghana.' };
+export const metadata = { title: 'Terms of use', description: 'The terms for using Tsacoal, the events app for Ghana.' };
 
 export default function TermsPage() {
   return (

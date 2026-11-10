@@ -6,8 +6,9 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 export const metadata = {
-  title: 'Tsacoal — every event in Ghana',
-  description: 'Find and book concerts, festivals, nightlife and more across Accra, Kumasi, Cape Coast, Tamale and the rest of Ghana.',
+  title: { absolute: 'Tsacoal: Events in Ghana, Concerts, Parties & Tickets' },
+  description: 'What’s on in Ghana tonight, this weekend and all of Detty December: concerts, festivals and parties in Accra, Kumasi, Cape Coast and Tamale, with tickets, line-ups and clips.',
+  alternates: { canonical: '/' },
 };
 
 export default EventsPage;
