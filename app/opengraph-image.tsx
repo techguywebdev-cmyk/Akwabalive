@@ -19,10 +19,10 @@ export default async function OG() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
           <svg width="88" height="88" viewBox="0 0 24 24">
             <rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" />
-            <path d="M10.5 5.5v9.5a3.2 3.2 0 0 0 3.2 3.2h1.8" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" />
-            <path d="M7.5 9.5h8" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" />
+            <path d="M12 7v11" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="butt" />
+            <path d="M6.5 7h11" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="butt" />
           </svg>
-          <span style={{ fontSize: 64, fontWeight: 800, letterSpacing: -2, color: '#ffffff' }}>tsacoal</span>
+          <span style={{ fontSize: 64, fontWeight: 800, letterSpacing: -2, color: '#ffffff' }}>Tsacoal</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <span style={{ fontSize: 76, fontWeight: 800, letterSpacing: -3, lineHeight: 1.02, color: '#ffffff', maxWidth: 980 }}>Every event in Ghana, in one place.</span>
