@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 export const metadata = {
-  title: 'Events in Ghana — Akwaaba',
+  title: 'Events in Ghana — Tsacoal',
   description: 'Browse all events across Accra, Kumasi, Cape Coast, Tamale and more.',
 };
 

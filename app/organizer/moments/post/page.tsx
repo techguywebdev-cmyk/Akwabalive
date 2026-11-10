@@ -83,7 +83,7 @@ export default function PostMomentPage() {
           <span style={{ width: 64, height: 64, borderRadius: 32, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.07)', color: T.mintText }}><Video size={28} /></span>
           <h1 style={{ margin: '18px 0 0', fontFamily: FONT.display, fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>Moments are for organisers</h1>
           <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>
-            {user ? 'Once you have an event on Akwaaba, you can post the best moments from your shows here.' : 'Sign in with your organiser account to post moments from your shows.'}
+            {user ? 'Once you have an event on Tsacoal, you can post the best moments from your shows here.' : 'Sign in with your organiser account to post moments from your shows.'}
           </p>
           <Link href={user ? '/organizer/events/new' : '/auth?next=/organizer/moments/post'} style={{ ...BTN.primary, marginTop: 22, height: 48, padding: '0 22px', display: 'inline-flex', textDecoration: 'none' }}>
             <Plus size={17} /> {user ? 'Create an event' : 'Sign in'}

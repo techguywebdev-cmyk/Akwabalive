@@ -354,7 +354,7 @@ export default function UserProfilePage() {
 
   async function share() {
     const url = `${window.location.origin}/u/${username}`;
-    const title = profile ? `${nameOf(profile)} on Akwaaba` : 'Akwaaba';
+    const title = profile ? `${nameOf(profile)} on Tsacoal` : 'Tsacoal';
     try {
       if (navigator.share) { await navigator.share({ title, url }); return; }
       await navigator.clipboard.writeText(url);
@@ -373,7 +373,7 @@ export default function UserProfilePage() {
   if (missing) return (
     <div style={page}>
       <Nav back="/" tabs />
-      <Empty icon={<X size={24} />} title="No one here" body={`There’s no Akwaaba profile called @${username}.`} cta={{ href: '/', label: 'Browse events' }} />
+      <Empty icon={<X size={24} />} title="No one here" body={`There’s no Tsacoal profile called @${username}.`} cta={{ href: '/', label: 'Browse events' }} />
     </div>
   );
 

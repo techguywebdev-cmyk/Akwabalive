@@ -38,7 +38,7 @@ export default function OrganizerPageClient({ organizer, events }: { organizer: 
             <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>Organiser</p>
             <h1 style={{ margin: '4px 0 0', fontFamily: FONT.display, fontSize: 30, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, color: T.white }}>{name}</h1>
             <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>
-              <Link href={`/u/${organizer.username}`} style={{ color: T.text2, textDecoration: 'none' }}>@{organizer.username}</Link> · {events.length} {events.length === 1 ? 'event' : 'events'} on Akwaaba
+              <Link href={`/u/${organizer.username}`} style={{ color: T.text2, textDecoration: 'none' }}>@{organizer.username}</Link> · {events.length} {events.length === 1 ? 'event' : 'events'} on Tsacoal
             </p>
           </div>
         </header>

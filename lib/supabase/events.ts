@@ -56,7 +56,7 @@ export interface SupabaseEvent {
     price: number;
     quantity: number;
     sold: number;
-    /** false = hidden (not offered on Akwaaba) */
+    /** false = hidden (not offered on Tsacoal) */
     is_available?: boolean | null;
   }[];
 }

@@ -20,7 +20,7 @@ interface Props {
   goingIds: Set<string>;
   /** e.g. "2026" — label for the "Going" badge and prompt */
   nextLabel: string | null;
-  /** Gifting is possible only when the next edition sells tickets on Akwaaba */
+  /** Gifting is possible only when the next edition sells tickets on Tsacoal */
   canGift: boolean;
   /** "r, g, b" — the video's colour, so the sheet carries the same glow as the slide */
   tint?: string;

@@ -78,7 +78,7 @@ function Tile({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarSta
         <span style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</span>
       </span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 3, fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isCurated(c.slug) ? 'Akwaaba' : ownerName(c)} · {c.calendar_events.length} {c.calendar_events.length === 1 ? 'show' : 'shows'}</span>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isCurated(c.slug) ? 'Tsacoal' : ownerName(c)} · {c.calendar_events.length} {c.calendar_events.length === 1 ? 'show' : 'shows'}</span>
         {!!stats?.likes && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0 }}><Heart size={11} />{stats.likes}</span>}
         {stats?.rating != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.mintText, flexShrink: 0 }}><Star size={11} fill="currentColor" strokeWidth={0} />{Number(stats.rating).toFixed(1)}</span>}
       </span>
@@ -177,7 +177,7 @@ export default function CalendarsHub() {
         )}
 
         {ours.length > 0 && (
-          <section aria-label="Starter calendars from Akwaaba" style={{ marginTop: 56 }}>
+          <section aria-label="Starter calendars from Tsacoal" style={{ marginTop: 56 }}>
             <p style={eyebrow}>Start from one of ours</p>
             <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14.5, color: T.text2 }}>Open one, tap “Copy to mine”, then add and remove shows.</p>
             <div className="no-scrollbar" style={{ display: 'flex', gap: 14, overflowX: 'auto', margin: '16px -20px 0', padding: '0 20px 4px' }}>

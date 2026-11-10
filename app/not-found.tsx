@@ -1,7 +1,7 @@
 import LostPage, { LOST_BTN } from '@/components/layout/LostPage';
 import Link from 'next/link';
 
-export const metadata = { title: 'Not found — Akwaaba' };
+export const metadata = { title: 'Not found — Tsacoal' };
 
 export default function NotFound() {
   return (

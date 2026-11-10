@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: { username: string 
     const { data } = await createClient(url, key).from('profiles').select('full_name, avatar_url, bio').ilike('username', handle).maybeSingle();
     if (data) { name = data.full_name ? `${data.full_name} (@${handle})` : `@${handle}`; avatar = data.avatar_url; bio = data.bio ?? ''; }
   }
-  return shareMeta({ title: `${name} on Akwaaba`, description: bio || `See where ${name} is going and the moments they’ve shared on Akwaaba.`, image: avatar, path: `/u/${handle}`, square: true });
+  return shareMeta({ title: `${name} on Tsacoal`, description: bio || `See where ${name} is going and the moments they’ve shared on Tsacoal.`, image: avatar, path: `/u/${handle}`, square: true });
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {

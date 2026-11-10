@@ -55,9 +55,9 @@ export default function PeoplePage() {
 
   async function invite() {
     const url = profile?.username ? `${location.origin}/u/${profile.username}` : location.origin;
-    const text = 'I’m on Akwaaba — follow me to see what I’m going to this season.';
+    const text = 'I’m on Tsacoal — follow me to see what I’m going to this season.';
     try {
-      if (navigator.share) { await navigator.share({ title: 'Akwaaba', text, url }); return; }
+      if (navigator.share) { await navigator.share({ title: 'Tsacoal', text, url }); return; }
       await navigator.clipboard.writeText(`${text} ${url}`);
       setCopied(true); setTimeout(() => setCopied(false), 1800);
     } catch { /* cancelled */ }

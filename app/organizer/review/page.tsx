@@ -187,7 +187,7 @@ export default function ReviewQueuePage() {
           </button>
           {showLinks && (
             <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, lineHeight: 1.45, color: T.text2 }}>Paste Instagram, X or ticket-site links, one per line. Akwaaba reads the flyer and details and adds them here.</p>
+              <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13.5, lineHeight: 1.45, color: T.text2 }}>Paste Instagram, X or ticket-site links, one per line. Tsacoal reads the flyer and details and adds them here.</p>
               <textarea value={links} onChange={(e) => setLinks(e.target.value)} rows={4} placeholder={'https://www.instagram.com/p/…\nhttps://egotickets.com/events/…'} style={{ width: '100%', boxSizing: 'border-box', padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, outline: 'none', resize: 'vertical' }} />
               <button type="button" onClick={addLinks} disabled={adding} style={{ ...mint, alignSelf: 'flex-start' }}>{adding ? 'Reading links…' : 'Add to queue'}</button>
             </div>

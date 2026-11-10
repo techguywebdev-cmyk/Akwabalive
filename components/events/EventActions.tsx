@@ -149,11 +149,11 @@ export function TicketsSheet({
           )}
           {dialFirst ? (
             <p style={{ margin: '8px 0 4px', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
-              Dial <b style={{ color: T.white }}>{dial}</b> to buy with MoMo{listed ? `, or buy on ${event.ticketSource && !/^dial\b/i.test(event.ticketSource) ? event.ticketSource : 'the official site'}` : ''}. Tickets are sold by the organiser, not on Akwaaba.
+              Dial <b style={{ color: T.white }}>{dial}</b> to buy with MoMo{listed ? `, or buy on ${event.ticketSource && !/^dial\b/i.test(event.ticketSource) ? event.ticketSource : 'the official site'}` : ''}. Tickets are sold by the organiser, not on Tsacoal.
             </p>
           ) : listed && (
             <p style={{ margin: '8px 0 4px', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
-              Tickets are sold by {event.ticketSource || 'the organiser'}, not on Akwaaba. Buy only on the official page.
+              Tickets are sold by {event.ticketSource || 'the organiser'}, not on Tsacoal. Buy only on the official page.
             </p>
           )}
           {(!listed || !!event.tiers?.length) && (
@@ -198,7 +198,7 @@ export function TicketsSheet({
           ) : sellable ? (
             <button type="button" onClick={() => onBuy(tiers)} style={cta}>Choose tickets</button>
           ) : (
-            <span style={{ ...cta, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default', fontSize: 14 }}>Not on sale on Akwaaba yet</span>
+            <span style={{ ...cta, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default', fontSize: 14 }}>Not on sale on Tsacoal yet</span>
           )}
         </div>
         {footer}

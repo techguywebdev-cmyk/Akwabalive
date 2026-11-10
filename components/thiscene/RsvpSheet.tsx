@@ -12,7 +12,7 @@ import { countdownText, dayName, statLine } from './dates';
 
 /**
  * RSVP for free events, presented as a Thiscene Ticket on the event's ambient gradient.
- * "Going" issues a free ticket when the event has a free tier on Akwaaba, and marks the
+ * "Going" issues a free ticket when the event has a free tier on Tsacoal, and marks the
  * viewer as going either way.
  */
 export default function RsvpSheet({

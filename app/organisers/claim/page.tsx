@@ -77,7 +77,7 @@ export default function ClaimPage() {
             </div>
             <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
               {found.map((e) => <EventCard key={e.id} e={e} onPick={() => setEv(e)} />)}
-              {q.trim().length >= 2 && !found.length && <p style={{ margin: '6px 2px', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Not on Akwaaba yet? <Link href="/organizer/events/new" style={{ color: T.mintText }}>List it</Link>.</p>}
+              {q.trim().length >= 2 && !found.length && <p style={{ margin: '6px 2px', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Not on Tsacoal yet? <Link href="/organizer/events/new" style={{ color: T.mintText }}>List it</Link>.</p>}
             </div>
           </>
         ) : (

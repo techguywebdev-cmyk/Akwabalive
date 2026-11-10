@@ -1,13 +1,13 @@
 import LegalPage, { CONTACT_EMAIL } from '@/components/legal/LegalPage';
 
-export const metadata = { title: 'Privacy policy — Akwaaba', description: 'What Akwaaba collects, why, and the choices you have.' };
+export const metadata = { title: 'Privacy policy — Tsacoal', description: 'What Tsacoal collects, why, and the choices you have.' };
 
 export default function PrivacyPage() {
   return (
     <LegalPage
-      eyebrow="Akwaaba"
+      eyebrow="Tsacoal"
       title="Privacy policy"
-      intro="This explains what information Akwaaba collects, how we use it and the choices you have. We collect only what the app needs, we do not sell your information, and we handle it in line with Ghana’s Data Protection Act, 2012 (Act 843)."
+      intro="This explains what information Tsacoal collects, how we use it and the choices you have. We collect only what the app needs, we do not sell your information, and we handle it in line with Ghana’s Data Protection Act, 2012 (Act 843)."
       summary={[
         'We collect only what the app needs to work.',
         'We never see or store your card or mobile money details.',
@@ -28,7 +28,7 @@ export default function PrivacyPage() {
           [
             'To run your account, issue and check tickets, and send messages about your orders and events you care about.',
             'To show you relevant events, friends who are going, and real popularity numbers on events.',
-            'To keep Akwaaba safe: reviewing new events, handling reports and preventing fraud.',
+            'To keep Tsacoal safe: reviewing new events, handling reports and preventing fraud.',
           ],
         ] },
         { title: 'What other people can see', body: [
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
           'When you buy a ticket to a hosted event, the organiser receives your name and ticket details so they can let you in.',
         ] },
         { title: 'Who we share it with', body: [
-          'We do not sell your information. We share it only with services that help us run Akwaaba, and only what they need: hosting and database (Vercel, Supabase), payments (Paystack), email delivery, and video players (YouTube and X, when you play a moment). We may also share information when the law requires it.',
+          'We do not sell your information. We share it only with services that help us run Tsacoal, and only what they need: hosting and database (Vercel, Supabase), payments (Paystack), email delivery, and video players (YouTube and X, when you play a moment). We may also share information when the law requires it.',
         ] },
         { title: 'How long we keep it', body: [
           'We keep your account information while your account is open. Ticket and payment records are kept for as long as accounting rules require. When you delete your account we delete or anonymise the rest within 30 days.',

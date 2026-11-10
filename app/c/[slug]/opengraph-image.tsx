@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'A calendar on Akwaaba';
+export const alt = 'A calendar on Tsacoal';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -25,8 +25,8 @@ export default async function OG({ params }: { params: { slug: string } }) {
   const slugs = c?.calendar_events.map((e) => e.event_slug) ?? [];
   const evs = slugs.length ? await rest<{ image_url: string | null }[]>(`events?select=image_url&slug=in.(${slugs.map(encodeURIComponent).join(',')})&image_url=not.is.null&order=date&limit=3`) : null;
   const flyers = (evs ?? []).map((e) => e.image_url!).filter(Boolean);
-  const who = params.slug.startsWith('akwaaba-') ? 'Akwaaba' : c?.profiles?.full_name || c?.profiles?.username || 'Someone';
-  const title = c?.title ?? 'A calendar on Akwaaba';
+  const who = params.slug.startsWith('akwaaba-') ? 'Tsacoal' : c?.profiles?.full_name || c?.profiles?.username || 'Someone';
+  const title = c?.title ?? 'A calendar on Tsacoal';
 
   return new ImageResponse(
     (

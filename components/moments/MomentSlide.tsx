@@ -157,7 +157,7 @@ const MomentSlide = forwardRef<SlideHandle, {
 
   const share = useCallback(async () => {
     const url = `${window.location.origin}/moments?id=${clip.id}`;
-    try { if (navigator.share) { await navigator.share({ title: clip.title, text: `${clip.title} — ${night.event_name} on Akwaaba`, url }); return; } } catch { /* fall back */ }
+    try { if (navigator.share) { await navigator.share({ title: clip.title, text: `${clip.title} — ${night.event_name} on Tsacoal`, url }); return; } } catch { /* fall back */ }
     try { await navigator.clipboard.writeText(url); flash('Link copied'); } catch { /* ignore */ }
   }, [clip, night.event_name, flash]);
 
@@ -338,7 +338,7 @@ const MomentSlide = forwardRef<SlideHandle, {
 
           {recapClip?.recap && (
             <p style={{ margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
-              <span aria-hidden style={{ width: 6, height: 6, borderRadius: 3, background: T.mint }} />The night, by Akwaaba
+              <span aria-hidden style={{ width: 6, height: 6, borderRadius: 3, background: T.mint }} />The night, by Tsacoal
             </p>
           )}
           {about && (
