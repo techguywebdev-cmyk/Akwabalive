@@ -25,6 +25,15 @@ const iso = (y: number, m: number, d: number) => `${y}-${String(m + 1).padStart(
  * A calendar as a little desk calendar: binding on top, the month with the most shows, each show's flyer in its
  * date square. Name, who made it, likes and stars below.
  */
+function SectionHead({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div>
+      <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 21, fontWeight: 800, letterSpacing: '-0.025em', color: T.white }}>{title}</h2>
+      {hint && <p style={{ margin: '3px 0 0', fontFamily: FONT.sans, fontSize: 13.5, color: T.text3 }}>{hint}</p>}
+    </div>
+  );
+}
+
 function Tile({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarStats }) {
   // The busiest month (the soonest when tied); this month when it's empty
   const byMonth: Record<string, TileEvent[]> = {};
@@ -55,7 +64,13 @@ function Tile({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarSta
             </span>
             <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, color: T.text3 }}>{y}</span>
           </span>
-          {/* The month, with flyers on the nights out */}
+          {/* The month, with flyers on the nights out (or a nudge when it's still empty) */}
+          {!evs.length ? (
+            <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, aspectRatio: '7 / 6', padding: 12, textAlign: 'center' }}>
+              <span style={{ width: 38, height: 38, borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.14)', color: T.mint }}><Plus size={18} strokeWidth={2.4} /></span>
+              <span style={{ fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 600, color: T.text2 }}>No shows yet</span>
+            </span>
+          ) : (
           <span style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 3, padding: '4px 9px 10px' }}>
             {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((w, i) => <span key={`w${i}`} style={{ textAlign: 'center', fontFamily: FONT.sans, fontSize: 8.5, fontWeight: 700, color: i >= 5 ? 'rgba(168,240,198,0.6)' : 'rgba(255,255,255,0.28)', paddingBottom: 2 }}>{w}</span>)}
             {cells.map((d, i) => {
@@ -71,6 +86,7 @@ function Tile({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarSta
               );
             })}
           </span>
+          )}
         </span>
       </span>
       <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10 }}>
@@ -142,7 +158,9 @@ export default function CalendarsHub() {
   // Header: flyers from the public calendars on show (never from someone's private one)
   const wall = Array.from(new Set([...ours, ...popular].flatMap((c) => c.calendar_events.map((e) => flyers[e.event_slug])).filter(Boolean))).slice(0, 10);
   const fl = (c: Row): TileEvent[] => c.calendar_events.filter((e) => dates[e.event_slug]).map((e) => ({ date: dates[e.event_slug], img: flyers[e.event_slug] ?? null }));
-  const grid: React.CSSProperties = { marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(46%, 220px), 1fr))', gap: '22px 14px' };
+  // Every section is the same swipeable row of tiles
+  const row: React.CSSProperties = { display: 'flex', gap: 14, overflowX: 'auto', margin: '14px -20px 0', padding: '0 20px 6px', scrollSnapType: 'x mandatory', scrollPaddingLeft: 20 };
+  const cell: React.CSSProperties = { width: 'min(56vw, 230px)', flexShrink: 0, scrollSnapAlign: 'start' };
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed', overflowX: 'clip' }}>
@@ -170,28 +188,36 @@ export default function CalendarsHub() {
         </header>
 
         {mine.length > 0 && (
-          <section aria-label="Your calendars" style={{ marginTop: 56 }}>
-            <p style={eyebrow}>Yours</p>
-            <div style={grid}>{mine.map((c) => <Tile key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} />)}</div>
-          </section>
-        )}
-
-        {ours.length > 0 && (
-          <section aria-label="Starter calendars from Tsacoal" style={{ marginTop: 56 }}>
-            <p style={eyebrow}>Start from one of ours</p>
-            <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14.5, color: T.text2 }}>Open one, tap “Copy to mine”, then add and remove shows.</p>
-            <div className="no-scrollbar" style={{ display: 'flex', gap: 14, overflowX: 'auto', margin: '16px -20px 0', padding: '0 20px 4px' }}>
-              {ours.map((c) => <div key={c.id} style={{ width: 'min(62vw, 240px)', flexShrink: 0 }}><Tile c={c} evs={fl(c)} stats={stats[c.id]} /></div>)}
+          <section aria-label="Your calendars" style={{ marginTop: 52 }}>
+            <SectionHead title="Yours" hint={`${mine.length} ${mine.length === 1 ? 'calendar' : 'calendars'}`} />
+            <div className="ak-noscroll" style={row}>
+              {mine.map((c) => <div key={c.id} style={cell}><Tile c={c} evs={fl(c)} stats={stats[c.id]} /></div>)}
+              <button type="button" onClick={start} aria-label="Start a new calendar"
+                style={{ ...cell, alignSelf: 'stretch', marginTop: 7, minHeight: 180, borderRadius: 18, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'linear-gradient(160deg, rgba(123,227,168,0.14) 0%, rgba(255,255,255,0.03) 100%)', color: T.white }}>
+                <span style={{ width: 44, height: 44, borderRadius: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}><Plus size={20} strokeWidth={2.4} /></span>
+                <span style={{ fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>New calendar</span>
+              </button>
             </div>
           </section>
         )}
 
-        <section aria-label="Popular calendars" style={{ marginTop: 56 }}>
-          <p style={{ ...eyebrow, display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} />Popular now</p>
+        {ours.length > 0 && (
+          <section aria-label="Starter calendars from Tsacoal" style={{ marginTop: 44 }}>
+            <SectionHead title="Start from one of ours" hint="Copy one, then make it yours" />
+            <div className="ak-noscroll" style={row}>
+              {ours.map((c) => <div key={c.id} style={cell}><Tile c={c} evs={fl(c)} stats={stats[c.id]} /></div>)}
+            </div>
+          </section>
+        )}
+
+        <section aria-label="Popular calendars" style={{ marginTop: 44 }}>
+          <SectionHead title="Popular now" hint="Shared by people on Tsacoal" />
           {popular.length ? (
-            <div style={grid}>{popular.map((c) => <Tile key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} />)}</div>
+            <div className="ak-noscroll" style={row}>
+              {popular.map((c) => <div key={c.id} style={cell}><Tile c={c} evs={fl(c)} stats={stats[c.id]} /></div>)}
+            </div>
           ) : (
-            <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15.5, lineHeight: 1.55, color: T.text2 }}>No one’s shared a calendar yet. Be the first, and send it to the squad.</p>
+            <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>No one’s shared a calendar yet. Be the first, and send it to the squad.</p>
           )}
         </section>
       </main>

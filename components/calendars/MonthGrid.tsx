@@ -146,16 +146,16 @@ export default function MonthGrid({ events, onRemove, onAddDay, renderSheet }: {
             // Owner: tap an empty night to find a show for it
             return (
               <button key={key} type="button" onClick={() => onAddDay(key)} aria-label={`Add a show on ${d} ${MONTHS[m]}`}
-                style={{ position: 'relative', aspectRatio: '3 / 4', padding: 0, border: 'none', borderRadius: 11, cursor: 'pointer', background: 'rgba(255,255,255,0.035)' }}>
-                <span style={{ position: 'absolute', top: 5, left: 0, right: 0, textAlign: 'center', fontFamily: FONT.display, fontSize: 12.5, fontWeight: 700, color: key === today ? T.mintText : T.text3 }}>{d}</span>
-                <Plus size={13} strokeWidth={2.4} style={{ position: 'absolute', left: '50%', bottom: 8, transform: 'translateX(-50%)', color: 'rgba(168,240,198,0.45)' }} />
+                style={{ position: 'relative', aspectRatio: '3 / 4', padding: 0, border: 'none', borderRadius: 11, cursor: 'pointer', background: key === today ? 'rgba(123,227,168,0.1)' : 'transparent' }}>
+                <span style={{ position: 'absolute', top: '30%', left: 0, right: 0, textAlign: 'center', fontFamily: FONT.display, fontSize: 13.5, fontWeight: 700, color: key === today ? T.mint : 'rgba(255,255,255,0.55)' }}>{d}</span>
+                <Plus size={12} strokeWidth={2.4} style={{ position: 'absolute', left: '50%', bottom: '14%', transform: 'translateX(-50%)', color: 'rgba(168,240,198,0.35)' }} />
               </button>
             );
           }
           if (!evs) {
             return (
-              <span key={key} style={{ position: 'relative', aspectRatio: '3 / 4', borderRadius: 11, background: 'rgba(255,255,255,0.035)', opacity: past ? 0.45 : 1 }}>
-                <span style={{ position: 'absolute', top: 5, left: 0, right: 0, textAlign: 'center', fontFamily: FONT.display, fontSize: 12.5, fontWeight: 700, color: key === today ? T.mintText : T.text3 }}>{d}</span>
+              <span key={key} style={{ position: 'relative', aspectRatio: '3 / 4', borderRadius: 11, background: key === today ? 'rgba(123,227,168,0.1)' : 'transparent', opacity: past ? 0.35 : 1 }}>
+                <span style={{ position: 'absolute', top: '38%', left: 0, right: 0, textAlign: 'center', fontFamily: FONT.display, fontSize: 13.5, fontWeight: 700, color: key === today ? T.mint : 'rgba(255,255,255,0.55)' }}>{d}</span>
                 {key === today && <span style={{ position: 'absolute', left: '50%', bottom: 7, width: 5, height: 5, borderRadius: 2, transform: 'translateX(-50%)', background: T.mint }} />}
               </span>
             );

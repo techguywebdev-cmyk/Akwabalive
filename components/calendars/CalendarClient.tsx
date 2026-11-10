@@ -336,10 +336,12 @@ export default function CalendarClient({ slug }: { slug: string }) {
 
         {/* Viewers: make your own */}
         {cal && !mine && (
-          <section style={{ marginTop: 72, position: 'relative' }}>
-            <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(28px, 7.5vw, 40px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.04, ...gradText }}>Make your own calendar.</h2>
-            <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>Line up your shows, keep it to yourself or share it with the squad.</p>
-            <Link href="/calendars" style={{ ...BTN.primary, marginTop: 20, height: 50, padding: '0 22px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', textDecoration: 'none', fontSize: 15 }}>Start one</Link>
+          <section style={{ marginTop: 56, paddingTop: 22, borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>Make your own</p>
+              <p style={{ margin: '3px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Line up your season, then share it.</p>
+            </div>
+            <Link href="/calendars" style={{ height: 42, padding: '0 18px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 14.5, fontWeight: 700, textDecoration: 'none' }}>Start one</Link>
           </section>
         )}
       </main>
