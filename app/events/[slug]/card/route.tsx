@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { ticketDial } from '@/lib/events/dial';
-import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, PAPER, INK } from '@/lib/shareCard';
+import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT } from '@/lib/shareCard';
 
 export const runtime = 'edge';
 
@@ -46,35 +46,35 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
 
   // The ticket: date stub | what, when, where, who | how to get in
   const ticket = (s: number) => (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', borderRadius: 36 * s, background: PAPER, boxShadow: '0 30px 70px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', borderRadius: 36 * s, background: 'rgba(9,15,12,0.9)', border: '2px solid rgba(123,227,168,0.22)', boxShadow: '0 30px 70px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'stretch' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 170 * s, padding: `${30 * s}px 0` }}>
-          <div style={{ display: 'flex', fontSize: 24 * s, letterSpacing: 4 * s, color: '#2FA36B' }}>{month}</div>
-          <div style={{ display: 'flex', fontSize: 92 * s, letterSpacing: -4 * s, lineHeight: 1, color: INK, marginTop: 2 * s }}>{num}</div>
-          <div style={{ display: 'flex', fontSize: 22 * s, letterSpacing: 3 * s, color: 'rgba(11,17,14,0.5)', marginTop: 4 * s }}>{day}</div>
+          <div style={{ display: 'flex', fontSize: 24 * s, letterSpacing: 4 * s, color: MINT }}>{month}</div>
+          <div style={{ display: 'flex', fontSize: 92 * s, letterSpacing: -4 * s, lineHeight: 1, color: '#fff', marginTop: 2 * s }}>{num}</div>
+          <div style={{ display: 'flex', fontSize: 22 * s, letterSpacing: 3 * s, color: 'rgba(255,255,255,0.5)', marginTop: 4 * s }}>{day}</div>
         </div>
-        <div style={{ display: 'flex', width: 0, borderLeft: `${3 * s}px dashed rgba(11,17,14,0.18)`, margin: `${22 * s}px 0` }} />
+        <div style={{ display: 'flex', width: 0, borderLeft: `${3 * s}px dashed rgba(255,255,255,0.16)`, margin: `${22 * s}px 0` }} />
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: `${30 * s}px ${36 * s}px ${30 * s}px ${34 * s}px` }}>
-          <div style={{ display: 'flex', fontSize: fit(56) * s, letterSpacing: -2.2 * s, lineHeight: 1.02, color: INK }}>{e.title}</div>
-          {(time || place) && <div style={{ display: 'flex', marginTop: 12 * s, fontSize: 26 * s, color: 'rgba(11,17,14,0.6)' }}>{[time, place].filter(Boolean).join(' · ')}</div>}
+          <div style={{ display: 'flex', fontSize: fit(56) * s, letterSpacing: -2.2 * s, lineHeight: 1.02, color: '#fff' }}>{e.title}</div>
+          {(time || place) && <div style={{ display: 'flex', marginTop: 12 * s, fontSize: 26 * s, color: 'rgba(255,255,255,0.62)' }}>{[time, place].filter(Boolean).join(' · ')}</div>}
           {(faces.length > 0 || acts) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 * s, marginTop: 18 * s }}>
               {faces.length > 0 && (
                 <div style={{ display: 'flex' }}>
                   {faces.map((f, i) => (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img key={f} src={f} alt="" width={56 * s} height={56 * s} style={{ width: 56 * s, height: 56 * s, borderRadius: 999, objectFit: 'cover', marginLeft: i ? -16 * s : 0, border: `${3 * s}px solid ${PAPER}` }} />
+                    <img key={f} src={f} alt="" width={56 * s} height={56 * s} style={{ width: 56 * s, height: 56 * s, borderRadius: 999, objectFit: 'cover', marginLeft: i ? -16 * s : 0, border: `${3 * s}px solid #0A110D` }} />
                   ))}
                 </div>
               )}
-              {acts && <div style={{ display: 'flex', fontSize: 25 * s, color: INK, maxWidth: 520 * s }}>{acts}</div>}
+              {acts && <div style={{ display: 'flex', fontSize: 25 * s, color: '#fff', maxWidth: 520 * s }}>{acts}</div>}
             </div>
           )}
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: `${18 * s}px ${36 * s}px`, background: INK }}>
-        <div style={{ display: 'flex', fontSize: 26 * s, color: dial ? MINT : 'rgba(255,255,255,0.75)' }}>{dial ? `Tickets: dial ${dial}` : 'Tickets & line-up on Tsacoal'}</div>
-        <div style={{ display: 'flex', fontSize: 26 * s, letterSpacing: -0.5 * s, color: '#fff' }}>tsacoal.com</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: `${18 * s}px ${36 * s}px`, background: MINT }}>
+        <div style={{ display: 'flex', fontSize: 26 * s, color: '#03130B' }}>{dial ? `Tickets: dial ${dial}` : 'Tickets & line-up on Tsacoal'}</div>
+        <div style={{ display: 'flex', fontSize: 26 * s, letterSpacing: -0.5 * s, color: '#03130B' }}>tsacoal.com</div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getArtistBySlug } from '@/lib/data/artists';
-import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, PAPER, INK } from '@/lib/shareCard';
+import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT } from '@/lib/shareCard';
 
 export const runtime = 'edge';
 
@@ -38,16 +38,16 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   const stub = (s: Show, k: number) => {
     const d = dayParts(s.date);
     return (
-      <div key={s.slug} style={{ display: 'flex', alignItems: 'center', width: '100%', borderRadius: 28 * k, background: PAPER, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.45)' }}>
+      <div key={s.slug} style={{ display: 'flex', alignItems: 'center', width: '100%', borderRadius: 28 * k, background: 'rgba(9,15,12,0.9)', border: '2px solid rgba(123,227,168,0.22)', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.45)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 130 * k, padding: `${20 * k}px 0` }}>
-          <div style={{ display: 'flex', fontSize: 20 * k, letterSpacing: 3 * k, color: '#2FA36B' }}>{d.month}</div>
-          <div style={{ display: 'flex', fontSize: 64 * k, letterSpacing: -3 * k, lineHeight: 1, color: INK }}>{d.num}</div>
-          <div style={{ display: 'flex', fontSize: 17 * k, letterSpacing: 2 * k, color: 'rgba(11,17,14,0.5)' }}>{d.day}</div>
+          <div style={{ display: 'flex', fontSize: 20 * k, letterSpacing: 3 * k, color: MINT }}>{d.month}</div>
+          <div style={{ display: 'flex', fontSize: 64 * k, letterSpacing: -3 * k, lineHeight: 1, color: '#fff' }}>{d.num}</div>
+          <div style={{ display: 'flex', fontSize: 17 * k, letterSpacing: 2 * k, color: 'rgba(255,255,255,0.5)' }}>{d.day}</div>
         </div>
-        <div style={{ display: 'flex', alignSelf: 'stretch', width: 0, borderLeft: `${3 * k}px dashed rgba(11,17,14,0.18)`, margin: `${16 * k}px 0` }} />
+        <div style={{ display: 'flex', alignSelf: 'stretch', width: 0, borderLeft: `${3 * k}px dashed rgba(255,255,255,0.16)`, margin: `${16 * k}px 0` }} />
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: `${16 * k}px ${24 * k}px` }}>
-          <div style={{ display: 'flex', fontSize: (s.title.length > 30 ? 30 : 36) * k, letterSpacing: -1.2 * k, lineHeight: 1.05, color: INK }}>{s.title}</div>
-          {where(s) && <div style={{ display: 'flex', marginTop: 6 * k, fontSize: 21 * k, color: 'rgba(11,17,14,0.55)' }}>{where(s)}</div>}
+          <div style={{ display: 'flex', fontSize: (s.title.length > 30 ? 30 : 36) * k, letterSpacing: -1.2 * k, lineHeight: 1.05, color: '#fff' }}>{s.title}</div>
+          {where(s) && <div style={{ display: 'flex', marginTop: 6 * k, fontSize: 21 * k, color: 'rgba(255,255,255,0.58)' }}>{where(s)}</div>}
         </div>
         {s.image_url && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -58,9 +58,9 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   };
 
   const empty = (k: number) => (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', padding: `${28 * k}px ${34 * k}px`, borderRadius: 28 * k, background: PAPER }}>
-      <div style={{ display: 'flex', fontSize: 34 * k, letterSpacing: -1 * k, color: INK }}>No dates announced yet</div>
-      <div style={{ display: 'flex', marginTop: 6 * k, fontSize: 22 * k, color: 'rgba(11,17,14,0.55)' }}>Follow on Tsacoal and hear first.</div>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', padding: `${28 * k}px ${34 * k}px`, borderRadius: 28 * k, background: 'rgba(9,15,12,0.9)', border: '2px solid rgba(123,227,168,0.22)' }}>
+      <div style={{ display: 'flex', fontSize: 34 * k, letterSpacing: -1 * k, color: '#fff' }}>No dates announced yet</div>
+      <div style={{ display: 'flex', marginTop: 6 * k, fontSize: 22 * k, color: 'rgba(255,255,255,0.58)' }}>Follow on Tsacoal and hear first.</div>
     </div>
   );
 
