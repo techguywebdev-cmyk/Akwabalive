@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Instagram, Share2, Check, CalendarDays, Camera } from 'lucide-react';
+import type { ArtistBio } from '@/lib/artists/bio';
 import type { Artist, GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
 import Nav from '@/components/layout/Nav';
@@ -37,8 +38,8 @@ function Stat({ value, label, href }: { value: string; label: string; href?: str
   return href ? <a href={href} style={style}>{body}</a> : <span style={style}>{body}</span>;
 }
 
-export default function ArtistPageClient({ artist, events, moments = [], photo: initialPhoto = null, hosted = [], similar = [] }: {
-  artist: Artist; events: GhanaEvent[]; moments?: Moment[]; photo?: ArtistPhoto | null; hosted?: SeriesSummary[]; similar?: SimilarArtist[];
+export default function ArtistPageClient({ artist, events, moments = [], photo: initialPhoto = null, hosted = [], similar = [], bio = null }: {
+  artist: Artist; events: GhanaEvent[]; moments?: Moment[]; photo?: ArtistPhoto | null; hosted?: SeriesSummary[]; similar?: SimilarArtist[]; bio?: ArtistBio | null;
 }) {
   const { user } = useAuth();
   const supabase = useMemo(() => createClient(), []);
@@ -50,6 +51,8 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
   const [isAdmin, setIsAdmin] = useState(false);
   const [photoSheet, setPhotoSheet] = useState(false);
   const [allPast, setAllPast] = useState(false);
+  const [bioOpen, setBioOpen] = useState(false);
+  const spotifyId = photo?.spotifyUrl?.match(/artist\/([A-Za-z0-9]+)/)?.[1] ?? null;
 
   const t0 = today();
   const upcoming = events.filter((e) => { const d = parseDay(e.date); return !d || d >= t0; });
@@ -115,11 +118,12 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
             Artist{artist.genre ? ` · ${artist.genre}` : ''}
           </p>
           <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: artist.name.length > 12 ? 42 : 52, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, color: T.white, textShadow: '0 2px 24px rgba(0,0,0,0.3)' }}>{artist.name}</h1>
+          {bio?.description && <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 15, color: T.text2 }}>{bio.description}</p>}
 
           <div style={{ display: 'flex', alignItems: 'stretch', maxWidth: 340, margin: '20px auto 0' }}>
             <Stat value={followers === null ? '–' : compactCount(followers)} label={followers === 1 ? 'Follower' : 'Followers'} />
             <span aria-hidden style={{ width: 1, background: T.hairlineStrong }} />
-            <Stat value={String(upcoming.length)} label="Upcoming" href={upcoming.length ? '#shows' : undefined} />
+            <Stat value={String(events.length + pastShows.filter((x) => !x.event).length)} label="Shows" href="#shows" />
             <span aria-hidden style={{ width: 1, background: T.hairlineStrong }} />
             <Stat value={String(moments.length)} label="Moments" href={moments.length ? '#moments' : undefined} />
           </div>
@@ -180,6 +184,19 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
           </section>
         )}
 
+        {bio && (
+          <section style={{ marginTop: 40 }}>
+            <SectionTitle>About</SectionTitle>
+            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15.5, lineHeight: 1.65, color: 'rgba(255,255,255,0.82)', ...(bioOpen ? {} : { display: '-webkit-box', WebkitLineClamp: 5, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }) }}>{bio.text}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 10 }}>
+              {!bioOpen && bio.text.length > 260 && (
+                <button type="button" onClick={() => setBioOpen(true)} style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>Read more</button>
+              )}
+              <a href={bio.url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: FONT.sans, fontSize: 12.5, color: T.text3, textDecoration: 'none' }}>From Wikipedia</a>
+            </div>
+          </section>
+        )}
+
         {reel.length > 0 && (
           <section id="moments" style={{ marginTop: 40, scrollMarginTop: 90 }}>
             <SectionTitle action={<Link href={`/moments?artist=${artist.slug}`} style={{ fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText, textDecoration: 'none' }}>See all</Link>}>Moments</SectionTitle>
@@ -189,7 +206,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
 
         {pastShows.length > 0 && (
           <section style={{ marginTop: 40 }}>
-            <SectionTitle>Past shows</SectionTitle>
+            <SectionTitle>Recent shows</SectionTitle>
             {(allPast ? pastShows : pastShows.slice(0, 6)).map((s) => (
               <PastRow key={s.key} show={s} rating={s.event ? ratings[s.event.slug] : undefined} onPlay={() => setViewer({ list: s.moments, start: 0, title: s.title })} />
             ))}
@@ -198,6 +215,14 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
                 Show all {pastShows.length}
               </button>
             )}
+          </section>
+        )}
+
+        {spotifyId && (
+          <section style={{ marginTop: 40 }}>
+            <SectionTitle>Listen</SectionTitle>
+            <iframe title={`${artist.name} on Spotify`} src={`https://open.spotify.com/embed/artist/${spotifyId}?utm_source=generator&theme=0`} width="100%" height="352" loading="lazy"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" style={{ display: 'block', border: 'none', borderRadius: 16, background: 'rgba(255,255,255,0.04)' }} />
           </section>
         )}
 

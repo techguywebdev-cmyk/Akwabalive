@@ -9,6 +9,7 @@ import { momentsForArtist } from '@/lib/moments/matchArtist';
 import { fetchMoments } from '@/lib/moments/server';
 import { getArtistPhotos } from '@/lib/artists/photos';
 import { shareMeta } from '@/lib/og';
+import { getArtistBio } from '@/lib/artists/bio';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -30,7 +31,7 @@ export default async function ArtistPage({ params }: { params: { slug: string } 
   const artist = getArtistBySlug(params.slug);
   if (!artist) notFound();
 
-  const [events, allMoments, photos] = await Promise.all([loadAllEvents(), fetchMoments(), getArtistPhotos(artists)]);
+  const [events, allMoments, photos, bio] = await Promise.all([loadAllEvents(), fetchMoments(), getArtistPhotos(artists), getArtistBio(artist)]);
   const t0 = new Date(); t0.setHours(0, 0, 0, 0);
   const isUpcoming = (d?: string) => !!d && new Date(`${d}T00:00:00`) >= t0;
 
@@ -50,6 +51,6 @@ export default async function ArtistPage({ params }: { params: { slug: string } 
     .map((a) => ({ slug: a.slug, name: a.name, photo: photos[a.slug]?.url ?? null, touring: events.some((e) => isUpcoming(e.date) && eventMatchesArtist(e, a)) }));
 
   return (
-    <ArtistPageClient artist={artist} events={matched} moments={moments} photo={photos[artist.slug] ?? null} hosted={hosted} similar={similar} />
+    <ArtistPageClient artist={artist} events={matched} moments={moments} photo={photos[artist.slug] ?? null} hosted={hosted} similar={similar} bio={bio} />
   );
 }
