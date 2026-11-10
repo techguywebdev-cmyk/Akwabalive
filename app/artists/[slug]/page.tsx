@@ -14,16 +14,15 @@ import { getArtistBio } from '@/lib/artists/bio';
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params, searchParams }: { params: { slug: string }; searchParams?: { by?: string } }) {
   const artist = getArtistBySlug(params.slug);
   if (!artist) return { title: `Artist — ${BRAND_NAME}` };
-  const photos = await getArtistPhotos([artist], 2500).catch(() => ({} as Record<string, { url?: string } | undefined>));
+  const by = searchParams?.by?.replace(/[^a-zA-Z0-9_.-]/g, '').slice(0, 40) || null;
   return shareMeta({
     title: `${artist.name} shows in Ghana`,
     description: `Upcoming dates, past shows and moments from ${artist.name} on ${BRAND_NAME}.`,
-    image: photos[artist.slug]?.url ?? null,
+    image: `/artists/${artist.slug}/card?format=og${by ? `&u=${by}` : ''}`,
     path: `/artists/${artist.slug}`,
-    square: true,
   });
 }
 
