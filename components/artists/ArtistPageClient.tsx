@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Instagram, Share2, Check, CalendarDays, Camera } from 'lucide-react';
+import ShareCardSheet from '@/components/events/ShareCardSheet';
 import type { ArtistBio } from '@/lib/artists/bio';
 import type { Artist, GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
@@ -78,20 +79,17 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
     if (user) supabase.rpc('is_akwaaba_admin').then(({ data }) => setIsAdmin(data === true));
   }, [supabase, user]);
 
-  async function share() {
-    const url = `${window.location.origin}/artists/${artist.slug}`;
-    try {
-      if (navigator.share) { await navigator.share({ title: `${artist.name} shows on Tsacoal`, url }); return; }
-      await navigator.clipboard.writeText(url);
-      setCopied(true); setTimeout(() => setCopied(false), 1800);
-    } catch { /* dismissed */ }
-  }
+  // Share opens the card sheet: the artist and their next shows as a picture, plus a personal link
+  const [sharing, setSharing] = useState(false);
+  function share() { setSharing(true); }
+
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
       <Nav back="/artists" tabs actions={
-        <button type="button" onClick={share} aria-label="Share artist" style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}>{copied ? <Check size={18} /> : <Share2 size={18} />}</button>
+        <button type="button" onClick={share} aria-label="Share artist" style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}><Share2 size={18} /></button>
       } />
+      {sharing && <ShareCardSheet kind="artist" slug={artist.slug} title={artist.name} onClose={() => setSharing(false)} />}
 
       {/* Hero: the artist's photo full width, melting into the page; name and who they are sit on it, actions in one row beneath */}
       <header style={{ position: 'relative' }}>
