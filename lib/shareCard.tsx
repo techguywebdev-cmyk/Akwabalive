@@ -24,6 +24,13 @@ export const sized = (u: string, w: number) => (u.includes('res.cloudinary.com')
 
 export const MINT = '#7BE3A8', MINT_TEXT = '#A8F0C6', ON_MINT = '#03130B', PAPER = '#F3FBF6', INK = '#0B110E';
 
+/* The brand gradients (same as the app) */
+export const G_MINT = 'linear-gradient(135deg, #D2FBE3 0%, #8FEBB7 34%, #5AD99A 68%, #2FB97E 100%)';
+export const G_TEXT = 'linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 38%, #BFF5D6 72%, #7BE3A8 100%)';
+export const G_TICKET = 'linear-gradient(160deg, rgba(28,58,42,0.96) 0%, rgba(12,22,17,0.95) 42%, rgba(7,12,9,0.96) 100%)';
+/** Text painted with a gradient */
+export const gText = (g: string) => ({ backgroundImage: g, backgroundClip: 'text', color: 'transparent' } as const);
+
 export const dayParts = (date: string) => {
   const d = new Date(`${date}T12:00:00Z`);
   return {
@@ -49,13 +56,13 @@ export function PersonPill({ p, line, tail, scale = 1 }: { p: Person; line: stri
   const s = (n: number) => Math.round(n * scale);
   const name = firstName(p);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: s(18), padding: `${s(10)}px ${s(30)}px ${s(10)}px ${s(10)}px`, borderRadius: 999, background: 'rgba(8,13,10,0.72)', border: `${s(2)}px solid rgba(123,227,168,0.35)` }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: s(18), padding: `${s(10)}px ${s(30)}px ${s(10)}px ${s(10)}px`, borderRadius: 999, background: 'linear-gradient(135deg, rgba(28,58,42,0.85) 0%, rgba(8,13,10,0.8) 60%)', border: `${s(2)}px solid rgba(123,227,168,0.35)` }}>
       {p.avatar_url
         // eslint-disable-next-line @next/next/no-img-element
         ? <img src={p.avatar_url} alt="" width={s(68)} height={s(68)} style={{ width: s(68), height: s(68), borderRadius: 999, objectFit: 'cover', border: `${s(3)}px solid ${MINT}` }} />
         : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: s(68), height: s(68), borderRadius: 999, background: '#16211C', border: `${s(3)}px solid ${MINT}`, color: '#fff', fontSize: s(32) }}>{name.charAt(0)}</div>}
       <div style={{ display: 'flex', fontSize: s(36), letterSpacing: -1, color: '#fff' }}>{line}</div>
-      {tail && <div style={{ display: 'flex', fontSize: s(36), letterSpacing: -1, color: MINT, marginLeft: -s(6) }}>{tail}</div>}
+      {tail && <div style={{ display: 'flex', fontSize: s(36), letterSpacing: -1, marginLeft: -s(6), ...gText(G_MINT) }}>{tail}</div>}
     </div>
   );
 }
