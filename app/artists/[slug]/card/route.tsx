@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getArtistBySlug } from '@/lib/data/artists';
-import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, G_MINT, G_TEXT, G_TICKET, gText } from '@/lib/shareCard';
+import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, G_MINT, G_TEXT, G_TICKET, gText, setOrigin } from '@/lib/shareCard';
 
 export const runtime = 'edge';
 
@@ -15,6 +15,7 @@ type Show = { slug: string; title: string; date: string; venue: string | null; c
 export async function GET(req: Request, { params }: { params: { slug: string } }) {
   const artist = getArtistBySlug(params.slug);
   if (!artist) return new Response('Not found', { status: 404 });
+  setOrigin(req.url);
   const q = new URL(req.url).searchParams;
   const format = q.get('format') === 'og' ? 'og' : q.get('format') === 'story' ? 'story' : 'post';
   const og = format === 'og';

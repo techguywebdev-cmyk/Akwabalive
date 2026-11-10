@@ -326,7 +326,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           <button type="button" onClick={share} aria-label="Share" style={roundBtn(false)}><Share2 size={17} /></button>
         </div>
         {calOpen && <AddToCalendar eventSlug={event.slug} eventTitle={event.title} onClose={() => setCalOpen(false)} />}
-        {sharing && <ShareCardSheet slug={event.slug} title={event.title} intro={sharingIntro} onClose={() => setSharing(false)} />}
+        {sharing && <ShareCardSheet slug={event.slug} title={event.title} image={event.image} intro={sharingIntro} onClose={() => setSharing(false)} />}
 
         <FriendsStrip slug={event.slug} variant="full" />
 

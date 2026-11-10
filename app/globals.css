@@ -145,3 +145,7 @@ body::before {
 @keyframes ak-pulse-k { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 .ak-pulse { animation: ak-pulse-k 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .ak-tick, .ak-pulse { animation: none; } }
+
+/* Loading shimmer */
+@keyframes ak-sh { 0% { background-position: -300px 0; } 100% { background-position: 300px 0; } }
+.ak-sk { background: linear-gradient(90deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 100%); background-size: 600px 100%; animation: ak-sh 1.1s linear infinite; }

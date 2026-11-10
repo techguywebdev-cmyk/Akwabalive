@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { ticketDial } from '@/lib/events/dial';
-import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, ON_MINT, G_MINT, G_TEXT, G_TICKET, gText } from '@/lib/shareCard';
+import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, ON_MINT, G_MINT, G_TEXT, G_TICKET, gText, setOrigin } from '@/lib/shareCard';
 
 export const runtime = 'edge';
 
@@ -16,6 +16,7 @@ type Row = {
  * The flyer's own colours fill the background; the details sit on a paper ticket. With ?u=username: "Leo's going".
  */
 export async function GET(req: Request, { params }: { params: { slug: string } }) {
+  setOrigin(req.url);
   const q = new URL(req.url).searchParams;
   const format = q.get('format') === 'og' ? 'og' : q.get('format') === 'story' ? 'story' : 'post';
   const og = format === 'og';
@@ -40,7 +41,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   const time = e.time && !/tba|tbc/i.test(e.time) ? e.time : null;
   const place = [e.venue && !/to be announced|tba/i.test(e.venue) ? e.venue : null, e.city ? e.city.charAt(0).toUpperCase() + e.city.slice(1) : null].filter(Boolean).join(', ');
   const dial = ticketDial({ ticketSource: e.ticket_source ?? undefined, description: e.description ?? '', listingInfo: e.listing_info as Parameters<typeof ticketDial>[0]['listingInfo'], flyerText: e.flyer_text ?? undefined });
-  const flyer = e.image_url ? sized(e.image_url, og ? 800 : 1080) : null;
+  const flyer = e.image_url ? sized(e.image_url, og ? 750 : format === 'story' ? 1080 : 828) : null;
   const fit = (base: number) => (e.title.length > 34 ? base * 0.7 : e.title.length > 22 ? base * 0.84 : base);
   const ff = font ? 'Inter Tight' : undefined;
   const fonts = font ? [{ name: 'Inter Tight', data: font, weight: 800 as const, style: 'normal' as const }] : undefined;

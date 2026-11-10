@@ -6,6 +6,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      // Flyers and photos the share cards shrink before drawing
+      ...['cdn-az.allevents.in', 'cdn.ayatickets.com', 'res.cloudinary.com', 'img.evbuc.com', 'egotickets-core-cdn.s3.eu-north-1.amazonaws.com',
+        'images.squarespace-cdn.com', 'tsacoal.com', 'akwabalive.vercel.app', 'i.scdn.co', 'upload.wikimedia.org', 'i.ytimg.com']
+        .map((hostname) => ({ protocol: 'https', hostname })),
     ],
   },
   experimental: {
