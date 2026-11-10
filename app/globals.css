@@ -134,3 +134,7 @@ body::before {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Horizontal strips that swipe without a visible bar */
+.ak-noscroll { scrollbar-width: none; }
+.ak-noscroll::-webkit-scrollbar { display: none; }
