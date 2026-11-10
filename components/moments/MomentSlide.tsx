@@ -252,7 +252,8 @@ const MomentSlide = forwardRef<SlideHandle, {
         )}
 
         {/* About the night: scrolls on short screens rather than cropping the faces under the next-edition card */}
-        <div className="no-scrollbar" style={{ padding: '14px 20px 6px', minHeight: 0, flex: '0 1 auto', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        {/* Title and its buttons stay put; only what's under them scrolls */}
+        <div style={{ padding: '14px 20px 0', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               {(fresh || tag) && (
@@ -288,8 +289,30 @@ const MomentSlide = forwardRef<SlideHandle, {
                 </a>
               )}
             </div>
+            {/* Comments, share and tickets, kept small */}
+            <div style={{ display: 'flex', gap: 8, paddingTop: 2 }}>
+              <button type="button" aria-label={`Comments (${comments.length})`} onClick={() => setShowComments(true)} style={{ ...iconBtn(false), position: 'relative' }}>
+                <MessageSquareText size={17} />
+                {comments.length > 0 && (
+                  <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 17, height: 17, padding: '0 4px', boxSizing: 'border-box', borderRadius: 9, background: T.white, color: '#050606', fontFamily: FONT.sans, fontSize: 10, fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {formatCount(comments.length)}
+                  </span>
+                )}
+              </button>
+              <button type="button" aria-label="Share" onClick={share} style={iconBtn(false)}><Share2 size={16} /></button>
+              {next && (
+                <button type="button" aria-label={`Add ${next.title} to a calendar`} onClick={() => setCalOpen(true)} style={iconBtn(false)}><CalendarPlus size={17} /></button>
+              )}
+              {next && (
+                <a href={next.ticketUrl ?? `/events/${next.slug}?tickets=1`} aria-label="Get tickets for the next edition" {...(next.ticketUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})} style={iconBtn(false, true)}>
+                  <Ticket size={17} />
+                </a>
+              )}
+            </div>
           </div>
+        </div>
 
+        <div className="no-scrollbar" style={{ padding: '0 20px 6px', minHeight: 0, flex: '0 1 auto', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           {(when || where) && (
             <p style={{ margin: '9px 0 0', display: 'flex', alignItems: 'center', gap: 12, fontFamily: FONT.sans, fontSize: 13, color: T.text2, minWidth: 0 }}>
               {when && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', flexShrink: 0 }}><CalendarDays size={14} />{shortDay(when)} {when.getFullYear()}</span>}
@@ -346,21 +369,7 @@ const MomentSlide = forwardRef<SlideHandle, {
 
         </div>
 
-        <div style={{ flex: 1, minHeight: 12 }} />
-
-        {/* Comments, share and calendar: pinned, so they never scroll away with the info above */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px 10px', flexShrink: 0 }}>
-          <button type="button" aria-label={`Comments (${comments.length})`} onClick={() => setShowComments(true)} style={{ ...iconBtn(false), width: 'auto', padding: '0 14px', gap: 7, borderRadius: 999, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700 }}>
-            <MessageSquareText size={16} />{comments.length > 0 ? formatCount(comments.length) : 'Comment'}
-          </button>
-          <button type="button" aria-label="Share" onClick={share} style={{ ...iconBtn(false), borderRadius: 999 }}><Share2 size={16} /></button>
-          {next && (
-            <button type="button" aria-label={`Add ${next.title} to a calendar`} onClick={() => setCalOpen(true)} style={{ ...iconBtn(false), borderRadius: 999 }}><CalendarPlus size={17} /></button>
-          )}
-          {!next && night.event_slug && (
-            <a href={`/events/${night.event_slug}`} aria-label="See the event" style={{ ...iconBtn(false), borderRadius: 999 }}><Ticket size={17} /></a>
-          )}
-        </div>
+        <div style={{ flex: 1, minHeight: 16 }} />
 
         {/* What's next for this show, full width: tickets for the next edition, or a reminder */}
         <div style={{ margin: '0 16px 14px', flexShrink: 0 }}>
