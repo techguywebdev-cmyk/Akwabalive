@@ -88,10 +88,10 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '40px 0 56px' }}>
           <svg width="40" height="40" viewBox="0 0 24 24">
             <rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" />
-            <path d="M7.5 18.5V11a4.5 4.5 0 0 1 9 0v7.5" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" />
-            <path d="M7.5 14.5h9" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" />
+            <path d="M10.5 5.5v9.5a3.2 3.2 0 0 0 3.2 3.2h1.8" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" />
+            <path d="M7.5 9.5h8" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" />
           </svg>
-          <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, color: '#fff' }}>akwaaba</span>
+          <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, color: '#fff' }}>tsacoal</span>
           <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.45)', marginLeft: 8 }}>make yours at akwabalive.vercel.app</span>
         </div>
       </div>
