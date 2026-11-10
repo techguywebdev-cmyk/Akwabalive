@@ -2,7 +2,7 @@ import type { Artist } from '@/lib/types';
 
 export type ArtistBio = { description: string | null; text: string; url: string };
 
-const UA = 'AkwaabaEvents/1.0 (https://akwabalive.vercel.app; techguywebdev@gmail.com)';
+const UA = 'AkwaabaEvents/1.0 (https://tsacoal.com; techguywebdev@gmail.com)';
 
 /** The opening of the artist's Wikipedia article (cached for a day); null when there isn't a real one */
 export async function getArtistBio(artist: Pick<Artist, 'wiki'>, ms = 2500): Promise<ArtistBio | null> {

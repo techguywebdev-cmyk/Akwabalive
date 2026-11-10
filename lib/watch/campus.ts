@@ -23,7 +23,7 @@ async function get(url: string, ms = 9000) {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
   try {
-    const r = await fetch(url, { signal: ctl.signal, cache: 'no-store', headers: { 'user-agent': 'Mozilla/5.0 (compatible; AkwaabaBot/1.0; +https://akwabalive.vercel.app)' } });
+    const r = await fetch(url, { signal: ctl.signal, cache: 'no-store', headers: { 'user-agent': 'Mozilla/5.0 (compatible; AkwaabaBot/1.0; +https://tsacoal.com)' } });
     return r.ok ? await r.text() : null;
   } catch { return null; } finally { clearTimeout(t); }
 }

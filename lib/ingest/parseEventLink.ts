@@ -294,7 +294,7 @@ export async function parseEventLink(url: string): Promise<ParsedDraft> {
     const res = await fetch(url, {
       headers: {
         'User-Agent':
-          'Mozilla/5.0 (compatible; AkwaabaBot/1.0; +https://akwabalive.vercel.app)',
+          'Mozilla/5.0 (compatible; AkwaabaBot/1.0; +https://tsacoal.com)',
         Accept: 'text/html',
       },
       redirect: 'follow',

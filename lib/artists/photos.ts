@@ -55,7 +55,7 @@ async function readRows(): Promise<Row[]> {
 
 /* ── Wikimedia lookup ───────────────────────────────────────────────── */
 
-const UA = 'AkwaabaEvents/1.0 (https://akwabalive.vercel.app; techguywebdev@gmail.com)';
+const UA = 'AkwaabaEvents/1.0 (https://tsacoal.com; techguywebdev@gmail.com)';
 const WEEK = 7 * 24 * 3600 * 1000;
 
 async function getJson(url: string, ms: number) {
