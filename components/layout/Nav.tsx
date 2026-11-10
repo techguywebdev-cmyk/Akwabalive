@@ -71,8 +71,11 @@ export function HeaderIconButton({
  * and the profile/sign-in button. Phones also get a floating glass tab bar at the bottom.
  */
 export default function Nav({
-  active, actions, back, tabs = false, plain = false, center, transparent = false,
+  active, actions, back, tabs = false, plain = false, center, transparent = false, onSearch, onFilter, filtersOn = false,
 }: {
+  /** Opens this page's filters (shown in the menu on phones) */
+  onFilter?: () => void;
+  filtersOn?: boolean;
   /** Never draw a header band (pages with a full-bleed image at the top, like an event's flyer): just the floating buttons */
   transparent?: boolean;
   variant?: 'default' | 'moments';
@@ -171,9 +174,8 @@ export default function Nav({
     { href: profileHref, label: user ? 'My profile' : 'Sign in', icon: 'user', key: 'Profile' },
   ];
 
-  const toolsLeft = isMobile && !back
-    ? (actions ?? (plain ? null : <HeaderIconButton label="Search events" icon="search" onClick={() => setSearching(true)} />))
-    : null;
+  // Phones: search and filters live in the menu, so the header is just the menu button
+  const toolsInMenu = isMobile && !back;
 
   return (
     <>
@@ -195,8 +197,6 @@ export default function Nav({
           {back
             ? <HeaderIconButton label="Back" icon="arrowLeft" href={back} />
             : <HeaderIconButton label="Menu" icon="menu" onClick={() => setMenuOpen(true)} />}
-          {/* Phones: search and filters sit with the menu button */}
-          {toolsLeft}
           {!isMobile && <span style={{ marginLeft: 8 }}><Wordmark /></span>}
 
           {!isMobile && (
@@ -236,7 +236,7 @@ export default function Nav({
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
-          {!toolsLeft && (actions ?? (plain ? null : <HeaderIconButton label="Search events" icon="search" onClick={() => setSearching(true)} />))}
+          {!toolsInMenu && (actions ?? (plain ? null : <HeaderIconButton label="Search events" icon="search" onClick={() => setSearching(true)} />))}
           {(!isMobile || !actions) && avatar}
         </div>
       </header>
@@ -291,7 +291,7 @@ export default function Nav({
             aria-modal="true"
             aria-label="Menu"
             style={{
-              position: 'absolute', top: 0, bottom: 0, left: 0, width: isMobile ? '100%' : 420, display: 'flex', flexDirection: 'column',
+              position: 'absolute', top: 0, bottom: 0, left: 0, width: isMobile ? '100%' : 420, boxSizing: 'border-box', display: 'flex', flexDirection: 'column',
               padding: 'calc(14px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px))',
               background: GROUND,
               boxShadow: '30px 0 80px rgba(0,0,0,0.5)',
@@ -318,6 +318,22 @@ export default function Nav({
                 </span>
               </Link>
             )}
+
+            {/* Search, and this page's filters */}
+            <div style={{ ...stagger(1), display: 'flex', gap: 8, marginTop: 20 }}>
+              <button type="button" onClick={() => { setMenuOpen(false); if (onSearch) onSearch(); else setSearching(true); }}
+                style={{ flex: 1, minWidth: 0, height: 50, padding: '0 16px', borderRadius: 17, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.07)', color: T.text3, fontFamily: FONT.sans, fontSize: 15, textAlign: 'left' }}>
+                <Icon name="search" size={19} color={T.mint} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Search shows, artists, places</span>
+              </button>
+              {onFilter && (
+                <button type="button" onClick={() => { setMenuOpen(false); onFilter(); }} aria-label={filtersOn ? 'Sort and filter (on)' : 'Sort and filter'}
+                  style={{ position: 'relative', width: 50, height: 50, flexShrink: 0, borderRadius: 17, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: filtersOn ? 'rgba(123,227,168,0.16)' : 'rgba(255,255,255,0.07)', color: filtersOn ? T.mint : T.white }}>
+                  <Icon name="sliders" size={20} />
+                  {filtersOn && <span aria-hidden style={{ position: 'absolute', top: 11, right: 11, width: 7, height: 7, borderRadius: 2, background: T.mint }} />}
+                </button>
+              )}
+            </div>
 
             {/* Where to go, each with a glimpse of what's inside: flyers, tonight's count, a clip, faces */}
             <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column' }}>
@@ -381,6 +397,23 @@ export default function Nav({
                 </Link>
               ))}
             </div>
+
+            {!user && (
+              <div style={{ ...stagger(9), marginTop: 30 }}>
+                <p style={{ margin: '0 0 4px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>With an account</p>
+                {([
+                  { label: 'Save the shows you like', icon: 'bookmark' },
+                  { label: 'A reminder the day before', icon: 'bell' },
+                  { label: 'Make and share your calendar', icon: 'calendarAdd' },
+                  { label: 'See where your friends are going', icon: 'friends' },
+                ] as { label: string; icon: IconName }[]).map((l) => (
+                  <Link key={l.label} href="/auth" onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 46, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 15.5, fontWeight: 500, color: 'rgba(255,255,255,0.86)' }}>
+                    <Icon name={l.icon} size={19} color={T.mint} />
+                    <span style={{ flex: 1 }}>{l.label}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
 
             {user && (
               <div style={{ ...stagger(9), marginTop: 30 }}>
