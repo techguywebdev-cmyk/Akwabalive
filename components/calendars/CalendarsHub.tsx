@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { FlyerPop, type GridEvent } from '@/components/calendars/MonthGrid';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Globe, Heart, Lock, Plus, Star } from 'lucide-react';
@@ -17,7 +18,7 @@ type Row = Calendar & { calendar_events: { event_slug: string }[] };
 const gradText: React.CSSProperties = { background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' };
 const eyebrow: React.CSSProperties = { margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
 
-type TileEvent = { date: string; img: string | null };
+type TileEvent = { date: string; img: string | null; ev: GridEvent };
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const iso = (y: number, m: number, d: number) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
@@ -49,8 +50,11 @@ function Tile({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarSta
   const day: Record<string, TileEvent> = {};
   for (const e of byMonth[pick] ?? []) if (!day[e.date.slice(0, 10)] || (!day[e.date.slice(0, 10)].img && e.img)) day[e.date.slice(0, 10)] = e;
   const span = Object.keys(byMonth).length;
+  const [pop, setPop] = useState<string | null>(null);
+  const popEvents = pop ? evs.filter((e) => e.date.slice(0, 10) === pop).map((e) => e.ev) : [];
 
   return (
+    <>
     <Link href={`/c/${c.slug}`} style={{ display: 'block', textDecoration: 'none' }}>
       <span style={{ position: 'relative', display: 'block', paddingTop: 7 }}>
         {/* Binding */}
@@ -79,7 +83,10 @@ function Tile({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarSta
               const e = day[k];
               if (!e) return <span key={i} style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: 8.5, fontWeight: 600, color: k === today ? T.mintText : 'rgba(255,255,255,0.3)' }}>{d}</span>;
               return (
-                <span key={i} style={{ position: 'relative', aspectRatio: '1', borderRadius: 5, overflow: 'hidden', background: GRAD.mint, boxShadow: '0 3px 8px -2px rgba(0,0,0,0.6)' }}>
+                <span key={i} role="button" tabIndex={0} aria-label={`See the show on ${d} ${MONTHS[m]}`}
+                  onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); setPop(k); }}
+                  onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.stopPropagation(); setPop(k); } }}
+                  style={{ position: 'relative', aspectRatio: '1', borderRadius: 5, overflow: 'hidden', background: GRAD.mint, boxShadow: '0 3px 8px -2px rgba(0,0,0,0.6)', cursor: 'zoom-in' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   {e.img && <img src={e.img} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
                 </span>
@@ -99,6 +106,8 @@ function Tile({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarSta
         {stats?.rating != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.mintText, flexShrink: 0 }}><Star size={11} fill="currentColor" strokeWidth={0} />{Number(stats.rating).toFixed(1)}</span>}
       </span>
     </Link>
+    {pop && popEvents.length > 0 && <FlyerPop day={pop} events={popEvents} onClose={() => setPop(null)} />}
+    </>
   );
 }
 
@@ -109,6 +118,7 @@ export default function CalendarsHub() {
   const { user } = useAuth();
   const [mine, setMine] = useState<Row[]>([]);
   const [popular, setPopular] = useState<Row[]>([]);
+  const [events, setEvents] = useState<Record<string, GridEvent>>({});
   const [ours, setOurs] = useState<Row[]>([]);
   const [stats, setStats] = useState<Record<string, CalendarStats>>({});
   const [flyers, setFlyers] = useState<Record<string, string>>({});
@@ -132,13 +142,14 @@ export default function CalendarsHub() {
       const score = (c: Row) => (st[c.id]?.likes ?? 0) * 3 + (st[c.id]?.ratings ?? 0) * 2 + (st[c.id]?.comments ?? 0) + c.calendar_events.length * 0.2;
       p.sort((a, b) => score(b) - score(a));
       const slugs = Array.from(new Set(all.flatMap((c) => c.calendar_events.map((e) => e.event_slug))));
-      const ev = slugs.length ? await db.from('events').select('slug, image_url, date').in('slug', slugs.slice(0, 300)) : { data: [] };
+      const ev = slugs.length ? await db.from('events').select('slug, title, date, time, venue, image_url').in('slug', slugs.slice(0, 300)) : { data: [] };
       if (!live) return;
       setOurs(p.filter((c) => isCurated(c.slug)));
       setPopular(p.filter((c) => c.owner_id !== user?.id && !isCurated(c.slug)).slice(0, 12));
       setMine(o.filter((c) => !isCurated(c.slug)));
       setStats(st);
-      const evRows = (ev.data ?? []) as { slug: string; image_url: string | null; date: string }[];
+      const evRows = (ev.data ?? []) as GridEvent[];
+      setEvents(Object.fromEntries(evRows.map((e) => [e.slug, e])));
       setFlyers(Object.fromEntries(evRows.filter((e) => e.image_url).map((e) => [e.slug, hiRes(e.image_url, 300) ?? e.image_url!])));
       setDates(Object.fromEntries(evRows.map((e) => [e.slug, e.date])));
     })();
@@ -157,7 +168,7 @@ export default function CalendarsHub() {
   };
   // Header: flyers from the public calendars on show (never from someone's private one)
   const wall = Array.from(new Set([...ours, ...popular].flatMap((c) => c.calendar_events.map((e) => flyers[e.event_slug])).filter(Boolean))).slice(0, 10);
-  const fl = (c: Row): TileEvent[] => c.calendar_events.filter((e) => dates[e.event_slug]).map((e) => ({ date: dates[e.event_slug], img: flyers[e.event_slug] ?? null }));
+  const fl = (c: Row): TileEvent[] => c.calendar_events.filter((e) => dates[e.event_slug]).map((e) => ({ date: dates[e.event_slug], img: flyers[e.event_slug] ?? null, ev: events[e.event_slug] }));
   // Every section is the same swipeable row of tiles
   const row: React.CSSProperties = { display: 'flex', gap: 14, overflowX: 'auto', margin: '14px -20px 0', padding: '0 20px 6px', scrollSnapType: 'x mandatory', scrollPaddingLeft: 20 };
   const cell: React.CSSProperties = { width: 'min(56vw, 230px)', flexShrink: 0, scrollSnapAlign: 'start' };
