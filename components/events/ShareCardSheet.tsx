@@ -6,9 +6,13 @@ import { Check, Download, Link2, Share2, X } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { T, FONT, GRAD } from '@/lib/thiscene';
 
-type Kind = 'event' | 'artist';
-const cardUrl = (kind: Kind, slug: string, u: string | null, size: 'post' | 'story') =>
-  `${kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}`;
+type Kind = 'event' | 'artist' | 'moment';
+/** For a moment, slug is the clip id and extra carries the next edition (&next=slug) */
+const cardUrl = (kind: Kind, slug: string, u: string | null, size: 'post' | 'story', extra = '') =>
+  kind === 'moment'
+    ? `/moments/card?id=${encodeURIComponent(slug)}&format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}${extra}`
+    : `${kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}`;
+const pageOf = (kind: Kind, slug: string) => kind === 'moment' ? `/moments?id=${encodeURIComponent(slug)}` : kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`;
 
 /** Cards fetched ahead of time, so the sheet opens with the picture ready and sharing is instant */
 const blobs = new Map<string, Promise<Blob>>();
@@ -23,27 +27,27 @@ function warm(url: string): Promise<Blob> {
 }
 
 /** Make the post-size card in the background while someone looks at a show or artist */
-export function useWarmShareCard(kind: Kind, slug: string, enabled = true) {
+export function useWarmShareCard(kind: Kind, slug: string, enabled = true, extra = '') {
   const { profile, loading } = useAuth();
   const u = profile?.username ?? null;
   useEffect(() => {
     if (!enabled || loading) return;
-    const t = setTimeout(() => { warm(cardUrl(kind, slug, u, 'post')).catch(() => {}); }, 400);
+    const t = setTimeout(() => { warm(cardUrl(kind, slug, u, 'post', extra)).catch(() => {}); }, 400);
     return () => clearTimeout(t);
-  }, [kind, slug, u, enabled, loading]);
+  }, [kind, slug, u, enabled, loading, extra]);
 }
 
 /**
  * Share a show as a designed card: story-size picture (with your face and "Leo's going" when you're signed in),
  * shared straight to WhatsApp/Instagram or saved, plus a link whose preview carries your name too.
  */
-export default function ShareCardSheet({ slug, title, onClose, kind = 'event', intro, image }: { slug: string; title: string; onClose: () => void; kind?: 'event' | 'artist'; intro?: string; image?: string | null }) {
-  const base = kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`;
+export default function ShareCardSheet({ slug, title, onClose, kind = 'event', intro, image, extra = '' }: { slug: string; title: string; onClose: () => void; kind?: Kind; intro?: string; image?: string | null; extra?: string }) {
+  const base = pageOf(kind, slug);
   const { profile } = useAuth();
   const u = profile?.username ?? null;
   // Post size (4:5) shows whole on X, Instagram and WhatsApp; story size fills a phone screen
   const [size, setSize] = useState<'post' | 'story'>('post');
-  const card = cardUrl(kind, slug, u, size);
+  const card = cardUrl(kind, slug, u, size, extra);
   const [preview, setPreview] = useState<string | null>(null);
   const [link, setLink] = useState(base);
   const [loaded, setLoaded] = useState(false);
@@ -54,10 +58,10 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
     let live = true, obj: string | null = null;
     setLoaded(false); setPreview(null);
     warm(card).then((b) => { if (!live) return; obj = URL.createObjectURL(b); setPreview(obj); }).catch(() => { if (live) setPreview(card); });
-    warm(cardUrl(kind, slug, u, size === 'post' ? 'story' : 'post')).catch(() => {});
+    warm(cardUrl(kind, slug, u, size === 'post' ? 'story' : 'post', extra)).catch(() => {});
     return () => { live = false; if (obj) URL.revokeObjectURL(obj); };
-  }, [card, kind, slug, u, size]);
-  useEffect(() => { setLink(`${window.location.origin}${base}${u ? `?by=${encodeURIComponent(u)}` : ''}`); }, [base, u]);
+  }, [card, kind, slug, u, size, extra]);
+  useEffect(() => { setLink(`${window.location.origin}${base}${u ? `${base.includes('?') ? '&' : '?'}by=${encodeURIComponent(u)}` : ''}`); }, [base, u]);
   useEffect(() => {
     const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
@@ -65,7 +69,7 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
 
   const file = async () => {
     const blob = await warm(card);
-    return new File([blob], `${slug}-${size}.png`, { type: 'image/png' });
+    return new File([blob], `${kind === 'moment' ? 'tsacoal-moment' : slug}-${size}.png`, { type: 'image/png' });
   };
 
   const shareCard = async () => {

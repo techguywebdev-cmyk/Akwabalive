@@ -106,24 +106,13 @@ export default function OrganizerDashboard() {
     <div style={{ minHeight: '100vh' }}>
       <Nav active="Dashboard" />
       <main style={{ maxWidth: 760, margin: '0 auto', padding: 'calc(88px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
-        {/* Who and the one main thing to do */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14 }}>
-          <div style={{ minWidth: 0 }}>
-            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.mintText }}>Organiser</p>
-            <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: 'clamp(30px, 7vw, 40px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, color: T.white }}>
-              {first ? `Hi ${first}` : 'Your events'}
-            </h1>
-          </div>
-          <Link href="/organizer/events/new" style={{ flexShrink: 0, height: 44, padding: '0 18px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
-            <Plus size={17} strokeWidth={2.4} /> New event
-          </Link>
-        </div>
+        <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(30px, 7vw, 40px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Dashboard</h1>
 
         {/* The numbers, plain: no boxes */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '18px 12px', marginTop: 26, paddingBottom: 22, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '18px 12px', marginTop: 22, paddingBottom: 22, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           {([
             ['Tickets sold', sold.toLocaleString(), null],
-            ['Money in', ghs(revenue), null],
+            ['Money in', `₵${Math.round(revenue).toLocaleString()}`, null],
             ['Checked in', checked.toLocaleString(), sold > 0 ? `${Math.round((checked / sold) * 100)}%` : null],
             ['Live events', String(live.length), null],
             ['Seen this week', compact(Object.values(seen).reduce((n, c) => n + c.seen7d, 0)), null],
@@ -158,8 +147,14 @@ export default function OrganizerDashboard() {
           ))}
         </div>
 
-        {/* Your events */}
-        <div role="tablist" aria-label="Your events" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginTop: 32, padding: 4, borderRadius: 16, background: 'rgba(255,255,255,0.05)' }}>
+        {/* Your events, with making a new one right where the events are */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 34 }}>
+          <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 21, fontWeight: 800, letterSpacing: '-0.025em', color: T.white }}>Your events</h2>
+          <Link href="/organizer/events/new" style={{ height: 36, padding: '0 14px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(123,227,168,0.12)', color: T.mintText, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+            <Plus size={16} strokeWidth={2.4} /> New event
+          </Link>
+        </div>
+        <div role="tablist" aria-label="Your events" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginTop: 14, padding: 4, borderRadius: 16, background: 'rgba(255,255,255,0.05)' }}>
           {(['upcoming', 'past', 'drafts'] as const).map((k) => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 40, padding: '0 6px', borderRadius: 12, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 700, background: tab === k ? 'rgba(123,227,168,0.16)' : 'transparent', color: tab === k ? T.mint : T.text2 }}>
               {k === 'upcoming' ? 'Upcoming' : k === 'past' ? 'Past' : 'Drafts'}
