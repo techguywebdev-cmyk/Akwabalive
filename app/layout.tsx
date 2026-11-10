@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Inter_Tight } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/supabase/AuthProvider';
+import RefTracker from '@/components/social/RefTracker';
 
 /** Display face — titles, numerals, eyebrows */
 const interTight = Inter_Tight({
@@ -43,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${inter.variable} ${interTight.variable}`}
     >
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider><RefTracker />{children}</AuthProvider>
       </body>
     </html>
   );
