@@ -118,7 +118,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
             Artist{artist.genre ? ` · ${artist.genre}` : ''}
           </p>
           <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: artist.name.length > 12 ? 42 : 52, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, color: T.white, textShadow: '0 2px 24px rgba(0,0,0,0.3)' }}>{artist.name}</h1>
-          {bio?.description && <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 15, color: T.text2 }}>{bio.description}</p>}
+          {bio?.description && <p style={{ maxWidth: 280, margin: '10px auto 0', fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.45, color: T.text2, textWrap: 'balance' } as React.CSSProperties}>{bio.description}</p>}
 
           <div style={{ display: 'flex', alignItems: 'stretch', maxWidth: 340, margin: '20px auto 0' }}>
             <Stat value={followers === null ? '–' : compactCount(followers)} label={followers === 1 ? 'Follower' : 'Followers'} />
@@ -129,9 +129,6 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
           </div>
 
           <div style={{ display: 'flex', gap: 10, marginTop: 22, justifyContent: 'center' }}>
-            <button type="button" onClick={toggle} disabled={busy} style={{ ...(following ? BTN.secondary : BTN.primary), flex: 1, maxWidth: 240, height: 46 }}>
-              {following ? <><Check size={17} /> Following</> : 'Follow'}
-            </button>
             {photo?.spotifyUrl && (
               <a href={photo.spotifyUrl} target="_blank" rel="noopener noreferrer" aria-label={`Listen to ${artist.name} on Spotify`} title="Listen on Spotify" style={{ ...roundBtn, color: '#1ED760' }}><SpotifyLogo size={20} /></a>
             )}
@@ -145,6 +142,9 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
               <button type="button" onClick={() => setPhotoSheet(true)} aria-label="Change photo" title="Change photo" style={roundBtn}><Camera size={18} /></button>
             )}
           </div>
+          <button type="button" onClick={toggle} disabled={busy} style={{ ...(following ? BTN.secondary : BTN.primary), width: '100%', maxWidth: 300, height: 50, margin: '16px auto 0', display: 'flex' }}>
+            {following ? <><Check size={17} /> Following</> : 'Follow'}
+            </button>
           {!following && (
             <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Follow to see new {artist.name} dates first.</p>
           )}
