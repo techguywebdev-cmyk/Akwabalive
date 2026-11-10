@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Instagram, Share2, Check, CalendarDays, Camera } from 'lucide-react';
-import ShareCardSheet from '@/components/events/ShareCardSheet';
+import ShareCardSheet, { useWarmShareCard } from '@/components/events/ShareCardSheet';
 import type { ArtistBio } from '@/lib/artists/bio';
 import type { Artist, GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
@@ -81,6 +81,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
 
   // Share opens the card sheet: the artist and their next shows as a picture, plus a personal link
   const [sharing, setSharing] = useState(false);
+  useWarmShareCard('artist', artist.slug);
   function share() { setSharing(true); }
 
 
