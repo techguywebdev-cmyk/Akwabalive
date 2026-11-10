@@ -17,11 +17,6 @@ export default async function OG() {
         fontFamily: font ? 'Inter Tight' : undefined,
         background: 'radial-gradient(70% 60% at 50% 0%, rgba(40,130,85,0.35) 0%, rgba(40,130,85,0) 80%), linear-gradient(180deg, #0B0F0D 0%, #050606 100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-          <svg width="88" height="88" viewBox="0 0 24 24">
-            <rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" />
-            <path d="M12 7v11" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="butt" />
-            <path d="M6.5 7h11" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="butt" />
-          </svg>
           <span style={{ fontSize: 64, fontWeight: 800, letterSpacing: -2, color: '#ffffff' }}>Tsacoal</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
