@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
-import { Stat, StatusPill, Bar, QuickAction, ghs, card, type EventStatus } from '@/components/organizer/ui';
+import { StatusPill, Bar, ghs, card, type EventStatus } from '@/components/organizer/ui';
 import { parseDay, shortDay } from '@/lib/dates';
 import { hiRes } from '@/lib/events/image';
 import { T, FONT, GRAD } from '@/lib/thiscene';
@@ -106,34 +106,64 @@ export default function OrganizerDashboard() {
     <div style={{ minHeight: '100vh' }}>
       <Nav active="Dashboard" />
       <main style={{ maxWidth: 760, margin: '0 auto', padding: 'calc(88px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
-        <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Organiser</p>
-        <h1 style={{ margin: '4px 0 0', fontFamily: FONT.display, fontSize: 'clamp(32px, 7vw, 44px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, color: T.white }}>
-          {first ? `Hi ${first}` : 'Your events'}
-        </h1>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 22 }}>
-          <Stat label="Tickets sold" value={sold.toLocaleString()} />
-          <Stat label="Money in" value={ghs(revenue)} note={revenue > 0 ? 'Before Paystack fees' : undefined} />
-          <Stat label="Checked in" value={checked.toLocaleString()} note={sold > 0 ? `${Math.round((checked / sold) * 100)}% of tickets` : undefined} />
-          <Stat label="Live events" value={String(live.length)} />
-          <Stat label="People who saw them" value={compact(Object.values(seen).reduce((n, c) => n + c.seen7d, 0))} note="This week" />
-          <Stat label="Going" value={compact(Object.values(seen).reduce((n, c) => n + c.going, 0))} note="Said they’re going" />
+        {/* Who and the one main thing to do */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14 }}>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.mintText }}>Organiser</p>
+            <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: 'clamp(30px, 7vw, 40px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, color: T.white }}>
+              {first ? `Hi ${first}` : 'Your events'}
+            </h1>
+          </div>
+          <Link href="/organizer/events/new" style={{ flexShrink: 0, height: 44, padding: '0 18px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+            <Plus size={17} strokeWidth={2.4} /> New event
+          </Link>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, marginTop: 14 }}>
-          <QuickAction primary href="/organizer/events/new" icon={<Plus size={22} strokeWidth={2.2} />} label="Create event" />
-          <QuickAction href="/organizer/scan" icon={<ScanLine size={22} strokeWidth={2} />} label="Scan tickets" />
-          <QuickAction href="/organizer/events/from-link" icon={<Link2 size={22} strokeWidth={2} />} label="Add from a link" />
-          <QuickAction href="/organisers/claim" icon={<Users size={22} strokeWidth={2} />} label="Claim an event" />
-          <QuickAction href="/organizer/review" icon={<Inbox size={22} strokeWidth={2} />} label="Review queue" badge={review} />
-          <QuickAction href="/organizer/moments/post" icon={<Video size={22} strokeWidth={2} />} label="Post a moment" />
-          <QuickAction href="/organizer/moments" icon={<Clapperboard size={22} strokeWidth={2} />} label="Moments review" />
+        {/* The numbers, plain: no boxes */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '18px 12px', marginTop: 26, paddingBottom: 22, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          {([
+            ['Tickets sold', sold.toLocaleString(), null],
+            ['Money in', ghs(revenue), null],
+            ['Checked in', checked.toLocaleString(), sold > 0 ? `${Math.round((checked / sold) * 100)}%` : null],
+            ['Live events', String(live.length), null],
+            ['Seen this week', compact(Object.values(seen).reduce((n, c) => n + c.seen7d, 0)), null],
+            ['Going', compact(Object.values(seen).reduce((n, c) => n + c.going, 0)), null],
+          ] as [string, string, string | null][]).map(([label, value, note]) => (
+            <div key={label} style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontFamily: FONT.display, fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
+                {note && <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: T.mintText }}>{note}</span>}
+              </div>
+              <div style={{ marginTop: 2, fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>{label}</div>
+            </div>
+          ))}
         </div>
 
-        <div role="tablist" aria-label="Your events" style={{ display: 'inline-flex', marginTop: 30, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)', border: 'none' }}>
+        {/* Everything else, as quiet rows */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', columnGap: 18, marginTop: 10 }}>
+          {([
+            ['/organizer/scan', <ScanLine key="i" size={18} />, 'Scan tickets', 0],
+            ['/organizer/events/from-link', <Link2 key="i" size={18} />, 'Add from a link', 0],
+            ['/organisers/claim', <Users key="i" size={18} />, 'Claim an event', 0],
+            ['/organizer/moments/post', <Video key="i" size={18} />, 'Post a moment', 0],
+            ['/organizer/review', <Inbox key="i" size={18} />, 'Review queue', review],
+            ['/organizer/moments', <Clapperboard key="i" size={18} />, 'Moments review', 0],
+          ] as [string, React.ReactNode, string, number][]).map(([href, icon, label, badge]) => (
+            <Link key={href} href={href} style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 56, textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <span style={{ width: 36, height: 36, borderRadius: 12, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.1)', color: T.mint }}>{icon}</span>
+              <span style={{ flex: 1, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, color: T.white }}>{label}</span>
+              {!!badge && <span style={{ minWidth: 22, height: 22, padding: '0 7px', boxSizing: 'border-box', borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 12, fontWeight: 800 }}>{badge}</span>}
+              <ChevronRight size={17} color="rgba(255,255,255,0.3)" />
+            </Link>
+          ))}
+        </div>
+
+        {/* Your events */}
+        <div role="tablist" aria-label="Your events" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginTop: 32, padding: 4, borderRadius: 16, background: 'rgba(255,255,255,0.05)' }}>
           {(['upcoming', 'past', 'drafts'] as const).map((k) => (
-            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 38, padding: '0 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, background: tab === k ? GRAD.mint : 'transparent', color: tab === k ? T.onMint : T.text2 }}>
-              {k === 'upcoming' ? 'Upcoming' : k === 'past' ? 'Past' : 'Drafts & review'}{lists[k].length ? ` · ${lists[k].length}` : ''}
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} style={{ height: 40, padding: '0 6px', borderRadius: 12, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: FONT.sans, fontSize: 14, fontWeight: 700, background: tab === k ? 'rgba(123,227,168,0.16)' : 'transparent', color: tab === k ? T.mint : T.text2 }}>
+              {k === 'upcoming' ? 'Upcoming' : k === 'past' ? 'Past' : 'Drafts'}
+              {lists[k].length > 0 && <span style={{ marginLeft: 6, fontWeight: 600, opacity: 0.7 }}>{lists[k].length}</span>}
             </button>
           ))}
         </div>
