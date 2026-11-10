@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { supabaseToGhanaEvent, type SupabaseEvent } from '@/lib/supabase/events';
 import { events as staticEvents } from '@/lib/data/events';
 import { seriesKey, seriesWords } from '@/lib/moments/series';
+import { SERIES, eventInSeries, momentInSeries } from '@/lib/data/series';
 import type { GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
 
@@ -63,6 +64,15 @@ export function useNextEdition(moment: Moment | null) {
           .limit(10);
         const hit = (data ?? []).find((e: { title: string }) => allWords(e.title));
         if (hit) found = supabaseToGhanaEvent(hit as SupabaseEvent);
+        // Shows go by more than one name (Beyond Kontrol is the BYK Concert): try every name the show is known by
+        const show = !found && moment ? SERIES.find((x) => momentInSeries(moment, x)) : null;
+        if (show) {
+          const { data: alt } = await supabase.from('events').select('*, ticket_tiers(*)').eq('status', 'published').gte('date', today)
+            .or(show.keywords.map((k) => `title.ilike.%${k.replace(/[^a-z0-9 ]/gi, '').trim().replace(/\s+/g, '%')}%`).join(','))
+            .order('date', { ascending: true }).limit(10);
+          const a = (alt ?? []).find((e: { title: string; description?: string }) => eventInSeries({ title: e.title, description: e.description ?? '' }, show));
+          if (a) found = supabaseToGhanaEvent(a as SupabaseEvent);
+        }
       } catch {
         /* fall through to static */
       }
