@@ -97,7 +97,7 @@ export default function CalendarSheet({ events, title, owner, slug, isPublic, on
         ))}
 
         <p style={{ margin: '26px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: FONT.display, fontSize: 14, fontWeight: 800, color: T.white }}>
-          <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden><rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" /><path d="M7.5 18.5V11a4.5 4.5 0 0 1 9 0v7.5" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" /><path d="M7.5 14.5h9" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" /></svg>
+          <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden><rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" /><path d="M10.5 5.5v9.5a3.2 3.2 0 0 0 3.2 3.2h1.8" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" /><path d="M7.5 9.5h8" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="round" /></svg>
           akwaaba
         </p>
       </div>
