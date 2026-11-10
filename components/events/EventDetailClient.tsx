@@ -37,6 +37,7 @@ import { useAuth } from '@/lib/supabase/AuthProvider';
 import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import StatTip from '@/components/events/StatTip';
 import AddToCalendar from '@/components/calendars/AddToCalendar';
+import ShareCardSheet from '@/components/events/ShareCardSheet';
 
 export type { CheckoutTier } from '@/lib/events/tiers';
 
@@ -217,14 +218,9 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
     else showToast(on ? 'Removed from your plans' : "You're going — friends can see it");
   }
 
-  async function share() {
-    const url = `${window.location.origin}/events/${event.slug}`;
-    try {
-      if (navigator.share) { await navigator.share({ title: event.title, url }); return; }
-      await navigator.clipboard.writeText(url);
-      showToast('Link copied');
-    } catch { /* cancelled */ }
-  }
+  // Share opens the card sheet: a designed picture of the show (with your name) and a personal link
+  const [sharing, setSharing] = useState(false);
+  function share() { setSharing(true); }
 
   const eyebrow: CSSProperties = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 6px' };
   const eyebrowMint: CSSProperties = { ...eyebrow, color: T.mintText };
@@ -326,6 +322,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           <button type="button" onClick={share} aria-label="Share" style={roundBtn(false)}><Share2 size={17} /></button>
         </div>
         {calOpen && <AddToCalendar eventSlug={event.slug} eventTitle={event.title} onClose={() => setCalOpen(false)} />}
+        {sharing && <ShareCardSheet slug={event.slug} title={event.title} onClose={() => setSharing(false)} />}
 
         <FriendsStrip slug={event.slug} variant="full" />
 

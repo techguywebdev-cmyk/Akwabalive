@@ -138,3 +138,10 @@ body::before {
 /* Horizontal strips that swipe without a visible bar */
 .ak-noscroll { scrollbar-width: none; }
 .ak-noscroll::-webkit-scrollbar { display: none; }
+
+/* Countdown digits slide down into place when they change */
+@keyframes ak-tick { from { transform: translateY(-70%); opacity: 0; } to { transform: none; opacity: 1; } }
+.ak-tick { animation: ak-tick 380ms cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes ak-pulse-k { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.ak-pulse { animation: ak-pulse-k 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .ak-tick, .ak-pulse { animation: none; } }

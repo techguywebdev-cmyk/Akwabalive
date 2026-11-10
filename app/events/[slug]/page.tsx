@@ -9,7 +9,6 @@ import { shareMeta } from '@/lib/og';
 import { momentsForEvent } from '@/lib/moments/match';
 import type { Moment } from '@/components/moments/types';
 import { parseDay, shortDay } from '@/lib/dates';
-import { hiRes } from '@/lib/events/image';
 
 // Event pages are kept for a minute and refreshed in the background, so they open instantly (and can be prefetched)
 export const revalidate = 60;
@@ -17,7 +16,7 @@ const FRESH = 60;
 /** Built the first time someone opens each event, then served from cache */
 export async function generateStaticParams() { return []; }
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params, searchParams }: { params: { slug: string }; searchParams?: { by?: string } }) {
   const staticEvent = staticEvents.find(e => e.slug === params.slug);
   if (staticEvent) {
     return {
@@ -30,10 +29,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     const e = supabaseToGhanaEvent(dbEvent);
     const price = e.priceUnknown ? 'Tickets on Tsacoal' : e.price === 0 ? 'Free entry' : `From GH₵ ${e.price.toLocaleString()}`;
     const who = (e.lineup ?? []).slice(0, 4).join(', ');
+    // Shared by someone: their name on the preview card
+    const by = searchParams?.by?.replace(/[^a-zA-Z0-9_.-]/g, '').slice(0, 40) || null;
     return shareMeta({
       title: e.title,
       description: [[parseDay(e.date) ? shortDay(parseDay(e.date)!) : e.dateLabel, e.time && !/tba/i.test(e.time) ? e.time : ''].filter(Boolean).join(', '), e.venue, price].filter(Boolean).join(' · ') + (who ? `. With ${who}.` : ''),
-      image: e.image ? hiRes(e.image, 1200) ?? e.image : null,
+      image: `/events/${e.slug}/card?format=og${by ? `&u=${by}` : ''}`,
       path: `/events/${e.slug}`,
     });
   }
