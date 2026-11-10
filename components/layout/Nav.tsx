@@ -8,8 +8,14 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 import Wordmark from '@/components/brand/Wordmark';
 import SearchSheet from '@/components/search/SearchSheet';
 import { useUnreadCount } from '@/hooks/useNotifications';
+import { useMenuPeek } from '@/hooks/useMenuPeek';
+import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 
 /** Main sections. On phones they live in the bottom tab bar; on desktop, in the header. */
+/** Faces on the menu's Artists row */
+const FACE_SLUGS = ['sarkodie', 'black-sherif', 'gyakie', 'king-promise'];
+const NO_FACES: string[] = [];
+
 const SECTIONS: { href: string; label: string; icon: IconName }[] = [
   { href: '/', label: 'Discover', icon: 'compass' },
   { href: '/events', label: 'Events', icon: 'calendar' },
@@ -87,6 +93,8 @@ export default function Nav({
   const [menuOpen, setMenuOpen] = useState(false);
   const [searching, setSearching] = useState(false);
   const unread = useUnreadCount();
+  const peek = useMenuPeek(menuOpen);
+  const faces = useArtistPhotos(menuOpen ? FACE_SLUGS : NO_FACES);
   const [isMobile, setIsMobile] = useState(true);
   const [tabsHidden, setTabsHidden] = useState(false);
   // Once the page scrolls, the header turns into frosted green glass so content never reads through behind it
@@ -305,29 +313,67 @@ export default function Nav({
               </Link>
             )}
 
-            {/* Where to go: big names, a quiet line on what each is; the page you're on in mint */}
-            <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column' }}>
-              {[
-                ...(new Date() < new Date('2027-01-06') ? [{ href: '/december', label: 'December', hint: 'The big nights this season', tag: 'Now' }] : []),
-                { href: '/', label: 'Discover', hint: 'Swipe through what’s on' },
-                { href: '/events', label: 'Events', hint: 'Every show, by date' },
-                { href: '/moments', label: 'Moments', hint: 'Clips from past nights' },
-                { href: '/calendars', label: 'Calendars', hint: 'Plan your season' },
-                { href: '/artists', label: 'Artists', hint: 'Who’s playing where' },
-                { href: '/shows', label: 'Shows', hint: 'The nights that come back' },
-              ].map((l: { href: string; label: string; hint: string; tag?: string }, i) => {
+            {/* Where to go, each with a glimpse of what's inside: flyers, tonight's count, a clip, faces */}
+            <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column' }}>
+              {([
+                ...(new Date() < new Date('2027-01-06') ? [{ href: '/december', label: 'December', hint: peek?.bigNights ? `${peek.bigNights} big nights this season` : 'The big nights this season', peek: 'flyers' }] : []),
+                { href: '/events', label: 'Events', hint: 'Every show, by date', peek: 'count' },
+                { href: '/moments', label: 'Moments', hint: 'Clips from past nights', peek: 'clip' },
+                { href: '/artists', label: 'Artists', hint: 'Who’s playing where', peek: 'faces' },
+              ] as { href: string; label: string; hint: string; peek: 'flyers' | 'count' | 'clip' | 'faces' }[]).map((l, i) => {
                 const on = active === l.label;
                 return (
                   <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} aria-current={on ? 'page' : undefined}
-                    style={{ ...stagger(i + 1), display: 'block', padding: '10px 0', textDecoration: 'none' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontFamily: FONT.display, fontSize: 27, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.1, color: T.white, ...(on ? { background: GRAD.mint, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' } : {}) }}>{l.label}</span>
-                      {l.tag && <span style={{ height: 20, padding: '0 8px', borderRadius: 7, display: 'inline-flex', alignItems: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{l.tag}</span>}
+                    style={{ ...stagger(i + 1), display: 'flex', alignItems: 'center', gap: 14, minHeight: 76, padding: '8px 0', textDecoration: 'none' }}>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 27, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.1, color: T.white, ...(on ? { background: GRAD.mint, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent' } : {}) }}>{l.label}</span>
+                      <span style={{ display: 'block', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.sans, fontSize: 13.5, color: on ? T.mintText : T.text3 }}>{l.hint}</span>
                     </span>
-                    <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 13.5, color: on ? T.mintText : T.text3 }}>{l.hint}</span>
+                    {l.peek === 'flyers' && peek?.flyers.length ? (
+                      <span aria-hidden style={{ display: 'flex', flexShrink: 0 }}>
+                        {peek.flyers.map((f, k) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={f} src={f} alt="" style={{ width: 40, height: 52, borderRadius: 9, objectFit: 'cover', marginLeft: k ? -14 : 0, transform: `rotate(${(k - 1) * 6}deg)`, boxShadow: '0 6px 16px rgba(0,0,0,0.45), 0 0 0 1.5px rgba(10,14,12,0.9)', position: 'relative', zIndex: k === 1 ? 2 : 1 }} />
+                        ))}
+                      </span>
+                    ) : null}
+                    {l.peek === 'count' && peek?.shows ? (
+                      <span style={{ flexShrink: 0, textAlign: 'right' }}>
+                        <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, color: T.mint }}>{peek.shows.n}</span>
+                        <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 600, color: T.text3 }}>{peek.shows.when}</span>
+                      </span>
+                    ) : null}
+                    {l.peek === 'clip' && peek?.clip ? (
+                      <span aria-hidden style={{ position: 'relative', width: 78, height: 50, borderRadius: 11, overflow: 'hidden', flexShrink: 0, boxShadow: '0 6px 16px rgba(0,0,0,0.4)' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={`https://i.ytimg.com/vi/${peek.clip}/mqdefault.jpg`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)' }}>
+                          <span style={{ width: 24, height: 24, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}><Icon name="play" size={11} /></span>
+                        </span>
+                      </span>
+                    ) : null}
+                    {l.peek === 'faces' && FACE_SLUGS.some((f) => faces[f]) ? (
+                      <span aria-hidden style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        {FACE_SLUGS.filter((f) => faces[f]).map((f, k) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img key={f} src={faces[f]!} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', marginLeft: k ? -10 : 0, boxShadow: '0 0 0 2px #0B110E', position: 'relative', zIndex: 5 - k }} />
+                        ))}
+                        {peek?.artists && peek.artists > FACE_SLUGS.length && <span style={{ marginLeft: 8, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.text2 }}>+{peek.artists - FACE_SLUGS.length}</span>}
+                      </span>
+                    ) : null}
                   </Link>
                 );
               })}
+            </div>
+
+            {/* The rest, quieter */}
+            <div style={{ ...stagger(6), display: 'flex', flexWrap: 'wrap', gap: '4px 22px', marginTop: 10 }}>
+              {[{ href: '/', label: 'Discover' }, { href: '/calendars', label: 'Calendars' }, { href: '/shows', label: 'Shows' }].map((l) => (
+                <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} aria-current={active === l.label ? 'page' : undefined}
+                  style={{ padding: '8px 0', textDecoration: 'none', fontFamily: FONT.display, fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em', color: active === l.label ? T.mint : 'rgba(255,255,255,0.82)' }}>
+                  {l.label}
+                </Link>
+              ))}
             </div>
 
             {user && (
