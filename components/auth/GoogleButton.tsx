@@ -22,7 +22,7 @@ export const hasGoogleButton = !!CLIENT_ID;
  * Google's own sign-in button, running on tsacoal.com, so Google's screen says "Sign in to tsacoal.com".
  * The Google token is handed to Supabase (signInWithIdToken); onSignedIn runs after.
  */
-export default function GoogleButton({ onSignedIn, onError }: { onSignedIn: () => void; onError: (m: string) => void }) {
+export default function GoogleButton({ onSignedIn, onError, icon = false }: { onSignedIn: () => void; onError: (m: string) => void; icon?: boolean }) {
   const box = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -50,7 +50,9 @@ export default function GoogleButton({ onSignedIn, onError }: { onSignedIn: () =
         },
       });
       const w = Math.min(400, Math.max(240, Math.round(box.current.getBoundingClientRect().width)));
-      window.google.accounts.id.renderButton(box.current, { type: 'standard', theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'center', width: w });
+      window.google.accounts.id.renderButton(box.current, icon
+        ? { type: 'icon', theme: 'filled_black', size: 'large', shape: 'circle' }
+        : { type: 'standard', theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'center', width: w });
       setReady(true);
       window.google.accounts.id.prompt();
     };
@@ -65,9 +67,9 @@ export default function GoogleButton({ onSignedIn, onError }: { onSignedIn: () =
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ position: 'relative', marginTop: 18, minHeight: 44, display: 'flex', justifyContent: 'center' }}>
+    <div style={{ position: 'relative', marginTop: icon ? 0 : 18, minHeight: icon ? 52 : 44, width: icon ? 52 : undefined, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 999, background: icon ? 'rgba(255,255,255,0.08)' : undefined }}>
       {!ready && <div className="ak-sk" style={{ position: 'absolute', inset: 0, borderRadius: 999 }} />}
-      <div ref={box} style={{ width: '100%', display: 'flex', justifyContent: 'center' }} />
+      <div ref={box} style={{ width: icon ? 'auto' : '100%', display: 'flex', justifyContent: 'center' }} />
     </div>
   );
 }
