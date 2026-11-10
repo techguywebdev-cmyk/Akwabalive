@@ -12,6 +12,7 @@ export type MenuPeek = {
   artists: number | null;      // how many artists have pages
   next: string | null;         // the soonest show's flyer
   calendars: number | null;    // public calendars people made
+  soon: { slug: string; title: string; image_url: string; date: string }[]; // flyers for the coming week
 };
 
 let cache: MenuPeek | null = null;
@@ -33,7 +34,8 @@ export function useMenuPeek(open: boolean): MenuPeek | null {
       db.from('artist_profiles').select('slug', { count: 'exact', head: true }),
       db.from('events').select('image_url').eq('status', 'published').gte('date', today).not('image_url', 'is', null).order('date').order('is_hot', { ascending: false }).limit(1),
       db.from('calendars').select('id', { count: 'exact', head: true }).eq('is_public', true),
-    ]).then(([hot, tonight, thisWeek, clip, artists, next, cals]) => {
+      db.from('events').select('slug, title, image_url, date').eq('status', 'published').gte('date', today).lte('date', week).not('image_url', 'is', null).order('is_hot', { ascending: false }).order('date').limit(10),
+    ]).then(([hot, tonight, thisWeek, clip, artists, next, cals, soon]) => {
       if (!live) return;
       const t = tonight.count ?? 0, w = thisWeek.count ?? 0;
       cache = {
@@ -44,6 +46,7 @@ export function useMenuPeek(open: boolean): MenuPeek | null {
         artists: artists.count ?? null,
         next: ((next.data ?? []) as { image_url: string }[])[0]?.image_url ?? null,
         calendars: cals.count ?? null,
+        soon: ((soon.data ?? []) as MenuPeek['soon']).filter((e) => !/images\.unsplash\.com/.test(e.image_url)),
       };
       setPeek(cache);
     });

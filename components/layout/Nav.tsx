@@ -9,7 +9,6 @@ import Wordmark from '@/components/brand/Wordmark';
 import SearchSheet from '@/components/search/SearchSheet';
 import { useUnreadCount } from '@/hooks/useNotifications';
 import { useMenuPeek } from '@/hooks/useMenuPeek';
-import { SERIES } from '@/lib/data/series';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 
 /** Main sections. On phones they live in the bottom tab bar; on desktop, in the header. */
@@ -343,9 +342,6 @@ export default function Nav({
                 { href: '/events', label: 'Events', hint: 'Every show, by date', peek: 'count' },
                 { href: '/moments', label: 'Moments', hint: 'Clips from past nights', peek: 'clip' },
                 { href: '/artists', label: 'Artists', hint: 'Who’s playing where', peek: 'faces' },
-                { href: '/', label: 'Discover', hint: 'Swipe through what’s on', peek: 'next' },
-                { href: '/calendars', label: 'Calendars', hint: peek?.calendars ? `${peek.calendars} to copy and share` : 'Plan your season', peek: 'cal' },
-                { href: '/shows', label: 'Shows', hint: 'The nights that come back', peek: 'shows' },
               ] as { href: string; label: string; hint: string; peek: 'flyers' | 'count' | 'clip' | 'faces' | 'next' | 'cal' | 'shows' }[]).map((l, i) => {
                 const on = active === l.label;
                 return (
@@ -387,26 +383,47 @@ export default function Nav({
                         {peek?.artists && peek.artists > FACE_SLUGS.length && <span style={{ marginLeft: 8, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.text2 }}>+{peek.artists - FACE_SLUGS.length}</span>}
                       </span>
                     ) : null}
-                    {l.peek === 'next' && peek?.next ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img aria-hidden src={peek.next} alt="" style={{ width: 44, height: 56, borderRadius: 10, objectFit: 'cover', flexShrink: 0, transform: 'rotate(4deg)', boxShadow: '0 6px 16px rgba(0,0,0,0.45)' }} />
-                    ) : null}
-                    {l.peek === 'cal' ? (
-                      <span aria-hidden style={{ width: 50, borderRadius: 11, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.92)', boxShadow: '0 6px 16px rgba(0,0,0,0.4)', textAlign: 'center' }}>
-                        <span style={{ display: 'block', height: 16, lineHeight: '16px', background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 10, fontWeight: 800, letterSpacing: '0.08em' }}>{new Date().toLocaleDateString('en-GB', { month: 'short', timeZone: 'Africa/Accra' }).toUpperCase()}</span>
-                        <span style={{ display: 'block', padding: '3px 0 5px', fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05, color: '#0B110E' }}>{new Date().toLocaleDateString('en-GB', { day: 'numeric', timeZone: 'Africa/Accra' })}</span>
-                      </span>
-                    ) : null}
-                    {l.peek === 'shows' ? (
-                      <span style={{ flexShrink: 0, textAlign: 'right' }}>
-                        <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, color: T.mint }}>{SERIES.length}</span>
-                        <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 600, color: T.text3 }}>every year</span>
-                      </span>
-                    ) : null}
                   </Link>
                 );
               })}
             </div>
+
+            {/* The rest, quieter */}
+            <div style={{ ...stagger(6), display: 'flex', flexWrap: 'wrap', gap: '4px 22px', marginTop: 10 }}>
+              {[{ href: '/', label: 'Discover' }, { href: '/calendars', label: 'Calendars' }, { href: '/shows', label: 'Shows' }].map((l) => (
+                <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} aria-current={active === l.label ? 'page' : undefined}
+                  style={{ padding: '8px 0', textDecoration: 'none', fontFamily: FONT.display, fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em', color: active === l.label ? T.mint : 'rgba(255,255,255,0.82)' }}>
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Live: flyers for the coming week, swipe across */}
+            {!!peek?.soon.length && (
+              <div style={{ ...stagger(7), marginTop: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+                  <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                    <span aria-hidden style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 2, marginRight: 8, verticalAlign: 'middle', background: T.mint, boxShadow: '0 0 10px rgba(123,227,168,0.8)' }} />This week
+                  </p>
+                  <Link href="/events" onClick={() => setMenuOpen(false)} style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.mintText, textDecoration: 'none' }}>See all</Link>
+                </div>
+                <div className="ak-noscroll" style={{ display: 'flex', gap: 10, marginTop: 12, marginRight: -24, paddingRight: 24, overflowX: 'auto', scrollSnapType: 'x mandatory' }}>
+                  {peek.soon.map((e) => {
+                    const d = new Date(`${e.date}T12:00:00Z`);
+                    return (
+                      <Link key={e.slug} href={`/events/${e.slug}`} onClick={() => setMenuOpen(false)} aria-label={e.title}
+                        style={{ position: 'relative', width: 104, flexShrink: 0, aspectRatio: '4 / 5', borderRadius: 14, overflow: 'hidden', scrollSnapAlign: 'start', boxShadow: '0 8px 20px rgba(0,0,0,0.4)' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={e.image_url} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        <span style={{ position: 'absolute', left: 6, top: 6, height: 20, padding: '0 7px', borderRadius: 7, display: 'inline-flex', alignItems: 'center', background: 'rgba(5,10,7,0.72)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', color: T.white, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700 }}>
+                          {d.toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' })} {d.getUTCDate()}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {user && (
               <div style={{ ...stagger(9), marginTop: 30 }}>
