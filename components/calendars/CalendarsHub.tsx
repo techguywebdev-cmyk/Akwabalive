@@ -54,69 +54,66 @@ function Tint({ img, strong = false }: { img: string | null | undefined; strong?
 }
 
 /**
- * A calendar as a wallet card: its next nights fanned out like tickets in a hand, coloured by the flyer on top,
- * with the name, how many nights, and how soon the next one is. Tap a flyer to pop it up; tap the card to open it.
+ * A calendar as its own line-up: the name, then its saved nights in date order, each a flyer with its date
+ * underneath. The next night's date is mint. Tap a flyer to pop it up; tap the name to open the calendar.
  */
-function Tile({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarStats }) {
+function Tile({ c, evs, stats, onAdd }: { c: Row; evs: TileEvent[]; stats?: CalendarStats; onAdd?: boolean }) {
   const today = todayIso();
   const sorted = [...evs].sort((x, y) => x.date.localeCompare(y.date));
   const up = sorted.filter((e) => e.date.slice(0, 10) >= today);
-  const pool = (up.length ? up : [...sorted].reverse()).filter((e) => e.img);
-  const fan = pool.slice(0, 3);
+  const list = (up.length ? up : [...sorted].reverse()).slice(0, 8);
+  const more = (up.length ? up.length : sorted.length) - list.length;
   const next = up[0];
   const n = c.calendar_events.length;
   const [pop, setPop] = useState<string | null>(null);
   const popEvents = pop ? evs.filter((e) => e.date.slice(0, 10) === pop).map((e) => e.ev) : [];
-  // The next night sits in the middle, on top; the two after it lean out behind
-  const place = fan.length === 1 ? [{ x: 0, r: 0, z: 2, s: 1.06 }]
-    : fan.length === 2 ? [{ x: -30, r: -6, z: 2, s: 1.04 }, { x: 34, r: 7, z: 1, s: 0.94 }]
-      : [{ x: 0, r: 0, z: 3, s: 1.08 }, { x: -64, r: -10, z: 1, s: 0.92 }, { x: 64, r: 10, z: 2, s: 0.92 }];
-  const nd = next ? parseDay(next.date) : null;
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   return (
-    <>
-      <Link href={`/c/${c.slug}`} style={{ position: 'relative', display: 'block', borderRadius: 28, overflow: 'hidden', textDecoration: 'none', background: '#0A100D', boxShadow: '0 26px 50px -28px rgba(0,0,0,0.95), inset 0 0 0 1px rgba(255,255,255,0.07)' }}>
-        <Tint img={fan[0]?.img} />
-        <span style={{ position: 'relative', display: 'block', padding: '16px 16px 18px' }}>
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 26 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.display, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>
-              {!c.is_public && <Lock size={11} aria-label="Private" />}{n} {n === 1 ? 'night' : 'nights'}
+    <div>
+      <Link href={`/c/${c.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            {!c.is_public && <Lock size={13} color={T.text3} style={{ flexShrink: 0 }} aria-label="Private" />}
+            <span style={{ fontFamily: FONT.display, fontSize: 20, fontWeight: 800, letterSpacing: '-0.03em', color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</span>
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 3, fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {n} {n === 1 ? 'night' : 'nights'}{next ? <> · <span style={{ color: T.mintText, fontWeight: 700 }}>next {until(next.date).toLowerCase()}</span></> : ''}{onAdd ? '' : ` · ${isCurated(c.slug) ? 'Tsacoal' : ownerName(c)}`}
             </span>
-            {next && <span style={{ padding: '4px 10px', borderRadius: 999, background: 'rgba(255,255,255,0.12)', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: T.white }}>{until(next.date)}</span>}
-          </span>
-
-          {/* The fan of flyers */}
-          <span style={{ position: 'relative', display: 'block', height: 176, marginTop: 10 }}>
-            {fan.length === 0 ? (
-              <span style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
-                <span style={{ width: 46, height: 46, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.14)', color: T.mint }}><Plus size={20} strokeWidth={2.4} /></span>
-                <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text2 }}>No nights yet</span>
-              </span>
-            ) : fan.map((e, i) => (
-              <span key={e.ev.slug} role="button" tabIndex={0} aria-label={`See the ${e.ev.title} flyer`}
-                onClick={(ev) => { ev.preventDefault(); ev.stopPropagation(); setPop(e.date.slice(0, 10)); }}
-                onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.stopPropagation(); setPop(e.date.slice(0, 10)); } }}
-                style={{ position: 'absolute', left: '50%', top: 12, width: 116, height: 145, marginLeft: -58, borderRadius: 14, overflow: 'hidden', zIndex: place[i].z, cursor: 'zoom-in', transform: `translateX(${place[i].x}px) rotate(${place[i].r}deg) scale(${place[i].s})`, boxShadow: '0 18px 34px -12px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08)', filter: i === 0 ? 'none' : 'brightness(0.78)' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={e.img!} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              </span>
-            ))}
-            {pool.length > 3 && <span style={{ position: 'absolute', right: 0, bottom: 0, zIndex: 4, padding: '3px 9px', borderRadius: 999, background: 'rgba(6,10,8,0.8)', fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 700, color: T.white }}>+{pool.length - 3}</span>}
-          </span>
-
-          <span style={{ display: 'block', marginTop: 12, fontFamily: FONT.display, fontSize: 21, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</span>
-          <span style={{ display: 'block', marginTop: 4, fontFamily: FONT.sans, fontSize: 13, color: 'rgba(255,255,255,0.62)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {next ? <>Next: {listTitle(next.ev.title)}{nd ? ` · ${shortDay(nd)}` : ''}</> : n ? 'All done for now' : 'Add your first night'}
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isCurated(c.slug) ? 'By Tsacoal' : `By ${ownerName(c)}`}</span>
             {!!stats?.likes && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0 }}><Heart size={11} />{stats.likes}</span>}
             {stats?.rating != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.mintText, flexShrink: 0 }}><Star size={11} fill="currentColor" strokeWidth={0} />{Number(stats.rating).toFixed(1)}</span>}
           </span>
         </span>
+        <span aria-hidden style={{ flexShrink: 0, width: 36, height: 36, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', color: T.white }}><ArrowRight size={16} /></span>
       </Link>
+
+      <div className="ak-noscroll" style={{ display: 'flex', gap: 10, overflowX: 'auto', margin: '14px -20px 0', padding: '0 20px 2px' }}>
+        {list.map((e) => {
+          const d = parseDay(e.date);
+          const isNext = e === next;
+          return (
+            <button key={e.ev.slug} type="button" onClick={() => setPop(e.date.slice(0, 10))} aria-label={`${e.ev.title}${d ? `, ${d.getDate()} ${MON[d.getMonth()]}` : ''}`}
+              style={{ flexShrink: 0, width: 92, padding: 0, border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ display: 'block', width: 92, height: 115, borderRadius: 14, overflow: 'hidden', background: GRAD.card, boxShadow: isNext ? '0 0 0 2px #7BE3A8, 0 14px 28px -14px rgba(91,217,154,0.6)' : '0 12px 24px -14px rgba(0,0,0,0.8)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {e.img && <img src={e.img} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginTop: 8 }}>
+                <span style={{ fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.03em', color: isNext ? T.mintText : T.white }}>{d ? d.getDate() : '?'}</span>
+                <span style={{ fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: isNext ? T.mintText : T.text3 }}>{d ? MON[d.getMonth()] : ''}</span>
+              </span>
+            </button>
+          );
+        })}
+        {(more > 0 || onAdd || !list.length) && (
+          <Link href={`/c/${c.slug}`} aria-label={more > 0 ? `${more} more nights` : 'Add a night'} style={{ flexShrink: 0, width: 92, height: 115, borderRadius: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, background: 'rgba(123,227,168,0.08)', color: T.mintText, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>
+            {more > 0 ? `+${more} more` : <><Plus size={20} strokeWidth={2.4} />Add</>}
+          </Link>
+        )}
+      </div>
       {pop && popEvents.length > 0 && <FlyerPop day={pop} events={popEvents} onClose={() => setPop(null)} />}
-    </>
+    </div>
   );
 }
 
@@ -213,9 +210,7 @@ export default function CalendarsHub() {
   // Header: flyers from the public calendars on show (never from someone's private one)
   const wall = Array.from(new Set([...ours, ...popular].flatMap((c) => c.calendar_events.map((e) => flyers[e.event_slug])).filter(Boolean))).slice(0, 10);
   const fl = (c: Row): TileEvent[] => c.calendar_events.filter((e) => dates[e.event_slug]).map((e) => ({ date: dates[e.event_slug], img: flyers[e.event_slug] ?? null, ev: events[e.event_slug] }));
-  // Every section is the same swipeable row of tiles
-  const row: React.CSSProperties = { display: 'flex', gap: 14, overflowX: 'auto', margin: '14px -20px 0', padding: '0 20px 6px', scrollSnapType: 'x mandatory', scrollPaddingLeft: 20 };
-  const cell: React.CSSProperties = { width: 'min(76vw, 300px)', flexShrink: 0, scrollSnapAlign: 'start' };
+  const stack: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 34, marginTop: 18 };
   // The soonest night across your own calendars
   const upNext = (() => {
     const t = todayIso();
@@ -270,34 +265,23 @@ export default function CalendarsHub() {
         )}
 
         {mine.length > 0 && (
-          <section aria-label="Your calendars" style={{ marginTop: 40 }}>
-            <SectionHead title="Your calendars" />
-            <div className="ak-noscroll" style={row}>
-              {mine.map((c) => <div key={c.id} style={cell}><Tile c={c} evs={fl(c)} stats={stats[c.id]} /></div>)}
-              <button type="button" onClick={start} aria-label="Start a new calendar"
-                style={{ ...cell, width: 150, alignSelf: 'stretch', minHeight: 180, borderRadius: 28, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'linear-gradient(160deg, rgba(123,227,168,0.14) 0%, rgba(255,255,255,0.03) 100%)', color: T.white }}>
-                <span style={{ width: 44, height: 44, borderRadius: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}><Plus size={20} strokeWidth={2.4} /></span>
-                <span style={{ fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>New calendar</span>
-              </button>
-            </div>
+          <section aria-label="Your calendars" style={{ marginTop: 44 }}>
+            <p style={eyebrow}>Your calendars</p>
+            <div style={stack}>{mine.map((c) => <Tile key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} onAdd />)}</div>
           </section>
         )}
 
         {ours.length > 0 && (
-          <section aria-label="Starter calendars from Tsacoal" style={{ marginTop: 44 }}>
-            <SectionHead title="Start from one of ours" hint="Copy one, then make it yours" />
-            <div className="ak-noscroll" style={row}>
-              {ours.map((c) => <div key={c.id} style={cell}><Tile c={c} evs={fl(c)} stats={stats[c.id]} /></div>)}
-            </div>
+          <section aria-label="Starter calendars from Tsacoal" style={{ marginTop: 52 }}>
+            <p style={eyebrow}>Start from one of ours</p>
+            <div style={stack}>{ours.map((c) => <Tile key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} />)}</div>
           </section>
         )}
 
-        <section aria-label="Popular calendars" style={{ marginTop: 44 }}>
-          <SectionHead title="Popular now" hint="Shared by people on Tsacoal" />
+        <section aria-label="Popular calendars" style={{ marginTop: 52 }}>
+          <p style={eyebrow}>Popular now</p>
           {popular.length ? (
-            <div className="ak-noscroll" style={row}>
-              {popular.map((c) => <div key={c.id} style={cell}><Tile c={c} evs={fl(c)} stats={stats[c.id]} /></div>)}
-            </div>
+            <div style={stack}>{popular.slice(0, 6).map((c) => <Tile key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} />)}</div>
           ) : (
             <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>No one’s shared a calendar yet. Be the first, and send it to the squad.</p>
           )}
