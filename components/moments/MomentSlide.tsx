@@ -11,6 +11,7 @@ import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
 import CustomPlayer, { type CustomPlayerHandle } from '@/components/moments/CustomPlayer';
 import CommentsSheet from '@/components/moments/CommentsSheet';
+import ShareCardSheet, { useWarmShareCard } from '@/components/events/ShareCardSheet';
 import GiftSheet from '@/components/moments/GiftSheet';
 import ArtistQuickSheet from '@/components/moments/ArtistQuickSheet';
 import { formatCount, type Comment, type Moment } from '@/components/moments/types';
@@ -155,11 +156,10 @@ const MomentSlide = forwardRef<SlideHandle, {
   const tweetId = isX ? clip.source_url?.match(/status\/(\d+)/)?.[1] ?? null : null;
   const colour = useVideoColour(isX ? undefined : clip.youtube_id, mounted);
 
-  const share = useCallback(async () => {
-    const url = `${window.location.origin}/moments?id=${clip.id}`;
-    try { if (navigator.share) { await navigator.share({ title: clip.title, text: `${clip.title} — ${night.event_name} on Tsacoal`, url }); return; } } catch { /* fall back */ }
-    try { await navigator.clipboard.writeText(url); flash('Link copied'); } catch { /* ignore */ }
-  }, [clip, night.event_name, flash]);
+  // Share opens the designed card (the still, the night, the next edition), ready in the background
+  const [shareOpen, setShareOpen] = useState(false);
+  const share = useCallback(() => setShareOpen(true), []);
+  useWarmShareCard('moment', clip.id, active && !isX, next ? `&next=${next.slug}` : '');
 
   // ── Rate the night here (ticket holders) ──────────────────────────
   const openRate = useCallback(async () => {
@@ -401,6 +401,10 @@ const MomentSlide = forwardRef<SlideHandle, {
         </div>
       </div>
 
+      {shareOpen && (
+        <ShareCardSheet kind="moment" slug={clip.id} title={clip.title} intro="Share this moment" extra={next ? `&next=${next.slug}` : ''}
+          image={clip.youtube_id ? `https://i.ytimg.com/vi/${clip.youtube_id}/hqdefault.jpg` : null} onClose={() => setShareOpen(false)} />
+      )}
       {showComments && (
         <CommentsSheet moment={clip} comments={comments} user={user} profile={profile} currentSeconds={t}
           wasThereIds={crowd.wasThereIds} goingIds={crowd.goingIds} nextLabel={next?.date?.slice(0, 4) ?? null} canGift={canGift} tint={tint}
