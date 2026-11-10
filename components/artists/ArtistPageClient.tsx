@@ -173,7 +173,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
         {later.length > 0 && (
           <section style={{ marginTop: 40 }}>
             <SectionTitle>More dates</SectionTitle>
-            {later.map((e) => <ShowRow key={e.slug} event={e} />)}
+            {later.map((e) => <ShowRow key={e.slug} event={e} fallback={photo?.url} />)}
           </section>
         )}
 
@@ -201,7 +201,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
           <section style={{ marginTop: 40 }}>
             <SectionTitle>Recent shows</SectionTitle>
             {(allPast ? pastShows : pastShows.slice(0, 6)).map((s) => (
-              <PastRow key={s.key} show={s} rating={s.event ? ratings[s.event.slug] : undefined} onPlay={() => setViewer({ list: s.moments, start: 0, title: s.title })} />
+              <PastRow key={s.key} show={s} rating={s.event ? ratings[s.event.slug] : undefined} onPlay={() => setViewer({ list: s.moments, start: 0, title: s.title })} fallback={photo?.url} />
             ))}
             {pastShows.length > 6 && !allPast && (
               <button type="button" onClick={() => setAllPast(true)} style={{ marginTop: 6, padding: 0, border: 'none', background: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.mintText }}>

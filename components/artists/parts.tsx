@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { Check, Play, Plus } from 'lucide-react';
 import type { GhanaEvent } from '@/lib/types';
 import type { Moment } from '@/components/moments/types';
@@ -137,7 +138,23 @@ export function NextShow({ event }: { event: GhanaEvent }) {
 }
 
 /** A show in a list: date block, small flyer, title, place (and price when upcoming) */
-export function ShowRow({ event, past, rating }: { event: GhanaEvent; past?: boolean; rating?: RatingSummary }) {
+/** A show's flyer as a small tile; stock placeholders and images that fail to load fall back to the artist's photo, else a plain tile */
+function Thumb({ src, fallback, dim }: { src?: string | null; fallback?: string | null; dim?: boolean }) {
+  const real = src && !/images\.unsplash\.com/.test(src) ? src : null;
+  const [failed, setFailed] = useState(false);
+  const url = real && !failed ? real : fallback ?? null;
+  return (
+    <span style={{ width: 52, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: 'linear-gradient(150deg, #26302B 0%, #121715 75%)' }}>
+      {url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" loading="lazy" onError={() => { if (!failed) setFailed(true); }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: url === fallback ? '50% 20%' : '50% 50%', display: 'block', opacity: dim ? 0.85 : 1, filter: url === fallback ? 'grayscale(0.35)' : undefined }} />
+      )}
+    </span>
+  );
+}
+
+export function ShowRow({ event, past, rating, fallback }: { event: GhanaEvent; past?: boolean; rating?: RatingSummary; fallback?: string | null }) {
   const d = parseDay(event.date);
   return (
     <Link href={`/events/${event.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', textDecoration: 'none', opacity: past ? 0.7 : 1 }}>
@@ -148,10 +165,7 @@ export function ShowRow({ event, past, rating }: { event: GhanaEvent; past?: boo
         <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 26, fontWeight: 800, lineHeight: 1.05, color: T.white }}>{d ? d.getDate() : ''}</span>
         {past && d && <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 11, color: T.text3 }}>{d.getFullYear()}</span>}
       </span>
-      <span style={{ width: 52, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)' }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {event.image && <img src={hiRes(event.image, 240) ?? event.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
-      </span>
+      <Thumb src={event.image ? hiRes(event.image, 240) ?? event.image : null} fallback={fallback} />
       <span style={{ minWidth: 0, flex: 1 }}>
         <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: FONT.display, fontSize: 16, fontWeight: 700, lineHeight: 1.25, color: T.white }}>{event.title}</span>
         <span style={{ display: 'block', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
@@ -215,9 +229,10 @@ export function MomentsStrip({ list, onOpen }: { list: Moment[]; onOpen: (i: num
 /** A past night: listed event and/or the clips from it. The row opens the event (or its clips); the mint chip plays the clips. */
 export type PastShow = { key: string; sortKey: string; title: string; year: number | null; event: GhanaEvent | null; moments: Moment[] };
 
-export function PastRow({ show, rating, onPlay }: { show: PastShow; rating?: RatingSummary; onPlay: () => void }) {
+export function PastRow({ show, rating, onPlay, fallback }: { show: PastShow; rating?: RatingSummary; onPlay: () => void; fallback?: string | null }) {
   const d = show.event ? parseDay(show.event.date) : null;
-  const thumb = show.event?.image ? hiRes(show.event.image, 240) ?? show.event.image : show.moments[0] ? ytThumb(show.moments[0].youtube_id, 'hq') : null;
+  const flyer = show.event?.image && !/images\.unsplash\.com/.test(show.event.image) ? hiRes(show.event.image, 240) ?? show.event.image : null;
+  const thumb = flyer ?? (show.moments[0] ? ytThumb(show.moments[0].youtube_id, 'hq') : null);
   const n = show.moments.length;
   const body = (
     <>
@@ -232,10 +247,7 @@ export function PastRow({ show, rating, onPlay }: { show: PastShow; rating?: Rat
           <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{show.year ?? '—'}</span>
         )}
       </span>
-      <span style={{ position: 'relative', width: 52, height: 64, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.06)' }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {thumb && <img src={thumb} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0.85 }} />}
-      </span>
+      <Thumb src={thumb} fallback={fallback} dim />
       <span style={{ minWidth: 0, flex: 1 }}>
         <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: FONT.display, fontSize: 16, fontWeight: 700, lineHeight: 1.25, color: T.white }}>{show.title}</span>
         <span style={{ display: 'block', marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
