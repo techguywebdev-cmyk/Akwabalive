@@ -392,7 +392,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
 
   return (
     <>
-      <Nav active="Events" actions={headerActions} />
+      <Nav active="Events" actions={headerActions} onSearch={() => setSearchOpen(true)} onFilter={() => setFilterOpen(true)} filtersOn={filtersOn} />
       {view === 'list' && !filters.search && <HotRail events={hotShows} top={headerH + searchH} />}
 
       {searchOpen && (
