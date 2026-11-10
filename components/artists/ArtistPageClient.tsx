@@ -27,16 +27,6 @@ export { priceLine } from '@/components/artists/parts';
 
 export type SimilarArtist = { slug: string; name: string; photo: string | null; touring: boolean };
 
-function Stat({ value, label, href }: { value: string; label: string; href?: string }) {
-  const body = (
-    <>
-      <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{value}</span>
-      <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.text3 }}>{label}</span>
-    </>
-  );
-  const style: React.CSSProperties = { flex: 1, minWidth: 0, textAlign: 'center', textDecoration: 'none' };
-  return href ? <a href={href} style={style}>{body}</a> : <span style={style}>{body}</span>;
-}
 
 export default function ArtistPageClient({ artist, events, moments = [], photo: initialPhoto = null, hosted = [], similar = [], bio = null }: {
   artist: Artist; events: GhanaEvent[]; moments?: Moment[]; photo?: ArtistPhoto | null; hosted?: SeriesSummary[]; similar?: SimilarArtist[]; bio?: ArtistBio | null;
@@ -103,51 +93,54 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
         <button type="button" onClick={share} aria-label="Share artist" style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}>{copied ? <Check size={18} /> : <Share2 size={18} />}</button>
       } />
 
-      {/* Hero: round portrait over a soft blur of the same photo */}
-      <header style={{ position: 'relative', overflow: 'hidden', padding: 'calc(80px + env(safe-area-inset-top, 0px)) 20px 6px', textAlign: 'center' }}>
-        {backdrop && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={backdrop} alt="" aria-hidden style={{ position: 'absolute', inset: -60, width: 'calc(100% + 120px)', height: 'calc(100% + 120px)', objectFit: 'cover', filter: 'blur(48px) saturate(1.25)', opacity: 0.5 }} />
-        )}
-        <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,12,11,0.25) 0%, rgba(10,12,11,0.5) 50%, rgba(9,11,10,0.98) 100%)' }} />
-        <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
-          <span style={{ display: 'block', width: 168, margin: '0 auto 20px', borderRadius: '50%', boxShadow: '0 18px 50px rgba(0,0,0,0.45)' }}>
-            <Portrait name={artist.name} url={photo?.url} size={168} ring={upcoming.length > 0} />
-          </span>
-          <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.mintText }}>
-            Artist{artist.genre ? ` · ${artist.genre}` : ''}
-          </p>
-          <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: artist.name.length > 12 ? 42 : 52, fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, color: T.white, textShadow: '0 2px 24px rgba(0,0,0,0.3)' }}>{artist.name}</h1>
-          {bio?.description && <p style={{ maxWidth: 280, margin: '10px auto 0', fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.45, color: T.text2, textWrap: 'balance' } as React.CSSProperties}>{bio.description}</p>}
-
-          <div style={{ display: 'flex', alignItems: 'stretch', maxWidth: 340, margin: '20px auto 0' }}>
-            <Stat value={followers === null ? '–' : compactCount(followers)} label={followers === 1 ? 'Follower' : 'Followers'} />
-            <span aria-hidden style={{ width: 1, background: T.hairlineStrong }} />
-            <Stat value={String(events.length + pastShows.filter((x) => !x.event).length)} label="Shows" href="#shows" />
-            <span aria-hidden style={{ width: 1, background: T.hairlineStrong }} />
-            <Stat value={String(moments.length)} label="Moments" href={moments.length ? '#moments' : undefined} />
+      {/* Hero: the artist's photo full width, melting into the page; name and who they are sit on it, actions in one row beneath */}
+      <header style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', height: 'min(64svh, 540px)', minHeight: 380, overflow: 'hidden' }}>
+          {photo?.url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photo.url} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 18%' }} />
+          ) : backdrop ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={backdrop} alt="" aria-hidden style={{ position: 'absolute', inset: -60, width: 'calc(100% + 120px)', height: 'calc(100% + 120px)', objectFit: 'cover', filter: 'blur(48px) saturate(1.2)', opacity: 0.55 }} />
+          ) : null}
+          <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(8,11,9,0.35) 0%, rgba(8,11,9,0) 22%, rgba(8,11,9,0) 45%, rgba(8,11,9,0.75) 78%, #0A0D0B 100%)' }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>
+            <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 20px 4px' }}>
+              <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: T.mintText }}>
+                {[artist.genre ?? 'Artist', upcoming.length ? 'Playing soon' : null].filter(Boolean).join(' · ')}
+              </p>
+              <h1 style={{ margin: '6px 0 0', fontFamily: FONT.display, fontSize: artist.name.length > 12 ? 46 : 60, fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.95, color: T.white, textShadow: '0 2px 30px rgba(0,0,0,0.45)' }}>{artist.name}</h1>
+              {bio?.description && <p style={{ margin: '10px 0 0', maxWidth: 420, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.45, color: 'rgba(255,255,255,0.78)' }}>{bio.description}</p>}
+            </div>
           </div>
+        </div>
 
-          <div style={{ display: 'flex', gap: 10, marginTop: 22, justifyContent: 'center' }}>
+        <div style={{ maxWidth: 640, margin: '0 auto', padding: '14px 20px 0' }}>
+          <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>
+            {[
+              <a key="s" href="#shows" style={{ color: 'inherit', textDecoration: 'none' }}><b style={{ color: T.white, fontWeight: 700 }}>{events.length + pastShows.filter((x) => !x.event).length}</b> shows</a>,
+              moments.length ? <a key="m" href="#moments" style={{ color: 'inherit', textDecoration: 'none' }}><b style={{ color: T.white, fontWeight: 700 }}>{moments.length}</b> moments</a> : null,
+              followers ? <span key="f"><b style={{ color: T.white, fontWeight: 700 }}>{compactCount(followers)}</b> {followers === 1 ? 'follower' : 'followers'}</span> : null,
+            ].filter(Boolean).flatMap((x, i) => (i ? [<span key={`d${i}`} aria-hidden style={{ margin: '0 8px', color: T.text3 }}>·</span>, x] : [x]))}
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16 }}>
+            <button type="button" onClick={toggle} disabled={busy} style={{ ...(following ? BTN.secondary : BTN.primary), height: 46, padding: '0 26px', marginRight: 'auto' }}>
+              {following ? <><Check size={17} /> Following</> : 'Follow'}
+            </button>
             {photo?.spotifyUrl && (
-              <a href={photo.spotifyUrl} target="_blank" rel="noopener noreferrer" aria-label={`Listen to ${artist.name} on Spotify`} title="Listen on Spotify" style={{ ...roundBtn, color: '#1ED760' }}><SpotifyLogo size={20} /></a>
+              <a href={photo.spotifyUrl} target="_blank" rel="noopener noreferrer" aria-label={`Listen to ${artist.name} on Spotify`} title="Listen on Spotify" style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22, color: '#1ED760' }}><SpotifyLogo size={19} /></a>
             )}
             {artist.instagram && (
-              <a href={`https://instagram.com/${artist.instagram}`} target="_blank" rel="noopener noreferrer" aria-label={`${artist.name} on Instagram`} style={roundBtn}><Instagram size={19} /></a>
+              <a href={`https://instagram.com/${artist.instagram}`} target="_blank" rel="noopener noreferrer" aria-label={`${artist.name} on Instagram`} style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}><Instagram size={18} /></a>
             )}
             {artist.xHandle && (
-              <a href={`https://x.com/${artist.xHandle}`} target="_blank" rel="noopener noreferrer" aria-label={`${artist.name} on X`} style={roundBtn}><XLogo size={16} /></a>
+              <a href={`https://x.com/${artist.xHandle}`} target="_blank" rel="noopener noreferrer" aria-label={`${artist.name} on X`} style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}><XLogo size={15} /></a>
             )}
             {isAdmin && (
-              <button type="button" onClick={() => setPhotoSheet(true)} aria-label="Change photo" title="Change photo" style={roundBtn}><Camera size={18} /></button>
+              <button type="button" onClick={() => setPhotoSheet(true)} aria-label="Change photo" title="Change photo" style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}><Camera size={17} /></button>
             )}
           </div>
-          <button type="button" onClick={toggle} disabled={busy} style={{ ...(following ? BTN.secondary : BTN.primary), width: '100%', maxWidth: 300, height: 50, margin: '16px auto 0', display: 'flex' }}>
-            {following ? <><Check size={17} /> Following</> : 'Follow'}
-            </button>
-          {!following && (
-            <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Follow to see new {artist.name} dates first.</p>
-          )}
         </div>
       </header>
 
