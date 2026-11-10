@@ -17,8 +17,7 @@ export function BrandGlyph({ size = 22 }: { size?: number }) {
 
 export default function Wordmark({ href = '/', size = 17 }: { href?: string; size?: number }) {
   return (
-    <Link href={href} aria-label="Tsacoal home" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-      <BrandGlyph size={size + 5} />
+    <Link href={href} aria-label="Tsacoal home" style={{ display: 'inline-flex', alignItems: 'center', gap: 0, textDecoration: 'none' }}>
       <span style={{ fontFamily: FONT.display, fontSize: size, fontWeight: 800, letterSpacing: '-0.03em', color: T.white, lineHeight: 1 }}>Tsacoal</span>
     </Link>
   );

@@ -86,11 +86,6 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
 
         <div style={{ display: 'flex', flex: 1 }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '40px 0 56px' }}>
-          <svg width="40" height="40" viewBox="0 0 24 24">
-            <rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" />
-            <path d="M12 7v11" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="butt" />
-            <path d="M6.5 7h11" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="butt" />
-          </svg>
           <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, color: '#fff' }}>Tsacoal</span>
           <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.45)', marginLeft: 8 }}>make yours at akwabalive.vercel.app</span>
         </div>

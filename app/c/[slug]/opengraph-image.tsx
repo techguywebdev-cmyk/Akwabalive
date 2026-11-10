@@ -34,11 +34,6 @@ export default async function OG({ params }: { params: { slug: string } }) {
         background: 'radial-gradient(70% 70% at 80% 30%, rgba(60,170,110,0.35) 0%, rgba(40,130,85,0) 70%), linear-gradient(180deg, #0B140F 0%, #050806 100%)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: flyers.length ? 600 : 1056 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <svg width="56" height="56" viewBox="0 0 24 24">
-              <rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" />
-              <path d="M12 7v11" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="butt" />
-              <path d="M6.5 7h11" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="butt" />
-            </svg>
             <span style={{ fontSize: 40, fontWeight: 800, letterSpacing: -1, color: '#fff' }}>Tsacoal</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
