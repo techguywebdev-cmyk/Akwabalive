@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { ticketDial } from '@/lib/events/dial';
-import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT } from '@/lib/shareCard';
+import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, G_MINT, G_TEXT, G_TICKET, gText } from '@/lib/shareCard';
 
 export const runtime = 'edge';
 
@@ -46,16 +46,16 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
 
   // The ticket: date stub | what, when, where, who | how to get in
   const ticket = (s: number) => (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', borderRadius: 36 * s, background: 'rgba(9,15,12,0.9)', border: '2px solid rgba(123,227,168,0.22)', boxShadow: '0 30px 70px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', borderRadius: 36 * s, background: G_TICKET, border: '2px solid rgba(123,227,168,0.22)', boxShadow: '0 30px 70px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'stretch' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 170 * s, padding: `${30 * s}px 0` }}>
-          <div style={{ display: 'flex', fontSize: 24 * s, letterSpacing: 4 * s, color: MINT }}>{month}</div>
+          <div style={{ display: 'flex', fontSize: 24 * s, letterSpacing: 4 * s, ...gText(G_MINT) }}>{month}</div>
           <div style={{ display: 'flex', fontSize: 92 * s, letterSpacing: -4 * s, lineHeight: 1, color: '#fff', marginTop: 2 * s }}>{num}</div>
           <div style={{ display: 'flex', fontSize: 22 * s, letterSpacing: 3 * s, color: 'rgba(255,255,255,0.5)', marginTop: 4 * s }}>{day}</div>
         </div>
         <div style={{ display: 'flex', width: 0, borderLeft: `${3 * s}px dashed rgba(255,255,255,0.16)`, margin: `${22 * s}px 0` }} />
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: `${30 * s}px ${36 * s}px ${30 * s}px ${34 * s}px` }}>
-          <div style={{ display: 'flex', fontSize: fit(56) * s, letterSpacing: -2.2 * s, lineHeight: 1.02, color: '#fff' }}>{e.title}</div>
+          <div style={{ display: 'flex', fontSize: fit(56) * s, letterSpacing: -2.2 * s, lineHeight: 1.02, ...gText(G_TEXT) }}>{e.title}</div>
           {(time || place) && <div style={{ display: 'flex', marginTop: 12 * s, fontSize: 26 * s, color: 'rgba(255,255,255,0.62)' }}>{[time, place].filter(Boolean).join(' · ')}</div>}
           {(faces.length > 0 || acts) && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 * s, marginTop: 18 * s }}>
@@ -72,7 +72,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
           )}
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: `${18 * s}px ${36 * s}px`, background: MINT }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: `${18 * s}px ${36 * s}px`, background: G_MINT }}>
         <div style={{ display: 'flex', fontSize: 26 * s, color: '#03130B' }}>{dial ? `Tickets: dial ${dial}` : 'Tickets & line-up on Tsacoal'}</div>
         <div style={{ display: 'flex', fontSize: 26 * s, letterSpacing: -0.5 * s, color: '#03130B' }}>tsacoal.com</div>
       </div>
@@ -115,7 +115,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
           <div style={{ display: 'flex', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', fontSize: 42, letterSpacing: -1.5, color: '#fff' }}>Tsacoal</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 24, letterSpacing: 4, color: 'rgba(255,255,255,0.6)' }}>
-              <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, background: MINT }} />LIVE IN GHANA
+              <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, background: G_MINT }} />LIVE IN GHANA
             </div>
           </div>
           <div style={{ display: 'flex', marginTop: 48 }}>{greeting(1)}</div>

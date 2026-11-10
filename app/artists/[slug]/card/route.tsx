@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getArtistBySlug } from '@/lib/data/artists';
-import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT } from '@/lib/shareCard';
+import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, G_MINT, G_TEXT, G_TICKET, gText } from '@/lib/shareCard';
 
 export const runtime = 'edge';
 
@@ -38,9 +38,9 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   const stub = (s: Show, k: number) => {
     const d = dayParts(s.date);
     return (
-      <div key={s.slug} style={{ display: 'flex', alignItems: 'center', width: '100%', borderRadius: 28 * k, background: 'rgba(9,15,12,0.9)', border: '2px solid rgba(123,227,168,0.22)', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.45)' }}>
+      <div key={s.slug} style={{ display: 'flex', alignItems: 'center', width: '100%', borderRadius: 28 * k, background: G_TICKET, border: '2px solid rgba(123,227,168,0.22)', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.45)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 130 * k, padding: `${20 * k}px 0` }}>
-          <div style={{ display: 'flex', fontSize: 20 * k, letterSpacing: 3 * k, color: MINT }}>{d.month}</div>
+          <div style={{ display: 'flex', fontSize: 20 * k, letterSpacing: 3 * k, ...gText(G_MINT) }}>{d.month}</div>
           <div style={{ display: 'flex', fontSize: 64 * k, letterSpacing: -3 * k, lineHeight: 1, color: '#fff' }}>{d.num}</div>
           <div style={{ display: 'flex', fontSize: 17 * k, letterSpacing: 2 * k, color: 'rgba(255,255,255,0.5)' }}>{d.day}</div>
         </div>
@@ -58,7 +58,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   };
 
   const empty = (k: number) => (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', padding: `${28 * k}px ${34 * k}px`, borderRadius: 28 * k, background: 'rgba(9,15,12,0.9)', border: '2px solid rgba(123,227,168,0.22)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', padding: `${28 * k}px ${34 * k}px`, borderRadius: 28 * k, background: G_TICKET, border: '2px solid rgba(123,227,168,0.22)' }}>
       <div style={{ display: 'flex', fontSize: 34 * k, letterSpacing: -1 * k, color: '#fff' }}>No dates announced yet</div>
       <div style={{ display: 'flex', marginTop: 6 * k, fontSize: 22 * k, color: 'rgba(255,255,255,0.58)' }}>Follow on Tsacoal and hear first.</div>
     </div>
@@ -80,7 +80,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: 44, left: 484, width: 672, height: 542 }}>
             <div style={{ display: 'flex' }}>{greeting(0.7)}</div>
-            <div style={{ display: 'flex', marginTop: 22, fontSize: nameSize(96), letterSpacing: -4, lineHeight: 0.95, color: '#fff' }}>{artist.name}</div>
+            <div style={{ display: 'flex', marginTop: 22, fontSize: nameSize(96), letterSpacing: -4, lineHeight: 0.95, ...gText(G_TEXT) }}>{artist.name}</div>
             <div style={{ display: 'flex', flex: 1 }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{list.length ? list.map((s) => stub(s, 0.72)) : empty(0.72)}</div>
           </div>
@@ -103,13 +103,13 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', fontSize: 42, letterSpacing: -1.5, color: '#fff' }}>Tsacoal</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 24, letterSpacing: 4, color: 'rgba(255,255,255,0.75)' }}>
-              <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, background: MINT }} />LIVE IN GHANA
+              <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, background: G_MINT }} />LIVE IN GHANA
             </div>
           </div>
           <div style={{ display: 'flex', flex: 1 }} />
           <div style={{ display: 'flex' }}>{greeting(1)}</div>
-          {artist.genre && <div style={{ display: 'flex', marginTop: 34, fontSize: 26, letterSpacing: 6, color: MINT_TEXT }}>{artist.genre.toUpperCase()}</div>}
-          <div style={{ display: 'flex', marginTop: 8, fontSize: nameSize(150), letterSpacing: -7, lineHeight: 0.92, color: '#fff' }}>{artist.name}</div>
+          {artist.genre && <div style={{ display: 'flex', marginTop: 34, fontSize: 26, letterSpacing: 6, ...gText(G_MINT) }}>{artist.genre.toUpperCase()}</div>}
+          <div style={{ display: 'flex', marginTop: 8, fontSize: nameSize(150), letterSpacing: -7, lineHeight: 0.92, ...gText(G_TEXT) }}>{artist.name}</div>
           <div style={{ display: 'flex', marginTop: 44, fontSize: 24, letterSpacing: 5, color: 'rgba(255,255,255,0.5)' }}>{list.length ? (list.length === 1 ? 'NEXT SHOW' : 'NEXT SHOWS') : 'SHOWS'}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 18 }}>{list.length ? list.map((s) => stub(s, 1)) : empty(1)}</div>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40, fontSize: 26, color: 'rgba(255,255,255,0.5)' }}>tsacoal.com/artists/{artist.slug}</div>
