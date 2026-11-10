@@ -19,8 +19,19 @@ export const firstName = (p: Person) => {
 
 export const cleanUser = (v: string | null) => v?.replace(/[^a-zA-Z0-9_.-]/g, '').slice(0, 40) || null;
 
-/** Cloudinary images at a sensible size; others as they are */
-export const sized = (u: string, w: number) => (u.includes('res.cloudinary.com') ? u.replace('/upload/', `/upload/w_${w},c_limit,f_jpg/`) : u);
+/**
+ * Images at the size the card needs: Cloudinary resizes itself; everything else goes through this site's image
+ * resizer (cached), so a 3 MB flyer becomes a small JPEG before it's drawn. Pass the request URL for the origin.
+ */
+let ORIGIN = 'https://tsacoal.com';
+export const setOrigin = (reqUrl: string) => { try { ORIGIN = new URL(reqUrl).origin; } catch { /* keep */ } };
+export const sized = (u: string, w: number) => {
+  if (u.startsWith('data:')) return u;
+  if (u.includes('res.cloudinary.com')) return u.replace('/upload/', `/upload/w_${w},c_limit,f_jpg,q_75/`);
+  const abs = u.startsWith('/') ? `${ORIGIN}${u}` : u;
+  const width = [640, 750, 828, 1080].find((x) => x >= w) ?? 1080;
+  return `${ORIGIN}/_next/image?url=${encodeURIComponent(abs)}&w=${width}&q=72`;
+};
 
 export const MINT = '#7BE3A8', MINT_TEXT = '#A8F0C6', ON_MINT = '#03130B', PAPER = '#F3FBF6', INK = '#0B110E';
 

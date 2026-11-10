@@ -571,7 +571,7 @@ export default function EventFeed({
           {toast}
         </div>
       )}
-      {sharing && <ShareCardSheet slug={sharing.e.slug} title={sharing.e.title} intro={sharing.intro} onClose={() => setSharing(null)} />}
+      {sharing && <ShareCardSheet slug={sharing.e.slug} title={sharing.e.title} image={sharing.e.image} intro={sharing.intro} onClose={() => setSharing(null)} />}
     </>
   );
 }

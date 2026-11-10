@@ -28,7 +28,7 @@ export function useWarmShareCard(kind: Kind, slug: string, enabled = true) {
   const u = profile?.username ?? null;
   useEffect(() => {
     if (!enabled || loading) return;
-    const t = setTimeout(() => { warm(cardUrl(kind, slug, u, 'post')).catch(() => {}); }, 1500);
+    const t = setTimeout(() => { warm(cardUrl(kind, slug, u, 'post')).catch(() => {}); }, 400);
     return () => clearTimeout(t);
   }, [kind, slug, u, enabled, loading]);
 }
@@ -37,7 +37,7 @@ export function useWarmShareCard(kind: Kind, slug: string, enabled = true) {
  * Share a show as a designed card: story-size picture (with your face and "Leo's going" when you're signed in),
  * shared straight to WhatsApp/Instagram or saved, plus a link whose preview carries your name too.
  */
-export default function ShareCardSheet({ slug, title, onClose, kind = 'event', intro }: { slug: string; title: string; onClose: () => void; kind?: 'event' | 'artist'; intro?: string }) {
+export default function ShareCardSheet({ slug, title, onClose, kind = 'event', intro, image }: { slug: string; title: string; onClose: () => void; kind?: 'event' | 'artist'; intro?: string; image?: string | null }) {
   const base = kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`;
   const { profile } = useAuth();
   const u = profile?.username ?? null;
@@ -100,7 +100,19 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
         </div>
 
         <div style={{ position: 'relative', width: size === 'story' ? 'min(56vw, 230px)' : 'min(76vw, 330px)', aspectRatio: size === 'story' ? '9 / 16' : '4 / 5', margin: '16px auto 0', borderRadius: 18, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-          {!loaded && <span className="ak-sk" style={{ position: 'absolute', inset: 0 }} />}
+          {/* While the card is being made: the flyer itself, softly, with a clear "making it" note, never an empty box */}
+          {!loaded && (
+            <span style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 18 }}>
+              {image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={image} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(14px) brightness(0.55) saturate(1.2)', transform: 'scale(1.12)' }} />
+              )}
+              <span className="ak-sk" style={{ position: 'absolute', inset: 0, opacity: 0.55 }} />
+              <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 10, height: 36, padding: '0 16px', borderRadius: 999, background: 'rgba(5,10,7,0.72)', color: T.white, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700 }}>
+                <span className="ak-pulse" style={{ width: 8, height: 8, borderRadius: 3, background: T.mint }} /> Making your card…
+              </span>
+            </span>
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {preview && <img src={preview} alt={`Share card for ${title}`} onLoad={() => setLoaded(true)} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: loaded ? 1 : 0, transition: 'opacity 240ms ease' }} />}
         </div>

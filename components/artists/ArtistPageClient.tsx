@@ -90,7 +90,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
       <Nav back="/artists" tabs actions={
         <button type="button" onClick={share} aria-label="Share artist" style={{ ...roundBtn, width: 44, height: 44, borderRadius: 22 }}><Share2 size={18} /></button>
       } />
-      {sharing && <ShareCardSheet kind="artist" slug={artist.slug} title={artist.name} onClose={() => setSharing(false)} />}
+      {sharing && <ShareCardSheet kind="artist" slug={artist.slug} title={artist.name} image={photo?.url} onClose={() => setSharing(false)} />}
 
       {/* Hero: the artist's photo full width, melting into the page; name and who they are sit on it, actions in one row beneath */}
       <header style={{ position: 'relative' }}>
