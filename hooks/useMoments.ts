@@ -69,11 +69,29 @@ function leadWith(list: Moment[], id: string): Moment[] {
   return [lead, ...list.slice(0, i), ...list.slice(i + 1)];
 }
 
+// The first page of the feed, fetched once in the background when the site opens (see Warmup),
+// so Moments shows straight away instead of waiting on the database
+let firstPage: Promise<Moment[] | null> | null = null;
+let firstRows: Moment[] | null = null;
+const firstQuery = () => createClient().from('moments').select('*').eq('status', 'live')
+  .order('is_featured', { ascending: false }).order('published_at', { ascending: false, nullsFirst: false })
+  .range(0, PAGE_SIZE - 1);
+export function prefetchMoments(): Promise<Moment[] | null> {
+  if (!firstPage) {
+    firstPage = Promise.resolve(firstQuery()).then(({ data, error }) => (error || !data ? null : (firstRows = data as Moment[])))
+      .catch(() => { firstPage = null; return null; });
+  }
+  return firstPage;
+}
+
 export function useMoments(initialMomentId?: string | null, category?: string | null) {
   const supabase = useMemo(() => createClient(), []);
-  const [moments, setMoments] = useState<Moment[]>([]);
+  // Already fetched in the background: start with it, no loading screen
+  const [warm] = useState(() => (!category && !initialMomentId && firstRows ? arrange(firstRows) : null));
+  const [moments, setMoments] = useState<Moment[]>(warm ?? []);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!warm);
+  const usedWarm = useRef(!!warm);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const fetched = useRef(0); // rows read from the database so far (cards hold several)
@@ -88,7 +106,16 @@ export function useMoments(initialMomentId?: string | null, category?: string | 
     .range(from, from + PAGE_SIZE - 1), [supabase, category]);
 
   const loadInitial = useCallback(async () => {
-    const { data, error } = await query(0);
+    if (usedWarm.current) {
+      // The feed is already on screen from the background fetch; just carry on from where it ends
+      usedWarm.current = false;
+      fetched.current = firstRows?.length ?? 0;
+      setHasMore((firstRows?.length ?? 0) === PAGE_SIZE);
+      return;
+    }
+    // In flight from the background: wait for that instead of asking twice
+    const pre = !category && firstPage ? await firstPage : null;
+    const { data, error } = pre ? { data: pre, error: null } : await query(0);
     if (!error && data) {
       let rows = data as Moment[];
       fetched.current = rows.length;

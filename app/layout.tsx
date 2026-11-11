@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthProvider } from '@/lib/supabase/AuthProvider';
 import RefTracker from '@/components/social/RefTracker';
 import { Analytics } from '@vercel/analytics/next';
+import Warmup from '@/components/layout/Warmup';
 import { JsonLd, siteJsonLd } from '@/lib/seo';
 
 /** Display face — titles, numerals, eyebrows */
@@ -56,9 +57,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${inter.variable} ${interTight.variable}`}
     >
+      <head>
+        {/* Connect early to where the data, clip pictures and players come from */}
+        {process.env.NEXT_PUBLIC_SUPABASE_URL && <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />}
+        <link rel="preconnect" href="https://i.ytimg.com" />
+        <link rel="dns-prefetch" href="https://www.youtube.com" />
+      </head>
       <body>
         <JsonLd data={siteJsonLd()} />
-        <AuthProvider><RefTracker />{children}</AuthProvider>
+        <AuthProvider><RefTracker /><Warmup />{children}</AuthProvider>
         <Analytics />
       </body>
     </html>

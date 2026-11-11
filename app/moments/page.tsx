@@ -22,24 +22,8 @@ export async function generateMetadata({ searchParams }: { searchParams: { id?: 
 export default function MomentsPage() {
   return (
     <Suspense
-      fallback={
-        <div
-          style={{
-            background: '#000',
-            height: '100svh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'rgba(255,255,255,0.25)',
-            fontFamily: 'monospace',
-            fontSize: 11,
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-          }}
-        >
-          Loading…
-        </div>
-      }
+      // Plain black while the feed's code arrives (usually already loaded in the background)
+      fallback={<div style={{ background: '#000', height: '100svh' }} />}
     >
       <MomentsClient />
     </Suspense>

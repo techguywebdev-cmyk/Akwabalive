@@ -520,6 +520,9 @@ export default function EventFeed({
       >
         {slides.map((sl, i) => sl.kind === 'hot' || sl.kind === 'friends' ? (
           <HotCarousel key={sl.key} events={sl.kind === 'friends' ? friendPlans!.events : hot} friends={sl.kind === 'friends' ? friendPlans!.by : undefined} topInset={topInset} active={i === active} onNext={() => scroller.current?.scrollBy({ top: scroller.current.clientHeight, behavior: 'smooth' })} />
+        ) : Math.abs(i - active) > 3 ? (
+          // Far from the screen: an empty slide of the same size (keeps the page small and fast; it fills in as you get close)
+          <section key={sl.item.event.slug} aria-label={sl.item.event.title} style={{ width: '100%', height: '100%', background: '#0B1510', scrollSnapAlign: 'start', scrollSnapStop: 'always' }} />
         ) : (
           <EventCard
             key={sl.item.event.slug}
