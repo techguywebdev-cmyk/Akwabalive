@@ -28,7 +28,7 @@ export const TENTPOLES: Tentpole[] = [
   { date: '2026-11-21', title: 'Shay Concert', artist: 'wendy-shay', blurb: 'Wendy Shay’s own concert, The Boss on the throne', venue: 'West Hills Mall', match: /\bshay\s*concert|wendy\s*shay/i },
   { date: '2026-12-04', title: 'Crazy World', artist: 'kidi', blurb: 'KiDi’s first headline concert of his own', venue: 'Ghud Park, Accra Mall', match: /crazy\s*world/i, tickets: '*714*567#', source: 'myjoyonline.com' },
   { date: '2026-12-11', title: 'Higher Grounds', artist: 'essumann', blurb: 'Essumann headlines his own night', venue: 'Untamed Empire', match: /essum+an/i },
-  { date: '2026-12-12', title: 'Gyakie Live', artist: 'gyakie', blurb: 'Gyakie’s first headline show since 2022', venue: 'Ghud Park, Accra Mall', match: /gyakie\s*live/i, source: '3news.com' },
+  { date: '2026-12-12', title: 'Gyakie Live', artist: 'gyakie', blurb: 'Gyakie’s first headline show since 2022', venue: 'Ghud Park, Accra Mall', match: /gyakie\s*live/i, tickets: '*714*31#', source: 'live.gyakie.com' },
   { date: '2026-12-17', title: 'BYK Concert', artist: 'medikal', blurb: 'Medikal’s Beyond Kontrol, the Spaceship Edition', venue: 'Untamed Empire', match: /\bbyk\b/i },
   { date: '2026-12-19', title: 'Asakaa Rave', blurb: 'Kumasi drill takes over Accra, from 2pm', venue: 'Untamed Empire', match: /asakaa\s*rave/i, tickets: '*800*300#', source: 'ghanaweb.com' },
   { date: '2026-12-20', title: 'The Convention', artist: 'bisa-kdei', blurb: 'Bisa Kdei’s highlife night, live with his band', venue: 'Underbridge Annex, East Legon', match: /\bthe\s*convention\b|bisa\s*k['’]?dei/i, tickets: '*714*911#', source: 'bisaconvention.live' },
