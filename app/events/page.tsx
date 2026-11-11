@@ -1,12 +1,11 @@
 import Footer from '@/components/layout/Footer';
 import EventsClient from '@/components/events/EventsClient';
 import { events as staticEvents } from '@/lib/data/events';
-import { fetchPublishedEvents, supabaseToGhanaEvent } from '@/lib/supabase/events';
+import { supabaseToGhanaEvent } from '@/lib/supabase/events';
+import { fetchPublishedEventsCached } from '@/lib/supabase/eventsCached';
 import { sortNewestFirst } from '@/lib/events/rank';
 
-// Served from cache and refreshed in the background every minute, so the page opens instantly
-export const revalidate = 60;
-export const fetchCache = 'force-cache';
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Events in Ghana: Concerts, Parties & Festivals in Accra and Beyond',
@@ -17,7 +16,8 @@ export const metadata = {
 import { JsonLd, eventListJsonLd } from '@/lib/seo';
 
 export default async function EventsPage() {
-  const supabaseEvents = await fetchPublishedEvents();
+  // Kept for a minute: new events show up within 60 seconds, and the page renders without waiting on the database
+  const supabaseEvents = await fetchPublishedEventsCached();
   const dynamicEvents = supabaseEvents.map(supabaseToGhanaEvent);
 
   // New + featured DB events first, then static catalogue

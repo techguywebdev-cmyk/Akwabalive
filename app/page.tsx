@@ -2,9 +2,7 @@ import EventsPage from './events/page';
 
 // The events page is the home page for now (the separate home design is kept in
 // components/home/HomeV2.tsx for later).
-// Served from cache and refreshed in the background every minute, so the page opens instantly
-export const revalidate = 60;
-export const fetchCache = 'force-cache';
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: { absolute: 'TsaCoal: Events in Ghana, Concerts, Parties & Tickets' },
