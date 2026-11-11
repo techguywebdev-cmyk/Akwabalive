@@ -61,7 +61,9 @@ function useGoing(slugs: string[]) {
  * A real month calendar: the month in big type, a full grid of dates, and each night out wearing its flyer.
  * Tap a date and that night opens underneath with its countdown, who's going and the way in.
  */
-export default function MonthView({ events, onRemove, onFindDay, tagOf }: {
+export default function MonthView({ events, onRemove, onFindDay, tagOf, eyebrow, action }: {
+  /** A small line above the month, and something to sit beside it (the calendars page) */
+  eyebrow?: string; action?: React.ReactNode;
   events: GridEvent[];
   onRemove?: (e: GridEvent) => void;
   /** Owner: find a show for this date */
@@ -117,9 +119,13 @@ export default function MonthView({ events, onRemove, onFindDay, tagOf }: {
   return (
     <div>
       {/* The month */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+      {eyebrow && <p style={{ margin: '0 0 10px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>{eyebrow}</p>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0 }}>
         <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(34px, 10vw, 48px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1, paddingBottom: '0.08em', ...gradText }}>{MONTHS[m]}</h2>
         <span style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700, color: T.text3 }}>{y}</span>
+      </div>
+      {action}
       </div>
       {months.length > 1 && (
         <div className="no-scrollbar" role="tablist" aria-label="Month" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '12px -20px 0', padding: '0 20px' }}>

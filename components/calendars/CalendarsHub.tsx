@@ -106,6 +106,47 @@ function Tile({ c, evs, stats, onAdd, bare }: { c: Row; evs: TileEvent[]; stats?
   );
 }
 
+/** One of your calendars: a date tile for its next night, the name, and a few of its flyers */
+function CalRow({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarStats }) {
+  const today = todayIso();
+  const sorted = [...evs].sort((x, y) => x.date.localeCompare(y.date));
+  const up = sorted.filter((e) => e.date.slice(0, 10) >= today);
+  const next = up[0];
+  const d = next ? parseDay(next.date) : null;
+  const n = c.calendar_events.length;
+  const thumbs = (up.length ? up : sorted).filter((e) => e.img).slice(0, 3);
+  const MON = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  return (
+    <Link href={`/c/${c.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 12, borderRadius: 22, textDecoration: 'none', background: 'linear-gradient(120deg, rgba(123,227,168,0.09), rgba(255,255,255,0.035) 55%)' }}>
+      {/* a tear-off date: the next night */}
+      <span style={{ flexShrink: 0, width: 54, height: 60, borderRadius: 14, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'rgba(6,10,8,0.6)' }}>
+        <span style={{ height: 19, display: 'flex', alignItems: 'center', justifyContent: 'center', background: d ? GRAD.mint : 'rgba(255,255,255,0.08)', color: d ? T.onMint : T.text3, fontFamily: FONT.sans, fontSize: 10, fontWeight: 800, letterSpacing: '0.12em' }}>{d ? MON[d.getMonth()] : 'NEW'}</span>
+        <span style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: 24, fontWeight: 800, letterSpacing: '-0.04em', color: T.white }}>{d ? d.getDate() : <Plus size={20} strokeWidth={2.4} color={T.mint} />}</span>
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontFamily: FONT.display, fontSize: 17.5, fontWeight: 800, letterSpacing: '-0.025em', color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</span>
+          {!c.is_public && <Lock size={12} color={T.text3} style={{ flexShrink: 0 }} aria-label="Private" />}
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {n === 0 ? 'Add your first night' : <>{n} {n === 1 ? 'night' : 'nights'}{next ? <> · <span style={{ color: T.mintText, fontWeight: 700 }}>{until(next.date)}</span></> : ' · all done'}</>}
+          </span>
+          {!!stats?.likes && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0 }}><Heart size={11} />{stats.likes}</span>}
+        </span>
+      </span>
+      {thumbs.length > 0 && (
+        <span aria-hidden style={{ flexShrink: 0, display: 'flex', alignItems: 'center', paddingRight: 2 }}>
+          {thumbs.map((e, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={e.ev.slug} src={e.img!} alt="" loading="lazy" style={{ width: 34, height: 43, objectFit: 'cover', borderRadius: 8, marginLeft: i ? -12 : 0, transform: `rotate(${(i - (thumbs.length - 1) / 2) * 6}deg)`, boxShadow: '0 6px 12px -4px rgba(0,0,0,0.8), 0 0 0 1.5px rgba(10,16,13,0.9)' }} />
+          ))}
+        </span>
+      )}
+    </Link>
+  );
+}
+
 /** Calendars: start yours, see yours, and the popular public ones */
 export default function CalendarsHub() {
   const db = useMemo(() => createClient(), []);
@@ -178,18 +219,11 @@ export default function CalendarsHub() {
       <main style={{ maxWidth: 960, margin: '0 auto', padding: 'calc(100px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
         {mine.length > 0 ? (
           <header>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
-              <div style={{ minWidth: 0 }}>
-                <p style={eyebrow}>Calendars</p>
-                <h1 style={{ margin: '10px 0 0', fontFamily: FONT.display, fontSize: 'clamp(34px, 9.5vw, 54px)', fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>Your nights out</h1>
-                <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14.5, color: T.text3 }}>{nights} {nights === 1 ? 'night' : 'nights'} saved across {mine.length} {mine.length === 1 ? 'calendar' : 'calendars'}</p>
-              </div>
-              <button type="button" onClick={start} aria-label="Start a new calendar" style={{ flexShrink: 0, height: 42, padding: '0 16px', borderRadius: 999, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(123,227,168,0.12)', color: T.mintText, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 }}>
-                <Plus size={16} strokeWidth={2.4} />New
-              </button>
-            </div>
-            <div style={{ marginTop: 28, maxWidth: 560 }}>
-              <MonthView events={myEvents} tagOf={(slug) => { const c = mine.find((x) => x.calendar_events.some((e) => e.event_slug === slug)); return c ? { title: c.title, href: `/c/${c.slug}` } : null; }} />
+            <div style={{ maxWidth: 560 }}>
+              <MonthView events={myEvents}
+                eyebrow={`Your nights out · ${nights} saved`}
+                action={<button type="button" onClick={start} aria-label="Start a new calendar" style={{ flexShrink: 0, width: 42, height: 42, borderRadius: 999, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}><Plus size={20} strokeWidth={2.6} /></button>}
+                tagOf={(slug) => { const c = mine.find((x) => x.calendar_events.some((e) => e.event_slug === slug)); return c ? { title: c.title, href: `/c/${c.slug}` } : null; }} />
             </div>
           </header>
         ) : (
@@ -218,7 +252,7 @@ export default function CalendarsHub() {
         {mine.length > 0 && (
           <section aria-label="Your calendars" style={{ marginTop: 44 }}>
             <p style={eyebrow}>Your calendars</p>
-            <div style={{ ...stack, gap: 20 }}>{mine.map((c) => <Tile key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} onAdd bare />)}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14, maxWidth: 560 }}>{mine.map((c) => <CalRow key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} />)}</div>
           </section>
         )}
 
