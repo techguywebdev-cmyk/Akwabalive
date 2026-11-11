@@ -17,7 +17,7 @@ async function publicCalendar(slug: string) {
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const c = await publicCalendar(params.slug);
   if (!c) return { title: 'Calendar', robots: { index: false } };
-  const who = params.slug.startsWith('akwaaba-') ? 'Tsacoal' : c.profiles?.full_name || c.profiles?.username || 'Someone';
+  const who = params.slug.startsWith('akwaaba-') ? 'TsaCoal' : c.profiles?.full_name || c.profiles?.username || 'Someone';
   const n = c.calendar_events?.length ?? 0;
   return shareMeta({
     title: `${c.title} · ${who}’s calendar`,

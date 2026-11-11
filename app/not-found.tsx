@@ -33,7 +33,7 @@ export default async function NotFound() {
         </div>
       )}
       <main style={{ position: 'relative', zIndex: 2, maxWidth: 640, margin: '0 auto', padding: `${shows.length ? 0 : 120}px 20px 70px` }}>
-        <Link href="/" style={{ display: 'inline-block', fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.03em', color: T.white, textDecoration: 'none' }}><span style={{ backgroundImage: 'linear-gradient(135deg, #D2FBE3 0%, #8FEBB7 34%, #5AD99A 68%, #2FB97E 100%)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>Tsa</span><span>Coal</span></Link>
+        <Link href="/" style={{ display: 'inline-block', fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.03em', color: T.white, textDecoration: 'none' }}>TsaCoal</Link>
         <p style={{ margin: '22px 0 0', fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText }}>Page not found</p>
         <h1 style={{ margin: '8px 0 0', fontFamily: FONT.display, fontSize: 'clamp(36px, 10vw, 52px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1.0, background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>
           This one left the party

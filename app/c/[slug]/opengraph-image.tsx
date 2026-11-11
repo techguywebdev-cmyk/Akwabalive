@@ -25,7 +25,7 @@ export default async function OG({ params }: { params: { slug: string } }) {
   const slugs = c?.calendar_events.map((e) => e.event_slug) ?? [];
   const evs = slugs.length ? await rest<{ image_url: string | null }[]>(`events?select=image_url&slug=in.(${slugs.map(encodeURIComponent).join(',')})&image_url=not.is.null&order=date&limit=3`) : null;
   const flyers = (evs ?? []).map((e) => e.image_url!).filter(Boolean);
-  const who = params.slug.startsWith('akwaaba-') ? 'Tsacoal' : c?.profiles?.full_name || c?.profiles?.username || 'Someone';
+  const who = params.slug.startsWith('akwaaba-') ? 'TsaCoal' : c?.profiles?.full_name || c?.profiles?.username || 'Someone';
   const title = c?.title ?? 'A calendar on Tsacoal';
 
   return new ImageResponse(
@@ -34,7 +34,7 @@ export default async function OG({ params }: { params: { slug: string } }) {
         background: 'radial-gradient(70% 70% at 80% 30%, rgba(60,170,110,0.35) 0%, rgba(40,130,85,0) 70%), linear-gradient(180deg, #0B140F 0%, #050806 100%)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: flyers.length ? 600 : 1056 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span style={{ display: 'flex', fontSize: 40, fontWeight: 800, letterSpacing: -1, color: '#fff' }}><span style={{ backgroundImage: 'linear-gradient(135deg, #D2FBE3 0%, #8FEBB7 34%, #5AD99A 68%, #2FB97E 100%)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>Tsa</span><span>Coal</span></span>
+            <span style={{ display: 'flex', fontSize: 40, fontWeight: 800, letterSpacing: -1, color: '#fff' }}>TsaCoal</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
             <span style={{ fontSize: 26, letterSpacing: 4, textTransform: 'uppercase', color: '#A8F0C6' }}>{who}’s calendar</span>
