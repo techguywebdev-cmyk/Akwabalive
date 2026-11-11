@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FONT, T } from '@/lib/thiscene';
+import { FONT, GRAD, T } from '@/lib/thiscene';
 
 /**
  * Tsacoal brand mark: a mint tile with a capital T and the name in
@@ -18,7 +18,9 @@ export function BrandGlyph({ size = 22 }: { size?: number }) {
 export default function Wordmark({ href = '/', size = 17 }: { href?: string; size?: number }) {
   return (
     <Link href={href} aria-label="Tsacoal home" style={{ display: 'inline-flex', alignItems: 'center', gap: 0, textDecoration: 'none' }}>
-      <span style={{ fontFamily: FONT.display, fontSize: size, fontWeight: 800, letterSpacing: '-0.03em', color: T.white, lineHeight: 1 }}>Tsacoal</span>
+      <span style={{ fontFamily: FONT.display, fontSize: size, fontWeight: 800, letterSpacing: '-0.03em', color: T.white, lineHeight: 1.15 }}>
+        <span style={{ background: GRAD.mint, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>Tsa</span>Coal
+      </span>
     </Link>
   );
 }

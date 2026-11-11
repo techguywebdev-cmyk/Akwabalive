@@ -86,7 +86,7 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
 
         <div style={{ display: 'flex', flex: 1 }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '40px 0 56px' }}>
-          <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: -1, color: '#fff' }}>Tsacoal</span>
+          <span style={{ display: 'flex', fontSize: 32, fontWeight: 800, letterSpacing: -1, color: '#fff' }}><span style={{ backgroundImage: 'linear-gradient(135deg, #D2FBE3 0%, #8FEBB7 34%, #5AD99A 68%, #2FB97E 100%)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>Tsa</span><span>Coal</span></span>
           <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.45)', marginLeft: 8 }}>make yours at tsacoal.com</span>
         </div>
       </div>

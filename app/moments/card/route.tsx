@@ -90,7 +90,7 @@ export async function GET(req: Request) {
           <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: H, background: 'linear-gradient(90deg, rgba(5,8,6,0.94) 0%, rgba(5,8,6,0.78) 45%, rgba(5,8,6,0.2) 100%)' }} />
           <div style={{ display: 'flex', position: 'absolute', top: 245, left: 960 }}>{play(140)}</div>
           <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: 50, left: 56, width: 680, height: 530 }}>
-            <div style={{ display: 'flex', fontSize: 34, letterSpacing: -1.4, color: '#fff' }}>Tsacoal</div>
+            <div style={{ display: 'flex', fontSize: 34, letterSpacing: -1.4, color: '#fff' }}><span style={{ backgroundImage: 'linear-gradient(135deg, #D2FBE3 0%, #8FEBB7 34%, #5AD99A 68%, #2FB97E 100%)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>Tsa</span><span>Coal</span></div>
             <div style={{ display: 'flex', flex: 1 }} />
             <div style={{ display: 'flex', fontSize: tSize(84), letterSpacing: -3.5, lineHeight: 0.98, ...gText(G_TEXT) }}>{title}</div>
             <div style={{ display: 'flex', marginTop: 12, fontSize: 28, color: 'rgba(255,255,255,0.62)' }}>{summary}</div>
@@ -115,7 +115,7 @@ export async function GET(req: Request) {
         <div style={{ display: 'flex', position: 'absolute', top: Math.round(VH * 0.42) - (story ? 80 : 65), left: W / 2 - (story ? 80 : 65) }}>{play(story ? 160 : 130)}</div>
         <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: 0, left: 0, width: W, height: H, padding: story ? '78px 72px 64px' : '56px 64px 48px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', fontSize: story ? 42 : 36, letterSpacing: -1.5, color: '#fff' }}>Tsacoal</div>
+            <div style={{ display: 'flex', fontSize: story ? 42 : 36, letterSpacing: -1.5, color: '#fff' }}><span style={{ backgroundImage: 'linear-gradient(135deg, #D2FBE3 0%, #8FEBB7 34%, #5AD99A 68%, #2FB97E 100%)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>Tsa</span><span>Coal</span></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: story ? 24 : 21, letterSpacing: 4, color: 'rgba(255,255,255,0.75)' }}>
               <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, backgroundImage: G_MINT }} />MOMENTS
             </div>
