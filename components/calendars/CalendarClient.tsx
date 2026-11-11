@@ -25,6 +25,8 @@ type Ev = { slug: string; title: string; date: string; time: string | null; venu
 const EV_SELECT = 'slug, title, date, time, venue, city, image_url';
 
 const gradText: React.CSSProperties = { background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' };
+/** Shrinks with the name so it fits on one line where it can, two at most */
+const titleSize = (t: string) => (t.length <= 12 ? 'clamp(40px, 11vw, 60px)' : t.length <= 18 ? 'clamp(34px, 9vw, 54px)' : t.length <= 26 ? 'clamp(28px, 7.4vw, 46px)' : 'clamp(26px, 6.6vw, 40px)');
 const quiet = (on = false): React.CSSProperties => ({ height: 38, minWidth: 38, padding: '0 8px', borderRadius: 999, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: 'transparent', color: on ? T.mint : 'rgba(255,255,255,0.75)', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 });
 const eyebrow: React.CSSProperties = { margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
 const iconBtn = (on = false): React.CSSProperties => ({
@@ -214,7 +216,7 @@ export default function CalendarClient({ slug }: { slug: string }) {
           )}
           <div style={{ position: 'relative' }}>
             {cal?.is_public === false && <p style={{ ...eyebrow, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}><Lock size={12} />Private</p>}
-            <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(38px, 10.5vw, 60px)', fontWeight: 800, lineHeight: 1.0, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>{cal?.title ?? ' '}</h1>
+            <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: titleSize(cal?.title ?? ''), fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.045em', paddingBottom: '0.06em', textWrap: 'balance', ...gradText } as React.CSSProperties}>{cal?.title ?? ' '}</h1>
             {cal?.description && <p style={{ margin: '8px 0 0', maxWidth: 520, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text3 }}>{cal.description}</p>}
             {cal && (
               <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8, fontFamily: FONT.sans, fontSize: 13.5, color: T.text3, flexWrap: 'wrap' }}>
@@ -253,7 +255,6 @@ export default function CalendarClient({ slug }: { slug: string }) {
               {mine
                 ? <>
                     <button type="button" onClick={() => setEditing(true)} aria-label="Calendar settings" style={quiet()}><Settings2 size={19} /></button>
-                    <button type="button" onClick={() => { setFindDay(undefined); setFinding(true); }} aria-label="Find shows to add" style={{ marginLeft: 4, width: 38, height: 38, borderRadius: 999, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}><Plus size={19} strokeWidth={2.6} /></button>
                   </>
                 : <button type="button" onClick={makeCopy} aria-label="Copy to my calendars" style={quiet()}><Copy size={18} /></button>}
             </div>
@@ -281,7 +282,7 @@ export default function CalendarClient({ slug }: { slug: string }) {
               <style>{'@keyframes csUp{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}'}</style>
               <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 21, fontWeight: 800, letterSpacing: '-0.025em', color: T.white }}>Calendar settings</p>
               <label style={{ display: 'block', marginTop: 18, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.text3 }}>Name</label>
-              <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={80}
+              <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={40}
                 style={{ marginTop: 8, width: '100%', boxSizing: 'border-box', height: 50, padding: '0 16px', borderRadius: 14, border: 'none', outline: 'none', background: 'rgba(255,255,255,0.08)', color: T.white, fontFamily: FONT.sans, fontSize: 16, fontWeight: 600 }} />
               <label style={{ display: 'block', marginTop: 16, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.text3 }}>About it</label>
               <textarea value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} maxLength={400} rows={2} placeholder="What’s the plan? (optional)"
