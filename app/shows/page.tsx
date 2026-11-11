@@ -15,7 +15,7 @@ export const fetchCache = 'force-no-store';
 export const metadata = {
   title: 'Ghana’s Biggest Yearly Shows & Festivals',
   alternates: { canonical: '/shows' },
-  description: 'Rapperholic, Detty Rave, Tidal Rave and the other nights that come back every year — with ratings from people who went.',
+  description: 'Rapperholic, Detty Rave, Tidal Rave and the other nights that come back every year, with ratings from people who went.',
 };
 
 export default async function ShowsPage() {
