@@ -9,6 +9,7 @@ import Footer from '@/components/layout/Footer';
 import FeedComments from '@/components/events/FeedComments';
 import MonthGrid from '@/components/calendars/MonthGrid';
 import SeasonTimeline from '@/components/calendars/SeasonTimeline';
+import MonthView from '@/components/calendars/MonthView';
 import SearchSheet from '@/components/search/SearchSheet';
 import CalendarSheet from '@/components/calendars/CalendarSheet';
 import { createClient } from '@/lib/supabase/client';
@@ -73,9 +74,9 @@ export default function CalendarClient({ slug }: { slug: string }) {
   const [picks, setPicks] = useState<Ev[]>([]);
   const [copied, setCopied] = useState('');
   // Timeline by default; the month grid is a quiet switch, remembered on this device
-  const [view, setViewState] = useState<'line' | 'month'>('line');
-  useEffect(() => { try { if (localStorage.getItem('ak-cal-view') === 'month') setViewState('month'); } catch { /* storage off */ } }, []);
-  const setView = (v: 'line' | 'month') => { setViewState(v); try { localStorage.setItem('ak-cal-view', v); } catch { /* storage off */ } };
+  const [view, setViewState] = useState<'line' | 'month'>('month');
+  useEffect(() => { try { if (localStorage.getItem('ak-cal-view2') === 'line') setViewState('line'); } catch { /* storage off */ } }, []);
+  const setView = (v: 'line' | 'month') => { setViewState(v); try { localStorage.setItem('ak-cal-view2', v); } catch { /* storage off */ } };
   const { comments, send, edit, remove } = useCalendarComments(cal?.id);
 
   const mine = !!user && cal?.owner_id === user.id;
@@ -306,7 +307,7 @@ export default function CalendarClient({ slug }: { slug: string }) {
               : <span style={{ fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>The line-up</span>}
             {events.length > 0 && (
               <div role="tablist" aria-label="View" style={{ display: 'flex', padding: 3, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
-                {([['line', 'Timeline'], ['month', 'Month']] as const).map(([v, l]) => (
+                {([['month', 'Month'], ['line', 'Passes']] as const).map(([v, l]) => (
                   <button key={v} type="button" role="tab" aria-selected={view === v} onClick={() => setView(v)}
                     style={{ height: 32, padding: '0 13px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, background: view === v ? 'rgba(123,227,168,0.16)' : 'transparent', color: view === v ? T.mintText : T.text3 }}>{l}</button>
                 ))}
@@ -327,9 +328,9 @@ export default function CalendarClient({ slug }: { slug: string }) {
             />
           )}
           {cal && (view === 'month' || !events.length) && (
-            <MonthGrid
+            <MonthView
               events={events}
-              onAddDay={mine ? (d) => { setFindDay(d); setFinding(true); } : undefined}
+              onFindDay={mine ? (d) => { setFindDay(d); setFinding(true); } : undefined}
               onRemove={mine ? (g) => {
                 const e = events.find((x) => x.slug === g.slug);
                 if (!e) return;
@@ -337,7 +338,6 @@ export default function CalendarClient({ slug }: { slug: string }) {
                 if (undoTimer.current) clearTimeout(undoTimer.current);
                 undoTimer.current = setTimeout(() => setUndo(null), 5000);
               } : undefined}
-              renderSheet={(pick) => <CalendarSheet events={events} title={cal.title} owner={ownerName(cal)} slug={cal.slug} isPublic={cal.is_public} onPick={pick} />}
             />
           )}
         </section>
