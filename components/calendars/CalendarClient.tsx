@@ -248,9 +248,6 @@ export default function CalendarClient({ slug }: { slug: string }) {
               <button type="button" onClick={toggleLike} aria-pressed={liked} aria-label={liked ? 'Unlike' : 'Like'} style={quiet(liked)}>
                 <Heart size={19} fill={liked ? 'currentColor' : 'none'} />{likes > 0 && <span>{likes}</span>}
               </button>
-              <button type="button" onClick={() => (user ? setChat(true) : needSignIn())} aria-label="Comments" style={quiet()}>
-                <MessageSquareText size={19} />{comments.length > 0 && <span>{comments.length}</span>}
-              </button>
               <button type="button" onClick={share} aria-label="Share link" style={quiet()}><Share2 size={18} /></button>
               {mine
                 ? <>
