@@ -21,7 +21,7 @@ export async function generateMetadata({
   params: { username: string };
 }) {
   return {
-    title: `@${params.username} — Organizer · ${BRAND_NAME}`,
+    title: `@${params.username} · Organizer`,
     description: `Events presented by @${params.username} on ${BRAND_NAME}.`,
   };
 }
