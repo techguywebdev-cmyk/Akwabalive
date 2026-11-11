@@ -142,7 +142,7 @@ export default function SeasonTimeline({ events, onRemove, onAdd }: { events: Gr
             </div>
 
             {/* The rest: just the flyers, each with its date and how far away it is */}
-            {rest.length > 0 && (
+            {(rest.length > 0 || onAdd) && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(30%, 150px), 1fr))', gap: 10, marginTop: 22 }}>
                 {rest.map((x, j) => {
                   const xd = parseDay(x.date);
@@ -165,17 +165,20 @@ export default function SeasonTimeline({ events, onRemove, onAdd }: { events: Gr
                     </button>
                   );
                 })}
+                {onAdd && (
+                  <button type="button" onClick={onAdd} aria-label="Add a night" style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', aspectRatio: '4 / 5', borderRadius: 16, border: '1.5px dashed rgba(123,227,168,0.35)', background: 'rgba(123,227,168,0.05)' }}>
+                      <span style={{ width: 40, height: 40, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.14)', color: T.mint }}><Plus size={20} strokeWidth={2.4} /></span>
+                    </span>
+                    <span style={{ display: 'block', marginTop: 8, padding: '0 2px', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, color: T.mintText }}>Add a night</span>
+                  </button>
+                )}
               </div>
             )}
           </>
         );
       })()}
 
-      {onAdd && (
-        <button type="button" onClick={onAdd} style={{ marginTop: 16, height: 44, padding: '0 16px', borderRadius: 999, border: 'none', background: 'rgba(123,227,168,0.1)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, color: T.mintText, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 }}>
-          <Plus size={17} strokeWidth={2.4} /> Add a night
-        </button>
-      )}
 
       {/* Nights gone by: a quiet row of flyers */}
       {been.length > 0 && (
