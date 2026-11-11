@@ -107,6 +107,11 @@ export default function MonthView({ events, onRemove, onFindDay, tagOf, eyebrow,
   const len = new Date(y, m + 1, 0).getDate();
   const cells: (number | null)[] = [...Array(lead).fill(null), ...Array.from({ length: len }, (_, i) => i + 1)];
   while (cells.length % 7) cells.push(null);
+  // Whole weeks, minus the ones already gone by with nothing saved in them
+  const weeks = Array.from({ length: cells.length / 7 }, (_, r) => cells.slice(r * 7, r * 7 + 7)).filter((row) => {
+    const ds = row.filter((d): d is number => d != null);
+    return iso(y, m, ds[ds.length - 1]) >= today || ds.some((d) => byDay[iso(y, m, d)]);
+  });
 
   const selEvents = byDay[sel] ?? [];
   const sd = new Date(`${sel}T12:00:00`);
@@ -142,33 +147,41 @@ export default function MonthView({ events, onRemove, onFindDay, tagOf, eyebrow,
         </div>
       )}
 
-      {/* The grid */}
-      <div key={ym} className="ak-fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 5, marginTop: 18 }}>
-        {WEEK.map((w, i) => <span key={w} style={{ paddingBottom: 6, textAlign: 'center', fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: i >= 5 ? 'rgba(168,240,198,0.75)' : T.text3 }}>{w}</span>)}
-        {cells.map((d, i) => {
-          if (d == null) return <span key={i} />;
-          const k = iso(y, m, d);
-          const list = byDay[k];
-          const on = k === sel, isToday = k === today, past = k < today;
-          if (!list) {
-            return (
-              <button key={i} type="button" onClick={() => setSel(k)} aria-label={`${d} ${MONTHS[m]}`} aria-pressed={on}
-                style={{ aspectRatio: '4 / 5', borderRadius: 11, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, background: on ? 'rgba(123,227,168,0.12)' : 'transparent', fontFamily: FONT.display, fontSize: 15, fontWeight: 700, color: isToday || on ? T.mintText : past ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.5)' }}>
-                {d}
-                {isToday && <span aria-hidden style={{ width: 4, height: 4, borderRadius: 2, background: T.mint }} />}
-              </button>
-            );
-          }
-          const f = flyer(list[0], 200);
+      {/* The grid: weeks gone by drop away, quiet weeks stay slim, weeks with a night out get room for the flyer */}
+      <div key={ym} className="ak-fade" style={{ marginTop: 16, padding: '14px 10px 10px', borderRadius: 26, background: 'linear-gradient(180deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.025) 100%)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6, paddingBottom: 8 }}>
+          {WEEK.map((w, i) => <span key={w} style={{ textAlign: 'center', fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: i >= 5 ? 'rgba(168,240,198,0.75)' : T.text3 }}>{w}</span>)}
+        </div>
+        {weeks.map((row, r) => {
+          const busy = row.some((d) => d != null && byDay[iso(y, m, d)]);
           return (
-            <button key={i} type="button" onClick={() => setSel(k)} aria-label={`${d} ${MONTHS[m]}: ${list.map((e) => e.title).join(', ')}`} aria-pressed={on}
-              style={{ position: 'relative', aspectRatio: '4 / 5', padding: 0, borderRadius: 11, border: 'none', cursor: 'pointer', overflow: 'hidden', background: GRAD.card, opacity: past ? 0.45 : 1, transform: on ? 'scale(1.08)' : 'none', zIndex: on ? 2 : 1, transition: 'transform 180ms cubic-bezier(0.22,1,0.36,1)', boxShadow: on ? '0 0 0 2px #7BE3A8, 0 12px 24px -8px rgba(91,217,154,0.6)' : '0 8px 16px -8px rgba(0,0,0,0.8)' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {f && <img src={f} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
-              <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(4,8,6,0.75) 0%, rgba(4,8,6,0) 48%)' }} />
-              <span style={{ position: 'absolute', left: 5, top: 3, fontFamily: FONT.display, fontSize: 12.5, fontWeight: 800, color: '#fff' }}>{d}</span>
-              {list.length > 1 && <span style={{ position: 'absolute', right: 3, bottom: 3, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 800 }}>{list.length}</span>}
-            </button>
+            <div key={r} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6, marginTop: r ? 6 : 0, alignItems: 'center' }}>
+              {row.map((d, i) => {
+                if (d == null) return <span key={i} />;
+                const k = iso(y, m, d);
+                const list = byDay[k];
+                const on = k === sel, isToday = k === today, past = k < today;
+                if (!list) {
+                  return (
+                    <button key={i} type="button" onClick={() => setSel(k)} aria-label={`${d} ${MONTHS[m]}`} aria-pressed={on}
+                      style={{ height: busy ? '100%' : 38, minHeight: 38, padding: 0, border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ width: 34, height: 34, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT.display, fontSize: 14.5, fontWeight: 700, background: isToday ? GRAD.mint : on ? 'rgba(123,227,168,0.16)' : 'transparent', color: isToday ? T.onMint : on ? T.mintText : past ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.62)' }}>{d}</span>
+                    </button>
+                  );
+                }
+                const f = flyer(list[0], 200);
+                return (
+                  <button key={i} type="button" onClick={() => setSel(k)} aria-label={`${d} ${MONTHS[m]}: ${list.map((e) => e.title).join(', ')}`} aria-pressed={on}
+                    style={{ position: 'relative', aspectRatio: '4 / 5', padding: 0, borderRadius: 11, border: 'none', cursor: 'pointer', overflow: 'hidden', background: GRAD.card, opacity: past ? 0.45 : 1, transform: on ? 'scale(1.1)' : 'none', zIndex: on ? 2 : 1, transition: 'transform 180ms cubic-bezier(0.22,1,0.36,1)', boxShadow: on ? '0 0 0 2px #7BE3A8, 0 12px 24px -8px rgba(91,217,154,0.6)' : '0 8px 16px -8px rgba(0,0,0,0.8)' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {f && <img src={f} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+                    <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(4,8,6,0) 45%, rgba(4,8,6,0.85) 100%)' }} />
+                    <span style={{ position: 'absolute', left: 0, right: 0, bottom: 3, textAlign: 'center', fontFamily: FONT.display, fontSize: 13, fontWeight: 800, color: '#fff' }}>{d}</span>
+                    {list.length > 1 && <span style={{ position: 'absolute', right: 3, top: 3, minWidth: 17, height: 17, padding: '0 4px', borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 800 }}>{list.length}</span>}
+                  </button>
+                );
+              })}
+            </div>
           );
         })}
       </div>
