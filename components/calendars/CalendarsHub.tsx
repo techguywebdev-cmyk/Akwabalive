@@ -10,7 +10,6 @@ import { parseDay, shortDay } from '@/lib/dates';
 import { listTitle } from '@/lib/titles';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
-import FlyerWall from '@/components/ui/FlyerWall';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { CAL_SELECT, calendarStats, createCalendar, isCurated, ownerName, type Calendar, type CalendarStats } from '@/lib/calendars';
@@ -197,7 +196,8 @@ function CalRow({ c, evs, stats }: { c: Row; evs: TileEvent[]; stats?: CalendarS
 export default function CalendarsHub() {
   const db = useMemo(() => createClient(), []);
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [loaded, setLoaded] = useState(false);
   const [mine, setMine] = useState<Row[]>([]);
   const [popular, setPopular] = useState<Row[]>([]);
   const [events, setEvents] = useState<Record<string, GridEvent>>({});
@@ -208,6 +208,7 @@ export default function CalendarsHub() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
     let live = true;
     (async () => {
       const sel = `${CAL_SELECT}, calendar_events(event_slug)`;
@@ -229,6 +230,7 @@ export default function CalendarsHub() {
       setOurs(p.filter((c) => isCurated(c.slug)));
       setPopular(p.filter((c) => c.owner_id !== user?.id && !isCurated(c.slug)).slice(0, 12));
       setMine(o.filter((c) => !isCurated(c.slug)));
+      setLoaded(true);
       setStats(st);
       const evRows = (ev.data ?? []) as GridEvent[];
       setEvents(Object.fromEntries(evRows.map((e) => [e.slug, e])));
@@ -236,7 +238,7 @@ export default function CalendarsHub() {
       setDates(Object.fromEntries(evRows.map((e) => [e.slug, e.date])));
     })();
     return () => { live = false; };
-  }, [user, db]);
+  }, [user?.id, db, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Starting one: they name it first (anything they like), and pick who sees it
   const [naming, setNaming] = useState(false);
@@ -248,8 +250,6 @@ export default function CalendarsHub() {
     setBusy(true);
     try { const c = await createCalendar(db, user.id, name, isPublic); router.push(`/c/${c.slug}`); } catch { setBusy(false); }
   };
-  // Header: flyers from the public calendars on show (never from someone's private one)
-  const wall = Array.from(new Set([...ours, ...popular].flatMap((c) => c.calendar_events.map((e) => flyers[e.event_slug])).filter(Boolean))).slice(0, 10);
   const fl = (c: Row): TileEvent[] => c.calendar_events.filter((e) => dates[e.event_slug]).map((e) => ({ date: dates[e.event_slug], img: flyers[e.event_slug] ?? null, ev: events[e.event_slug] }));
   const stack: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 34, marginTop: 18 };
   // Every night you've saved, across all your calendars, for the one month view
@@ -269,6 +269,14 @@ export default function CalendarsHub() {
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed', overflowX: 'clip' }}>
       <Nav back="/" />
       <main style={{ maxWidth: 960, margin: '0 auto', padding: 'calc(100px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
+        {!loaded ? (
+          <div aria-busy="true" aria-label="Loading" style={{ maxWidth: 560 }}>
+            <div className="ak-sk" style={{ width: '62%', height: 44, borderRadius: 12 }} />
+            <div className="ak-sk" style={{ width: '40%', height: 16, borderRadius: 8, marginTop: 10 }} />
+            <div className="ak-sk" style={{ height: 300, borderRadius: 30, marginTop: 22 }} />
+            <div className="ak-sk" style={{ height: 84, borderRadius: 22, marginTop: 34 }} />
+          </div>
+        ) : <>
         {mine.length > 0 ? (
           <header>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, maxWidth: 560 }}>
@@ -281,25 +289,8 @@ export default function CalendarsHub() {
             {upNext && <div style={{ marginTop: 22, maxWidth: 560 }}><UpNext e={upNext.e} img={flyers[upNext.e.slug] ?? null} cal={upNext.cal} /></div>}
           </header>
         ) : (
-        <header style={{ position: 'relative', paddingTop: wall.length ? 'min(50vw, 240px)' : 0 }}>
-          {wall.length > 0 ? (
-            <div aria-hidden style={{ position: 'absolute', top: 'calc(-100px - env(safe-area-inset-top, 0px))', left: '50%', width: '100vw', transform: 'translateX(-50%)', height: 'calc(min(50vw, 240px) + 100px + 190px)', pointerEvents: 'none' }}>
-              <FlyerWall images={wall} height="100%" />
-            </div>
-          ) : (
-            <div aria-hidden style={{ position: 'absolute', inset: '-80px -20px auto', height: 320, background: GRAD.aurora, opacity: 0.5, filter: 'blur(30px)', pointerEvents: 'none' }} />
-          )}
-          <p style={{ ...eyebrow, position: 'relative' }}>Calendars</p>
-          <h1 style={{ position: 'relative', margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(38px, 10.5vw, 64px)', fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>Your season, your line-up.</h1>
-          <p style={{ position: 'relative', margin: '14px 0 0', maxWidth: 540, fontFamily: FONT.sans, fontSize: 16.5, lineHeight: 1.55, color: T.text2 }}>
-            Put the shows you’re going to in one calendar. Keep it private, or share it and let people like, rate and comment.
-          </p>
-          <div style={{ position: 'relative', marginTop: 22, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button type="button" onClick={start} disabled={busy} style={{ ...BTN.primary, height: 50, padding: '0 22px', borderRadius: 999, cursor: 'pointer', fontSize: 15, display: 'inline-flex', alignItems: 'center', gap: 8, opacity: busy ? 0.7 : 1 }}>
-              <Plus size={18} strokeWidth={2.6} />Start a calendar
-            </button>
-            <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.text3 }}>Or tap “Add to a calendar” on any event</span>
-          </div>
+        <header>
+          <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(32px, 9vw, 48px)', fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>Calendars</h1>
         </header>
         )}
 
@@ -325,6 +316,7 @@ export default function CalendarsHub() {
             <p style={{ margin: '12px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: T.text2 }}>No one’s shared a calendar yet. Be the first, and send it to the squad.</p>
           )}
         </section>
+        </>}
       </main>
       <Footer />
 
