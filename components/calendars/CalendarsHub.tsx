@@ -263,7 +263,6 @@ export default function CalendarsHub() {
     const cal = e && mine.find((c) => c.calendar_events.some((x) => x.event_slug === e.slug));
     return e && cal ? { e, cal } : null;
   })();
-  const nights = new Set(mine.flatMap((c) => c.calendar_events.map((e) => e.event_slug))).size;
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed', overflowX: 'clip' }}>
@@ -271,22 +270,13 @@ export default function CalendarsHub() {
       <main style={{ maxWidth: 960, margin: '0 auto', padding: 'calc(100px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
         {!loaded ? (
           <div aria-busy="true" aria-label="Loading" style={{ maxWidth: 560 }}>
-            <div className="ak-sk" style={{ width: '62%', height: 44, borderRadius: 12 }} />
-            <div className="ak-sk" style={{ width: '40%', height: 16, borderRadius: 8, marginTop: 10 }} />
-            <div className="ak-sk" style={{ height: 300, borderRadius: 30, marginTop: 22 }} />
+            <div className="ak-sk" style={{ height: 300, borderRadius: 30 }} />
             <div className="ak-sk" style={{ height: 84, borderRadius: 22, marginTop: 34 }} />
           </div>
         ) : <>
         {mine.length > 0 ? (
           <header>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, maxWidth: 560 }}>
-              <div style={{ minWidth: 0 }}>
-                <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(32px, 9vw, 48px)', fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>Your nights out</h1>
-                <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>{nights} saved across {mine.length} {mine.length === 1 ? 'calendar' : 'calendars'}</p>
-              </div>
-              <button type="button" onClick={start} aria-label="Start a new calendar" style={{ flexShrink: 0, width: 42, height: 42, borderRadius: 999, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}><Plus size={20} strokeWidth={2.6} /></button>
-            </div>
-            {upNext && <div style={{ marginTop: 22, maxWidth: 560 }}><UpNext e={upNext.e} img={flyers[upNext.e.slug] ?? null} cal={upNext.cal} /></div>}
+            {upNext && <div style={{ maxWidth: 560 }}><UpNext e={upNext.e} img={flyers[upNext.e.slug] ?? null} cal={upNext.cal} /></div>}
           </header>
         ) : (
         <header>
@@ -297,7 +287,12 @@ export default function CalendarsHub() {
         {mine.length > 0 && (
           <section aria-label="Your calendars" style={{ marginTop: 44 }}>
             <p style={eyebrow}>Your calendars</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14, maxWidth: 560 }}>{mine.map((c) => <CalRow key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} />)}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14, maxWidth: 560 }}>{mine.map((c) => <CalRow key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} />)}
+              <button type="button" onClick={start} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 12, borderRadius: 22, cursor: 'pointer', background: 'transparent', border: '1.5px dashed rgba(123,227,168,0.28)', color: T.mintText, fontFamily: FONT.sans, fontSize: 15, fontWeight: 700, textAlign: 'left' }}>
+                <span style={{ flexShrink: 0, width: 54, height: 60, borderRadius: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.08)' }}><Plus size={20} strokeWidth={2.4} /></span>
+                New calendar
+              </button>
+            </div>
           </section>
         )}
 
