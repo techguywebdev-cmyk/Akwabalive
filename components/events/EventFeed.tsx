@@ -10,6 +10,8 @@ import PaystackCheckout from '@/components/payment/PaystackCheckout';
 import FlyerCanvas, { Glow } from '@/components/events/FlyerCanvas';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments } from '@/components/moments/EventMoments';
+import type { Moment } from '@/components/moments/types';
+import { extractYoutubeId } from '@/lib/events/rank';
 import { ytThumb } from '@/lib/moments/match';
 import { hiRes } from '@/lib/events/image';
 import CustomPlayer from '@/components/moments/CustomPlayer';
@@ -104,13 +106,20 @@ function EventCard({
   // Played on its own once per visit to the card; stopping it (Flyer) keeps it stopped until you swipe away
   const [autoDone, setAutoDone] = useState(false);
   useEffect(() => { if (!active) { setWatching(false); setAutoDone(false); } }, [active]);
-  const moments = useEventMoments(event, near);
+  const pastMoments = useEventMoments(event, near);
+  // No past clips yet: play the event's own promo video (the YouTube link the organiser or we added)
+  const promoId = event.promoVideoUrl ? extractYoutubeId(event.promoVideoUrl) : null;
+  const moments = useMemo<Moment[]>(() => pastMoments.length || !promoId ? pastMoments : [{
+    id: `promo-${event.slug}`, title: event.title, event_name: event.title, event_slug: event.slug,
+    youtube_id: promoId, description: null, year: null, is_featured: false,
+  }], [pastMoments, promoId, event.slug, event.title]);
+  const isPromo = !pastMoments.length && moments.length > 0;
   // Comments: the clip's own thread (the same one as on the Moments page); the event chat when it has no clips.
   // Loaded for the card on screen only.
   const [chatOpen, setChatOpen] = useState(false);
   const [calOpen, setCalOpen] = useState(false);
   useEffect(() => { if (!active) setChatOpen(false); }, [active]);
-  const threadClip = moments.length ? moments[watching ? clip : 0] : null;
+  const threadClip = !isPromo && moments.length ? moments[watching ? clip : 0] : null;
   const momentThread = useMomentComments(active && threadClip ? threadClip.id : undefined);
   const eventThread = useEventComments(active && !threadClip ? event.slug : undefined);
   const thread = threadClip ? momentThread : eventThread;
@@ -178,7 +187,7 @@ function EventCard({
   const split = splitEventTitle(event.title);
   const title = shorten(calmCase(split.title));
   const subtitle = shorten(calmCase(split.subtitle), 60);
-  const hype = hypeTags(event, { returning: moments.length > 0 });
+  const hype = hypeTags(event, { returning: pastMoments.length > 0 });
   const excerpt = eventExcerpt(event.description, event.title);
   const goingCount = (event.attending ?? 0) + (going ? 1 : 0);
   const tags = [event.category, statusText(event)]
@@ -227,7 +236,7 @@ function EventCard({
           </div>
           <div style={{ position: 'relative', padding: '12px 20px 4px' }}>
             <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
-              {moments[clip].event_name}{moments[clip].year ? ` · ${moments[clip].year}` : ''}
+              {isPromo ? 'Promo' : moments[clip].event_name}{moments[clip].year ? ` · ${moments[clip].year}` : ''}
             </p>
             {moments.length > 1 && (
               <div className="no-scrollbar" style={{ display: 'flex', gap: 8, marginTop: 10, overflowX: 'auto' }}>
@@ -281,7 +290,7 @@ function EventCard({
               <ImageIcon size={14} strokeWidth={2.2} /> Flyer
             </button>
           ) : moments.length > 0 ? (
-            <button type="button" onClick={() => { setClip(0); setProg(0); setWatching(true); }} aria-label={`Watch moments from past editions, ${moments.length} video${moments.length > 1 ? 's' : ''}`} title="Watch moments"
+            <button type="button" onClick={() => { setClip(0); setProg(0); setWatching(true); }} aria-label={isPromo ? 'Watch the promo video' : `Watch moments from past editions, ${moments.length} video${moments.length > 1 ? 's' : ''}`} title={isPromo ? 'Watch the promo' : 'Watch moments'}
               style={{ width: 28, height: 28, padding: 0, borderRadius: 14, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint, boxShadow: '0 0 14px rgba(123,227,168,0.45)' }}>
               <Play size={12} fill="currentColor" strokeWidth={0} style={{ marginLeft: 2 }} />
             </button>
