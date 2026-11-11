@@ -36,5 +36,18 @@
       "path": "/api/calendars/curate",
       "schedule": "20 6 * * *"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path((?!api/|_next/).*\\.(?:png|jpg|jpeg|webp|gif|svg|ico))",
+      "has": [
+        {
+          "type": "host",
+          "value": "akwabalive.vercel.app"
+        }
+      ],
+      "destination": "https://tsacoal.com/:path",
+      "permanent": true
+    }
   ]
 }
