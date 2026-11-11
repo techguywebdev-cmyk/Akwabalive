@@ -17,7 +17,7 @@ export default async function OG() {
         fontFamily: font ? 'Inter Tight' : undefined,
         background: 'radial-gradient(70% 60% at 50% 0%, rgba(40,130,85,0.35) 0%, rgba(40,130,85,0) 80%), linear-gradient(180deg, #0B0F0D 0%, #050606 100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-          <span style={{ fontSize: 64, fontWeight: 800, letterSpacing: -2, color: '#ffffff' }}>Tsacoal</span>
+          <span style={{ display: 'flex', fontSize: 64, fontWeight: 800, letterSpacing: -2, color: '#ffffff' }}><span style={{ backgroundImage: 'linear-gradient(135deg, #D2FBE3 0%, #8FEBB7 34%, #5AD99A 68%, #2FB97E 100%)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>Tsa</span><span>Coal</span></span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <span style={{ fontSize: 76, fontWeight: 800, letterSpacing: -3, lineHeight: 1.02, color: '#ffffff', maxWidth: 980 }}>Every event in Ghana, in one place.</span>
