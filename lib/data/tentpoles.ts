@@ -31,6 +31,7 @@ export const TENTPOLES: Tentpole[] = [
   { date: '2026-12-12', title: 'Gyakie Live', artist: 'gyakie', blurb: 'Gyakie’s first headline show since 2022', venue: 'Ghud Park, Accra Mall', match: /gyakie\s*live/i, source: '3news.com' },
   { date: '2026-12-17', title: 'BYK Concert', artist: 'medikal', blurb: 'Medikal’s Beyond Kontrol, the Spaceship Edition', venue: 'Untamed Empire', match: /\bbyk\b/i },
   { date: '2026-12-19', title: 'Asakaa Rave', blurb: 'Kumasi drill takes over Accra, from 2pm', venue: 'Untamed Empire', match: /asakaa\s*rave/i, tickets: '*800*300#', source: 'ghanaweb.com' },
+  { date: '2026-12-20', title: 'The Convention', artist: 'bisa-kdei', blurb: 'Bisa Kdei’s highlife night, live with his band', venue: 'Underbridge Annex, East Legon', match: /\bthe\s*convention\b|bisa\s*k['’]?dei/i, tickets: '*714*911#', source: 'bisaconvention.live' },
   { date: '2026-12-21', title: 'Zaama Disco', artist: 'black-sherif', blurb: 'Black Sherif’s yearly party for the city', venue: 'Legon Sports Stadium', match: /zaama\s*disco/i, source: 'sparkglim.net' },
   { date: '2026-12-24', title: 'BHIM Concert', artist: 'stonebwoy', blurb: 'Stonebwoy’s Christmas Eve concert', venue: 'University of Ghana Stadium', match: /\bbhim\b/i },
 ];
