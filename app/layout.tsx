@@ -3,6 +3,7 @@ import { Inter, Inter_Tight } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/supabase/AuthProvider';
 import RefTracker from '@/components/social/RefTracker';
+import { Analytics } from '@vercel/analytics/next';
 import { JsonLd, siteJsonLd } from '@/lib/seo';
 
 /** Display face — titles, numerals, eyebrows */
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <JsonLd data={siteJsonLd()} />
         <AuthProvider><RefTracker />{children}</AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
