@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 export const metadata = {
-  title: { absolute: 'Tsacoal: Events in Ghana, Concerts, Parties & Tickets' },
+  title: { absolute: 'TsaCoal: Events in Ghana, Concerts, Parties & Tickets' },
   description: 'What’s on in Ghana tonight, this weekend and all of Detty December: concerts, festivals and parties in Accra, Kumasi, Cape Coast and Tamale, with tickets, line-ups and clips.',
   alternates: { canonical: '/' },
 };

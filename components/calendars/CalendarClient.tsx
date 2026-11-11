@@ -39,13 +39,7 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 function Avatar({ c, size = 30 }: { c: Calendar; size?: number }) {
   const name = ownerName(c);
   if (isCurated(c.slug)) {
-    return (
-      <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden style={{ flexShrink: 0 }}>
-        <rect x="1" y="1" width="22" height="22" rx="7" fill="#7BE3A8" />
-        <path d="M12 7v11" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="butt" />
-        <path d="M6.5 7h11" fill="none" stroke="#03130B" strokeWidth="2.4" strokeLinecap="butt" />
-      </svg>
-    );
+    return <span aria-hidden style={{ width: size, height: size, borderRadius: size * 0.32, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.1)', color: '#fff', fontFamily: FONT.display, fontSize: size * 0.4, fontWeight: 800, letterSpacing: '-0.04em' }}>TC</span>;
   }
   const url = c.profiles?.avatar_url;
   // eslint-disable-next-line @next/next/no-img-element

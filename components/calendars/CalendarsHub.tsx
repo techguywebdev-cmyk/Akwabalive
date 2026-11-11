@@ -68,7 +68,7 @@ function Tile({ c, evs, stats, onAdd, bare }: { c: Row; evs: TileEvent[]; stats?
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 3, fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {n} {n === 1 ? 'night' : 'nights'}{next ? <> · <span style={{ color: T.mintText, fontWeight: 700 }}>next {until(next.date).toLowerCase()}</span></> : ''}{onAdd ? '' : ` · ${isCurated(c.slug) ? 'Tsacoal' : ownerName(c)}`}
+              {n} {n === 1 ? 'night' : 'nights'}{next ? <> · <span style={{ color: T.mintText, fontWeight: 700 }}>next {until(next.date).toLowerCase()}</span></> : ''}{onAdd ? '' : ` · ${isCurated(c.slug) ? 'TsaCoal' : ownerName(c)}`}
             </span>
             {!!stats?.likes && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, flexShrink: 0 }}><Heart size={11} />{stats.likes}</span>}
             {stats?.rating != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.mintText, flexShrink: 0 }}><Star size={11} fill="currentColor" strokeWidth={0} />{Number(stats.rating).toFixed(1)}</span>}

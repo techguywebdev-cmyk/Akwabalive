@@ -3,8 +3,8 @@ import type { MetadataRoute } from 'next';
 /** Add to home screen: opens full screen like an app */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Tsacoal: every event in Ghana',
-    short_name: 'Tsacoal',
+    name: 'TsaCoal: every event in Ghana',
+    short_name: 'TsaCoal',
     description: 'Concerts, festivals and parties in Ghana, with tickets, line-ups and moments.',
     start_url: '/',
     display: 'standalone',

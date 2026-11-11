@@ -35,7 +35,7 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
   const slugs = c.calendar_events.map((e) => e.event_slug);
   const events = slugs.length ? (await rest<SheetEvent[]>(`events?select=slug,title,date,image_url&slug=in.(${slugs.map((s) => `"${s}"`).map(encodeURIComponent).join(',')})&order=date`)) ?? [] : [];
   const months = sheetMonths(events);
-  const who = params.slug.startsWith('akwaaba-') ? 'Tsacoal' : c?.profiles?.full_name || c?.profiles?.username || 'Someone';
+  const who = params.slug.startsWith('akwaaba-') ? 'TsaCoal' : c?.profiles?.full_name || c?.profiles?.username || 'Someone';
 
   const body = months.reduce((h, mo) => h + MONTH_HEAD + mo.weeks.reduce((s, w) => s + (w.full ? FULL_ROW : THIN_ROW) + GAP, 0) + 30, 0);
   const H = Math.max(1350, Math.min(3200, 300 + body + 150));
@@ -86,7 +86,7 @@ export async function GET(_req: Request, { params }: { params: { slug: string } 
 
         <div style={{ display: 'flex', flex: 1 }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '40px 0 56px' }}>
-          <span style={{ display: 'flex', fontSize: 32, fontWeight: 800, letterSpacing: -1, color: '#fff' }}><span style={{ backgroundImage: 'linear-gradient(135deg, #D2FBE3 0%, #8FEBB7 34%, #5AD99A 68%, #2FB97E 100%)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>Tsa</span><span>Coal</span></span>
+          <span style={{ display: 'flex', fontSize: 32, fontWeight: 800, letterSpacing: -1, color: '#fff' }}>TsaCoal</span>
           <span style={{ fontSize: 24, color: 'rgba(255,255,255,0.45)', marginLeft: 8 }}>make yours at tsacoal.com</span>
         </div>
       </div>

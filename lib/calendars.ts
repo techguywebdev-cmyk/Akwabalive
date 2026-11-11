@@ -25,7 +25,7 @@ export function calendarSlug(title: string) {
 
 /** Calendars we make ourselves (starter calendars): their links start with akwaaba- and they show as by Tsacoal */
 export const isCurated = (slug?: string | null) => !!slug && slug.startsWith('akwaaba-');
-export const ownerName = (c: Pick<Calendar, 'profiles'> & { slug?: string }) => (isCurated(c.slug) ? 'Tsacoal' : c.profiles?.full_name || c.profiles?.username || 'Someone');
+export const ownerName = (c: Pick<Calendar, 'profiles'> & { slug?: string }) => (isCurated(c.slug) ? 'TsaCoal' : c.profiles?.full_name || c.profiles?.username || 'Someone');
 
 export async function myCalendars(db: SupabaseClient, userId: string) {
   const { data } = await db.from('calendars').select('*, calendar_events(event_slug)').eq('owner_id', userId).order('updated_at', { ascending: false });
