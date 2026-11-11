@@ -5,7 +5,7 @@ import { FlyerPop, type GridEvent } from '@/components/calendars/MonthGrid';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Globe, Heart, Lock, Plus, Star } from 'lucide-react';
-import MonthView from '@/components/calendars/MonthView';
+import Countdown, { startsAt } from '@/components/events/Countdown';
 import { parseDay, shortDay } from '@/lib/dates';
 import { listTitle } from '@/lib/titles';
 import Nav from '@/components/layout/Nav';
@@ -103,6 +103,52 @@ function Tile({ c, evs, stats, onAdd, bare }: { c: Row; evs: TileEvent[]; stats?
       </div>}
       {pop && popEvents.length > 0 && <FlyerPop day={pop} events={popEvents} onClose={() => setPop(null)} />}
     </div>
+  );
+}
+
+/** The flyer, blurred, as the card's own colour */
+function Tint({ img, strong = false }: { img: string | null | undefined; strong?: boolean }) {
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      {img && <img src={img} alt="" aria-hidden style={{ position: 'absolute', inset: '-30%', width: '160%', height: '160%', objectFit: 'cover', filter: 'blur(40px) saturate(1.4)', opacity: strong ? 0.75 : 0.6, pointerEvents: 'none' }} />}
+      <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,10,8,0.3) 0%, rgba(6,10,8,0.7) 55%, rgba(6,10,8,0.92) 100%)', pointerEvents: 'none' }} />
+    </>
+  );
+}
+
+/** Your next night out, across all your calendars: a pass with the flyer and a live countdown */
+function UpNext({ e, img, cal }: { e: GridEvent; img: string | null; cal: Row }) {
+  const d = parseDay(e.date);
+  const at = startsAt(e.date, e.time);
+  const [pop, setPop] = useState(false);
+  const where = [d ? shortDay(d) : null, e.time && !/tba/i.test(e.time) ? e.time : null, e.venue && !/to be announced|tba/i.test(e.venue) ? e.venue : null].filter(Boolean).join(' · ');
+  return (
+    <article className="ak-rise" style={{ position: 'relative', borderRadius: 30, overflow: 'hidden', background: '#0A100D', boxShadow: '0 30px 60px -30px rgba(0,0,0,0.95), inset 0 0 0 1px rgba(255,255,255,0.08)' }}>
+      <Tint img={img} strong />
+      <div style={{ position: 'relative', display: 'flex', gap: 16, alignItems: 'center', padding: '18px 18px 0' }}>
+        <button type="button" onClick={() => setPop(true)} aria-label={`See the ${e.title} flyer`} style={{ flexShrink: 0, width: 104, height: 130, padding: 0, border: 'none', borderRadius: 14, overflow: 'hidden', cursor: 'zoom-in', background: GRAD.card, transform: 'rotate(-4deg)', boxShadow: '0 20px 40px -14px rgba(0,0,0,0.9)' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {img && <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+        </button>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <p style={{ ...eyebrow }}>Your next night out</p>
+          <h2 style={{ margin: '7px 0 0', fontFamily: FONT.display, fontSize: 'clamp(22px, 6.4vw, 30px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, ...gradText }}>{listTitle(e.title)}</h2>
+          <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 13.5, lineHeight: 1.4, color: T.text2 }}>{where}</p>
+        </div>
+      </div>
+      {at && <div style={{ position: 'relative', padding: '16px 18px 0' }}><Countdown at={at} compact /></div>}
+      <div aria-hidden style={{ position: 'relative', height: 26, marginTop: 14 }}>
+        <span style={{ position: 'absolute', left: -13, top: 0, width: 26, height: 26, borderRadius: 999, background: '#070B09' }} />
+        <span style={{ position: 'absolute', right: -13, top: 0, width: 26, height: 26, borderRadius: 999, background: '#070B09' }} />
+        <span style={{ position: 'absolute', left: 22, right: 22, top: 12, borderTop: '2px dashed rgba(255,255,255,0.16)' }} />
+      </div>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '4px 18px 18px' }}>
+        <Link href={`/c/${cal.slug}`} style={{ minWidth: 0, fontFamily: FONT.sans, fontSize: 13, color: T.text3, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>On <span style={{ color: T.white, fontWeight: 700 }}>{cal.title}</span></Link>
+        <Link href={`/events/${e.slug}`} style={{ flexShrink: 0, height: 40, padding: '0 16px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>See the event <ArrowRight size={15} /></Link>
+      </div>
+      {pop && <FlyerPop day={e.date.slice(0, 10)} events={[e]} onClose={() => setPop(false)} />}
+    </article>
   );
 }
 
@@ -211,6 +257,12 @@ export default function CalendarsHub() {
     const seen = new Set<string>();
     return mine.flatMap((c) => c.calendar_events.map((e) => events[e.event_slug])).filter((e): e is GridEvent => !!e && !seen.has(e.slug) && !!seen.add(e.slug)).sort((x, y) => x.date.localeCompare(y.date));
   }, [mine, events]);
+  const upNext = (() => {
+    const t = new Date().toISOString().slice(0, 10);
+    const e = myEvents.find((x) => x.date.slice(0, 10) >= t);
+    const cal = e && mine.find((c) => c.calendar_events.some((x) => x.event_slug === e.slug));
+    return e && cal ? { e, cal } : null;
+  })();
   const nights = new Set(mine.flatMap((c) => c.calendar_events.map((e) => e.event_slug))).size;
 
   return (
@@ -219,12 +271,14 @@ export default function CalendarsHub() {
       <main style={{ maxWidth: 960, margin: '0 auto', padding: 'calc(100px + env(safe-area-inset-top, 0px)) 20px 40px' }}>
         {mine.length > 0 ? (
           <header>
-            <div style={{ maxWidth: 560 }}>
-              <MonthView events={myEvents}
-                eyebrow={`Your nights out · ${nights} saved`}
-                action={<button type="button" onClick={start} aria-label="Start a new calendar" style={{ flexShrink: 0, width: 42, height: 42, borderRadius: 999, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}><Plus size={20} strokeWidth={2.6} /></button>}
-                tagOf={(slug) => { const c = mine.find((x) => x.calendar_events.some((e) => e.event_slug === slug)); return c ? { title: c.title, href: `/c/${c.slug}` } : null; }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, maxWidth: 560 }}>
+              <div style={{ minWidth: 0 }}>
+                <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(32px, 9vw, 48px)', fontWeight: 800, lineHeight: 1.02, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>Your nights out</h1>
+                <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>{nights} saved across {mine.length} {mine.length === 1 ? 'calendar' : 'calendars'}</p>
+              </div>
+              <button type="button" onClick={start} aria-label="Start a new calendar" style={{ flexShrink: 0, width: 42, height: 42, borderRadius: 999, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}><Plus size={20} strokeWidth={2.6} /></button>
             </div>
+            {upNext && <div style={{ marginTop: 22, maxWidth: 560 }}><UpNext e={upNext.e} img={flyers[upNext.e.slug] ?? null} cal={upNext.cal} /></div>}
           </header>
         ) : (
         <header style={{ position: 'relative', paddingTop: wall.length ? 'min(50vw, 240px)' : 0 }}>
