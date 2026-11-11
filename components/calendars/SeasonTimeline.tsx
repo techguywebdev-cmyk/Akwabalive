@@ -154,14 +154,13 @@ export default function SeasonTimeline({ events, onRemove, onAdd }: { events: Gr
                       <span style={{ position: 'relative', display: 'block', aspectRatio: '4 / 5', borderRadius: 16, overflow: 'hidden', background: GRAD.card, boxShadow: '0 16px 30px -18px rgba(0,0,0,0.9)' }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         {f && <img src={f} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6, marginTop: 8, padding: '0 2px' }}>
-                        <span style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                          <span style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.04em', color: T.white }}>{xd ? xd.getDate() : '?'}</span>
-                          <span style={{ fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.1em', color: T.mintText }}>{xd ? MON[xd.getMonth()] : ''}</span>
+                        {/* a tear-off date on the corner */}
+                        <span style={{ position: 'absolute', left: 7, top: 7, width: 40, borderRadius: 10, overflow: 'hidden', textAlign: 'center', background: 'rgba(8,13,10,0.82)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 6px 14px -4px rgba(0,0,0,0.7)' }}>
+                          <span style={{ display: 'block', height: 15, lineHeight: '15px', background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 9, fontWeight: 800, letterSpacing: '0.12em' }}>{xd ? MON[xd.getMonth()] : ''}</span>
+                          <span style={{ display: 'block', padding: '3px 0 4px', fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1, color: '#fff' }}>{xd ? xd.getDate() : '?'}</span>
                         </span>
-                        <span style={{ fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 600, color: T.text3, whiteSpace: 'nowrap' }}>{until(x.date)}</span>
                       </span>
+                      <span style={{ display: 'block', marginTop: 8, padding: '0 2px', fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 600, color: T.text3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{until(x.date)}</span>
                     </button>
                   );
                 })}
