@@ -25,6 +25,7 @@ type Ev = { slug: string; title: string; date: string; time: string | null; venu
 const EV_SELECT = 'slug, title, date, time, venue, city, image_url';
 
 const gradText: React.CSSProperties = { background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' };
+const quiet = (on = false): React.CSSProperties => ({ height: 38, minWidth: 38, padding: '0 8px', borderRadius: 999, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: 'transparent', color: on ? T.mint : 'rgba(255,255,255,0.75)', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 });
 const eyebrow: React.CSSProperties = { margin: 0, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
 const iconBtn = (on = false): React.CSSProperties => ({
   minWidth: 48, height: 48, padding: '0 14px', borderRadius: 15, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
@@ -74,9 +75,9 @@ export default function CalendarClient({ slug }: { slug: string }) {
   const [picks, setPicks] = useState<Ev[]>([]);
   const [copied, setCopied] = useState('');
   // Timeline by default; the month grid is a quiet switch, remembered on this device
-  const [view, setViewState] = useState<'line' | 'month'>('month');
-  useEffect(() => { try { if (localStorage.getItem('ak-cal-view2') === 'line') setViewState('line'); } catch { /* storage off */ } }, []);
-  const setView = (v: 'line' | 'month') => { setViewState(v); try { localStorage.setItem('ak-cal-view2', v); } catch { /* storage off */ } };
+  const [view, setViewState] = useState<'line' | 'month'>('line');
+  useEffect(() => { try { if (localStorage.getItem('ak-cal-view3') === 'month') setViewState('month'); } catch { /* storage off */ } }, []);
+  const setView = (v: 'line' | 'month') => { setViewState(v); try { localStorage.setItem('ak-cal-view3', v); } catch { /* storage off */ } };
   const { comments, send, edit, remove } = useCalendarComments(cal?.id);
 
   const mine = !!user && cal?.owner_id === user.id;
@@ -212,54 +213,58 @@ export default function CalendarClient({ slug }: { slug: string }) {
             <div aria-hidden style={{ position: 'absolute', inset: '-60px -20px auto', height: 340, background: GRAD.aurora, opacity: 0.55, filter: 'blur(30px)', pointerEvents: 'none' }} />
           )}
           <div style={{ position: 'relative' }}>
-            <p style={{ ...eyebrow, display: 'flex', alignItems: 'center', gap: 7 }}>
-              {cal?.is_public === false ? <Lock size={12} /> : <Globe size={12} />}{cal?.is_public === false ? 'Private calendar' : 'Calendar'}
-            </p>
-            <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(38px, 10.5vw, 60px)', fontWeight: 800, lineHeight: 1.0, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>{cal?.title ?? ' '}</h1>
-            {cal?.description && <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{cal.description}</p>}
+            {cal?.is_public === false && <p style={{ ...eyebrow, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}><Lock size={12} />Private</p>}
+            <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(38px, 10.5vw, 60px)', fontWeight: 800, lineHeight: 1.0, letterSpacing: '-0.045em', paddingBottom: '0.06em', ...gradText }}>{cal?.title ?? ' '}</h1>
+            {cal?.description && <p style={{ margin: '8px 0 0', maxWidth: 520, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text3 }}>{cal.description}</p>}
             {cal && (
-              <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Avatar c={cal} size={38} />
-                <div style={{ minWidth: 0 }}>
-                  {cal.profiles?.username && !isCurated(cal.slug)
-                    ? <Link href={`/u/${cal.profiles.username}`} style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 700, color: T.white, textDecoration: 'none' }}>{ownerName(cal)}</Link>
-                    : <span style={{ display: 'block', fontFamily: FONT.sans, fontSize: 15, fontWeight: 700, color: T.white }}>{ownerName(cal)}</span>}
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, fontFamily: FONT.sans, fontSize: 13, color: T.text3, flexWrap: 'wrap' }}>
-                    <span>{events.length} {events.length === 1 ? 'show' : 'shows'}</span>
-                    {first && <><span aria-hidden>·</span><span>{first === last || !last ? shortDay(first) : `${shortDay(first).replace(/^\S+ /, '')} – ${shortDay(last).replace(/^\S+ /, '')}`}</span></>}
-                    {ratings.length > 0 && <><span aria-hidden>·</span><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.mintText, fontWeight: 700 }}><Star size={12} fill="currentColor" strokeWidth={0} />{avg.toFixed(1)}</span></>}
-                  </span>
-                </div>
+              <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8, fontFamily: FONT.sans, fontSize: 13.5, color: T.text3, flexWrap: 'wrap' }}>
+                <Avatar c={cal} size={22} />
+                {cal.profiles?.username && !isCurated(cal.slug)
+                  ? <Link href={`/u/${cal.profiles.username}`} style={{ fontWeight: 700, color: T.white, textDecoration: 'none' }}>{ownerName(cal)}</Link>
+                  : <span style={{ fontWeight: 700, color: T.white }}>{ownerName(cal)}</span>}
+                <span aria-hidden>·</span><span>{events.length} {events.length === 1 ? 'show' : 'shows'}</span>
+                {ratings.length > 0 && <><span aria-hidden>·</span><span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: T.mintText, fontWeight: 700 }}><Star size={12} fill="currentColor" strokeWidth={0} />{avg.toFixed(1)}</span></>}
               </div>
             )}
           </div>
         </header>
 
-        {/* One quiet row: react on the left, your own move on the right */}
+        {/* One quiet row: the view switch, then small icons */}
         {cal && (
-          <section aria-label="React" style={{ marginTop: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <button type="button" onClick={toggleLike} aria-pressed={liked} aria-label={liked ? 'Unlike' : 'Like'} style={iconBtn(liked)}>
+          <section aria-label="Actions" style={{ marginTop: 22 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {events.length > 0 && (
+                <div role="tablist" aria-label="View" style={{ display: 'flex', padding: 3, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
+                  {([['line', 'Passes'], ['month', 'Month']] as const).map(([v, l]) => (
+                    <button key={v} type="button" role="tab" aria-selected={view === v} onClick={() => setView(v)}
+                      style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700, background: view === v ? 'rgba(123,227,168,0.16)' : 'transparent', color: view === v ? T.mintText : T.text3 }}>{l}</button>
+                  ))}
+                </div>
+              )}
+              <span style={{ flex: 1 }} />
+              {copied && <span style={{ marginRight: 6, fontFamily: FONT.sans, fontSize: 12.5, color: T.mintText }}>{copied}</span>}
+              <button type="button" onClick={toggleLike} aria-pressed={liked} aria-label={liked ? 'Unlike' : 'Like'} style={quiet(liked)}>
                 <Heart size={19} fill={liked ? 'currentColor' : 'none'} />{likes > 0 && <span>{likes}</span>}
               </button>
-              <button type="button" onClick={() => (user ? setChat(true) : needSignIn())} aria-label="Comments" style={iconBtn()}>
+              <button type="button" onClick={() => (user ? setChat(true) : needSignIn())} aria-label="Comments" style={quiet()}>
                 <MessageSquareText size={19} />{comments.length > 0 && <span>{comments.length}</span>}
               </button>
-              <button type="button" onClick={share} aria-label="Share link" style={iconBtn()}><Share2 size={18} /></button>
-              <span style={{ flex: 1 }} />
-              {copied && <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.mintText }}>{copied}</span>}
+              <button type="button" onClick={share} aria-label="Share link" style={quiet()}><Share2 size={18} /></button>
               {mine
-                ? <button type="button" onClick={() => setEditing(true)} aria-label="Calendar settings" style={iconBtn()}><Settings2 size={19} /></button>
-                : <button type="button" onClick={makeCopy} style={{ ...iconBtn(), padding: '0 16px', fontSize: 14 }}><Copy size={16} />Copy to mine</button>}
+                ? <>
+                    <button type="button" onClick={() => setEditing(true)} aria-label="Calendar settings" style={quiet()}><Settings2 size={19} /></button>
+                    <button type="button" onClick={() => { setFindDay(undefined); setFinding(true); }} aria-label="Find shows to add" style={{ marginLeft: 4, width: 38, height: 38, borderRadius: 999, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: GRAD.mint, color: T.onMint }}><Plus size={19} strokeWidth={2.6} /></button>
+                  </>
+                : <button type="button" onClick={makeCopy} aria-label="Copy to my calendars" style={quiet()}><Copy size={18} /></button>}
             </div>
             {!mine && (
-              <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.text3 }}>{myStars ? 'Your rating' : 'Rate this line-up'}</span>
-                <div role="radiogroup" aria-label="Rate this calendar" style={{ display: 'flex', gap: 2 }}>
+              <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{myStars ? 'Your rating' : 'Rate it'}</span>
+                <div role="radiogroup" aria-label="Rate this calendar" style={{ display: 'flex', gap: 1 }}>
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button key={n} type="button" role="radio" aria-checked={myStars === n} aria-label={`${n} star${n > 1 ? 's' : ''}`} onClick={() => rate(n)}
-                      style={{ width: 28, height: 28, border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: myStars >= n ? T.mint : 'rgba(255,255,255,0.2)', transition: 'color 150ms ease' }}>
-                      <Star size={20} fill="currentColor" strokeWidth={0} />
+                      style={{ width: 24, height: 24, border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: myStars >= n ? T.mint : 'rgba(255,255,255,0.2)' }}>
+                      <Star size={17} fill="currentColor" strokeWidth={0} />
                     </button>
                   ))}
                 </div>
@@ -295,25 +300,10 @@ export default function CalendarClient({ slug }: { slug: string }) {
         )}
 
         {/* The shows: a season timeline, or the month grid */}
-        <section aria-label="Shows" style={{ marginTop: 40 }}>
+        <section aria-label="Shows" style={{ marginTop: 24 }}>
           {cal && !events.length && (
             <p style={{ margin: '0 0 16px', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>{mine ? 'Nothing in it yet. Find shows to add, or tap “Add to a calendar” on any event.' : 'Nothing in this calendar yet.'}</p>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 20 }}>
-            {mine
-              ? <button type="button" onClick={() => { setFindDay(undefined); setFinding(true); }} style={{ ...BTN.primary, boxShadow: 'none', height: 42, padding: '0 18px', borderRadius: 999, cursor: 'pointer', fontSize: 14.5, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-                  <Search size={16} strokeWidth={2.4} />Find shows
-                </button>
-              : <span style={{ fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>The line-up</span>}
-            {events.length > 0 && (
-              <div role="tablist" aria-label="View" style={{ display: 'flex', padding: 3, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
-                {([['month', 'Month'], ['line', 'Passes']] as const).map(([v, l]) => (
-                  <button key={v} type="button" role="tab" aria-selected={view === v} onClick={() => setView(v)}
-                    style={{ height: 32, padding: '0 13px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, background: view === v ? 'rgba(123,227,168,0.16)' : 'transparent', color: view === v ? T.mintText : T.text3 }}>{l}</button>
-                ))}
-              </div>
-            )}
-          </div>
           {cal && events.length > 0 && view === 'line' && (
             <SeasonTimeline
               events={events}
