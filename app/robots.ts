@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/og';
 
-const PRIVATE = ['/api/', '/organizer/', '/account', '/auth', '/notifications', '/t/', '/*?by=', '/*/card'];
+const PRIVATE = ['/admin', '/api/', '/organizer/', '/account', '/auth', '/notifications', '/t/', '/*?by=', '/*/card'];
 
 /** Every search engine and AI answer engine is welcome on the public pages */
 export default function robots(): MetadataRoute.Robots {
