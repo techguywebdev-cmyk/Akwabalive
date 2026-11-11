@@ -5,8 +5,9 @@ import { parseDay } from '@/lib/dates';
 import { getArtistPhotos, getArtistFollowers } from '@/lib/artists/photos';
 import { BRAND_NAME } from '@/lib/theme';
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
+// Served from cache and refreshed in the background every minute, so the page opens instantly
+export const revalidate = 60;
+export const fetchCache = 'force-cache';
 export const metadata = {
   title: 'Ghanaian Artists: Upcoming Concerts & Shows',
   description: `Sarkodie, Black Sherif, Stonebwoy, King Promise, Gyakie and more: where Ghana’s biggest artists are performing next, with tickets and clips, on ${BRAND_NAME}.`,

@@ -4,8 +4,9 @@ import { events as staticEvents } from '@/lib/data/events';
 import { fetchPublishedEvents, supabaseToGhanaEvent } from '@/lib/supabase/events';
 import { sortNewestFirst } from '@/lib/events/rank';
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
+// Served from cache and refreshed in the background every minute, so the page opens instantly
+export const revalidate = 60;
+export const fetchCache = 'force-cache';
 
 export const metadata = {
   title: 'Events in Ghana: Concerts, Parties & Festivals in Accra and Beyond',

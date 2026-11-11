@@ -2,8 +2,9 @@ import EventsPage from '../events/page';
 
 // The home page at its own address, for sharing on X and elsewhere: a fresh link that apps
 // haven't cached a preview for. Kept out of search so it doesn't compete with the home page.
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
+// Served from cache and refreshed in the background every minute, so the page opens instantly
+export const revalidate = 60;
+export const fetchCache = 'force-cache';
 
 export const metadata = {
   title: { absolute: 'TsaCoal | Ghana, after dark' },

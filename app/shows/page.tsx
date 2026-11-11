@@ -10,8 +10,9 @@ import type { Artist } from '@/lib/types';
 import { linkTentpoles, EXPECTED } from '@/lib/data/tentpoles';
 import type { CalendarItem } from '@/components/series/ShowsIndexClient';
 
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
+// Served from cache and refreshed in the background every minute, so the page opens instantly
+export const revalidate = 60;
+export const fetchCache = 'force-cache';
 export const metadata = {
   title: 'Ghana’s Biggest Yearly Shows & Festivals',
   alternates: { canonical: '/shows' },
