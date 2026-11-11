@@ -100,70 +100,76 @@ export default function SeasonTimeline({ events, onRemove, onAdd }: { events: Gr
 
   return (
     <div>
-      {upcoming.length > 0 && (
-        <div style={{ position: 'relative' }}>
-          {upcoming.map((e, i) => {
-            const d = parseDay(e.date);
-            const isOpen = e.slug === openSlug, isNext = e.slug === nextSlug;
-            const at = startsAt(e.date, e.time);
-            const dateLine = d ? `${WD[d.getDay()].charAt(0) + WD[d.getDay()].slice(1).toLowerCase()} ${d.getDate()} ${MONTH[d.getMonth()]}` : e.date;
-            return (
-              <div key={e.slug} id={`pass-${e.slug}`} style={{ position: 'relative', zIndex: i + 1, marginTop: i === 0 ? 0 : isOpen ? 14 : -16 }}>
-                {isOpen ? (
-                  /* An open pass */
-                  <article className="ak-fade" style={{ position: 'relative', borderRadius: 30, overflow: 'hidden', background: '#0A100D', boxShadow: '0 -10px 30px -12px rgba(0,0,0,0.6), 0 30px 60px -30px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(255,255,255,0.08)' }}>
-                    <Tint e={e} strong />
-                    <div style={{ position: 'relative', padding: '18px 18px 0' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                        <span style={{ fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: T.mintText }}>{isNext ? 'Up next' : 'You’re going'}</span>
-                        <span style={{ padding: '5px 11px', borderRadius: 999, background: 'rgba(255,255,255,0.1)', fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.white }}>{until(e.date)}</span>
+      {upcoming.length > 0 && (() => {
+        const e = upcoming.find((x) => x.slug === openSlug) ?? upcoming[0];
+        const d = parseDay(e.date);
+        const isNext = e.slug === nextSlug;
+        const at = startsAt(e.date, e.time);
+        const dateLine = d ? `${WD[d.getDay()].charAt(0) + WD[d.getDay()].slice(1).toLowerCase()} ${d.getDate()} ${MONTH[d.getMonth()]}` : e.date;
+        const rest = upcoming.filter((x) => x.slug !== e.slug);
+        return (
+          <>
+            <div id="pass-open" key={e.slug}>
+                    <article className="ak-fade" style={{ position: 'relative', borderRadius: 30, overflow: 'hidden', background: '#0A100D', boxShadow: '0 -10px 30px -12px rgba(0,0,0,0.6), 0 30px 60px -30px rgba(0,0,0,0.9), inset 0 0 0 1px rgba(255,255,255,0.08)' }}>
+                      <Tint e={e} strong />
+                      <div style={{ position: 'relative', padding: '18px 18px 0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                          <span style={{ fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: T.mintText }}>{isNext ? 'Up next' : 'You’re going'}</span>
+                          <span style={{ padding: '5px 11px', borderRadius: 999, background: 'rgba(255,255,255,0.1)', fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 700, color: T.white }}>{until(e.date)}</span>
+                        </div>
+                        {/* the whole flyer, never cropped */}
+                        <button type="button" onClick={() => setPop(e.date.slice(0, 10))} aria-label={`See the ${e.title} flyer`} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: 14, padding: 0, border: 'none', background: 'none', cursor: 'zoom-in' }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          {flyerOf(e) && <img src={flyerOf(e)!} alt="" style={{ display: 'block', maxWidth: '100%', maxHeight: 'min(62vw, 340px)', borderRadius: 16, boxShadow: '0 24px 50px -18px rgba(0,0,0,0.85)' }} />}
+                        </button>
+                        <h3 style={{ margin: '18px 0 0', fontFamily: FONT.display, fontSize: 'clamp(24px, 7vw, 30px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>{listTitle(e.title)}</h3>
+                        <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>{dateLine} · {where(e)}</p>
+                        {at && <div style={{ marginTop: 16 }}><Countdown at={at} compact /></div>}
                       </div>
-                      {/* the whole flyer, never cropped */}
-                      <button type="button" onClick={() => setPop(e.date.slice(0, 10))} aria-label={`See the ${e.title} flyer`} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: 14, padding: 0, border: 'none', background: 'none', cursor: 'zoom-in' }}>
+                      {/* perforation */}
+                      <div aria-hidden style={{ position: 'relative', height: 26, marginTop: 16 }}>
+                        <span style={{ position: 'absolute', left: -13, top: 0, width: 26, height: 26, borderRadius: 999, background: '#070B09' }} />
+                        <span style={{ position: 'absolute', right: -13, top: 0, width: 26, height: 26, borderRadius: 999, background: '#070B09' }} />
+                        <span style={{ position: 'absolute', left: 22, right: 22, top: 12, borderTop: '2px dashed rgba(255,255,255,0.16)' }} />
+                      </div>
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '4px 18px 18px' }}>
+                        <span style={{ minWidth: 0 }}>{going[e.slug]?.n ? <Faces slug={e.slug} /> : <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Tell your people</span>}</span>
+                        <Link href={`/events/${e.slug}`} style={{ flexShrink: 0, height: 40, padding: '0 16px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+                          See the event <ArrowRight size={15} />
+                        </Link>
+                      </div>
+                    </article>
+            </div>
+
+            {/* The rest: just the flyers, each with its date and how far away it is */}
+            {rest.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(30%, 150px), 1fr))', gap: 10, marginTop: 22 }}>
+                {rest.map((x, j) => {
+                  const xd = parseDay(x.date);
+                  const f = flyerOf(x, 360);
+                  return (
+                    <button key={x.slug} type="button" className="ak-rise" aria-label={`${x.title}, ${xd ? `${xd.getDate()} ${MONTH[xd.getMonth()]}` : x.date}`}
+                      onClick={() => { setOpen(x.slug); requestAnimationFrame(() => document.getElementById('pass-open')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }}
+                      style={{ padding: 0, border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', animationDelay: `${Math.min(j, 9) * 40}ms` }}>
+                      <span style={{ position: 'relative', display: 'block', aspectRatio: '4 / 5', borderRadius: 16, overflow: 'hidden', background: GRAD.card, boxShadow: '0 16px 30px -18px rgba(0,0,0,0.9)' }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        {flyerOf(e) && <img src={flyerOf(e)!} alt="" style={{ display: 'block', maxWidth: '100%', maxHeight: 'min(62vw, 340px)', borderRadius: 16, boxShadow: '0 24px 50px -18px rgba(0,0,0,0.85)' }} />}
-                      </button>
-                      <h3 style={{ margin: '18px 0 0', fontFamily: FONT.display, fontSize: 'clamp(24px, 7vw, 30px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>{listTitle(e.title)}</h3>
-                      <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>{dateLine} · {where(e)}</p>
-                      {at && <div style={{ marginTop: 16 }}><Countdown at={at} compact /></div>}
-                    </div>
-                    {/* perforation */}
-                    <div aria-hidden style={{ position: 'relative', height: 26, marginTop: 16 }}>
-                      <span style={{ position: 'absolute', left: -13, top: 0, width: 26, height: 26, borderRadius: 999, background: '#070B09' }} />
-                      <span style={{ position: 'absolute', right: -13, top: 0, width: 26, height: 26, borderRadius: 999, background: '#070B09' }} />
-                      <span style={{ position: 'absolute', left: 22, right: 22, top: 12, borderTop: '2px dashed rgba(255,255,255,0.16)' }} />
-                    </div>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '4px 18px 18px' }}>
-                      <span style={{ minWidth: 0 }}>{going[e.slug]?.n ? <Faces slug={e.slug} /> : <span style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Tell your people</span>}</span>
-                      <Link href={`/events/${e.slug}`} style={{ flexShrink: 0, height: 40, padding: '0 16px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 6, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
-                        See the event <ArrowRight size={15} />
-                      </Link>
-                    </div>
-                  </article>
-                ) : (
-                  /* A pass in the stack: just its top edge */
-                  <button type="button" onClick={() => { setOpen(e.slug); requestAnimationFrame(() => document.getElementById(`pass-${e.slug}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })); }} aria-label={`${e.title}, ${dateLine}`}
-                    style={{ position: 'relative', width: '100%', height: 84, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 14, border: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 24, overflow: 'hidden', background: '#0A100D', boxShadow: '0 -10px 26px -10px rgba(0,0,0,0.75), inset 0 0 0 1px rgba(255,255,255,0.07)' }}>
-                    <Tint e={e} />
-                    <span style={{ position: 'relative', width: 40, flexShrink: 0, textAlign: 'center' }}>
-                      <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 24, fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 1, color: T.white }}>{d ? d.getDate() : '?'}</span>
-                      <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: T.mintText }}>{d ? MON[d.getMonth()] : ''}</span>
-                    </span>
-                    <span style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 16, fontWeight: 800, letterSpacing: '-0.02em', color: T.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listTitle(e.title)}</span>
-                      <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 12.5, color: 'rgba(255,255,255,0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{until(e.date)} · {where(e)}</span>
-                    </span>
-                    {flyerOf(e, 160) && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={flyerOf(e, 160)!} alt="" style={{ position: 'relative', width: 44, height: 55, objectFit: 'cover', borderRadius: 9, flexShrink: 0, boxShadow: '0 6px 14px rgba(0,0,0,0.5)' }} />
-                    )}
-                  </button>
-                )}
+                        {f && <img src={f} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />}
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6, marginTop: 8, padding: '0 2px' }}>
+                        <span style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                          <span style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.04em', color: T.white }}>{xd ? xd.getDate() : '?'}</span>
+                          <span style={{ fontFamily: FONT.sans, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.1em', color: T.mintText }}>{xd ? MON[xd.getMonth()] : ''}</span>
+                        </span>
+                        <span style={{ fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 600, color: T.text3, whiteSpace: 'nowrap' }}>{until(x.date)}</span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-      )}
+            )}
+          </>
+        );
+      })()}
 
       {onAdd && (
         <button type="button" onClick={onAdd} style={{ marginTop: 16, height: 44, padding: '0 16px', borderRadius: 999, border: 'none', background: 'rgba(123,227,168,0.1)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, color: T.mintText, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 }}>
