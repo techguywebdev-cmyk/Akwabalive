@@ -16,7 +16,7 @@ import GiftSheet from '@/components/moments/GiftSheet';
 import ArtistQuickSheet from '@/components/moments/ArtistQuickSheet';
 import { formatCount, type Comment, type Moment } from '@/components/moments/types';
 import { useMomentComments } from '@/hooks/useMomentComments';
-import { useNextEdition } from '@/hooks/useNextEdition';
+import { useNextEdition, prefetchUpcoming } from '@/hooks/useNextEdition';
 import { useMomentCrowd } from '@/hooks/useMomentCrowd';
 import { justHappened } from '@/hooks/useMoments';
 import { useVideoColour } from '@/hooks/useVideoColour';
@@ -112,7 +112,9 @@ const MomentSlide = forwardRef<SlideHandle, {
   // Data only for slides near the screen
   const { comments, send, edit, remove, report } = useMomentComments(mounted ? clip.id : undefined);
   const isAdmin = useIsAdmin();
-  const { next } = useNextEdition(mounted ? night : null);
+  const { next, loading: nextLoading } = useNextEdition(mounted ? night : null);
+  // Load the upcoming list as soon as the feed opens, so the next edition is ready before you get to it
+  useEffect(() => { prefetchUpcoming(); }, []);
   const commenterIds = useMemo(() => comments.map((c) => c.user_id), [comments]);
   const crowd = useMomentCrowd(mounted ? night.event_slug : undefined, next, commenterIds, user?.id);
 
@@ -373,7 +375,9 @@ const MomentSlide = forwardRef<SlideHandle, {
 
         {/* What's next for this show, full width: tickets for the next edition, or a reminder */}
         <div style={{ margin: '0 16px 14px', flexShrink: 0 }}>
-          {next ? (
+          {nextLoading ? (
+            <div aria-hidden style={{ height: 82, borderRadius: 20, background: `linear-gradient(120deg, rgba(${tint}, 0.18) 0%, rgba(255,255,255,0.03) 70%)` }} />
+          ) : next ? (
             <Link href={`/events/${next.slug}`} style={{
               position: 'relative', display: 'flex', alignItems: 'center', gap: 14, padding: 12, borderRadius: 20, overflow: 'hidden', textDecoration: 'none',
               background: `linear-gradient(120deg, rgba(${tint}, 0.32) 0%, rgba(255,255,255,0.05) 70%)`, border: 'none',
