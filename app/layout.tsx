@@ -34,8 +34,8 @@ export const metadata: Metadata = {
     other: { ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } : {}) },
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
-  openGraph: { type: 'website', siteName: 'TsaCoal', title: 'TsaCoal | Ghana, After Dark', description: 'Every night out in Ghana in one place. Find the show, save it, bring your people.' },
-  twitter: { card: 'summary_large_image', title: 'TsaCoal | Ghana, After Dark', description: 'Every night out in Ghana in one place. Find the show, save it, bring your people.' },
+  openGraph: { type: 'website', siteName: 'TsaCoal', title: 'TsaCoal | Ghana, after dark', description: 'Every concert, rave, pool party and gospel night in one place. Find the show, save it, bring your people.' },
+  twitter: { card: 'summary_large_image', title: 'TsaCoal | Ghana, after dark', description: 'Every concert, rave, pool party and gospel night in one place. Find the show, save it, bring your people.' },
 };
 
 export const viewport = {
