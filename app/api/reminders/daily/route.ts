@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { isScheduler } from '@/lib/cronAuth';
 import { getAdminClient } from '@/lib/payments/fulfill';
 import { SITE_URL } from '@/lib/og';
+import { sendPushes } from '@/lib/push';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -42,9 +43,23 @@ export async function GET(req: Request) {
       if (!sentBefore.has(k)) want.set(k, { user_id: r.user_id, event_slug: r.event_slug, ticket: ticket || !!want.get(k)?.ticket });
     }
   }
+  // App pushes first (free, instant): "X is tomorrow", once per person per show
+  const evBySlug = new Map(events.map((e) => [e.slug, e]));
+  const { data: pushedBefore } = await db.from('reminder_log').select('user_id, event_slug').eq('kind', 'push_day_before').in('event_slug', slugs);
+  const pushedSet = new Set((pushedBefore ?? []).map((r: any) => `${r.user_id}|${r.event_slug}`));
+  const pushList = Array.from(want.values()).concat(((done ?? []) as any[]).map((r) => ({ user_id: r.user_id, event_slug: r.event_slug, ticket: false })))
+    .filter((w, i, a) => !pushedSet.has(`${w.user_id}|${w.event_slug}`) && a.findIndex((x) => x.user_id === w.user_id && x.event_slug === w.event_slug) === i);
+  const pushed = await sendPushes(db, pushList.map((w) => {
+    const e = evBySlug.get(w.event_slug)!;
+    const time = e.time && !/tba/i.test(e.time) ? ` at ${e.time}` : '';
+    return { userId: w.user_id, title: `${e.title} is tomorrow`, body: `${e.venue ?? 'See the details'}${time}. ${w.ticket ? 'Your ticket is in the app.' : 'Bring your people.'}`, url: `/events/${e.slug}`, image: e.image_url };
+  }));
+  const pushedRows = pushList.filter((w) => pushed.has(w.user_id)).map((w) => ({ user_id: w.user_id, event_slug: w.event_slug, kind: 'push_day_before' }));
+  if (pushedRows.length) await db.from('reminder_log').insert(pushedRows);
+
   const key = process.env.RESEND_API_KEY;
   const from = process.env.REMINDER_FROM; // e.g. "Tsacoal <reminders@yourdomain.com>"
-  if (!key || !from) return NextResponse.json({ tomorrow, events: events.length, people: want.size, sent: 0, note: 'Set RESEND_API_KEY and REMINDER_FROM (verified domain) to send' });
+  if (!key || !from) return NextResponse.json({ tomorrow, events: events.length, people: want.size, pushed: pushedRows.length, sent: 0, note: 'Set RESEND_API_KEY and REMINDER_FROM (verified domain) to send' });
 
   const bySlug = new Map(events.map((e) => [e.slug, e]));
   let sent = 0;
@@ -72,5 +87,5 @@ export async function GET(req: Request) {
     }).catch(() => null);
     if (r?.ok) { sent++; await db.from('reminder_log').insert({ user_id: w.user_id, event_slug: w.event_slug, kind: 'day_before' }); }
   }
-  return NextResponse.json({ tomorrow, events: events.length, people: want.size, sent });
+  return NextResponse.json({ tomorrow, events: events.length, people: want.size, pushed: pushedRows.length, sent });
 }
