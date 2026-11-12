@@ -173,3 +173,10 @@ body::before {
 @media (min-width: 720px) { .ak-masonry { column-count: 3; column-gap: 16px; } .ak-masonry > * { margin-bottom: 22px; } }
 @media (min-width: 1000px) { .ak-masonry { column-count: 4; } }
 @media (max-width: 520px) { .ak-hide-phone { display: none !important; } }
+
+/* Events grid: even boxes */
+.ak-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 720px) { .ak-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+@media (min-width: 1000px) { .ak-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; } }
+@media (min-width: 1240px) { .ak-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (hover: hover) { .ak-box:hover { transform: translateY(-4px); } .ak-box:hover .ak-tile-flyer { transform: scale(1.025); } }
