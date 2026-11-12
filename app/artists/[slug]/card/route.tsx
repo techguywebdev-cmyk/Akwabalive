@@ -62,7 +62,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   const empty = (k: number) => (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', padding: `${28 * k}px ${34 * k}px`, borderRadius: 28 * k, background: G_TICKET, border: '2px solid rgba(123,227,168,0.22)' }}>
       <div style={{ display: 'flex', fontSize: 34 * k, letterSpacing: -1 * k, color: '#fff' }}>No dates announced yet</div>
-      <div style={{ display: 'flex', marginTop: 6 * k, fontSize: 22 * k, color: 'rgba(255,255,255,0.58)' }}>Follow on Tsacoal and hear first.</div>
+      <div style={{ display: 'flex', marginTop: 6 * k, fontSize: 22 * k, color: 'rgba(255,255,255,0.58)' }}>Follow on TsaCoal and hear first.</div>
     </div>
   );
 
