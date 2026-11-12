@@ -108,7 +108,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
           </div>
         </div>
       ),
-      { width: W, height: H, headers: { 'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' }, fonts },
+      { width: W, height: H, headers: { 'Cache-Control': 'public, max-age=300, s-maxage=600, stale-while-revalidate=3600' }, fonts },
     );
   }
 
@@ -172,6 +172,6 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
         </div>
       </div>
     ),
-    { width: W, height: H, headers: { 'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' }, fonts },
+    { width: W, height: H, headers: { 'Cache-Control': 'public, max-age=300, s-maxage=600, stale-while-revalidate=3600' }, fonts },
   );
 }

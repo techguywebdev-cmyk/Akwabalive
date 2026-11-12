@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     const meta = shareMeta({
       title: e.title,
       description: [[parseDay(e.date) ? shortDay(parseDay(e.date)!) : e.dateLabel, e.time && !/tba/i.test(e.time) ? e.time : ''].filter(Boolean).join(', '), e.venue, price].filter(Boolean).join(' · ') + (who ? `. With ${who}.` : ''),
-      image: `/events/${e.slug}/card?format=og`,
+      image: `/events/${e.slug}/card?format=og&v=4`,
       path: `/events/${e.slug}`,
     });
     // In search results: what people type ("tidal rave 2026 tickets"); share previews keep the plain name
