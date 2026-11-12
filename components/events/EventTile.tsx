@@ -104,34 +104,27 @@ export default function EventTile({ event: e, performer, feature = false }: { ev
     );
   }
 
-  // A grid box: one poster-like object. Its own flyer, blurred, fills the box; the flyer floats whole on top,
-  // and the details sit on the same glow underneath, with the day as a big calendar number.
+  // A grid square: the flyer, whole, floating in its own light (the flyer blurred fills the square),
+  // then a clear order underneath: the name first, then one quiet line for when.
   return (
-    <Link href={`/events/${e.slug}`} className="ak-tile ak-box" style={{ position: 'relative', display: 'flex', flexDirection: 'column', minWidth: 0, borderRadius: 22, overflow: 'hidden', textDecoration: 'none', color: T.text, isolation: 'isolate', background: '#0B1510', boxShadow: '0 0 0 1px rgba(255,255,255,0.07), 0 16px 36px rgba(0,0,0,0.45)' }}>
-      {e.image && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={e.image} alt="" aria-hidden loading="lazy" style={{ position: 'absolute', zIndex: -2, inset: '-12%', width: '124%', height: '124%', objectFit: 'cover', filter: 'blur(28px) saturate(1.5) brightness(0.62)' }} />
-      )}
-      <span aria-hidden style={{ position: 'absolute', zIndex: -1, inset: 0, background: 'linear-gradient(180deg, rgba(6,10,8,0) 45%, rgba(6,10,8,0.55) 78%, rgba(6,10,8,0.78) 100%)' }} />
-      {/* The flyer, whole */}
-      <span style={{ position: 'relative', display: 'block', aspectRatio: '4 / 5', margin: 8, marginBottom: 0 }}>
+    <Link href={`/events/${e.slug}`} className="ak-tile ak-box" style={{ display: 'block', minWidth: 0, textDecoration: 'none', color: T.text }}>
+      <span style={{ position: 'relative', display: 'block', aspectRatio: '1 / 1', borderRadius: 20, overflow: 'hidden', isolation: 'isolate', background: '#0B1510', boxShadow: '0 0 0 1px rgba(255,255,255,0.07), 0 14px 32px rgba(0,0,0,0.45)' }}>
         {e.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="ak-tile-flyer" src={e.image} alt={e.title} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 10px 18px rgba(0,0,0,0.45))' }} />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={e.image} alt="" aria-hidden loading="lazy" style={{ position: 'absolute', zIndex: -1, inset: '-10%', width: '120%', height: '120%', objectFit: 'cover', filter: 'blur(22px) saturate(1.5) brightness(0.6)' }} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="ak-tile-flyer" src={e.image} alt={e.title} loading="lazy" style={{ position: 'absolute', inset: '5%', width: '90%', height: '90%', objectFit: 'contain', filter: 'drop-shadow(0 10px 18px rgba(0,0,0,0.5))' }} />
+          </>
         )}
       </span>
-      {/* Day number like a calendar page, then the name and when */}
-      <span style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 12px 13px' }}>
-        <span aria-hidden style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 30 }}>
-          <span style={{ fontFamily: FONT.display, fontSize: 26, fontWeight: 800, letterSpacing: '-0.05em', lineHeight: 0.95, background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>{day.getDate()}</span>
-          <span style={{ marginTop: 3, fontFamily: FONT.display, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.14em', color: T.mintText }}>{MONTHS[day.getMonth()]}</span>
-        </span>
-        <span style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: '2.3em', fontFamily: FONT.display, fontSize: 14.5, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.15, color: T.white }}>{e.title}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.62)', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            {e.hot && <Flame size={11} strokeWidth={2.8} color={T.mintText} aria-label="Hot" style={{ flexShrink: 0 }} />}
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{performer ? performer.name : until(e.date)}</span>
-          </span>
+      <span style={{ display: 'block', padding: '10px 2px 0' }}>
+        <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: FONT.display, fontSize: 15.5, fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.18, color: T.white }}>{e.title}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4, fontFamily: FONT.sans, fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+          {e.hot && <Flame size={11} strokeWidth={2.8} color={T.mintText} aria-label="Hot" style={{ flexShrink: 0 }} />}
+          <span style={{ fontWeight: 700, color: T.mintText }}>{DAYS[day.getDay()].charAt(0)}{DAYS[day.getDay()].slice(1).toLowerCase()} {day.getDate()} {MONTHS[day.getMonth()].charAt(0)}{MONTHS[day.getMonth()].slice(1).toLowerCase()}</span>
+          <span aria-hidden style={{ color: 'rgba(255,255,255,0.3)' }}>·</span>
+          <span style={{ color: 'rgba(255,255,255,0.55)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{performer ? performer.name : until(e.date)}</span>
         </span>
       </span>
     </Link>
