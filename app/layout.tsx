@@ -66,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <JsonLd data={siteJsonLd()} />
         <AuthProvider><RefTracker /><Warmup />{children}</AuthProvider>
+        {/* Vercel Web Analytics: visitors, referrers, countries (enabled in the Vercel dashboard) */}
         <Analytics />
       </body>
     </html>
