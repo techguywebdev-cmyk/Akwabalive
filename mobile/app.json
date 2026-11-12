@@ -1,0 +1,76 @@
+{
+  "expo": {
+    "name": "TsaCoal",
+    "slug": "tsacoal",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.tsacoal.app",
+      "associatedDomains": [
+        "applinks:tsacoal.com"
+      ]
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B1510"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.tsacoal.app",
+      "edgeToEdgeEnabled": true,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "tsacoal.com",
+              "pathPrefix": "/events"
+            },
+            {
+              "scheme": "https",
+              "host": "tsacoal.com",
+              "pathPrefix": "/moments"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image",
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#060A08",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#7BE3A8"
+        }
+      ]
+    ],
+    "scheme": "tsacoal",
+    "backgroundColor": "#060A08",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

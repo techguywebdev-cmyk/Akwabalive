@@ -35,6 +35,10 @@
     {
       "path": "/api/calendars/curate",
       "schedule": "20 6 * * *"
+    },
+    {
+      "path": "/api/alerts",
+      "schedule": "40 8 * * *"
     }
   ],
   "redirects": [
