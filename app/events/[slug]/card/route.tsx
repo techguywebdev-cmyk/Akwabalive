@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { ticketDial } from '@/lib/events/dial';
+import { cityLabel } from '@/lib/utils';
 import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, ON_MINT, G_MINT, G_TEXT, G_TICKET, gText, setOrigin } from '@/lib/shareCard';
 
 export const runtime = 'edge';
@@ -39,7 +40,10 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   const acts = lineup.length ? lineup.slice(0, 3).join(', ') + (lineup.length > 3 ? ` +${lineup.length - 3}` : '') : null;
   const { day, num, month } = dayParts(e.date);
   const time = e.time && !/tba|tbc/i.test(e.time) ? e.time : null;
-  const place = [e.venue && !/to be announced|tba/i.test(e.venue) ? e.venue : null, e.city ? e.city.charAt(0).toUpperCase() + e.city.slice(1) : null].filter(Boolean).join(', ');
+  const cityName = e.city ? cityLabel(e.city) : null;
+  const place = [e.venue && !/to be announced|tba/i.test(e.venue) ? e.venue : null, cityName && !(e.venue ?? '').toLowerCase().includes(cityName.toLowerCase()) ? cityName : null].filter(Boolean).join(', ');
+  // Where the show is (Live in Accra, Live in London), not a blanket "Ghana"
+  const liveIn = `LIVE IN ${(cityName ?? 'Ghana').toUpperCase()}`;
   const dial = ticketDial({ ticketSource: e.ticket_source ?? undefined, description: e.description ?? '', listingInfo: e.listing_info as Parameters<typeof ticketDial>[0]['listingInfo'], flyerText: e.flyer_text ?? undefined });
   const flyer = e.image_url ? sized(e.image_url, og ? 750 : format === 'story' ? 1080 : 828) : null;
   const fit = (base: number) => (e.title.length > 34 ? base * 0.7 : e.title.length > 22 ? base * 0.84 : base);
@@ -75,7 +79,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: `${18 * s}px ${36 * s}px`, background: G_MINT }}>
-        <div style={{ display: 'flex', fontSize: 26 * s, color: '#03130B' }}>{dial ? `Tickets: dial ${dial}` : 'Tickets & line-up on Tsacoal'}</div>
+        <div style={{ display: 'flex', fontSize: 26 * s, color: '#03130B' }}>{dial ? `Tickets: dial ${dial}` : 'Tickets & line-up on TsaCoal'}</div>
         <div style={{ display: 'flex', fontSize: 26 * s, letterSpacing: -0.5 * s, color: '#03130B' }}>tsacoal.com</div>
       </div>
     </div>
@@ -112,11 +116,11 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   // The flyer whole and tilted, a mint date sticker slapped on its corner, the name in the brand gradient beneath.
   const story = format === 'story';
   const W = 1080, H = story ? 1920 : 1350;
-  const FW = story ? 820 : 600, FH = Math.round(FW * 1.25);
+  const FW = story ? 720 : 600, FH = Math.round(FW * 1.25);
   const sticker = (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: -60, bottom: -50, width: story ? 250 : 210, height: story ? 250 : 210, borderRadius: 999, background: G_MINT, transform: 'rotate(10deg)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', border: '6px solid rgba(255,255,255,0.35)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: story ? 24 : -178, bottom: story ? -196 : -8, width: story ? 220 : 200, height: story ? 220 : 200, borderRadius: 999, background: G_MINT, transform: 'rotate(10deg)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', border: '6px solid rgba(255,255,255,0.35)' }}>
       <div style={{ display: 'flex', fontSize: story ? 30 : 26, letterSpacing: 4, color: ON_MINT }}>{day}</div>
-      <div style={{ display: 'flex', fontSize: story ? 104 : 88, letterSpacing: -5, lineHeight: 0.95, color: ON_MINT }}>{num}</div>
+      <div style={{ display: 'flex', fontSize: story ? 94 : 84, letterSpacing: -5, lineHeight: 0.95, color: ON_MINT }}>{num}</div>
       <div style={{ display: 'flex', fontSize: story ? 30 : 26, letterSpacing: 4, color: ON_MINT }}>{month}</div>
     </div>
   );
@@ -128,7 +132,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', fontSize: story ? 42 : 36, letterSpacing: -1.5, color: '#fff' }}>TsaCoal</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: story ? 24 : 21, letterSpacing: 4, color: 'rgba(255,255,255,0.65)' }}>
-              <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, background: G_MINT }} />LIVE IN GHANA
+              <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, background: G_MINT }} />{liveIn}
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 44 : 28 }}>{greeting(story ? 1 : 0.86)}</div>
@@ -162,7 +166,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
             </div>
           )}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: story ? 40 : 26, padding: story ? '22px 34px' : '17px 28px', borderRadius: 999, background: G_MINT }}>
-            <div style={{ display: 'flex', fontSize: story ? 30 : 25, color: ON_MINT }}>{dial ? `Tickets: dial ${dial}` : 'Tickets & line-up on Tsacoal'}</div>
+            <div style={{ display: 'flex', fontSize: story ? 30 : 25, color: ON_MINT }}>{dial ? `Tickets: dial ${dial}` : 'Tickets & line-up on TsaCoal'}</div>
             <div style={{ display: 'flex', fontSize: story ? 28 : 24, color: ON_MINT }}>tsacoal.com</div>
           </div>
         </div>
