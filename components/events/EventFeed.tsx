@@ -26,6 +26,7 @@ import { splitEventTitle, eventBlurb } from '@/lib/events/title';
 import { type CheckoutTier } from '@/lib/events/tiers';
 import { Heart, Share2, Mic2, Play, Image as ImageIcon, MessageSquareText, CalendarPlus } from 'lucide-react';
 import AddToCalendar from '@/components/calendars/AddToCalendar';
+import { eventShareText } from '@/lib/shareText';
 import ShareCardSheet, { useWarmShareCard } from '@/components/events/ShareCardSheet';
 import LineupFaces from '@/components/events/LineupFaces';
 import FeedComments from '@/components/events/FeedComments';
@@ -583,7 +584,7 @@ export default function EventFeed({
           {toast}
         </div>
       )}
-      {sharing && <ShareCardSheet slug={sharing.e.slug} title={sharing.e.title} image={sharing.e.image} intro={sharing.intro} onClose={() => setSharing(null)} />}
+      {sharing && <ShareCardSheet slug={sharing.e.slug} title={sharing.e.title} image={sharing.e.image} intro={sharing.intro} text={eventShareText(sharing.e, !!sharing.intro)} onClose={() => setSharing(null)} />}
     </>
   );
 }

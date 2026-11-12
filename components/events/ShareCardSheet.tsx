@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { Check, Download, Link2, Share2, X } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { T, FONT, GRAD } from '@/lib/thiscene';
+import { artistShareText, momentShareText } from '@/lib/shareText';
 
 type Kind = 'event' | 'artist' | 'moment';
 /** Bump when the card design changes, so phones and the CDN fetch the new card instead of a cached one */
@@ -43,7 +44,7 @@ export function useWarmShareCard(kind: Kind, slug: string, enabled = true, extra
  * Share a show as a designed card: story-size picture (with your face and "Leo's going" when you're signed in),
  * shared straight to WhatsApp/Instagram or saved, plus a link whose preview carries your name too.
  */
-export default function ShareCardSheet({ slug, title, onClose, kind = 'event', intro, image, extra = '' }: { slug: string; title: string; onClose: () => void; kind?: Kind; intro?: string; image?: string | null; extra?: string }) {
+export default function ShareCardSheet({ slug, title, onClose, kind = 'event', intro, image, extra = '', text }: { slug: string; title: string; onClose: () => void; kind?: Kind; intro?: string; image?: string | null; extra?: string; text?: string }) {
   const base = pageOf(kind, slug);
   const { profile } = useAuth();
   const u = profile?.username ?? null;
@@ -55,6 +56,9 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  // The words that travel with the picture and the link (what, when, where, tickets)
+  const words = text ?? (kind === 'artist' ? artistShareText(title) : kind === 'moment' ? momentShareText(title) : `${title}\nWho’s coming? 👇`);
+  const message = `${words}\n${link}`;
   // Show the ready-made picture straight away; also start the other size so switching is instant
   useEffect(() => {
     let live = true, obj: string | null = null;
@@ -79,8 +83,9 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
     try {
       const f = await file();
       const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-      if (nav.canShare?.({ files: [f] })) await navigator.share({ files: [f], title, text: `${title} ${link}` });
-      else if (navigator.share) await navigator.share({ title, url: link });
+      // Picture + message + link in one go (WhatsApp and Instagram keep the text as the caption)
+      if (nav.canShare?.({ files: [f], text: message })) await navigator.share({ files: [f], title, text: message });
+      else if (navigator.share) await navigator.share({ title, text: words, url: link });
       else await save();
     } catch { /* cancelled */ } finally { setBusy(false); }
   };
@@ -91,7 +96,7 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   };
   const copy = async () => {
-    try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* blocked */ }
+    try { await navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* blocked */ }
   };
 
   const small: React.CSSProperties = { height: 44, padding: '0 18px', borderRadius: 16, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(255,255,255,0.08)', color: T.white, fontFamily: FONT.sans, fontSize: 14.5, fontWeight: 600 };
@@ -99,13 +104,13 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={kind === 'artist' ? `Share ${title}` : 'Share this show'} onClick={onClose}
       style={{ position: 'fixed', inset: 0, zIndex: 400, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', background: 'rgba(2,6,4,0.78)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, margin: '0 auto', padding: '18px 24px calc(22px + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box', borderRadius: '28px 28px 0 0', background: '#0C1210' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 480, maxHeight: '94svh', overflowY: 'auto', overscrollBehavior: 'contain', margin: '0 auto', padding: '18px 24px calc(22px + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box', borderRadius: '28px 28px 0 0', background: '#0C1210' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{intro ?? (kind === 'artist' ? `Share ${title}` : 'Share this show')}</p>
           <button type="button" onClick={onClose} aria-label="Close" style={{ width: 38, height: 38, borderRadius: 13, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.08)', color: T.white }}><X size={18} /></button>
         </div>
 
-        <div style={{ position: 'relative', width: size === 'story' ? 'min(56vw, 230px)' : 'min(76vw, 330px)', aspectRatio: size === 'story' ? '9 / 16' : '4 / 5', margin: '16px auto 0', borderRadius: 18, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+        <div style={{ position: 'relative', width: size === 'story' ? 'min(46vw, 190px)' : 'min(62vw, 270px)', aspectRatio: size === 'story' ? '9 / 16' : '4 / 5', margin: '16px auto 0', borderRadius: 18, overflow: 'hidden', background: 'rgba(255,255,255,0.05)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
           {/* While the card is being made: the flyer itself, softly, with a clear "making it" note, never an empty box */}
           {!loaded && (
             <span style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 18 }}>
@@ -128,7 +133,11 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
               style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 'none', cursor: 'pointer', background: size === k ? 'rgba(123,227,168,0.16)' : 'rgba(255,255,255,0.06)', color: size === k ? T.mint : T.text2, fontFamily: FONT.sans, fontSize: 13, fontWeight: 700 }}>{label}</button>
           ))}
         </div>
-        {u && <p style={{ margin: '12px 0 0', textAlign: 'center', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Your name’s on it, and on the link preview.</p>}
+        {/* The message that goes with it, so people see exactly what's being sent */}
+        <p style={{ margin: '14px auto 0', maxWidth: 360, padding: '12px 14px', borderRadius: 16, background: 'linear-gradient(120deg, rgba(123,227,168,0.08), rgba(255,255,255,0.03) 60%)', fontFamily: FONT.sans, fontSize: 13, lineHeight: 1.45, color: T.text2, whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>
+          {words}{'\n'}<span style={{ color: T.mintText }}>{link.replace(/^https?:\/\//, '')}</span>
+        </p>
+        {u && <p style={{ margin: '8px 0 0', textAlign: 'center', fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>Your name’s on the picture and the link preview.</p>}
 
         <button type="button" onClick={shareCard} disabled={busy}
           style={{ display: 'flex', width: 'calc(100% - 32px)', maxWidth: 340, height: 50, margin: '16px auto 0', borderRadius: 999, border: 'none', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', gap: 8, background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, opacity: busy ? 0.7 : 1 }}>
@@ -136,7 +145,7 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
         </button>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 10 }}>
           <button type="button" onClick={save} style={small}><Download size={16} /> Save image</button>
-          <button type="button" onClick={copy} style={small}>{copied ? <><Check size={16} /> Copied</> : <><Link2 size={16} /> Copy link</>}</button>
+          <button type="button" onClick={copy} style={small}>{copied ? <><Check size={16} /> Copied</> : <><Link2 size={16} /> Copy message</>}</button>
         </div>
       </div>
     </div>,
