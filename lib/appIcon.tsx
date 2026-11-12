@@ -6,7 +6,7 @@ export async function appIcon(size: number, fontUrl: URL) {
   return new ImageResponse(
     (
       <div style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(80% 80% at 30% 15%, #1F4A35 0%, #0B1510 60%, #060A08 100%)' }}>
-        <div style={{ display: 'flex', fontFamily: font ? 'Inter Tight' : undefined, fontSize: size * 0.52, fontWeight: 800, lineHeight: 1, letterSpacing: -size * 0.03 }}>
+        <div style={{ display: 'flex', fontFamily: font ? 'Inter Tight' : undefined, fontSize: size * 0.38, fontWeight: 800, lineHeight: 1, letterSpacing: -size * 0.022, marginLeft: -size * 0.022 }}>
           <span style={{ color: '#fff' }}>TC</span>
         </div>
       </div>
