@@ -14,6 +14,7 @@ import HotRail, { HOT_RAIL_H } from '@/components/events/HotRail';
 import { linkTentpoles } from '@/lib/data/tentpoles';
 import { loadAll as loadAllMoments } from '@/components/moments/EventMoments';
 import { momentsForEvent } from '@/lib/moments/match';
+import EventTile from '@/components/events/EventTile';
 import FilterSheet, { CITIES, CATEGORIES, WHEN_OPTS, PRICE_OPTS, type Place } from '@/components/events/FilterSheet';
 import { Icon } from '@/components/ui/Icon';
 import type { GhanaEvent, FilterState, City, Category } from '@/lib/types';
@@ -49,7 +50,7 @@ const DEFAULT: FilterState = {
   when: 'upcoming',
 };
 
-type View = 'feed' | 'list';
+type View = 'feed' | 'list' | 'grid';
 
 /** "Saturday 14 December" (or the stored label when the date can't be read) */
 function dayHeading(e: GhanaEvent) {
@@ -174,8 +175,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   useEffect(() => {
     try {
       const v = localStorage.getItem('akw_events_view');
-      if (v === 'feed' || v === 'list') setViewState(v);
-      else if (v === 'grid') setViewState('list');
+      if (v === 'feed' || v === 'list' || v === 'grid') setViewState(v);
     } catch { /* ignore */ }
     try {
       const raw = localStorage.getItem('akwaaba_loc');
@@ -388,12 +388,12 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   const artistPhoto = useArtistPhotos(searchArtist ? [searchArtist.slug] : []);
   const searchH = searchOpen ? 66 + (searchArtist ? ARTIST_ROW_H + 1 : 0) : 0;
   // The Hot rail sits on the list view; the feed keeps its full-height flyers
-  const railH = hotShows.length && view === 'list' && !filters.search ? HOT_RAIL_H : 0;
+  const railH = hotShows.length && view !== 'feed' && !filters.search ? HOT_RAIL_H : 0;
 
   return (
     <>
       <Nav active="Events" actions={headerActions} onSearch={() => setSearchOpen(true)} onFilter={() => setFilterOpen(true)} filtersOn={filtersOn} />
-      {view === 'list' && !filters.search && <HotRail events={hotShows} top={headerH + searchH} />}
+      {view !== 'feed' && !filters.search && <HotRail events={hotShows} top={headerH + searchH} />}
 
       {searchOpen && (
         <div style={{ position: 'fixed', zIndex: 195, top: `calc(${headerH}px + env(safe-area-inset-top, 0px))`, left: 16, right: 16, maxWidth: 720, margin: '0 auto' }}>
@@ -456,7 +456,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
           showAllLabel={filters.when !== 'all' ? 'Include past events' : 'Clear filters'}
         />
       ) : (
-        <main style={{ maxWidth: 760, margin: '0 auto', padding: `calc(${headerH + searchH + railH + 10}px + env(safe-area-inset-top, 0px)) 20px 40px` }}>
+        <main style={{ maxWidth: view === 'grid' ? 1120 : 760, margin: '0 auto', padding: `calc(${headerH + searchH + railH + 10}px + env(safe-area-inset-top, 0px)) 20px 40px` }}>
           {!filters.search && <ShowNudge events={events} />}
           <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(36px, 7vw, 52px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', color: T.white }}>
             Events
@@ -519,7 +519,12 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
                     {g.label}
                   </h2>
                 )}
-                {g.events.map((e, i) => <Row key={e.slug} event={e} last={i === g.events.length - 1} performer={performerFor(e)} />)}
+                {view === 'grid' ? (
+                  // Flyers side by side: two across on a phone, more on wider screens
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(calc(50% - 6px), 200px), 1fr))', gap: '18px 12px', marginTop: 12 }}>
+                    {g.events.map((e) => <EventTile key={e.slug} event={e} performer={performerFor(e)} />)}
+                  </div>
+                ) : g.events.map((e, i) => <Row key={e.slug} event={e} last={i === g.events.length - 1} performer={performerFor(e)} />)}
               </section>
             ))
           )}

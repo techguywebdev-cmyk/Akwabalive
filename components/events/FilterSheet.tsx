@@ -112,8 +112,8 @@ export default function FilterSheet({
   places: Place[];
   pickPlace: (p: Place) => void;
   clearLoc: () => void;
-  view?: 'feed' | 'list';
-  setView?: (v: 'feed' | 'list') => void;
+  view?: 'feed' | 'list' | 'grid';
+  setView?: (v: 'feed' | 'list' | 'grid') => void;
 }) {
   const [shown, setShown] = useState(false);
 
@@ -162,6 +162,7 @@ export default function FilterSheet({
           {view && setView && (
             <Group title="Show as">
               <Chip on={view === 'feed'} onClick={() => setView('feed')}>Full-screen cards</Chip>
+              <Chip on={view === 'grid'} onClick={() => setView('grid')}>Grid</Chip>
               <Chip on={view === 'list'} onClick={() => setView('list')}>List</Chip>
             </Group>
           )}
