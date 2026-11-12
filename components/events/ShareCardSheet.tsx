@@ -7,11 +7,13 @@ import { useAuth } from '@/lib/supabase/AuthProvider';
 import { T, FONT, GRAD } from '@/lib/thiscene';
 
 type Kind = 'event' | 'artist' | 'moment';
+/** Bump when the card design changes, so phones and the CDN fetch the new card instead of a cached one */
+const CARD_V = '4';
 /** For a moment, slug is the clip id and extra carries the next edition (&next=slug) */
 const cardUrl = (kind: Kind, slug: string, u: string | null, size: 'post' | 'story', extra = '') =>
   kind === 'moment'
-    ? `/moments/card?id=${encodeURIComponent(slug)}&format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}${extra}`
-    : `${kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}`;
+    ? `/moments/card?id=${encodeURIComponent(slug)}&format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}${extra}&v=${CARD_V}`
+    : `${kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}&v=${CARD_V}`;
 const pageOf = (kind: Kind, slug: string) => kind === 'moment' ? `/moments?id=${encodeURIComponent(slug)}` : kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`;
 
 /** Cards fetched ahead of time, so the sheet opens with the picture ready and sharing is instant */

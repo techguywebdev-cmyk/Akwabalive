@@ -45,7 +45,7 @@ export async function GET(req: Request) {
   const fonts = font ? [{ name: 'Inter Tight', data: font, weight: 800 as const, style: 'normal' as const }] : undefined;
   const tSize = (base: number) => (title.length > 22 ? base * 0.72 : title.length > 14 ? base * 0.86 : base);
   const where = (s: Ev) => [s.venue && !/to be announced|tba/i.test(s.venue) ? s.venue : null, s.city ? s.city.charAt(0).toUpperCase() + s.city.slice(1) : null].filter(Boolean).join(', ');
-  const headers = { 'Cache-Control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' };
+  const headers = { 'Cache-Control': 'public, max-age=300, s-maxage=600, stale-while-revalidate=3600' };
 
   const play = (size: number) => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: size, height: size, borderRadius: 999, backgroundImage: G_MINT, boxShadow: '0 20px 50px rgba(0,0,0,0.55)' }}>

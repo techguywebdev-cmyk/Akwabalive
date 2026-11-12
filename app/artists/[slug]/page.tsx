@@ -22,7 +22,7 @@ export async function generateMetadata({ params, searchParams }: { params: { slu
   return shareMeta({
     title: `${artist.name} Concerts & Shows in Ghana ${new Date().getFullYear()}`,
     description: `Where to see ${artist.name} live: upcoming ${artist.name} concerts and shows in Ghana with dates, venues and tickets, plus clips from past performances, on ${BRAND_NAME}.`,
-    image: `/artists/${artist.slug}/card?format=og${by ? `&u=${by}` : ''}`,
+    image: `/artists/${artist.slug}/card?format=og&v=4${by ? `&u=${by}` : ''}`,
     path: `/artists/${artist.slug}`,
   });
 }
