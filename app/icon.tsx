@@ -1,3 +1,4 @@
+// Icon design v3: white TC on dark green, zoomed out (changing this file gives the icon a new address, so browsers drop the old cached one)
 import { appIcon } from '@/lib/appIcon';
 
 export const runtime = 'edge';
