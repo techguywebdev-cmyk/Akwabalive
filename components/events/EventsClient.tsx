@@ -528,8 +528,8 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
                 {view === 'grid' ? (
                   <>
                     {gi === 0 && <EventTile event={g.events[0]} performer={performerFor(g.events[0])} feature />}
-                    {/* Magazine columns: every flyer at its own shape, two across on a phone, more on wider screens */}
-                    <div className="ak-masonry" style={{ marginTop: gi === 0 ? 'clamp(12px, 2vw, 18px)' : 0 }}>
+                    {/* Even boxes: two across on a phone, up to five on wide screens */}
+                    <div className="ak-grid" style={{ marginTop: gi === 0 ? 'clamp(12px, 2vw, 18px)' : 0 }}>
                       {(gi === 0 ? g.events.slice(1) : g.events).map((e) => <EventTile key={e.slug} event={e} performer={performerFor(e)} />)}
                     </div>
                   </>
