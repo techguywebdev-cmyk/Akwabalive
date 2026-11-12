@@ -388,12 +388,12 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
   const artistPhoto = useArtistPhotos(searchArtist ? [searchArtist.slug] : []);
   const searchH = searchOpen ? 66 + (searchArtist ? ARTIST_ROW_H + 1 : 0) : 0;
   // The Hot rail sits on the list view; the feed keeps its full-height flyers
-  const railH = hotShows.length && view !== 'feed' && !filters.search ? HOT_RAIL_H : 0;
+  const railH = hotShows.length && view === 'list' && !filters.search ? HOT_RAIL_H : 0;
 
   return (
     <>
       <Nav active="Events" actions={headerActions} onSearch={() => setSearchOpen(true)} onFilter={() => setFilterOpen(true)} filtersOn={filtersOn} />
-      {view !== 'feed' && !filters.search && <HotRail events={hotShows} top={headerH + searchH} />}
+      {view === 'list' && !filters.search && <HotRail events={hotShows} top={headerH + searchH} />}
 
       {searchOpen && (
         <div style={{ position: 'fixed', zIndex: 195, top: `calc(${headerH}px + env(safe-area-inset-top, 0px))`, left: 16, right: 16, maxWidth: 720, margin: '0 auto' }}>
@@ -458,6 +458,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
       ) : (
         <main style={{ maxWidth: view === 'grid' ? 1120 : 760, margin: '0 auto', padding: `calc(${headerH + searchH + railH + 10}px + env(safe-area-inset-top, 0px)) 20px 40px` }}>
           {!filters.search && <ShowNudge events={events} />}
+          {view === 'grid' && !filters.search && hotShows.length > 0 && <HotRail events={hotShows} top={0} inline />}
           <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 'clamp(36px, 7vw, 52px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.035em', color: T.white }}>
             Events
           </h1>
@@ -513,17 +514,25 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
             </div>
           ) : (
             groups.map((g, gi) => (
-              <section key={`${g.key}-${gi}`} style={{ marginTop: gi === 0 ? 28 : 24 }}>
-                {filters.sort === 'upcoming' && (
+              <section key={`${g.key}-${gi}`} style={{ marginTop: gi === 0 ? 28 : view === 'grid' ? 40 : 24 }}>
+                {filters.sort === 'upcoming' && (view === 'grid' ? (
+                  <h2 style={{ margin: '0 0 14px', display: 'flex', alignItems: 'baseline', gap: 10, fontFamily: FONT.display, fontSize: 'clamp(22px, 5.6vw, 30px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, color: T.white }}>
+                    {g.label}
+                    <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, letterSpacing: 0, color: 'rgba(255,255,255,0.4)' }}>{g.events.length}</span>
+                  </h2>
+                ) : (
                   <h2 style={{ margin: '0 0 2px', fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
                     {g.label}
                   </h2>
-                )}
+                ))}
                 {view === 'grid' ? (
-                  // Flyers side by side: two across on a phone, more on wider screens
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(calc(50% - 6px), 200px), 1fr))', gap: 'clamp(10px, 1.6vw, 18px)', marginTop: 12 }}>
-                    {g.events.map((e, i) => <EventTile key={e.slug} event={e} performer={performerFor(e)} feature={gi === 0 && i === 0} />)}
-                  </div>
+                  <>
+                    {gi === 0 && <EventTile event={g.events[0]} performer={performerFor(g.events[0])} feature />}
+                    {/* Magazine columns: every flyer at its own shape, two across on a phone, more on wider screens */}
+                    <div className="ak-masonry" style={{ marginTop: gi === 0 ? 'clamp(12px, 2vw, 18px)' : 0 }}>
+                      {(gi === 0 ? g.events.slice(1) : g.events).map((e) => <EventTile key={e.slug} event={e} performer={performerFor(e)} />)}
+                    </div>
+                  </>
                 ) : g.events.map((e, i) => <Row key={e.slug} event={e} last={i === g.events.length - 1} performer={performerFor(e)} />)}
               </section>
             ))

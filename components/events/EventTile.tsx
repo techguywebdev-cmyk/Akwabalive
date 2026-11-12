@@ -96,7 +96,7 @@ export default function EventTile({ event: e, performer, feature = false }: { ev
               <Mic2 size={14} strokeWidth={2.3} color={T.mintText} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acts}</span>
             </span>
           )}
-          <span style={{ alignSelf: 'flex-start', marginTop: 'clamp(2px, 1vw, 8px)', display: 'inline-flex', alignItems: 'center', height: 'clamp(36px, 4.4vw, 44px)', padding: '0 clamp(14px, 2vw, 20px)', borderRadius: 999, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', color: T.white, fontFamily: FONT.sans, fontSize: 'clamp(13px, 1.5vw, 14.5px)', fontWeight: 700 }}>
+          <span className="ak-hide-phone" style={{ alignSelf: 'flex-start', marginTop: 'clamp(2px, 1vw, 8px)', display: 'inline-flex', alignItems: 'center', height: 'clamp(36px, 4.4vw, 44px)', padding: '0 clamp(14px, 2vw, 20px)', borderRadius: 999, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', color: T.white, fontFamily: FONT.sans, fontSize: 'clamp(13px, 1.5vw, 14.5px)', fontWeight: 700 }}>
             See the show
           </span>
         </span>
@@ -104,29 +104,33 @@ export default function EventTile({ event: e, performer, feature = false }: { ev
     );
   }
 
+  // In the grid: the flyer at its own shape, lit from behind by its own colours, and the essentials under it
   return (
-    <Link href={`/events/${e.slug}`} className="ak-tile" style={{ position: 'relative', display: 'flex', flexDirection: 'column', minWidth: 0, padding: 7, borderRadius: 24, textDecoration: 'none', isolation: 'isolate', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
-      <Glow src={e.image} />
-      <span style={{ position: 'relative' }}>
-        <Flyer e={e} radius={17} />
-      </span>
-      <span style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 4, padding: '11px 5px 5px', flex: 1 }}>
-        {/* Date, with a flame when it's one of the big ones */}
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.display, fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: T.mintText, whiteSpace: 'nowrap' }}>
-          {e.hot && <Flame size={12} strokeWidth={2.6} aria-label="Hot" />}
-          {DAYS[day.getDay()]} {day.getDate()} {MONTHS[day.getMonth()]}
+    <Link href={`/events/${e.slug}`} className="ak-tile ak-tile-m" style={{ display: 'block', minWidth: 0, textDecoration: 'none', color: T.text }}>
+      <span style={{ position: 'relative', display: 'block', isolation: 'isolate' }}>
+        {e.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={e.image} alt="" aria-hidden loading="lazy" style={{ position: 'absolute', zIndex: -1, left: '6%', right: '6%', top: '10%', width: '88%', height: '88%', objectFit: 'cover', filter: 'blur(26px) saturate(1.6)', opacity: 0.55 }} />
+        )}
+        <span className="ak-tile-flyer" style={{ display: 'block', borderRadius: 18, overflow: 'hidden', background: '#0B1510', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+          {e.image
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={e.image} alt={e.title} loading="lazy" style={{ display: 'block', width: '100%', height: 'auto', minHeight: 120 }} />
+            : <span style={{ display: 'block', aspectRatio: '4 / 5' }} />}
         </span>
+      </span>
+      <span style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '11px 2px 0' }}>
         {performer && (
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: T.mintText }}>
             <Mic2 size={12} strokeWidth={2.4} /> {performer.name}
           </span>
         )}
         <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: FONT.display, fontSize: 16, fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.15, color: T.white }}>{e.title}</span>
-        {known(e.venue) && <span style={{ fontFamily: FONT.sans, fontSize: 12, color: 'rgba(255,255,255,0.55)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{known(e.venue)}</span>}
-        {/* Countdown and price sit on the card's bottom edge, so rows line up */}
-        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 'auto', paddingTop: 6 }}>
-          <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.82)', whiteSpace: 'nowrap' }}>{until(e.date)}</span>
-          {p && <span style={{ flexShrink: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: p === 'Free' ? T.mintText : 'rgba(255,255,255,0.82)' }}>{p}</span>}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 12.5, color: 'rgba(255,255,255,0.6)', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+          {e.hot && <Flame size={12} strokeWidth={2.6} color={T.mintText} aria-label="Hot" style={{ flexShrink: 0 }} />}
+          <span style={{ color: T.mintText, fontWeight: 700 }}>{day.getDate()} {MONTHS[day.getMonth()].charAt(0)}{MONTHS[day.getMonth()].slice(1).toLowerCase()}</span>
+          <span aria-hidden>·</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{until(e.date)}</span>
         </span>
       </span>
     </Link>
