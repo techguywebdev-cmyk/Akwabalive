@@ -19,7 +19,7 @@ const ring = `linear-gradient(140deg, ${T.mint} 0%, #3FBF86 100%)`;
  * It sits on the page ground (the feed starts below it), so it never covers a flyer. Shows real numbers
  * (people who saw it this week, people going) once they're worth showing; otherwise the date.
  */
-export default function HotRail({ events, top }: { events: GhanaEvent[]; top: number }) {
+export default function HotRail({ events, top, inline = false }: { events: GhanaEvent[]; top: number; inline?: boolean }) {
   const [counts, setCounts] = useState<Record<string, EventCounts>>({});
   const key = events.map((e) => e.slug).join('|');
   // Out of the way while you scroll down the list; back as soon as you scroll up (or reach the top)
@@ -47,7 +47,7 @@ export default function HotRail({ events, top }: { events: GhanaEvent[]; top: nu
 
   if (!events.length) return null;
   return (
-    <nav aria-label="Hot right now" style={{ position: 'fixed', zIndex: 190, left: 0, right: 0, top: `calc(${top}px + env(safe-area-inset-top, 0px))`, height: HOT_RAIL_H, transform: hidden ? 'translateY(-115%)' : 'none', opacity: hidden ? 0 : 1, pointerEvents: hidden ? 'none' : 'auto', transition: 'transform 320ms cubic-bezier(0.22,1,0.36,1), opacity 220ms ease', background: 'linear-gradient(180deg, rgba(12,26,19,0.86) 0%, rgba(10,22,16,0.86) 100%)', backdropFilter: 'blur(18px) saturate(140%)', WebkitBackdropFilter: 'blur(18px) saturate(140%)' }}>
+    <nav aria-label="Hot right now" style={inline ? { margin: '0 -20px', height: HOT_RAIL_H } : { position: 'fixed', zIndex: 190, left: 0, right: 0, top: `calc(${top}px + env(safe-area-inset-top, 0px))`, height: HOT_RAIL_H, transform: hidden ? 'translateY(-115%)' : 'none', opacity: hidden ? 0 : 1, pointerEvents: hidden ? 'none' : 'auto', transition: 'transform 320ms cubic-bezier(0.22,1,0.36,1), opacity 220ms ease', background: 'linear-gradient(180deg, rgba(12,26,19,0.86) 0%, rgba(10,22,16,0.86) 100%)', backdropFilter: 'blur(18px) saturate(140%)', WebkitBackdropFilter: 'blur(18px) saturate(140%)' }}>
       <div className="no-scrollbar" style={{ display: 'flex', alignItems: 'flex-start', gap: 14, overflowX: 'auto', padding: '6px 16px 0', maxWidth: 960, margin: '0 auto' }}>
         <span style={{ flexShrink: 0, alignSelf: 'center', marginTop: -14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, color: T.mintText }}>
           <Flame size={18} />

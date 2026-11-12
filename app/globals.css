@@ -162,6 +162,14 @@ body::before {
 .ak-tile { transition: transform 0.25s ease, box-shadow 0.25s ease; }
 .ak-tile .ak-tile-flyer { transition: transform 0.35s ease; }
 @media (hover: hover) {
-  .ak-tile:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px rgba(123,227,168,0.28), 0 24px 50px rgba(0,0,0,0.5) !important; }
+  .ak-tile:not(.ak-tile-m):hover { transform: translateY(-4px); box-shadow: 0 0 0 1px rgba(123,227,168,0.28), 0 24px 50px rgba(0,0,0,0.5) !important; }
+  .ak-tile-m:hover { transform: translateY(-3px); }
   .ak-tile:hover .ak-tile-flyer { transform: scale(1.015); }
 }
+
+/* Events grid: magazine columns (flyers keep their own shape) */
+.ak-masonry { column-count: 2; column-gap: 12px; }
+.ak-masonry > * { break-inside: avoid; margin-bottom: 16px; }
+@media (min-width: 720px) { .ak-masonry { column-count: 3; column-gap: 16px; } .ak-masonry > * { margin-bottom: 22px; } }
+@media (min-width: 1000px) { .ak-masonry { column-count: 4; } }
+@media (max-width: 520px) { .ak-hide-phone { display: none !important; } }
