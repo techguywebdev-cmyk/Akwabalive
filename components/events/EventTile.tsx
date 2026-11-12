@@ -1,52 +1,132 @@
 'use client';
 
 import Link from 'next/link';
-import { Mic2 } from 'lucide-react';
+import { Flame, Mic2 } from 'lucide-react';
 import type { GhanaEvent } from '@/lib/types';
 import { T, FONT, GRAD } from '@/lib/thiscene';
 
+const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const known = (v?: string | null) => (v && !/\b(tba|tbc|to be announced)\b/i.test(v) ? v : null);
 
-/**
- * One show in the grid: the whole flyer (never cropped; any spare space is the flyer itself, blurred),
- * then a tear-off date beside the name and where/when.
- */
-export default function EventTile({ event, performer }: { event: GhanaEvent; performer?: { name: string; slug: string } | null }) {
-  const d = new Date(`${event.date}T12:00:00`);
-  const month = MONTHS[d.getMonth()] ?? '';
-  const day = d.getDate();
-  const sub = [known(event.time), known(event.venue)].filter(Boolean).join(' · ');
+function until(date: string): string {
+  const a = new Date(); a.setHours(0, 0, 0, 0);
+  const b = new Date(`${date}T00:00:00`);
+  const n = Math.round((b.getTime() - a.getTime()) / 86400000);
+  if (n < 0) return 'Been';
+  if (n === 0) return 'Tonight';
+  if (n === 1) return 'Tomorrow';
+  if (n < 7) return `In ${n} days`;
+  if (n < 14) return 'Next week';
+  if (n < 60) return `In ${Math.round(n / 7)} weeks`;
+  return `In ${Math.round(n / 30)} months`;
+}
+const price = (e: GhanaEvent) => (e.priceUnknown ? null : e.price === 0 ? 'Free' : `GH₵${e.price.toLocaleString()}`);
+
+/** The flyer, whole: any spare space is the flyer itself, blurred */
+function Flyer({ e, radius }: { e: GhanaEvent; radius: number }) {
   return (
-    <Link href={`/events/${event.slug}`} className="ak-tile" style={{ display: 'block', minWidth: 0, textDecoration: 'none', color: T.text }}>
-      <span style={{ position: 'relative', display: 'block', aspectRatio: '4 / 5', borderRadius: 18, overflow: 'hidden', background: '#0B1510', boxShadow: '0 14px 34px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05)' }}>
-        {event.image && (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={event.image} alt="" aria-hidden loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(18px) brightness(0.5)', transform: 'scale(1.15)' }} />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={event.image} alt={event.title} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
-          </>
-        )}
+    <span className="ak-tile-flyer" style={{ position: 'relative', display: 'block', aspectRatio: '4 / 5', borderRadius: radius, overflow: 'hidden', background: '#0B1510', boxShadow: '0 18px 40px rgba(0,0,0,0.5)' }}>
+      {e.image && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={e.image} alt="" aria-hidden loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(16px) brightness(0.55)', transform: 'scale(1.15)' }} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={e.image} alt={e.title} loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
+        </>
+      )}
+    </span>
+  );
+}
+
+/** The card's own light: its flyer, blurred and dimmed behind everything */
+function Glow({ src }: { src?: string | null }) {
+  return (
+    <span aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'inherit', pointerEvents: 'none' }}>
+      {src && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" loading="lazy" style={{ position: 'absolute', inset: '-20%', width: '140%', height: '140%', objectFit: 'cover', filter: 'blur(40px) saturate(1.5) brightness(0.55)', opacity: 0.85 }} />
+      )}
+      <span style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,10,8,0.15) 0%, rgba(6,10,8,0.55) 55%, rgba(6,10,8,0.88) 100%)' }} />
+    </span>
+  );
+}
+
+function Meta({ e, big }: { e: GhanaEvent; big?: boolean }) {
+  const d = new Date(`${e.date}T12:00:00`);
+  const p = price(e);
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <span style={{ fontFamily: FONT.display, fontSize: big ? 12.5 : 11, fontWeight: 800, letterSpacing: '0.14em', color: T.mintText }}>
+        {DAYS[d.getDay()]} {d.getDate()} {MONTHS[d.getMonth()]}
       </span>
-      {/* Tear-off date beside the name, so nothing sits on the flyer */}
-      <span style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 10 }}>
-        <span aria-hidden style={{ flexShrink: 0, width: 38, borderRadius: 10, overflow: 'hidden', textAlign: 'center', background: 'rgba(255,255,255,0.06)' }}>
-          <span style={{ display: 'block', padding: '2px 0 1px', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 9, fontWeight: 800, letterSpacing: '0.12em' }}>{month}</span>
-          <span style={{ display: 'block', padding: '1px 0 3px', fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.15, color: T.white }}>{day}</span>
-        </span>
-        <span style={{ flex: 1, minWidth: 0 }}>
-          {performer && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: T.mintText }}>
-              <Mic2 size={12} strokeWidth={2.4} /> {performer.name}
+      <span style={{ fontFamily: FONT.sans, fontSize: big ? 13 : 11.5, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>{until(e.date)}</span>
+      {big && p && <span style={{ fontFamily: FONT.sans, fontSize: 13, fontWeight: 700, color: p === 'Free' ? T.mintText : 'rgba(255,255,255,0.85)' }}>· {p}</span>}
+    </span>
+  );
+}
+
+/**
+ * One show in the grid. `feature` makes it the big card that opens the grid:
+ * flyer beside the details, with the line-up and a clear way in.
+ */
+export default function EventTile({ event: e, performer, feature = false }: { event: GhanaEvent; performer?: { name: string; slug: string } | null; feature?: boolean }) {
+  const where = [known(e.venue), known(e.area)].filter(Boolean).join(', ');
+  const time = known(e.time);
+  const acts = (e.lineup ?? []).slice(0, 3).join(', ');
+  const p = price(e);
+  const day = new Date(`${e.date}T12:00:00`);
+
+  if (feature) {
+    return (
+      <Link href={`/events/${e.slug}`} className="ak-tile" style={{ gridColumn: '1 / -1', position: 'relative', display: 'flex', gap: 'clamp(14px, 3vw, 28px)', alignItems: 'center', padding: 'clamp(10px, 2vw, 16px)', borderRadius: 28, textDecoration: 'none', isolation: 'isolate', boxShadow: '0 0 0 1px rgba(255,255,255,0.07)' }}>
+        <Glow src={e.image} />
+        <span style={{ position: 'relative', flex: '0 0 clamp(128px, 38%, 320px)' }}><Flyer e={e} radius={18} /></span>
+        <span style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'clamp(6px, 1.2vw, 10px)' }}>
+          {e.hot && (
+            <span style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 5, height: 24, padding: '0 10px', borderRadius: 999, background: GRAD.mint, color: T.onMint, fontFamily: FONT.sans, fontSize: 11.5, fontWeight: 800 }}>
+              <Flame size={12} strokeWidth={2.6} /> Up next
             </span>
           )}
-          <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: FONT.display, fontSize: 15, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.2, color: T.white }}>
-            {event.title}
-          </span>
-          {sub && (
-            <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 12.5, color: T.text3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</span>
+          <Meta e={e} big />
+          <span style={{ fontFamily: FONT.display, fontSize: 'clamp(24px, 5.4vw, 46px)', fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.02, color: T.white, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{e.title}</span>
+          {(time || where) && <span style={{ fontFamily: FONT.sans, fontSize: 'clamp(13px, 1.6vw, 15px)', color: 'rgba(255,255,255,0.7)' }}>{[time, where].filter(Boolean).join(' · ')}</span>}
+          {acts && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 'clamp(12.5px, 1.5vw, 14px)', fontWeight: 600, color: T.white }}>
+              <Mic2 size={14} strokeWidth={2.3} color={T.mintText} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acts}</span>
+            </span>
           )}
+          <span style={{ alignSelf: 'flex-start', marginTop: 'clamp(2px, 1vw, 8px)', display: 'inline-flex', alignItems: 'center', height: 'clamp(36px, 4.4vw, 44px)', padding: '0 clamp(14px, 2vw, 20px)', borderRadius: 999, background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', color: T.white, fontFamily: FONT.sans, fontSize: 'clamp(13px, 1.5vw, 14.5px)', fontWeight: 700 }}>
+            See the show
+          </span>
+        </span>
+      </Link>
+    );
+  }
+
+  return (
+    <Link href={`/events/${e.slug}`} className="ak-tile" style={{ position: 'relative', display: 'flex', flexDirection: 'column', minWidth: 0, padding: 7, borderRadius: 24, textDecoration: 'none', isolation: 'isolate', boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }}>
+      <Glow src={e.image} />
+      <span style={{ position: 'relative' }}>
+        <Flyer e={e} radius={17} />
+      </span>
+      <span style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 4, padding: '11px 5px 5px', flex: 1 }}>
+        {/* Date, with a flame when it's one of the big ones */}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.display, fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: T.mintText, whiteSpace: 'nowrap' }}>
+          {e.hot && <Flame size={12} strokeWidth={2.6} aria-label="Hot" />}
+          {DAYS[day.getDay()]} {day.getDate()} {MONTHS[day.getMonth()]}
+        </span>
+        {performer && (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: T.mintText }}>
+            <Mic2 size={12} strokeWidth={2.4} /> {performer.name}
+          </span>
+        )}
+        <span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', fontFamily: FONT.display, fontSize: 16, fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.15, color: T.white }}>{e.title}</span>
+        {known(e.venue) && <span style={{ fontFamily: FONT.sans, fontSize: 12, color: 'rgba(255,255,255,0.55)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{known(e.venue)}</span>}
+        {/* Countdown and price sit on the card's bottom edge, so rows line up */}
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 'auto', paddingTop: 6 }}>
+          <span style={{ fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.82)', whiteSpace: 'nowrap' }}>{until(e.date)}</span>
+          {p && <span style={{ flexShrink: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, color: p === 'Free' ? T.mintText : 'rgba(255,255,255,0.82)' }}>{p}</span>}
         </span>
       </span>
     </Link>

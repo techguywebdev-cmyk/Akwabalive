@@ -158,6 +158,10 @@ body::before {
 .ak-rise { animation: ak-rise-k 360ms 140ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 @media (prefers-reduced-motion: reduce) { .ak-pop, .ak-rise { animation: none; } }
 
-/* Grid tiles lift a little under the pointer (desktop) */
-.ak-tile > span:first-child { transition: transform 0.22s ease, box-shadow 0.22s ease; }
-@media (hover: hover) { .ak-tile:hover > span:first-child { transform: translateY(-3px); box-shadow: 0 20px 44px rgba(0,0,0,0.55), 0 0 0 1px rgba(123,227,168,0.25); } }
+/* Grid tiles: lift and brighten a little under the pointer (desktop) */
+.ak-tile { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.ak-tile .ak-tile-flyer { transition: transform 0.35s ease; }
+@media (hover: hover) {
+  .ak-tile:hover { transform: translateY(-4px); box-shadow: 0 0 0 1px rgba(123,227,168,0.28), 0 24px 50px rgba(0,0,0,0.5) !important; }
+  .ak-tile:hover .ak-tile-flyer { transform: scale(1.015); }
+}

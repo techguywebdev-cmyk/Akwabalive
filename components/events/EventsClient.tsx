@@ -521,8 +521,8 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
                 )}
                 {view === 'grid' ? (
                   // Flyers side by side: two across on a phone, more on wider screens
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(calc(50% - 6px), 200px), 1fr))', gap: '18px 12px', marginTop: 12 }}>
-                    {g.events.map((e) => <EventTile key={e.slug} event={e} performer={performerFor(e)} />)}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(calc(50% - 6px), 200px), 1fr))', gap: 'clamp(10px, 1.6vw, 18px)', marginTop: 12 }}>
+                    {g.events.map((e, i) => <EventTile key={e.slug} event={e} performer={performerFor(e)} feature={gi === 0 && i === 0} />)}
                   </div>
                 ) : g.events.map((e, i) => <Row key={e.slug} event={e} last={i === g.events.length - 1} performer={performerFor(e)} />)}
               </section>
