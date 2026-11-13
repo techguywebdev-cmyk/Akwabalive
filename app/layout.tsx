@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   // Search Console / Bing Webmaster verification: set these env vars in Vercel
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
-    other: { ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } : {}) },
+    other: { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION || 'B27FA849295D24BB7DAB8664E731ADB5' },
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   openGraph: { type: 'website', siteName: 'TsaCoal', title: 'TsaCoal | Ghana, after dark', description: 'Every concert, rave, pool party and gospel night in one place. Find the show, save it, bring your people.' },
