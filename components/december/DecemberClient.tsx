@@ -3,7 +3,7 @@
 import { calmTitle } from '@/lib/titles';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Flame, Eye, Users, Car, Smartphone, Ticket, MapPin, Share2, ArrowRight, CalendarDays, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Flame, Eye, Users, Car, Smartphone, Ticket, MapPin, Share2, ArrowRight, CalendarDays, ChevronRight } from 'lucide-react';
 import type { GhanaEvent } from '@/lib/types';
 import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
@@ -26,17 +26,8 @@ const untilLabel = (n: number) => (n <= 0 ? 'Today' : n === 1 ? 'Tomorrow' : `In
 
 const eyebrow: React.CSSProperties = { margin: 0, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: T.mintText };
 const h2: React.CSSProperties = { margin: '6px 0 0', fontFamily: FONT.display, fontSize: 'clamp(26px, 6.5vw, 36px)', fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, color: T.white };
-const LIMIT = 5;
-const SPECIAL: Record<string, string> = { '2026-12-24': 'Christmas Eve', '2026-12-25': 'Christmas Day', '2026-12-26': 'Boxing Day', '2026-12-31': 'New Year’s Eve', '2027-01-01': 'New Year’s Day' };
 const priceOf = (e: GhanaEvent) => (e.priceUnknown ? 'Tickets' : e.price === 0 ? 'Free' : `From GH₵ ${e.price.toLocaleString()}`);
 const img = (e: GhanaEvent, w = 700) => (e.image ? hiRes(e.image, w) ?? e.image : '');
-
-/** All the days in the window, so the strip shows quiet days too */
-function daysBetween(from: string, to: string) {
-  const out: string[] = [];
-  for (let d = new Date(`${from}T12:00:00Z`); d.toISOString().slice(0, 10) <= to; d = new Date(d.getTime() + 86400000)) out.push(d.toISOString().slice(0, 10));
-  return out;
-}
 
 export default function DecemberClient({ list, poles, expected, from, to }: { list: DecEvent[]; poles: DecPole[]; expected: DecExpected[]; from: string; to: string }) {
   // Today on the client only, so the static page and the browser agree on first paint
@@ -48,34 +39,6 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
   const daysTo = (d: string) => (today ? Math.round((Date.parse(`${d}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86400000) : 0);
   // The big ones are nights out: concerts, festivals, parties (not expos, conferences or church programmes)
   const big = useMemo(() => [...list].filter((x) => !['business', 'faith', 'tech'].includes(x.event.category)).sort((a, b) => b.score - a.score).slice(0, 8), [list]);
-  const days = useMemo(() => daysBetween(from, to), [from, to]);
-  const byDay = useMemo(() => {
-    const m = new Map<string, DecEvent[]>();
-    for (const x of list) { const k = x.event.date; m.set(k, [...(m.get(k) ?? []), x]); }
-    m.forEach((v) => v.sort((a, b) => b.score - a.score));
-    return m;
-  }, [list]);
-  // The calendar: whole weeks (Monday to Sunday) around the season, one night picked at a time
-  const grid = useMemo(() => {
-    const start = new Date(`${from}T12:00:00Z`); start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() + 6) % 7));
-    const end = new Date(`${to}T12:00:00Z`); end.setUTCDate(end.getUTCDate() + ((7 - end.getUTCDay()) % 7));
-    const out: string[] = [];
-    for (const d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) out.push(d.toISOString().slice(0, 10));
-    return out;
-  }, [from, to]);
-  const showDays = useMemo(() => days.filter((d) => byDay.has(d)), [days, byDay]);
-  const [sel, setSel] = useState<string | null>(null);
-  const [all, setAll] = useState(false);
-  useEffect(() => {
-    if (sel || !showDays.length) return;
-    const t = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Accra' });
-    setSel(showDays.find((d) => d >= t) ?? showDays[0]);
-  }, [showDays, sel]);
-  const dayList = sel ? byDay.get(sel) ?? [] : [];
-  const shown = all ? dayList : dayList.slice(0, LIMIT);
-  const si = sel ? showDays.indexOf(sel) : -1;
-  const prevDay = si > 0 ? showDays[si - 1] : null;
-  const nextDay = si >= 0 && si < showDays.length - 1 ? showDays[si + 1] : null;
 
   const share = async () => {
     const data = { title: 'Detty December in Accra', text: 'Every big show this December, day by day', url: `${location.origin}/december` };
@@ -204,91 +167,6 @@ export default function DecemberClient({ list, poles, expected, from, to }: { li
           </section>
         )}
 
-        {/* Day by day: a month view of the season; tap a night to see what's on */}
-        <section id="calendar" style={{ marginTop: 56, scrollMarginTop: 90 }}>
-          <p style={eyebrow}>Day by day</p>
-          <h2 style={h2}>Every night of the season</h2>
-          <div role="grid" aria-label="December calendar" style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6 }}>
-            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((w, i) => (
-              <span key={i} aria-hidden style={{ textAlign: 'center', paddingBottom: 4, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: T.text3 }}>{w}</span>
-            ))}
-            {grid.map((d) => {
-              const inSeason = d >= from && d <= to;
-              const n = inSeason ? byDay.get(d)?.length ?? 0 : 0;
-              const on = sel === d;
-              const dt = new Date(`${d}T12:00:00Z`);
-              const special = SPECIAL[d];
-              return (
-                <button key={d} type="button" role="gridcell" disabled={!n} aria-selected={on} aria-label={`${dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}: ${n} ${n === 1 ? 'show' : 'shows'}`}
-                  onClick={() => { setSel(d); setAll(false); }}
-                  style={{
-                    position: 'relative', aspectRatio: '1 / 1.08', padding: 0, border: 'none', borderRadius: 12, cursor: n ? 'pointer' : 'default',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-                    background: on ? GRAD.mint : n ? `rgba(123,227,168,${Math.min(0.06 + n * 0.035, 0.26)})` : 'transparent',
-                    boxShadow: on ? '0 10px 26px -10px rgba(91,217,154,0.7), inset 0 1px 0 rgba(255,255,255,0.6)' : 'none',
-                    color: on ? T.onMint : n ? T.white : inSeason ? T.text3 : 'rgba(255,255,255,0.14)', transition: 'background 160ms ease',
-                  }}>
-                  {dt.getUTCDate() === 1 && <span style={{ position: 'absolute', top: 5, fontFamily: FONT.sans, fontSize: 8, fontWeight: 800, letterSpacing: '0.08em', opacity: 0.8 }}>{dt.toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' }).toUpperCase()}</span>}
-                  <span style={{ fontFamily: FONT.display, fontSize: 16, fontWeight: 800, lineHeight: 1, marginTop: dt.getUTCDate() === 1 ? 9 : 0 }}>{dt.getUTCDate()}</span>
-                  <span style={{ height: 11, fontFamily: FONT.sans, fontSize: 10, fontWeight: 700, opacity: n ? 0.85 : 0 }}>{n || ''}</span>
-                  {special && !on && <span aria-hidden style={{ position: 'absolute', top: 6, right: 6, width: 5, height: 5, borderRadius: 1.5, background: T.mint }} />}
-                </button>
-              );
-            })}
-          </div>
-
-          {sel && (
-            <div style={{ marginTop: 26 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {SPECIAL[sel] && <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>{SPECIAL[sel]}</p>}
-                  <p style={{ margin: SPECIAL[sel] ? '3px 0 0' : 0, fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.025em', color: T.white }}>
-                    {new Date(`${sel}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })}
-                  </p>
-                  <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13.5, color: T.text3 }}>{dayList.length} {dayList.length === 1 ? 'show' : 'shows'}</p>
-                </div>
-                {[{ d: prevDay, I: ChevronLeft, l: 'Previous night' }, { d: nextDay, I: ChevronRight, l: 'Next night' }].map(({ d, I, l }) => (
-                  <button key={l} type="button" aria-label={l} disabled={!d} onClick={() => { if (d) { setSel(d); setAll(false); } }}
-                    style={{ width: 40, height: 40, borderRadius: 13, border: 'none', cursor: d ? 'pointer' : 'default', background: 'rgba(255,255,255,0.07)', color: d ? T.white : T.text3, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: d ? 1 : 0.4 }}>
-                    <I size={19} />
-                  </button>
-                ))}
-              </div>
-              <ul style={{ listStyle: 'none', margin: '18px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {shown.map((x) => {
-                  const hot = x.event.hot || x.score >= 60;
-                  const time = x.event.time && !/tba/i.test(x.event.time) ? x.event.time.replace(':00 ', ' ').toLowerCase() : '';
-                  const price = x.event.priceUnknown ? '' : x.event.price === 0 ? 'Free' : `GH₵ ${x.event.price.toLocaleString()}`;
-                  return (
-                    <li key={x.event.slug}>
-                      <Link href={`/events/${x.event.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none' }}>
-                        <span style={{ width: 52, height: 65, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.05)' }}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={img(x.event, 200)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        </span>
-                        <span style={{ flex: 1, minWidth: 0 }}>
-                          <span style={{ fontFamily: FONT.sans, fontSize: 15.5, fontWeight: 600, lineHeight: 1.3, color: T.white, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                            {hot && <span aria-label="Hot" style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 2, background: T.mint, marginRight: 8, verticalAlign: 'middle', boxShadow: `0 0 8px ${T.mint}` }} />}
-                            {calmTitle(x.event.title).replace(/\s*[-–|:]?\s*\b20(26|27)\b\s*/g, ' ').replace(/\s+([-–|:])\s*$/, '').trim()}
-                          </span>
-                          <span style={{ display: 'block', marginTop: 3, fontFamily: FONT.sans, fontSize: 13, color: T.text3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {[time, x.event.venue].filter(Boolean).join(' · ')}
-                            {price && <span style={{ color: price === 'Free' ? T.mintText : T.text2 }}>{` · ${price}`}</span>}
-                          </span>
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-              {dayList.length > LIMIT && !all && (
-                <button type="button" onClick={() => setAll(true)} style={{ marginTop: 18, height: 44, padding: '0 18px', borderRadius: 999, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.07)', color: T.white, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600 }}>
-                  Show all {dayList.length}
-                </button>
-              )}
-            </div>
-          )}
-        </section>
 
         {/* Make your own: the calendars feature */}
         <section style={{ marginTop: 56 }}>
