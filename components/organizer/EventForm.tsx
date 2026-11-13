@@ -5,7 +5,7 @@ import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'r
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ImagePlus, Link2, Plus, Trash2, X, Ticket, ExternalLink, Loader2, Upload } from 'lucide-react';
-import { uploadClip, uploadsOn, isClipUrl, checkFile, MAX_SECONDS, type Trim, type Frame } from '@/lib/videoUpload';
+import { progressLabel, uploadClip, uploadsOn, isClipUrl, checkFile, MAX_SECONDS, type Trim, type Frame } from '@/lib/videoUpload';
 import TrimSheet from '@/components/media/TrimSheet';
 import TrimmedVideo from '@/components/media/TrimmedVideo';
 import PageSettings from '@/components/organizer/PageSettings';
@@ -426,7 +426,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
 function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const supabase = useMemo(() => createClient(), []);
   const pick = useRef<HTMLInputElement>(null);
-  const [up, setUp] = useState<{ progress: number; error?: string } | null>(null);
+  const [up, setUp] = useState<{ progress: number; error?: string; size?: number } | null>(null);
   const v = value.trim();
   const yt = v ? extractYoutubeId(v) : null;
   const clip = isClipUrl(v) ? v : null;
@@ -442,9 +442,9 @@ function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) 
   }
   async function send(file: File, trim: Trim | null, key: string | null, frame: Frame | null) {
     setTrimming(null);
-    setUp({ progress: 0 });
+    setUp({ progress: 0, size: file.size });
     try {
-      const r = await uploadClip(supabase, file, 'promo', (p) => setUp({ progress: p }), trim, key, frame);
+      const r = await uploadClip(supabase, file, 'promo', (p) => setUp({ progress: p, size: file.size }), trim, key, frame);
       onChange(r.videoUrl); setUp(null);
     } catch (e) { setUp({ progress: 0, error: (e as Error).message }); }
   }
@@ -481,7 +481,7 @@ function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) 
         up && !up.error ? (
           <div style={{ marginTop: -2 }}>
             <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${Math.round(up.progress * 100)}%`, background: T.mint, transition: 'width 200ms linear' }} /></div>
-            <p style={{ margin: '6px 2px 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{up.progress >= 1 ? 'Preparing your clip… this can take a minute' : `Uploading… ${Math.round(up.progress * 100)}%`}</p>
+            <p style={{ margin: '6px 2px 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{up.progress >= 1 ? 'Preparing your clip… this can take a minute' : progressLabel(up.progress, up.size ?? 0)}</p>
           </div>
         ) : uploadsOn && (
           <div style={{ marginTop: -2 }}>

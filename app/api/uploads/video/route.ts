@@ -40,6 +40,7 @@ export async function POST(req: Request) {
   if (!ext) return NextResponse.json({ error: 'Use an MP4, MOV or WebM video' }, { status: 400 });
   if (!size || size > VIDEO_MAX_MB * 1024 * 1024) return NextResponse.json({ error: `Keep it under ${VIDEO_MAX_MB} MB` }, { status: 400 });
   const key = `${kind}/${user.id}/${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+  console.log('upload start', key, size, type);
   return NextResponse.json({ key, ticket: makeTicket(key), chunkSize: CHUNK_BYTES, chunks: Math.ceil(size / CHUNK_BYTES), publicUrl: `${r2PublicBase()}/${key}` });
 }
 
@@ -63,6 +64,7 @@ export async function PUT(req: Request) {
       if (missing.length) break;
     }
     await new Promise<void>((resolve, reject) => out.end((e?: Error | null) => (e ? reject(e) : resolve())));
+    console.log('upload join', key, chunks, 'missing', missing.length);
     if (missing.length) return NextResponse.json({ error: 'missing', missing }, { status: 409 });
     const put = await r2Put(key, await readFile(file), 'application/octet-stream');
     if (!put.ok) return NextResponse.json({ error: 'Saving the video failed. Try again.' }, { status: 502 });
