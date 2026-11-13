@@ -28,8 +28,16 @@ export async function GET() {
   try {
     const mk = `check/${Date.now()}-m.mp4`;
     const id = await startMultipart(mk, 'video/mp4');
-    const put = await fetch(await presignPart(mk, id, 1), { method: 'PUT', body: 'piece', headers: { Origin: 'https://tsacoal.com' } });
-    out.multipart = { partStatus: put.status, partBody: put.ok ? '' : (await put.text()).slice(0, 300) };
+    const partUrl = await presignPart(mk, id, 1);
+    // Exactly what a phone's browser does first: ask permission for a PUT with no extra headers
+    const pre = await fetch(partUrl, { method: 'OPTIONS', headers: { Origin: 'https://tsacoal.com', 'Access-Control-Request-Method': 'PUT' } });
+    const preBody = pre.ok ? '' : (await pre.text()).slice(0, 300);
+    const put = await fetch(partUrl, { method: 'PUT', body: 'piece', headers: { Origin: 'https://tsacoal.com' } });
+    out.multipart = {
+      partPreflight: { status: pre.status, allowOrigin: pre.headers.get('access-control-allow-origin'), allowMethods: pre.headers.get('access-control-allow-methods'), body: preBody },
+      partStatus: put.status, partAllowOrigin: put.headers.get('access-control-allow-origin'), partBody: put.ok ? '' : (await put.text()).slice(0, 300),
+      partUrlParams: Array.from(new URL(partUrl).searchParams.keys()).join(','),
+    };
     await finishMultipart(mk, id, 1);
     const back = await fetch(`${r2PublicBase()}/${mk}`, { cache: 'no-store' });
     out.multipart = { partStatus: put.status, joined: true, publicRead: back.status, content: (await back.text()).slice(0, 20) };
