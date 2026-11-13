@@ -5,7 +5,9 @@ import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'r
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ImagePlus, Link2, Plus, Trash2, X, Ticket, ExternalLink, Loader2, Upload } from 'lucide-react';
-import { uploadClip, uploadsOn, isClipUrl, MAX_SECONDS, MAX_MB } from '@/lib/videoUpload';
+import { uploadClip, uploadsOn, isClipUrl, checkFile, MAX_SECONDS, type Trim } from '@/lib/videoUpload';
+import TrimSheet from '@/components/media/TrimSheet';
+import TrimmedVideo from '@/components/media/TrimmedVideo';
 import PageSettings from '@/components/organizer/PageSettings';
 import { cleanPage, cleanCode, codeOk, type EventPage } from '@/lib/events/page';
 import { createClient } from '@/lib/supabase/client';
@@ -57,7 +59,7 @@ export const emptyDraft = (): EventDraft => ({
   tiers: [{ name: 'Regular', price: '', quantity: '200', description: '', sold: 0 }],
 });
 
-const promoOk = (u: string) => !!extractYoutubeId(u) || /^https:\/\/\S+\.(mp4|mov|webm)(\?\S*)?$/i.test(u);
+const promoOk = (u: string) => !!extractYoutubeId(u) || /^https:\/\/\S+\.(mp4|mov|webm|3gp)(\?\S*)?(#t=[\d.,]+)?$/i.test(u);
 
 /** "20:00" → "8:00 PM" */
 export function to12h(hhmm: string) {
@@ -429,22 +431,31 @@ function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) 
   const yt = v ? extractYoutubeId(v) : null;
   const clip = isClipUrl(v) ? v : null;
 
-  async function choose(file?: File) {
+  // Pick a video, choose the part that plays, then it uploads
+  const [trimming, setTrimming] = useState<File | null>(null);
+  function choose(file?: File) {
+    if (pick.current) pick.current.value = '';
     if (!file) return;
+    const bad = checkFile(file);
+    if (bad) { setUp({ progress: 0, error: bad }); return; }
+    setUp(null); setTrimming(file);
+  }
+  async function send(file: File, trim: Trim | null) {
+    setTrimming(null);
     setUp({ progress: 0 });
     try {
-      const r = await uploadClip(supabase, file, 'promo', (p) => setUp({ progress: p }));
+      const r = await uploadClip(supabase, file, 'promo', (p) => setUp({ progress: p }), trim);
       onChange(r.videoUrl); setUp(null);
     } catch (e) { setUp({ progress: 0, error: (e as Error).message }); }
-    if (pick.current) pick.current.value = '';
   }
   const remove = <button type="button" onClick={() => { onChange(''); setUp(null); }} aria-label="Remove promo video" style={{ marginLeft: 'auto', width: 34, height: 34, borderRadius: 17, border: 'none', background: 'rgba(255,255,255,0.06)', color: T.text2, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={16} /></button>;
 
   return (
     <>
-      <input ref={pick} type="file" accept="video/mp4,video/quicktime,video/webm" hidden onChange={(e) => choose(e.target.files?.[0])} />
+      <input ref={pick} type="file" accept="video/*" hidden onChange={(e) => choose(e.target.files?.[0])} />
+      {trimming && <TrimSheet file={trimming} onCancel={() => setTrimming(null)} onDone={(t) => send(trimming, t)} />}
       {!clip && (
-        <Field label="Promo video (optional)" hint={`A YouTube link to your trailer or last year’s highlights${uploadsOn ? `, or upload a clip (up to ${MAX_SECONDS}s, ${MAX_MB} MB)` : ''}. It plays at the top of your event page.`}>
+        <Field label="Promo video (optional)" hint={`A YouTube link to your trailer or last year’s highlights${uploadsOn ? `, or upload a clip (trimmed to ${MAX_SECONDS}s)` : ''}. It plays at the top of your event page.`}>
           <input type="url" inputMode="url" value={value} onChange={(e) => onChange(e.target.value)} placeholder="https://youtu.be/…" style={field} disabled={!!up && !up.error} />
         </Field>
       )}
@@ -452,7 +463,7 @@ function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) 
         <div>
           <span style={labelCss}>Promo video</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <video src={clip} muted playsInline preload="metadata" style={{ width: 112, aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 10, display: 'block', background: '#000' }} />
+            <TrimmedVideo src={clip} muted playsInline preload="metadata" style={{ width: 112, aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 10, display: 'block', background: '#000' }} />
             <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.mintText, fontWeight: 600 }}>Clip uploaded</span>
             {remove}
           </div>

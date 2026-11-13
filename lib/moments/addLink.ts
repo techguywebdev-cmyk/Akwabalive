@@ -31,7 +31,7 @@ export async function addMomentFromLink(db: SupabaseClient, input: LinkInput): P
   let row: Record<string, unknown>;
   if (up) {
     // An uploaded clip: its own file, played by the browser. The key in its URL keeps it unique.
-    const key = up.videoUrl.split('/').pop()!.replace(/\.[a-z0-9]+$/i, '');
+    const key = up.videoUrl.split('#')[0].split('/').pop()!.replace(/\.[a-z0-9]+$/i, '');
     row = {
       youtube_id: `up-${key}`, source: 'upload', source_url: up.videoUrl, thumbnail_url: up.posterUrl ?? null,
       title: String(input.title || eventName).slice(0, 140), published_at: new Date().toISOString(),

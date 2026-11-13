@@ -1,4 +1,5 @@
 'use client';
+import TrimmedVideo from '@/components/media/TrimmedVideo';
 import { useState, useEffect, type CSSProperties } from 'react';
 import Link from 'next/link';
 import Nav, { HeaderIconButton } from '@/components/layout/Nav';
@@ -116,7 +117,7 @@ export default function EventDetailClient({ event, related, seriesMomentId, orga
   const paragraphs  = description.split('\n\n');
 
   const ytId = event.promoVideoUrl ? extractYoutubeId(event.promoVideoUrl) : null;
-  const isMp4 = !!event.promoVideoUrl && /\.(mp4|mov|webm)(\?|$)/i.test(event.promoVideoUrl);
+  const isMp4 = !!event.promoVideoUrl && /\.(mp4|mov|webm|3gp)(\?|#|$)/i.test(event.promoVideoUrl);
 
   useEffect(() => {
     const onUnmute = () => setWantSound(true);
@@ -304,7 +305,7 @@ export default function EventDetailClient({ event, related, seriesMomentId, orga
           </div>
         )}
         {showPromoVideo && isMp4 && event.promoVideoUrl && (
-          <video key={wantSound ? 'vs' : 'vm'} src={event.promoVideoUrl} autoPlay muted={!wantSound} loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          <TrimmedVideo key={wantSound ? 'vs' : 'vm'} src={event.promoVideoUrl} autoPlay muted={!wantSound} loop playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         )}
       </div>
 

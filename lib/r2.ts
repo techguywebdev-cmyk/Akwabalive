@@ -5,15 +5,15 @@ import { AwsClient } from 'aws4fetch';
  * Set in Vercel: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, NEXT_PUBLIC_R2_PUBLIC_URL
  * (the bucket's public address, e.g. https://video.tsacoal.com).
  */
-export const VIDEO_MAX_MB = 50;
+export const VIDEO_MAX_MB = 200;
 export const VIDEO_MAX_SECONDS = 60;
-export const VIDEO_TYPES: Record<string, string> = { 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm' };
+export const VIDEO_TYPES: Record<string, string> = { 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm', 'video/3gpp': '3gp' };
 
 export const r2PublicBase = () => (process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '').replace(/\/+$/, '');
 export const r2Ready = () => !!(process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && process.env.R2_BUCKET && r2PublicBase());
 
 /** True when a URL points at one of our uploaded clips */
-export const isOurClip = (url?: string | null) => !!url && !!r2PublicBase() && url.startsWith(`${r2PublicBase()}/`);
+export const isOurClip = (url?: string | null) => !!url && !!r2PublicBase() && url.startsWith(`${r2PublicBase()}/`) && !/[\s"'<>]/.test(url);
 
 /** A short-lived link the browser can PUT one file to, straight into the bucket */
 export async function presignPut(key: string, contentType: string): Promise<string> {
