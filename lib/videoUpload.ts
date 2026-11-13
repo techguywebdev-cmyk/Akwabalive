@@ -11,6 +11,8 @@ export const MAX_SECONDS = 60;
 const TYPES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/3gpp'];
 
 export type Trim = { start: number; end: number };
+/** How an upright video fills the wide frame: whole with blurred sides, or a wide slice (y: 0 top … 1 bottom) */
+export type Frame = { mode: 'fit' | 'crop'; y: number };
 
 /** The part of a clip that plays, written on its link: …/clip.mp4#t=12.5,70 (browsers understand this) */
 export const withTrim = (url: string, t?: Trim | null) => (t ? `${url.split('#')[0]}#t=${+t.start.toFixed(2)},${+t.end.toFixed(2)}` : url.split('#')[0]);
@@ -124,11 +126,11 @@ export async function makePreview(supabase: SupabaseClient, key: string): Promis
 }
 
 /** Last step: the server cuts the chosen part into a clip every browser plays, with a still */
-export async function finishClip(supabase: SupabaseClient, key: string, trim?: Trim | null): Promise<{ videoUrl: string; posterUrl: string | null }> {
+export async function finishClip(supabase: SupabaseClient, key: string, trim?: Trim | null, frame?: Frame | null): Promise<{ videoUrl: string; posterUrl: string | null }> {
   if (trim && trim.end - trim.start > MAX_SECONDS + 0.5) throw new Error(`Trim it to ${MAX_SECONDS} seconds or less`);
   const res = await fetch('/api/uploads/video/process', {
     method: 'POST', headers: await authed(supabase),
-    body: JSON.stringify({ key, start: trim?.start ?? 0, end: trim && Number.isFinite(trim.end) ? trim.end : null }),
+    body: JSON.stringify({ key, start: trim?.start ?? 0, end: trim && Number.isFinite(trim.end) ? trim.end : null, frame: frame ?? null }),
   });
   const r = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(r.error ?? 'We couldn’t prepare that clip. Try again.');
@@ -139,10 +141,10 @@ export async function finishClip(supabase: SupabaseClient, key: string, trim?: T
  * Upload a clip. `key` is set when the file is already up (the trim screen uploaded it to make a preview).
  * Progress goes 0–1 for the upload; then the server prepares the clip.
  */
-export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void, trim?: Trim | null, key?: string | null): Promise<{ videoUrl: string; posterUrl: string | null }> {
+export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void, trim?: Trim | null, key?: string | null, frame?: Frame | null): Promise<{ videoUrl: string; posterUrl: string | null }> {
   const k = key ?? await uploadRaw(supabase, file, kind, onProgress);
   onProgress?.(1);
-  return finishClip(supabase, k, trim);
+  return finishClip(supabase, k, trim, frame);
 }
 
 /** True for a link to a video file (an uploaded clip) rather than YouTube */
