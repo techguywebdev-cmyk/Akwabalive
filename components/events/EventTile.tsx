@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Flame, Mic2 } from 'lucide-react';
 import type { GhanaEvent } from '@/lib/types';
@@ -70,7 +71,11 @@ function Meta({ e, big }: { e: GhanaEvent; big?: boolean }) {
  * One show in the grid. `feature` makes it the big card that opens the grid:
  * flyer beside the details, with the line-up and a clear way in.
  */
-export default function EventTile({ event: e, performer, feature = false }: { event: GhanaEvent; performer?: { name: string; slug: string } | null; feature?: boolean }) {
+export default function EventTile({ event: e, performer, feature = false, index = 0 }: { event: GhanaEvent; performer?: { name: string; slug: string } | null; feature?: boolean; index?: number }) {
+  // Alternating small tilts so a row of flyers looks hand-pinned, not stamped
+  const tilt = [-2.5, 2, -1.5, 2.5, -2, 1.5][index % 6];
+  // The card takes the flyer's own shape once it loads (width ÷ height), so nothing on it is cut off
+  const [shape, setShape] = useState(0.8);
   const where = [known(e.venue), known(e.area)].filter(Boolean).join(', ');
   const time = known(e.time);
   const acts = (e.lineup ?? []).slice(0, 3).join(', ');
@@ -114,7 +119,11 @@ export default function EventTile({ event: e, performer, feature = false }: { ev
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={e.image} alt="" aria-hidden loading="lazy" style={{ position: 'absolute', zIndex: -1, inset: '-10%', width: '120%', height: '120%', objectFit: 'cover', filter: 'blur(22px) saturate(1.5) brightness(0.6)' }} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="ak-tile-flyer" src={e.image} alt={e.title} loading="lazy" style={{ position: 'absolute', inset: '5%', width: '90%', height: '90%', objectFit: 'contain', filter: 'drop-shadow(0 10px 18px rgba(0,0,0,0.5))' }} />
+            {/* The flyer as its own little card: rounded, a thin light edge, a deep shadow, a slight tilt like it's pinned up */}
+            <span className="ak-flyer-card" style={{ position: 'absolute', top: '50%', left: '50%', ...(shape >= 0.8 ? { width: '76%', aspectRatio: String(shape) } : { height: '86%', aspectRatio: String(shape) }), transform: `translate(-50%, -50%) rotate(${tilt}deg)`, borderRadius: 14, overflow: 'hidden', background: '#0B1510', boxShadow: '0 0 0 1px rgba(255,255,255,0.14), 0 14px 28px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.4)' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={e.image} alt={e.title} loading="lazy" onLoad={(ev) => { const im = ev.currentTarget; if (im.naturalWidth && im.naturalHeight) setShape(Math.min(1.25, Math.max(0.5, im.naturalWidth / im.naturalHeight))); }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            </span>
           </>
         )}
       </span>

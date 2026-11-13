@@ -180,3 +180,7 @@ body::before {
 @media (min-width: 1000px) { .ak-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 18px; } }
 @media (min-width: 1240px) { .ak-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 @media (hover: hover) { .ak-box:hover { transform: translateY(-4px); } .ak-box:hover .ak-tile-flyer { transform: scale(1.04); } }
+
+/* Grid flyer cards straighten and lift under the pointer */
+.ak-flyer-card { transition: transform 0.3s ease; }
+@media (hover: hover) { .ak-box:hover .ak-flyer-card { transform: translate(-50%, -50%) rotate(0deg) scale(1.04) !important; } }
