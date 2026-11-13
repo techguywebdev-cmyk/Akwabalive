@@ -29,10 +29,11 @@ export async function GET() {
     const mk = `check/${Date.now()}-m.mp4`;
     const id = await startMultipart(mk, 'video/mp4');
     const put = await fetch(await presignPart(mk, id, 1), { method: 'PUT', body: 'piece', headers: { Origin: 'https://tsacoal.com' } });
+    out.multipart = { partStatus: put.status, partBody: put.ok ? '' : (await put.text()).slice(0, 300) };
     await finishMultipart(mk, id, 1);
     const back = await fetch(`${r2PublicBase()}/${mk}`, { cache: 'no-store' });
     out.multipart = { partStatus: put.status, joined: true, publicRead: back.status, content: (await back.text()).slice(0, 20) };
     await r2Delete(mk);
-  } catch (e) { out.multipart = { error: String(e).slice(0, 300) }; }
+  } catch (e) { out.multipart = { ...(out.multipart as object), error: String(e).slice(0, 600) }; }
   return NextResponse.json(out);
 }
