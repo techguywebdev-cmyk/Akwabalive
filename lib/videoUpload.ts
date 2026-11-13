@@ -95,65 +95,102 @@ const authed = async (supabase: SupabaseClient) => {
   return { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' };
 };
 
-/**
- * Sends one piece; resolves when stored. No fixed time limit (slow mobile data is fine): it only gives up
- * when nothing has moved for a minute. Reports bytes sent so far for that piece.
- */
-function sendPart(url: string, blob: Blob, onBytes: (n: number) => void): Promise<void> {
+/** Sends one small piece to this site; resolves when stored. Gives up on the attempt after 45 s with no progress. */
+function sendChunk(url: string, blob: Blob, onBytes: (n: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {
     const x = new XMLHttpRequest();
     let last = Date.now();
-    const watch = setInterval(() => { if (Date.now() - last > 60000) { x.abort(); clearInterval(watch); reject(new Error('stalled')); } }, 5000);
+    const watch = setInterval(() => { if (Date.now() - last > 45000) x.abort(); }, 3000);
     const end = (fn: () => void) => { clearInterval(watch); fn(); };
-    x.open('PUT', url);
+    x.open('POST', url);
+    x.setRequestHeader('Content-Type', 'application/octet-stream');
     x.upload.onprogress = (e) => { last = Date.now(); onBytes(e.loaded); };
-    x.onload = () => end(() => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error(`status ${x.status}`))));
+    x.onload = () => end(() => (x.status >= 200 && x.status < 300 ? resolve() : reject(Object.assign(new Error(`status ${x.status}`), { status: x.status }))));
     x.onerror = () => end(() => reject(new Error('network')));
     x.onabort = () => end(() => reject(new Error('stalled')));
     x.send(blob);
   });
 }
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const online = () => new Promise<void>((r) => { if (typeof navigator === 'undefined' || navigator.onLine !== false) return r(); const t = setTimeout(r, 60000); window.addEventListener('online', () => { clearTimeout(t); r(); }, { once: true }); });
+
+type Saved = { key: string; ticket: string; chunkSize: number; chunks: number; done: number[]; at: number };
+const memo = (f: File) => `tsacoal-upload:${f.name}:${f.size}:${f.lastModified}`;
+const load = (f: File): Saved | null => { try { const v = JSON.parse(localStorage.getItem(memo(f)) || 'null') as Saved | null; return v && Date.now() - v.at < 20 * 3600 * 1000 ? v : null; } catch { return null; } };
+const save = (f: File, v: Saved | null) => { try { if (v) localStorage.setItem(memo(f), JSON.stringify(v)); else localStorage.removeItem(memo(f)); } catch { /* private mode */ } };
 
 /**
- * Step 1: the original file goes straight to storage in 5 MB pieces. Each piece retries on its own
- * (a dropped connection on mobile data only costs that piece), with overall progress. Returns the file's key.
+ * Step 1: the original file goes up in 1 MB pieces to this same site (which every phone reaches),
+ * three at a time. A failed piece is retried on its own, offline waits for the connection, and progress
+ * is remembered: picking the same video again carries on from where it stopped. Returns the file's key.
  */
 export async function uploadRaw(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void): Promise<string> {
   const problem = checkFile(file);
   if (problem) throw new Error(problem);
-  const headers = await authed(supabase);
-  const type = file.type || 'video/mp4';
-  const res = await fetch('/api/uploads/video', { method: 'POST', headers, body: JSON.stringify({ type, size: file.size, kind: kind === 'promo' ? 'promo' : 'moments' }) });
-  const j = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(j.error ?? 'Couldn’t start the upload');
-  const { key, uploadId, partSize, urls } = j as { key: string; uploadId: string; partSize: number; urls: string[] };
-
-  let done = 0;
-  for (let i = 0; i < urls.length; i++) {
-    const piece = file.slice(i * partSize, Math.min(file.size, (i + 1) * partSize));
-    for (let attempt = 1; ; attempt++) {
-      try {
-        await sendPart(urls[i], piece, (n) => onProgress?.(Math.min(0.99, (done + n) / file.size)));
-        break;
-      } catch (e) {
-        // Say which piece and why, so a failure can be told apart (network, stalled, refused)
-        if (attempt >= 10) throw new Error(`The upload keeps dropping (piece ${i + 1} of ${urls.length}: ${(e as Error).message}). Check your connection, or try on Wi-Fi.`);
-        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-          // Offline: wait for the connection to come back (up to a minute) before trying the piece again
-          await new Promise<void>((r) => { const t = setTimeout(r, 60000); window.addEventListener('online', () => { clearTimeout(t); r(); }, { once: true }); });
-        } else await wait(Math.min(10000, 1500 * attempt));
-      }
-    }
-    done += piece.size;
-    onProgress?.(Math.min(0.99, done / file.size));
+  let job = load(file);
+  if (!job) {
+    const type = file.type || 'video/mp4';
+    const res = await fetch('/api/uploads/video', { method: 'POST', headers: await authed(supabase), body: JSON.stringify({ type, size: file.size, kind: kind === 'promo' ? 'promo' : 'moments' }) });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error ?? 'Couldn’t start the upload');
+    job = { key: j.key, ticket: j.ticket, chunkSize: j.chunkSize, chunks: j.chunks, done: [], at: Date.now() };
+    save(file, job);
   }
+  const J = job;
+  const done = new Set(J.done);
+  const sending = new Map<number, number>(); // piece -> bytes sent so far
+  const report = () => {
+    let sent = 0;
+    done.forEach((n) => { sent += Math.min(J.chunkSize, file.size - n * J.chunkSize); });
+    sending.forEach((b) => { sent += b; });
+    onProgress?.(Math.min(0.99, sent / file.size));
+  };
+  report();
 
-  const fin = await fetch('/api/uploads/video', { method: 'PUT', headers: await authed(supabase), body: JSON.stringify({ key, uploadId, parts: urls.length }) });
-  const f = await fin.json().catch(() => ({}));
-  if (!fin.ok) throw new Error(f.error ?? 'The upload didn’t finish. Try again.');
-  onProgress?.(1);
-  return key;
+  const queue = Array.from({ length: J.chunks }, (_, n) => n).filter((n) => !done.has(n));
+  let failure: Error | null = null;
+  const worker = async () => {
+    while (queue.length && !failure) {
+      const n = queue.shift()!;
+      const piece = file.slice(n * J.chunkSize, Math.min(file.size, (n + 1) * J.chunkSize));
+      const url = `/api/uploads/video/chunk?key=${encodeURIComponent(J.key)}&n=${n}&t=${encodeURIComponent(J.ticket)}`;
+      for (let attempt = 1; ; attempt++) {
+        try {
+          await sendChunk(url, piece, (b) => { sending.set(n, b); report(); });
+          break;
+        } catch (e) {
+          sending.delete(n); report();
+          const status = (e as { status?: number }).status;
+          if (status === 403) { save(file, null); failure = new Error('That upload expired. Pick the video again.'); return; }
+          if (attempt >= 25) { failure = new Error(`The connection kept dropping (piece ${n + 1} of ${J.chunks}: ${(e as Error).message}). Try again: it will carry on from where it stopped.`); return; }
+          await online();
+          await wait(Math.min(8000, 800 * attempt));
+        }
+      }
+      sending.delete(n);
+      done.add(n);
+      J.done = Array.from(done); J.at = Date.now(); save(file, J);
+      report();
+    }
+  };
+  await Promise.all([worker(), worker(), worker()]);
+  if (failure) throw failure;
+
+  // Join the pieces; if storage is missing any, send those again and retry
+  for (let round = 0; round < 3; round++) {
+    const fin = await fetch('/api/uploads/video', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: J.key, ticket: J.ticket, chunks: J.chunks }) });
+    const f = await fin.json().catch(() => ({}));
+    if (fin.ok) { save(file, null); onProgress?.(1); return J.key; }
+    if (fin.status === 409 && Array.isArray(f.missing)) {
+      for (const n of f.missing as number[]) {
+        const piece = file.slice(n * J.chunkSize, Math.min(file.size, (n + 1) * J.chunkSize));
+        await sendChunk(`/api/uploads/video/chunk?key=${encodeURIComponent(J.key)}&n=${n}&t=${encodeURIComponent(J.ticket)}`, piece, () => {});
+      }
+      continue;
+    }
+    throw new Error(f.error ?? 'The upload didn’t finish. Try again.');
+  }
+  throw new Error('The upload didn’t finish. Try again.');
 }
 
 /** For phones that can't show the original: a small copy from the server that every browser plays */
