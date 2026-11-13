@@ -1,5 +1,6 @@
 'use client';
 
+import TrimmedVideo from '@/components/media/TrimmedVideo';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
@@ -157,7 +158,7 @@ export function MomentsViewer({ list, start = 0, eventTitle, onClose }: { list: 
       <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0 8px' }}>
         <div style={{ width: '100%', maxWidth: 960, aspectRatio: '16 / 9', maxHeight: '100%', background: '#000' }}>
           {m.source === 'upload' && m.source_url ? (
-            <video key={m.youtube_id} src={m.source_url} poster={m.thumbnail_url ?? undefined} title={m.title} autoPlay controls playsInline style={{ width: '100%', height: '100%', display: 'block', background: '#000' }} />
+            <TrimmedVideo key={m.youtube_id} src={m.source_url} poster={m.thumbnail_url ?? undefined} title={m.title} autoPlay controls playsInline style={{ width: '100%', height: '100%', display: 'block', background: '#000' }} />
           ) : <iframe
             key={m.youtube_id}
             title={m.title}

@@ -4,23 +4,61 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 /** Uploads show only once video storage is set up (its public address is set in Vercel) */
 export const uploadsOn = !!process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
-export const MAX_MB = 50;
+/** Biggest file we take (a longer video is fine: only the trimmed part plays) */
+export const MAX_MB = 200;
+/** Longest part that plays */
 export const MAX_SECONDS = 60;
-const TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
+const TYPES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/3gpp'];
 
-/** How long a video file runs, read in the browser before uploading */
-function probe(file: File): Promise<{ seconds: number; video: HTMLVideoElement; url: string }> {
+export type Trim = { start: number; end: number };
+
+/** The part of a clip that plays, written on its link: …/clip.mp4#t=12.5,70 (browsers understand this) */
+export const withTrim = (url: string, t?: Trim | null) => (t ? `${url.split('#')[0]}#t=${+t.start.toFixed(2)},${+t.end.toFixed(2)}` : url.split('#')[0]);
+export function readTrim(url?: string | null): Trim | null {
+  const m = url?.match(/#t=([\d.]+)(?:,([\d.]+))?/);
+  if (!m) return null;
+  const start = Number(m[1]) || 0, end = m[2] ? Number(m[2]) : Infinity;
+  return end > start ? { start, end } : null;
+}
+
+/** Why a video couldn't be read, in words a person can act on */
+export function unreadable(code?: number): string {
+  return code === 4
+    ? 'This browser can’t play that video’s format. Phones often record in HEVC. Turn off “High efficiency video” in your camera settings, or save the video from WhatsApp, then try again.'
+    : 'That video couldn’t be opened. Try another one, or save it from WhatsApp first.';
+}
+
+/**
+ * Opens a video in the browser and reads its length. The element is put on the page (hidden):
+ * some phones won't load a video that isn't.
+ */
+export function openVideo(file: File): Promise<{ seconds: number; video: HTMLVideoElement; url: string; done: () => void }> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const v = document.createElement('video');
-    v.preload = 'metadata'; v.muted = true; v.playsInline = true; v.src = url;
-    v.onloadedmetadata = () => resolve({ seconds: v.duration, video: v, url });
-    v.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That video can’t be read. Try an MP4.')); };
+    v.muted = true; v.playsInline = true; v.preload = 'auto';
+    v.setAttribute('playsinline', '');
+    Object.assign(v.style, { position: 'fixed', left: '-9999px', top: '0', width: '2px', height: '2px', opacity: '0', pointerEvents: 'none' });
+    document.body.appendChild(v);
+    const done = () => { v.remove(); URL.revokeObjectURL(url); };
+    let settled = false;
+    const ok = () => {
+      if (settled) return;
+      // Some recordings report no length until asked to seek to the end
+      if (!Number.isFinite(v.duration)) { v.currentTime = 1e9; return; }
+      settled = true; clearTimeout(timer); resolve({ seconds: v.duration, video: v, url, done });
+    };
+    v.onloadedmetadata = ok;
+    v.ondurationchange = () => { if (Number.isFinite(v.duration) && v.duration > 0) ok(); };
+    v.onerror = () => { if (settled) return; settled = true; clearTimeout(timer); const code = v.error?.code; done(); reject(Object.assign(new Error(unreadable(code)), { code })); };
+    const timer = setTimeout(() => { if (settled) return; settled = true; done(); reject(new Error(unreadable())); }, 20000);
+    v.src = url;
+    v.load();
   });
 }
 
 /** A still from early in the clip, as a JPEG, for thumbnails and share cards */
-function poster(v: HTMLVideoElement): Promise<Blob | null> {
+function poster(v: HTMLVideoElement, at = 0): Promise<Blob | null> {
   return new Promise((resolve) => {
     const grab = () => {
       const w = v.videoWidth, h = v.videoHeight;
@@ -32,36 +70,34 @@ function poster(v: HTMLVideoElement): Promise<Blob | null> {
     };
     v.onseeked = grab;
     v.onerror = () => resolve(null);
-    v.currentTime = Math.min(1, (v.duration || 2) / 3);
+    v.currentTime = at > 0 ? at + 0.5 : Math.min(1, (v.duration || 2) / 3);
     setTimeout(() => resolve(null), 8000);
   });
 }
 
-/** Checks a clip (type, size, length) and returns the reason it can't go up, or null */
-export async function checkClip(file: File): Promise<string | null> {
-  if (!TYPES.includes(file.type)) return 'Use an MP4, MOV or WebM video';
-  if (file.size > MAX_MB * 1024 * 1024) return `That’s ${(file.size / 1048576).toFixed(0)} MB. Keep it under ${MAX_MB} MB.`;
-  try {
-    const { seconds, url } = await probe(file);
-    URL.revokeObjectURL(url);
-    if (seconds > MAX_SECONDS + 0.5) return `That’s ${Math.round(seconds)} seconds. Keep it to ${MAX_SECONDS} seconds or less.`;
-  } catch (e) { return (e as Error).message; }
+/** Quick checks before the trim screen: the type and the file size */
+export function checkFile(file: File): string | null {
+  if (file.type && !file.type.startsWith('video/')) return 'Choose a video';
+  if (file.type && !TYPES.includes(file.type)) return 'Use an MP4, MOV or WebM video';
+  if (file.size > MAX_MB * 1024 * 1024) return `That’s ${(file.size / 1048576).toFixed(0)} MB. Videos up to ${MAX_MB} MB work; try a shorter one.`;
   return null;
 }
 
 /**
- * Uploads a short clip to TsaCoal's video storage, with a still for its thumbnail.
- * Reports progress (0–1). Returns the clip's public URL and the still's URL.
+ * Uploads a clip to TsaCoal's video storage, with a still (from where it starts playing) for thumbnails.
+ * `trim` is the part that plays (at most a minute). Reports progress (0–1).
  */
-export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void): Promise<{ videoUrl: string; posterUrl: string | null }> {
-  const problem = await checkClip(file);
+export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void, trim?: Trim | null): Promise<{ videoUrl: string; posterUrl: string | null }> {
+  const problem = checkFile(file);
   if (problem) throw new Error(problem);
+  if (trim && trim.end - trim.start > MAX_SECONDS + 0.5) throw new Error(`Trim it to ${MAX_SECONDS} seconds or less`);
   const session = (await supabase.auth.getSession()).data.session;
   if (!session) throw new Error('Sign in to upload');
+  const type = file.type || 'video/mp4';
 
   const res = await fetch('/api/uploads/video', {
     method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: file.type, size: file.size, kind: kind === 'promo' ? 'promo' : 'moments' }),
+    body: JSON.stringify({ type, size: file.size, kind: kind === 'promo' ? 'promo' : 'moments' }),
   });
   const j = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(j.error ?? 'Couldn’t start the upload');
@@ -70,28 +106,28 @@ export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'mo
   await new Promise<void>((resolve, reject) => {
     const x = new XMLHttpRequest();
     x.open('PUT', j.uploadUrl);
-    x.setRequestHeader('Content-Type', file.type);
+    x.setRequestHeader('Content-Type', type);
     x.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(e.loaded / e.total); };
     x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error('The upload didn’t go through. Try again.')));
     x.onerror = () => reject(new Error('The upload didn’t go through. Check your connection and try again.'));
     x.send(file);
   });
 
-  // The still goes with the images
+  // The still goes with the images (a missing still never blocks the clip)
   let posterUrl: string | null = null;
   try {
-    const { video, url } = await probe(file);
-    const still = await poster(video);
-    URL.revokeObjectURL(url);
+    const { video, done } = await openVideo(file);
+    const still = await poster(video, trim?.start);
+    done();
     if (still) {
       const path = `events/posters/${session.user.id}-${Date.now().toString(36)}.jpg`;
       const { error } = await supabase.storage.from('event-images').upload(path, still, { contentType: 'image/jpeg', cacheControl: '31536000' });
       if (!error) posterUrl = supabase.storage.from('event-images').getPublicUrl(path).data.publicUrl;
     }
-  } catch { /* a missing still never blocks the clip */ }
+  } catch { /* fine */ }
 
-  return { videoUrl: j.publicUrl, posterUrl };
+  return { videoUrl: withTrim(j.publicUrl, trim), posterUrl };
 }
 
 /** True for a link to a video file (an uploaded clip) rather than YouTube */
-export const isClipUrl = (u?: string | null) => !!u && /\.(mp4|mov|webm)(\?|$)/i.test(u);
+export const isClipUrl = (u?: string | null) => !!u && /\.(mp4|mov|webm|3gp)(\?|#|$)/i.test(u);

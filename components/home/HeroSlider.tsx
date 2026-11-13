@@ -1,5 +1,6 @@
 'use client';
 
+import TrimmedVideo from '@/components/media/TrimmedVideo';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Calendar, MapPin, Clock } from 'lucide-react';
@@ -127,7 +128,7 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
 
   const slide = slides[cur] || FALLBACK[0];
   const ytId = slide.promoVideoUrl ? extractYoutubeId(slide.promoVideoUrl) : null;
-  const isMp4 = !!slide.promoVideoUrl && /\.(mp4|mov|webm)(\?|$)/i.test(slide.promoVideoUrl);
+  const isMp4 = !!slide.promoVideoUrl && /\.(mp4|mov|webm|3gp)(\?|#|$)/i.test(slide.promoVideoUrl);
   const hasPromo = !!(ytId || isMp4);
 
   const clearTimers = () => {
@@ -455,7 +456,7 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
       )}
 
       {hasPromo && phase === 'video' && isMp4 && slide.promoVideoUrl && !ytId && (
-        <video
+        <TrimmedVideo
           key={slide.promoVideoUrl + cur}
           src={slide.promoVideoUrl}
           autoPlay

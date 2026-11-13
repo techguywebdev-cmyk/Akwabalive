@@ -2,6 +2,8 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import type { CustomPlayerHandle } from './CustomPlayer';
+import TrimmedVideo from '@/components/media/TrimmedVideo';
+import { readTrim } from '@/lib/videoUpload';
 
 /**
  * Plays a clip uploaded to TsaCoal (a plain video file) with the same controls as the YouTube player:
@@ -12,6 +14,10 @@ const ClipPlayer = forwardRef<CustomPlayerHandle, {
   onMuteChange?: (muted: boolean) => void; onEnded?: () => void; onTimeUpdate?: (t: number, d: number) => void;
 }>(function ClipPlayer({ src, poster, title, active, fit = 'contain', onMuteChange, onEnded, onTimeUpdate }, ref) {
   const v = useRef<HTMLVideoElement>(null);
+  // Only the trimmed part plays; times are reported from its start
+  const trim = readTrim(src);
+  const t0 = trim?.start ?? 0;
+  const len = (el: HTMLVideoElement) => (trim && Number.isFinite(trim.end) ? trim.end : el.duration || 0) - t0;
   const [muted, setMuted] = useState(true);
   useEffect(() => { onMuteChange?.(muted); }, [muted, onMuteChange]);
 
@@ -23,17 +29,18 @@ const ClipPlayer = forwardRef<CustomPlayerHandle, {
   }, [active]);
 
   useImperativeHandle(ref, () => ({
-    seekTo: (s) => { if (v.current) v.current.currentTime = s; },
+    seekTo: (s) => { if (v.current) v.current.currentTime = t0 + s; },
     play: () => { v.current?.play().catch(() => {}); },
     toggleMute: () => { const el = v.current; if (!el) return; el.muted = !el.muted; setMuted(el.muted); if (!el.muted) el.play().catch(() => {}); },
-    getCurrentTime: () => v.current?.currentTime ?? 0,
-    getDuration: () => v.current?.duration || 0,
-  }), []);
+    getCurrentTime: () => Math.max(0, (v.current?.currentTime ?? 0) - t0),
+    getDuration: () => (v.current ? len(v.current) : 0),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [src]);
 
   return (
-    <video ref={v} src={src} poster={poster ?? undefined} title={title} muted={muted} playsInline preload={active ? 'auto' : 'metadata'}
+    <TrimmedVideo ref={v} src={src} poster={poster ?? undefined} title={title} muted={muted} playsInline preload={active ? 'auto' : 'metadata'}
       onClick={() => { const el = v.current; if (el) (el.paused ? el.play().catch(() => {}) : el.pause()); }}
-      onEnded={onEnded} onTimeUpdate={() => { const el = v.current; if (el) onTimeUpdate?.(el.currentTime, el.duration || 0); }}
+      onEnded={() => onEnded?.()} onTimeUpdate={() => { const el = v.current; if (el) onTimeUpdate?.(Math.max(0, el.currentTime - t0), len(el)); }}
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, background: '#000', cursor: 'pointer' }} />
   );
 });

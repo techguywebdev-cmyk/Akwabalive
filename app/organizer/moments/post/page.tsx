@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Check, Plus, Trash2, Upload, Video, X } from 'lucide-react';
-import { uploadClip, uploadsOn, MAX_SECONDS, MAX_MB } from '@/lib/videoUpload';
+import { uploadClip, uploadsOn, checkFile, withTrim, MAX_SECONDS, type Trim } from '@/lib/videoUpload';
+import TrimSheet from '@/components/media/TrimSheet';
+import TrimmedVideo from '@/components/media/TrimmedVideo';
 import Nav from '@/components/layout/Nav';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
@@ -40,18 +42,28 @@ export default function PostMomentPage() {
   const [clip, setClip] = useState<{ name: string; progress: number; videoUrl?: string; posterUrl?: string | null; preview?: string; error?: string } | null>(null);
   const pick = useRef<HTMLInputElement>(null);
 
-  async function chooseClip(file: File | undefined) {
+  // Picking a video opens the trim screen first; the upload starts once they've chosen the part
+  const [trimming, setTrimming] = useState<File | null>(null);
+  const [pickErr, setPickErr] = useState('');
+  function chooseClip(file: File | undefined) {
+    if (pick.current) pick.current.value = '';
     if (!file) return;
-    const preview = URL.createObjectURL(file);
+    const bad = checkFile(file);
+    setPickErr(bad ?? '');
+    if (!bad) setTrimming(file);
+  }
+  async function startUpload(file: File, trim: Trim | null) {
+    setTrimming(null);
+    const preview = withTrim(URL.createObjectURL(file), trim);
     setClip({ name: file.name, progress: 0, preview });
     try {
-      const r = await uploadClip(supabase, file, 'moment', (p) => setClip((c) => (c ? { ...c, progress: p } : c)));
+      const r = await uploadClip(supabase, file, 'moment', (p) => setClip((c) => (c ? { ...c, progress: p } : c)), trim);
       setClip((c) => (c ? { ...c, progress: 1, videoUrl: r.videoUrl, posterUrl: r.posterUrl } : c));
     } catch (e) {
       setClip((c) => (c ? { ...c, error: (e as Error).message } : c));
     }
   }
-  const dropClip = () => { if (clip?.preview) URL.revokeObjectURL(clip.preview); setClip(null); if (pick.current) pick.current.value = ''; };
+  const dropClip = () => { if (clip?.preview) URL.revokeObjectURL(clip.preview.split('#')[0]); setClip(null); if (pick.current) pick.current.value = ''; };
 
   const token = useCallback(async () => (await supabase.auth.getSession()).data.session?.access_token, [supabase]);
 
@@ -147,18 +159,20 @@ export default function PostMomentPage() {
             </label>
           )}
           {/* No link? Upload the clip itself */}
-          <input ref={pick} type="file" accept="video/mp4,video/quicktime,video/webm" hidden onChange={(e) => chooseClip(e.target.files?.[0])} />
+          <input ref={pick} type="file" accept="video/*" hidden onChange={(e) => chooseClip(e.target.files?.[0])} />
+          {trimming && <TrimSheet file={trimming} onCancel={() => setTrimming(null)} onDone={(t) => startUpload(trimming, t)} />}
+          {pickErr && !clip && <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 13, color: '#FCA5A5' }}>{pickErr}</p>}
           {!clip ? (
             uploadsOn && !form.url.trim() && (
               <button type="button" onClick={() => pick.current?.click()} style={{ marginTop: 10, width: '100%', height: 48, borderRadius: 14, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: T.text, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <Upload size={16} /> No link? Upload a clip <span style={{ color: T.text3, fontWeight: 500 }}>(up to {MAX_SECONDS}s, {MAX_MB} MB)</span>
+                <Upload size={16} /> No link? Upload a clip <span style={{ color: T.text3, fontWeight: 500 }}>(trim to {MAX_SECONDS}s)</span>
               </button>
             )
           ) : (
             <div style={{ marginTop: 18 }}>
               <span style={{ ...label, marginTop: 0 }}>Your clip</span>
               <div style={{ position: 'relative', marginTop: 8, borderRadius: 14, overflow: 'hidden', background: '#000' }}>
-                {clip.preview && <video src={clip.preview} muted playsInline controls={!!clip.videoUrl} style={{ display: 'block', width: '100%', maxHeight: 320, objectFit: 'contain' }} />}
+                {clip.preview && <TrimmedVideo src={clip.preview} muted playsInline controls={!!clip.videoUrl} style={{ display: 'block', width: '100%', maxHeight: 320, objectFit: 'contain' }} />}
                 <button type="button" aria-label="Remove clip" onClick={dropClip} style={{ position: 'absolute', top: 8, right: 8, width: 34, height: 34, borderRadius: 17, border: 'none', cursor: 'pointer', background: 'rgba(0,0,0,0.6)', color: T.white, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
                 {uploading && (
                   <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 4, background: 'rgba(255,255,255,0.15)' }}>
