@@ -297,7 +297,7 @@ export default function CalendarsHub() {
         )}
 
         {ours.length > 0 && (
-          <section aria-label="Starter calendars from Tsacoal" style={{ marginTop: 52 }}>
+          <section aria-label="Starter calendars from TsaCoal" style={{ marginTop: 52 }}>
             <p style={eyebrow}>Start from one of ours</p>
             <div style={stack}>{ours.map((c) => <Tile key={c.id} c={c} evs={fl(c)} stats={stats[c.id]} />)}</div>
           </section>

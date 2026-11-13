@@ -57,7 +57,7 @@ export default function ArtistPhotoSheet({ slug, name, current, onClose, onSaved
     const row = { slug, photo_url: url, photo_credit: credit.trim() || null, photo_license: null, photo_source_url: null, photo_source: 'upload', updated_at: new Date().toISOString() };
     const { error } = await supabase.from('artist_profiles').upsert(row);
     setBusy(false);
-    if (error) { setErr('Could not save. Are you signed in as the Tsacoal admin?'); return; }
+    if (error) { setErr('Could not save. Are you signed in as the TsaCoal admin?'); return; }
     onSaved({ url, credit: row.photo_credit, license: null, sourceUrl: null, source: 'upload' });
   }
 

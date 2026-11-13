@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const n = c.calendar_events?.length ?? 0;
   return shareMeta({
     title: `${c.title} · ${who}’s calendar`,
-    description: c.description || `${n} ${n === 1 ? 'show' : 'shows'} ${who} is lining up. Like it, rate it, or make your own on Tsacoal.`,
+    description: c.description || `${n} ${n === 1 ? 'show' : 'shows'} ${who} is lining up. Like it, rate it, or make your own on TsaCoal.`,
     image: `${SITE_URL}/c/${params.slug}/opengraph-image`,
     path: `/c/${params.slug}`,
   });

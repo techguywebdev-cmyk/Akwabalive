@@ -15,7 +15,7 @@ const ago = (iso: string) => {
   return `${Math.floor(h / 24)}d ago`;
 };
 
-/** Admin: who brings people to Tsacoal through the links and cards they share */
+/** Admin: who brings people to TsaCoal through the links and cards they share */
 export default function SharersPage() {
   const isAdmin = useIsAdmin();
   const db = useMemo(() => createClient(), []);

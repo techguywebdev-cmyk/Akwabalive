@@ -172,7 +172,7 @@ function AuthForm() {
     }
   }
 
-  const heading = { signin: 'Welcome back', signup: 'Join Tsacoal', forgot: 'Reset your password', reset: 'Set a new password', pick: 'One last thing' }[mode];
+  const heading = { signin: 'Welcome back', signup: 'Join TsaCoal', forgot: 'Reset your password', reset: 'Set a new password', pick: 'One last thing' }[mode];
   const sub = {
     signin: 'Your tickets, plans and friends, all in one place.',
     signup: 'Find every event in Ghana, see who’s going and keep your tickets on your phone.',
@@ -296,7 +296,7 @@ function AuthForm() {
           )}
           {mode === 'signup' && (
             <p style={{ margin: 0, textAlign: 'center', fontFamily: FONT.sans, fontSize: 12.5, lineHeight: 1.5, color: T.text3 }}>
-              By signing up you agree to Tsacoal’s <Link href="/terms" style={{ color: T.text2 }}>terms</Link> and <Link href="/privacy" style={{ color: T.text2 }}>privacy policy</Link>.
+              By signing up you agree to TsaCoal’s <Link href="/terms" style={{ color: T.text2 }}>terms</Link> and <Link href="/privacy" style={{ color: T.text2 }}>privacy policy</Link>.
             </p>
           )}
           {(mode === 'forgot' || mode === 'reset') && (

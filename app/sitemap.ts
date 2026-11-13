@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { SITE_URL } from '@/lib/og';
 import { artists } from '@/lib/data/artists';
 import { SERIES } from '@/lib/data/series';
+import { GUIDES } from '@/lib/guides';
 
 export const revalidate = 3600;
 
@@ -20,6 +21,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/organisers`, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${SITE_URL}/privacy`, changeFrequency: 'yearly', priority: 0.1 },
     { url: `${SITE_URL}/terms`, changeFrequency: 'yearly', priority: 0.1 },
+    // Guide pages for what people search: today, this weekend, free, festivals, by city
+    ...GUIDES.map((g) => ({ url: `${SITE_URL}/${g.slug}`, changeFrequency: 'daily', priority: /today|weekend/.test(g.slug) ? 0.95 : 0.9 })),
   ].map((x) => ({ ...x, lastModified: now })) as MetadataRoute.Sitemap;
 
   let events: MetadataRoute.Sitemap = [];

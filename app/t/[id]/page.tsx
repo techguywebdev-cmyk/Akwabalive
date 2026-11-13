@@ -63,7 +63,7 @@ export default function TicketScanPage({ params, searchParams }: { params: { id:
         </span>
         <h1 style={{ margin: '18px 0 0', fontFamily: FONT.display, fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>{title}</h1>
         {used && v?.checked_in_at && <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 15, color: T.text2 }}>Checked in at {time(v.checked_in_at)}</p>}
-        {v?.reason === 'not_recognised' && <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>This QR code wasn’t issued by Tsacoal, or it has been changed.</p>}
+        {v?.reason === 'not_recognised' && <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>This QR code wasn’t issued by TsaCoal, or it has been changed.</p>}
 
         {v?.event_title && (
           <section style={{ marginTop: 26, padding: 20, borderRadius: 24, background: 'rgba(255,255,255,0.05)', border: 'none', textAlign: 'left' }}>

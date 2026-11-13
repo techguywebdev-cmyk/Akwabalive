@@ -13,7 +13,7 @@ export function JsonLd({ data }: { data: Record<string, unknown> | Record<string
 
 const abs = (u?: string | null) => (!u ? undefined : u.startsWith('http') ? u.replace('https://akwabalive.vercel.app', SITE_URL) : `${SITE_URL}${u.startsWith('/') ? '' : '/'}${u}`);
 const cap = (s?: string | null) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : undefined);
-const PUBLISHER = { '@type': 'Organization', name: 'Tsacoal', url: SITE_URL };
+const PUBLISHER = { '@type': 'Organization', name: 'TsaCoal', url: SITE_URL };
 
 /** "8:00 PM" → "20:00" */
 function to24(t?: string | null): string | null {
@@ -30,12 +30,12 @@ const isoStart = (date: string, time?: string | null) => { const t = to24(time);
 export function siteJsonLd() {
   return [
     {
-      '@context': 'https://schema.org', '@type': 'Organization', '@id': `${SITE_URL}/#org`, name: 'Tsacoal', url: SITE_URL,
+      '@context': 'https://schema.org', '@type': 'Organization', '@id': `${SITE_URL}/#org`, name: 'TsaCoal', url: SITE_URL,
       logo: `${SITE_URL}/icon`, email: 'hello@tsacoal.com', areaServed: { '@type': 'Country', name: 'Ghana' },
-      description: 'Tsacoal lists every event in Ghana in one place: concerts, festivals, parties and shows in Accra, Kumasi and beyond, with tickets, line-ups and clips from past nights.',
+      description: 'TsaCoal lists every event in Ghana in one place: concerts, festivals, parties and shows in Accra, Kumasi and beyond, with tickets, line-ups and clips from past nights.',
     },
     {
-      '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${SITE_URL}/#site`, name: 'Tsacoal', url: SITE_URL, inLanguage: 'en-GH', publisher: { '@id': `${SITE_URL}/#org` },
+      '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${SITE_URL}/#site`, name: 'TsaCoal', url: SITE_URL, inLanguage: 'en-GH', publisher: { '@id': `${SITE_URL}/#org` },
       potentialAction: { '@type': 'SearchAction', target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/events?q={search_term_string}` }, 'query-input': 'required name=search_term_string' },
     },
   ];

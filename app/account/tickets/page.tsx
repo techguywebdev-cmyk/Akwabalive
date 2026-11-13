@@ -218,7 +218,7 @@ export default function MyTicketsPage() {
             <div style={{ padding: '56px 8px', textAlign: 'center' }}>
               <span style={{ display: 'inline-flex', width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', background: 'rgba(123,227,168,0.1)', color: T.mint }}><Icon name="ticket" size={28} /></span>
               <p style={{ margin: '16px 0 0', fontFamily: FONT.display, fontSize: 22, fontWeight: 700, color: T.white }}>{tab === 'upcoming' ? 'No upcoming tickets' : 'No past tickets yet'}</p>
-              <p style={{ margin: '6px 0 20px', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Tickets you buy or RSVP to on Tsacoal show up here with a QR code for the door.</p>
+              <p style={{ margin: '6px 0 20px', fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>Tickets you buy or RSVP to on TsaCoal show up here with a QR code for the door.</p>
               <Link href="/" style={BTN.primary}>Find events</Link>
             </div>
           )}

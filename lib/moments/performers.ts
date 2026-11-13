@@ -11,7 +11,7 @@ import { cleanExcerpt } from '@/lib/moments/excerpt';
  *  - channel:     the video is on the artist's own YouTube channel
  *  - title:       the artist is named in the video's title (or the moment's event name)
  *  - description: named near the top of the YouTube description or in its tags (the uploader's credits)
- *  - lineup:      billed on the Tsacoal event the moment belongs to
+ *  - lineup:      billed on the TsaCoal event the moment belongs to
  *  - host:        hosts the show series the moment belongs to
  *
  * An artist is confirmed by their own channel or by being named in the title. Otherwise it takes two signals,

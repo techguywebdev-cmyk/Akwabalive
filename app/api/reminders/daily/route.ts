@@ -31,7 +31,7 @@ export async function GET(req: Request) {
     db.from('reminder_log').select('user_id, event_slug').eq('kind', 'day_before').in('event_slug', slugs),
     db.from('calendar_events').select('event_slug, calendars!inner(owner_id, title, slug)').in('event_slug', slugs),
   ]);
-  // Shows in someone's calendar (starter calendars by Tsacoal don't count: they belong to everyone)
+  // Shows in someone's calendar (starter calendars by TsaCoal don't count: they belong to everyone)
   const cal = new Map<string, { title: string; slug: string }>();
   const calRows = ((ce ?? []) as any[]).filter((r) => r.calendars && !String(r.calendars.slug).startsWith('akwaaba-'))
     .map((r) => { cal.set(`${r.calendars.owner_id}|${r.event_slug}`, { title: r.calendars.title, slug: r.calendars.slug }); return { user_id: r.calendars.owner_id, event_slug: r.event_slug }; });
@@ -58,7 +58,7 @@ export async function GET(req: Request) {
   if (pushedRows.length) await db.from('reminder_log').insert(pushedRows);
 
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.REMINDER_FROM; // e.g. "Tsacoal <reminders@yourdomain.com>"
+  const from = process.env.REMINDER_FROM; // e.g. "TsaCoal <reminders@yourdomain.com>"
   if (!key || !from) return NextResponse.json({ tomorrow, events: events.length, people: want.size, pushed: pushedRows.length, sent: 0, note: 'Set RESEND_API_KEY and REMINDER_FROM (verified domain) to send' });
 
   const bySlug = new Map(events.map((e) => [e.slug, e]));
@@ -79,7 +79,7 @@ export async function GET(req: Request) {
         ${e.image_url ? `<img src="${e.image_url}" alt="" style="width:100%;border-radius:16px;display:block;margin-bottom:20px">` : ''}
         <a href="${url}" style="display:inline-block;background:#7BE3A8;color:#03130B;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:999px">${w.ticket ? 'Open your ticket' : 'See the details'}</a>
         ${inCal && !w.ticket ? `<p style="margin:18px 0 0;font-size:14px;color:rgba(255,255,255,.7)">It’s on your calendar <a href="${SITE_URL}/c/${inCal.slug}" style="color:#A8F0C6;font-weight:700;text-decoration:none">${inCal.title}</a>.</p>` : ''}
-        <p style="margin:24px 0 0;color:rgba(255,255,255,.4);font-size:12px">You’re getting this because you ${w.ticket ? 'have a ticket for' : inCal ? 'added' : 'saved or are going to'} this show on Tsacoal.</p>
+        <p style="margin:24px 0 0;color:rgba(255,255,255,.4);font-size:12px">You’re getting this because you ${w.ticket ? 'have a ticket for' : inCal ? 'added' : 'saved or are going to'} this show on TsaCoal.</p>
       </div></div>`;
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },

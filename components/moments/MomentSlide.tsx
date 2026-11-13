@@ -343,7 +343,7 @@ const MomentSlide = forwardRef<SlideHandle, {
 
           {recapClip?.recap && (
             <p style={{ margin: '12px 0 0', display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>
-              <span aria-hidden style={{ width: 6, height: 6, borderRadius: 3, background: T.mint }} />The night, by Tsacoal
+              <span aria-hidden style={{ width: 6, height: 6, borderRadius: 3, background: T.mint }} />The night, by TsaCoal
             </p>
           )}
           {about && (
