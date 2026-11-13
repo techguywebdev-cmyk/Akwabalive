@@ -143,7 +143,7 @@ export const artists: Artist[] = [
     instagram: 'r2bees',
     xHandle: 'R2Bees',
   },
-  // Acts with shows on Tsacoal right now (Oct 2026)
+  // Acts with shows on TsaCoal right now (Oct 2026)
   { id: 'kwabena-kwabena', slug: 'kwabena-kwabena', wiki: 'Kwabena Kwabena', name: 'Kwabena Kwabena', image: '', isMajor: true, priority: 13, keywords: ['kwabena kwabena'] },
   { id: 'fancy-gadam', slug: 'fancy-gadam', wiki: 'Fancy Gadam', name: 'Fancy Gadam', image: '', isMajor: true, priority: 14, keywords: ['fancy gadam', 'gadam nation', 'gadam concert'] },
   { id: 'kweku-smoke', slug: 'kweku-smoke', wiki: 'Kweku Smoke', name: 'Kweku Smoke', image: '', isMajor: true, priority: 15, keywords: ['kweku smoke'] },

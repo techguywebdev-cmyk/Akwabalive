@@ -15,7 +15,7 @@ type Result =
 
 const clock = (iso: string | null) => (iso ? new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '');
 
-/** Pull the ticket id and key out of a scanned Tsacoal QR (…/t/<id>?k=<key>) */
+/** Pull the ticket id and key out of a scanned TsaCoal QR (…/t/<id>?k=<key>) */
 function parseTicket(text: string): { id: string; key: string } | null {
   try {
     const u = new URL(text);
@@ -50,7 +50,7 @@ export default function ScanPage() {
     lastText.current = text;
     const t = parseTicket(text);
     if (!t) {
-      setResult({ kind: 'bad', message: 'This isn’t an Tsacoal ticket QR code.' });
+      setResult({ kind: 'bad', message: 'This isn’t an TsaCoal ticket QR code.' });
     } else {
       const { data: v } = await supabase.rpc('verify_ticket', { p_id: t.id, p_key: t.key });
       if (!v?.valid && v?.reason === 'not_recognised') setResult({ kind: 'bad', message: 'Not a valid ticket. It may be fake or changed.' });

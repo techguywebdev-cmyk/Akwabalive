@@ -19,11 +19,11 @@ export const CAL_SELECT = '*, profiles(username, full_name, avatar_url)';
 /** A short, readable link: "my-detty-december-4k2f" */
 export function calendarSlug(title: string) {
   const base = title.toLowerCase().normalize('NFKD').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 40) || 'calendar';
-  // akwaaba-… links are ours (starter calendars); someone's "Tsacoal nights" becomes my-akwaaba-nights-…
+  // akwaaba-… links are ours (starter calendars); someone's "TsaCoal nights" becomes my-akwaaba-nights-…
   return `${base.startsWith('akwaaba') ? `my-${base}` : base}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-/** Calendars we make ourselves (starter calendars): their links start with akwaaba- and they show as by Tsacoal */
+/** Calendars we make ourselves (starter calendars): their links start with akwaaba- and they show as by TsaCoal */
 export const isCurated = (slug?: string | null) => !!slug && slug.startsWith('akwaaba-');
 export const ownerName = (c: Pick<Calendar, 'profiles'> & { slug?: string }) => (isCurated(c.slug) ? 'TsaCoal' : c.profiles?.full_name || c.profiles?.username || 'Someone');
 

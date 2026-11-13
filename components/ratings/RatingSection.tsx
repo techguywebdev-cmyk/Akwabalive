@@ -212,7 +212,7 @@ export default function RatingSection({ slug, title, past }: { slug: string; tit
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, color: T.white }}>
                     {r.username ? <Link href={`/u/${r.username}`} style={{ color: 'inherit', textDecoration: 'none' }}>{r.name}</Link> : r.name}
-                    {r.verified && <BadgeCheck size={15} color={T.mint} aria-label="Verified: had an Tsacoal ticket" />}
+                    {r.verified && <BadgeCheck size={15} color={T.mint} aria-label="Verified: had an TsaCoal ticket" />}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
                     <Stars value={r.overall} size={12} />

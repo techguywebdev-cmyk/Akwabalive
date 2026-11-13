@@ -84,7 +84,7 @@ export default async function OrganizerPage({
     return (
       <SoftMissing
         title={`@${raw} not found`}
-        body="There’s no organiser with that username on Tsacoal."
+        body="There’s no organiser with that username on TsaCoal."
       />
     );
   }

@@ -94,7 +94,7 @@ export default function ClaimPage() {
               <input id="q" aria-label="Find your event" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search your event" style={{ ...field, paddingLeft: 48, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }} />
             </div>
 
-            <p style={{ ...label, margin: '24px 0 10px 2px' }}>{q.trim().length >= 2 ? (found.length ? `${found.length} found` : 'Nothing found') : 'Coming up on Tsacoal'}</p>
+            <p style={{ ...label, margin: '24px 0 10px 2px' }}>{q.trim().length >= 2 ? (found.length ? `${found.length} found` : 'Nothing found') : 'Coming up on TsaCoal'}</p>
             {shown.length > 0 ? (
               <div className="ak-fade" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(104px, 1fr))', gap: 10 }}>
                 {shown.map((e) => <FlyerTile key={e.id} e={e} onPick={() => { setEv(e); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />)}
@@ -105,7 +105,7 @@ export default function ClaimPage() {
               </div>
             ) : null}
 
-            <p style={{ margin: '26px 2px 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2, textAlign: 'center' }}>Not on Tsacoal yet? <Link href="/organizer/events/new" style={{ color: T.mintText, fontWeight: 600, textDecoration: 'none' }}>List it yourself</Link></p>
+            <p style={{ margin: '26px 2px 0', fontFamily: FONT.sans, fontSize: 14, color: T.text2, textAlign: 'center' }}>Not on TsaCoal yet? <Link href="/organizer/events/new" style={{ color: T.mintText, fontWeight: 600, textDecoration: 'none' }}>List it yourself</Link></p>
           </>
         ) : (
           <>

@@ -35,7 +35,7 @@ export default function SeriesPageClient({ series, upcoming, past, moments, host
   async function share() {
     const url = `${window.location.origin}/shows/${series.slug}`;
     try {
-      if (navigator.share) { await navigator.share({ title: `${series.name} on Tsacoal`, url }); return; }
+      if (navigator.share) { await navigator.share({ title: `${series.name} on TsaCoal`, url }); return; }
       await navigator.clipboard.writeText(url);
       setCopied(true); setTimeout(() => setCopied(false), 1800);
     } catch { /* dismissed */ }

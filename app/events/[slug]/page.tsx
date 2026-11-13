@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   const dbEvent = await fetchEventBySlug(params.slug, FRESH);
   if (dbEvent) {
     const e = supabaseToGhanaEvent(dbEvent);
-    const price = e.priceUnknown ? 'Tickets on Tsacoal' : e.price === 0 ? 'Free entry' : `From GH₵ ${e.price.toLocaleString()}`;
+    const price = e.priceUnknown ? 'Tickets on TsaCoal' : e.price === 0 ? 'Free entry' : `From GH₵ ${e.price.toLocaleString()}`;
     const who = (e.lineup ?? []).slice(0, 4).join(', ');
     // Not personalised by ?by=: reading searchParams here makes the cached page dynamic and it 500s
     const meta = shareMeta({

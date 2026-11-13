@@ -52,7 +52,7 @@ const HYPE_STYLE: Record<HypeKind, { style: CSSProperties; icon: React.ReactNode
   detty: { style: { background: 'rgba(123,227,168,0.16)', color: T.mintText }, icon: <PartyPopper size={14} strokeWidth={2.2} /> },
 };
 
-/** A special tag: selling fast, the organiser's own line, an Tsacoal pick… */
+/** A special tag: selling fast, the organiser's own line, an TsaCoal pick… */
 export function HypeChip({ hype }: { hype: Hype }) {
   const h = HYPE_STYLE[hype.kind];
   return <span style={{ ...chip, fontWeight: 700, ...h.style }}>{h.icon}{hype.text}</span>;

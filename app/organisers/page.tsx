@@ -33,7 +33,7 @@ const eyebrow: React.CSSProperties = { margin: 0, fontFamily: FONT.display, font
 const h2: React.CSSProperties = { margin: '6px 0 0', fontFamily: FONT.display, fontSize: 'clamp(26px, 6vw, 34px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05, color: T.white };
 
 const WHY = [
-  { title: 'Seen where people decide', body: 'Tsacoal is where people look for what to do this weekend: every show in Ghana in one feed, with your full flyer, line-up and a ticket button.' },
+  { title: 'Seen where people decide', body: 'TsaCoal is where people look for what to do this weekend: every show in Ghana in one feed, with your full flyer, line-up and a ticket button.' },
   { title: 'Get on the Hot list', body: 'Shows people are going to rise to the Hot screen and the top of the feed, with real numbers like “1.2k checked this out”.' },
   { title: 'Last year sells this year', body: 'Clips from your past editions play right on your event. People see the energy before they buy.' },
   { title: 'Know what’s working', body: 'See views, saves and who’s going on every event, so you know when to push and where.' },
@@ -41,12 +41,12 @@ const WHY = [
 const STEPS = [
   { icon: ImagePlus, title: 'Upload your flyer', body: 'We read the date, venue, line-up and contacts off it for you.' },
   { icon: CheckCircle2, title: 'Check and publish', body: 'Fix anything we missed, add ticket types or your ticket link, and go live.' },
-  { icon: ScanLine, title: 'Sell and scan', body: 'Send people to your ticket link, or sell on Tsacoal with MoMo and card (coming soon), and scan tickets at the door from your phone.' },
+  { icon: ScanLine, title: 'Sell and scan', body: 'Send people to your ticket link, or sell on TsaCoal with MoMo and card (coming soon), and scan tickets at the door from your phone.' },
 ];
 const FAQ = [
   { q: 'What does it cost?', a: 'Listing your event is free.' },
   { q: 'I already sell tickets on another site. Can I still list?', a: 'Yes. Add your ticket link and the “Get tickets” button sends people straight there.' },
-  { q: 'My event is already on Tsacoal. Who put it there?', a: 'We list public events so people can find everything in one place. Claim it and it moves to your account: you can edit it, add tickets and see its numbers.' },
+  { q: 'My event is already on TsaCoal. Who put it there?', a: 'We list public events so people can find everything in one place. Claim it and it moves to your account: you can edit it, add tickets and see its numbers.' },
   { q: 'Who checks events?', a: 'We check your first event before it goes live, to keep the feed real. After that, you publish straight away.' },
 ];
 
@@ -97,7 +97,7 @@ export default async function OrganisersPage() {
 
         {/* What a listing looks like, then why it works */}
         <section style={{ marginTop: 88 }}>
-          <p style={eyebrow}>Why Tsacoal</p>
+          <p style={eyebrow}>Why TsaCoal</p>
           <h2 style={{ ...h2, fontSize: 'clamp(32px, 8.5vw, 48px)', letterSpacing: '-0.04em' }}>More people at the door.</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 40, alignItems: 'center', marginTop: 30 }}>
             {lead && (

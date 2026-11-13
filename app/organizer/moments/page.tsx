@@ -82,7 +82,7 @@ export default function MomentsReviewPage() {
     return (
       <div style={{ minHeight: '100svh', background: GROUND }}>
         <Nav back="/organizer/dashboard" />
-        <p style={{ padding: '120px 24px', textAlign: 'center', fontFamily: FONT.sans, color: T.text2 }}>Only the Tsacoal admin can review Moments.</p>
+        <p style={{ padding: '120px 24px', textAlign: 'center', fontFamily: FONT.sans, color: T.text2 }}>Only the TsaCoal admin can review Moments.</p>
       </div>
     );
   }
@@ -93,7 +93,7 @@ export default function MomentsReviewPage() {
       <main style={{ maxWidth: 720, margin: '0 auto', padding: 'calc(84px + env(safe-area-inset-top, 0px)) 20px 120px' }}>
         <h1 style={{ margin: 0, fontFamily: FONT.display, fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>Moments review</h1>
         <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>
-          Videos found on artists’ and shows’ own YouTube channels wait here. Approve the ones that belong on Tsacoal.
+          Videos found on artists’ and shows’ own YouTube channels wait here. Approve the ones that belong on TsaCoal.
         </p>
         <button type="button" onClick={findNow} disabled={busy} style={{ ...BTN.primary, marginTop: 18, height: 46 }}>
           <Search size={17} /> {busy ? 'Looking…' : 'Find official videos now'}

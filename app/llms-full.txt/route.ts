@@ -33,7 +33,7 @@ export async function GET() {
     const place = [r.venue && !/to be announced|tba/i.test(r.venue) ? r.venue : null, cap(r.area), cap(r.city)].filter(Boolean).join(', ');
     return `- **[${r.title}](${SITE_URL}/events/${r.slug})** · ${day(r.date)}${r.time && !/tba/i.test(r.time) ? `, ${r.time}` : ''} · ${place || 'Ghana'} · ${price(r)}${who(r) ? ` · With ${who(r)}` : ''}${r.category ? ` · ${cap(r.category)}` : ''}`;
   });
-  const body = `# Tsacoal: every upcoming event in Ghana
+  const body = `# TsaCoal: every upcoming event in Ghana
 
 > Live listings from tsacoal.com, refreshed hourly. ${rows.length} upcoming events. Times are Ghana time (GMT). Prices in Ghana cedis. Each link has full details and tickets.
 
@@ -42,7 +42,7 @@ Updated: ${new Date().toISOString()}
 ## Upcoming events
 ${lines.join('\n')}
 
-## Artists on Tsacoal
+## Artists on TsaCoal
 ${artists.slice(0, 120).map((a) => `- [${a.name}](${SITE_URL}/artists/${a.slug})${a.genre ? ` · ${a.genre}` : ''}`).join('\n')}
 `;
   return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } });

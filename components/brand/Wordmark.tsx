@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { FONT, T } from '@/lib/thiscene';
 
 /**
- * Tsacoal brand mark: a mint tile with a capital T and the name in
+ * TsaCoal brand mark: a mint tile with a capital T and the name in
  * lowercase Inter Tight. Small enough to sit in the middle of the header.
  */
 export function BrandGlyph({ size = 22 }: { size?: number }) {
@@ -17,7 +17,7 @@ export function BrandGlyph({ size = 22 }: { size?: number }) {
 
 export default function Wordmark({ href = '/', size = 17 }: { href?: string; size?: number }) {
   return (
-    <Link href={href} aria-label="Tsacoal home" style={{ display: 'inline-flex', alignItems: 'center', gap: 0, textDecoration: 'none' }}>
+    <Link href={href} aria-label="TsaCoal home" style={{ display: 'inline-flex', alignItems: 'center', gap: 0, textDecoration: 'none' }}>
       <span style={{ fontFamily: FONT.display, fontSize: size, fontWeight: 800, letterSpacing: '-0.03em', color: '#fff', lineHeight: 1.15 }}>TsaCoal</span>
     </Link>
   );

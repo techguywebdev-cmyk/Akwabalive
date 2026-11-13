@@ -23,11 +23,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://tsacoal.com'),
-  // Pages give their own title; " | Tsacoal" is added to each
+  // Pages give their own title; " | TsaCoal" is added to each
   title: { default: 'TsaCoal: Events in Ghana, Concerts, Parties & Tickets', template: '%s | TsaCoal' },
   description: 'Every event in Ghana in one place: concerts, festivals, parties and Detty December shows in Accra, Kumasi and beyond, with tickets, line-ups and clips from past nights.',
   applicationName: 'TsaCoal',
-  keywords: ['events in Ghana', 'Accra events', 'things to do in Accra', 'concerts in Ghana', 'Ghana festivals', 'Detty December', 'Accra nightlife', 'parties in Accra', 'Ghana concert tickets', 'Kumasi events', 'Afrobeats concerts', 'Tsacoal'],
+  keywords: ['events in Ghana', 'Accra events', 'things to do in Accra', 'concerts in Ghana', 'Ghana festivals', 'Detty December', 'Accra nightlife', 'parties in Accra', 'Ghana concert tickets', 'Kumasi events', 'Afrobeats concerts', 'TsaCoal'],
   category: 'entertainment',
   formatDetection: { telephone: false },
   // Search Console / Bing Webmaster verification: set these env vars in Vercel

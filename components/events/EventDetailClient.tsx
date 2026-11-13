@@ -498,7 +498,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           <h2 style={eyebrow}>Tickets</h2>
           {listed && (
             <p style={{ margin: '4px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.6, color: T.text2 }}>
-              Tickets are sold by {event.ticketSource || 'the organiser'}, not on Tsacoal. We list the event so you can find it — buy only on the official page.
+              Tickets are sold by {event.ticketSource || 'the organiser'}, not on TsaCoal. We list the event so you can find it — buy only on the official page.
             </p>
           )}
           {listed && (

@@ -366,7 +366,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
 
         <Section title="Tickets">
           <div role="radiogroup" aria-label="How tickets are sold" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {([['hosted', 'Sell on Tsacoal', 'MoMo & card, QR tickets, door scanning'], ['listed', 'Sold elsewhere', 'Link to another ticket site']] as const).map(([v, t, n]) => {
+            {([['hosted', 'Sell on TsaCoal', 'MoMo & card, QR tickets, door scanning'], ['listed', 'Sold elsewhere', 'Link to another ticket site']] as const).map(([v, t, n]) => {
               const on = d.listing === v;
               return (
                 <button key={v} type="button" role="radio" aria-checked={on} onClick={() => set('listing', v)} style={{ textAlign: 'left', padding: 14, borderRadius: 18, cursor: 'pointer', background: on ? 'rgba(123,227,168,0.12)' : 'rgba(255,255,255,0.04)', border: 'none', color: T.white, display: 'flex', flexDirection: 'column', gap: 6 }}>

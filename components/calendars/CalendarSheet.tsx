@@ -35,7 +35,7 @@ export default function CalendarSheet({ events, title, owner, slug, isPublic, on
     try {
       const f = await getImage();
       const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-      if (nav.canShare?.({ files: [f] })) await navigator.share({ files: [f], title, text: `${title}: my line-up on Tsacoal ${window.location.origin}/c/${slug}` });
+      if (nav.canShare?.({ files: [f] })) await navigator.share({ files: [f], title, text: `${title}: my line-up on TsaCoal ${window.location.origin}/c/${slug}` });
       else { save(f); setNote('Saved to your downloads'); }
     } catch (e) { if ((e as Error)?.name !== 'AbortError') setNote('Couldn’t make the image. Try again.'); }
     setBusy('');
@@ -97,7 +97,7 @@ export default function CalendarSheet({ events, title, owner, slug, isPublic, on
         ))}
 
         <p style={{ margin: '26px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontFamily: FONT.display, fontSize: 14, fontWeight: 800, color: T.white }}>
-          Tsacoal
+          TsaCoal
         </p>
       </div>
 

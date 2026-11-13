@@ -187,7 +187,7 @@ export default function GiftSheet({
               {tier ? `Pay ₵${tier.price.toLocaleString()} and send` : 'No tickets available'}
             </button>
             <p style={{ fontFamily: sans, fontSize: 12, lineHeight: 1.5, color: C.c3, textAlign: 'center' }}>
-              {first} gets the ticket in their Tsacoal account. Payment secured by Paystack.
+              {first} gets the ticket in their TsaCoal account. Payment secured by Paystack.
             </p>
           </div>
         ) : (

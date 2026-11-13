@@ -115,7 +115,7 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
               <div style={{ ...card, padding: 18, marginTop: 22 }}>
                 <p style={{ margin: 0, fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.5, color: T.text2 }}>
                   This event is <strong style={{ color: T.white }}>listed</strong>: tickets are sold on {ev.ticket_source || 'another site'}, so sales and check-ins aren’t tracked here.
-                  Sell your next event on Tsacoal to get MoMo and card payments, live sales here and QR check-in at the door.
+                  Sell your next event on TsaCoal to get MoMo and card payments, live sales here and QR check-in at the door.
                 </p>
               </div>
             ) : (
