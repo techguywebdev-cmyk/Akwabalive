@@ -15,6 +15,14 @@ export const r2Ready = () => !!(process.env.R2_ACCOUNT_ID && process.env.R2_ACCE
 /** True when a URL points at one of our uploaded clips */
 export const isOurClip = (url?: string | null) => !!url && !!r2PublicBase() && url.startsWith(`${r2PublicBase()}/`) && !/[\s"'<>]/.test(url);
 
+const client = () => new AwsClient({ accessKeyId: process.env.R2_ACCESS_KEY_ID!, secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!, service: 's3', region: 'auto' });
+const objectUrl = (key: string) => `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.R2_BUCKET}/${key}`;
+
+/** Server side: read, write and delete one object in the bucket */
+export const r2Get = (key: string) => client().fetch(objectUrl(key));
+export const r2Put = (key: string, body: BodyInit, type: string) => client().fetch(objectUrl(key), { method: 'PUT', body, headers: { 'Content-Type': type, 'Cache-Control': 'public, max-age=31536000, immutable' } });
+export const r2Delete = (key: string) => client().fetch(objectUrl(key), { method: 'DELETE' });
+
 /** A short-lived link the browser can PUT one file to, straight into the bucket */
 export async function presignPut(key: string, contentType: string): Promise<string> {
   const client = new AwsClient({ accessKeyId: process.env.R2_ACCESS_KEY_ID!, secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!, service: 's3', region: 'auto' });

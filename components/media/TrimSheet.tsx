@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom';
 import { Pause, Play, X } from 'lucide-react';
 import { T, FONT, GRAD } from '@/lib/thiscene';
-import { MAX_SECONDS, unreadable, type Trim } from '@/lib/videoUpload';
+import { MAX_SECONDS, type Trim } from '@/lib/videoUpload';
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const MIN = 1;
@@ -23,6 +23,11 @@ export default function TrimSheet({ file, onCancel, onDone }: { file: File; onCa
   const [now, setNow] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState('');
+  // The phone can't show this video (some formats only the server can read): still usable, just no preview
+  const [blind, setBlind] = useState(false);
+  const [from, setFrom] = useState('0:00');
+  useEffect(() => { const t = setTimeout(() => { if (!v.current?.duration) setBlind(true); }, 12000); return () => clearTimeout(t); }, []);
+  const fromSec = (() => { const m = from.trim().match(/^(?:(\d+):)?(\d{1,2})$/); return m ? Number(m[1] || 0) * 60 + Number(m[2]) : NaN; })();
   const drag = useRef<{ what: 'start' | 'end' | 'move'; x0: number; r0: Trim } | null>(null);
 
   useEffect(() => {
@@ -109,17 +114,29 @@ export default function TrimSheet({ file, onCancel, onDone }: { file: File; onCa
       <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }} onClick={toggle}>
         <video ref={v} src={url} playsInline muted={false} preload="auto" onLoadedMetadata={loaded} onDurationChange={() => { if (!dur && v.current && Number.isFinite(v.current.duration)) loaded(); }}
           onTimeUpdate={onTime} onPause={() => setPlaying(false)} onPlay={() => setPlaying(true)}
-          onError={() => setError(unreadable(v.current?.error?.code))}
-          style={{ maxWidth: '100%', maxHeight: '100%', display: error ? 'none' : 'block' }} />
-        {!error && dur > 0 && !playing && (
+          onError={() => setBlind(true)}
+          style={{ maxWidth: '100%', maxHeight: '100%', display: error || blind ? 'none' : 'block' }} />
+        {!error && !blind && dur > 0 && !playing && (
           <span aria-hidden style={{ position: 'absolute', width: 64, height: 64, borderRadius: 32, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.white }}><Play size={26} fill={T.white} style={{ marginLeft: 3 }} /></span>
         )}
         {error && <p style={{ margin: 0, padding: '0 28px', textAlign: 'center', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: '#FCA5A5' }}>{error}</p>}
-        {!error && !dur && <p style={{ position: 'absolute', margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>Opening your video…</p>}
+        {!error && !blind && !dur && <p style={{ position: 'absolute', margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>Opening your video…</p>}
+        {blind && !error && (
+          <div onClick={(e) => e.stopPropagation()} style={{ padding: '0 28px', textAlign: 'center' }}>
+            <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>No preview on this phone</p>
+            <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 14.5, lineHeight: 1.55, color: T.text2 }}>Your video still works: we’ll convert it on our side. Pick where the minute starts.</p>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginTop: 18, fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}>
+              Start at
+              <input value={from} onChange={(e) => setFrom(e.target.value)} inputMode="numeric" placeholder="0:00"
+                style={{ width: 90, height: 46, borderRadius: 14, border: 'none', background: 'rgba(255,255,255,0.08)', color: T.white, textAlign: 'center', fontFamily: FONT.display, fontSize: 18, fontWeight: 700, outline: 'none' }} />
+            </label>
+            {Number.isNaN(fromSec) && <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 13, color: '#FCA5A5' }}>Write it like 0:15 or 1:30</p>}
+          </div>
+        )}
       </div>
 
       <div style={{ padding: '18px 20px calc(18px + env(safe-area-inset-bottom, 0px))' }}>
-        {!error && dur > 0 && (
+        {!error && !blind && dur > 0 && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
               <span>{fmt(range.start)}</span>
@@ -140,13 +157,13 @@ export default function TrimSheet({ file, onCancel, onDone }: { file: File; onCa
           </>
         )}
         <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-          <button type="button" onClick={toggle} disabled={!!error || !dur} aria-label={playing ? 'Pause' : 'Play'}
+          {!blind && <button type="button" onClick={toggle} disabled={!!error || !dur} aria-label={playing ? 'Pause' : 'Play'}
             style={{ width: 52, height: 52, borderRadius: 26, border: 'none', flexShrink: 0, background: 'rgba(255,255,255,0.08)', color: T.white, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: error || !dur ? 0.4 : 1 }}>
             {playing ? <Pause size={20} /> : <Play size={20} style={{ marginLeft: 2 }} />}
-          </button>
-          <button type="button" disabled={!!error || !dur} onClick={() => { v.current?.pause(); onDone(whole ? null : range); }}
-            style={{ flex: 1, height: 52, borderRadius: 999, border: 'none', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, cursor: 'pointer', opacity: error || !dur ? 0.4 : 1 }}>
-            {error ? 'Can’t use this video' : whole ? 'Use clip' : 'Use this part'}
+          </button>}
+          <button type="button" disabled={!!error || (blind ? Number.isNaN(fromSec) : !dur)} onClick={() => { v.current?.pause(); onDone(blind ? { start: fromSec, end: fromSec + MAX_SECONDS } : whole ? null : range); }}
+            style={{ flex: 1, height: 52, borderRadius: 999, border: 'none', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, cursor: 'pointer', opacity: error || (blind ? Number.isNaN(fromSec) : !dur) ? 0.4 : 1 }}>
+            {error ? 'Can’t use this video' : blind ? 'Use this minute' : whole ? 'Use clip' : 'Use this part'}
           </button>
         </div>
       </div>

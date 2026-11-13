@@ -481,7 +481,7 @@ function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) 
         up && !up.error ? (
           <div style={{ marginTop: -2 }}>
             <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${Math.round(up.progress * 100)}%`, background: T.mint, transition: 'width 200ms linear' }} /></div>
-            <p style={{ margin: '6px 2px 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Uploading… {Math.round(up.progress * 100)}%</p>
+            <p style={{ margin: '6px 2px 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>{up.progress >= 1 ? 'Preparing your clip… this can take a minute' : `Uploading… ${Math.round(up.progress * 100)}%`}</p>
           </div>
         ) : uploadsOn && (
           <div style={{ marginTop: -2 }}>
