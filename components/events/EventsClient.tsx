@@ -530,7 +530,7 @@ export default function EventsClient({ events, seed: seedProp = 1 }: { events: G
                     {gi === 0 && <EventTile event={g.events[0]} performer={performerFor(g.events[0])} feature />}
                     {/* Even boxes: two across on a phone, up to five on wide screens */}
                     <div className="ak-grid" style={{ marginTop: gi === 0 ? 'clamp(12px, 2vw, 18px)' : 0 }}>
-                      {(gi === 0 ? g.events.slice(1) : g.events).map((e) => <EventTile key={e.slug} event={e} performer={performerFor(e)} />)}
+                      {(gi === 0 ? g.events.slice(1) : g.events).map((e, i) => <EventTile key={e.slug} event={e} performer={performerFor(e)} index={i} />)}
                     </div>
                   </>
                 ) : g.events.map((e, i) => <Row key={e.slug} event={e} last={i === g.events.length - 1} performer={performerFor(e)} />)}
