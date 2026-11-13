@@ -114,6 +114,15 @@ function sendChunk(url: string, blob: Blob, onBytes: (n: number) => void): Promi
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const online = () => new Promise<void>((r) => { if (typeof navigator === 'undefined' || navigator.onLine !== false) return r(); const t = setTimeout(r, 60000); window.addEventListener('online', () => { clearTimeout(t); r(); }, { once: true }); });
 
+/** What the upload is doing right now, for the progress label */
+export const uploadStatus = { retries: 0, last: '', lastOkAt: 0 };
+/** "3.2 of 48 MB", plus a note while a piece is being retried */
+export function progressLabel(p: number, bytes: number): string {
+  const mb = (n: number) => (n / 1048576).toFixed(n < 10485760 ? 1 : 0);
+  const retry = uploadStatus.retries && Date.now() - uploadStatus.lastOkAt > 8000 ? ` · weak connection, retrying (${uploadStatus.last})` : '';
+  return `Uploading… ${mb(p * bytes)} of ${mb(bytes)} MB${retry}`;
+}
+
 type Saved = { key: string; ticket: string; chunkSize: number; chunks: number; done: number[]; at: number };
 const memo = (f: File) => `tsacoal-upload:${f.name}:${f.size}:${f.lastModified}`;
 const load = (f: File): Saved | null => { try { const v = JSON.parse(localStorage.getItem(memo(f)) || 'null') as Saved | null; return v && Date.now() - v.at < 20 * 3600 * 1000 ? v : null; } catch { return null; } };
@@ -137,6 +146,7 @@ export async function uploadRaw(supabase: SupabaseClient, file: File, kind: 'mom
     save(file, job);
   }
   const J = job;
+  uploadStatus.retries = 0; uploadStatus.last = ''; uploadStatus.lastOkAt = Date.now();
   const done = new Set(J.done);
   const sending = new Map<number, number>(); // piece -> bytes sent so far
   const report = () => {
@@ -159,7 +169,7 @@ export async function uploadRaw(supabase: SupabaseClient, file: File, kind: 'mom
           await sendChunk(url, piece, (b) => { sending.set(n, b); report(); });
           break;
         } catch (e) {
-          sending.delete(n); report();
+          sending.delete(n); uploadStatus.retries++; uploadStatus.last = (e as Error).message; report();
           const status = (e as { status?: number }).status;
           if (status === 403) { save(file, null); failure = new Error('That upload expired. Pick the video again.'); return; }
           if (attempt >= 25) { failure = new Error(`The connection kept dropping (piece ${n + 1} of ${J.chunks}: ${(e as Error).message}). Try again: it will carry on from where it stopped.`); return; }
@@ -167,7 +177,7 @@ export async function uploadRaw(supabase: SupabaseClient, file: File, kind: 'mom
           await wait(Math.min(8000, 800 * attempt));
         }
       }
-      sending.delete(n);
+      sending.delete(n); uploadStatus.lastOkAt = Date.now();
       done.add(n);
       J.done = Array.from(done); J.at = Date.now(); save(file, J);
       report();

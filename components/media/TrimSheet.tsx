@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom';
 import { Pause, Play, X } from 'lucide-react';
 import { T, FONT, GRAD } from '@/lib/thiscene';
-import { MAX_SECONDS, uploadRaw, makePreview, type Trim, type Frame } from '@/lib/videoUpload';
+import { progressLabel, MAX_SECONDS, uploadRaw, makePreview, type Trim, type Frame } from '@/lib/videoUpload';
 import { createClient } from '@/lib/supabase/client';
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
@@ -179,7 +179,7 @@ export default function TrimSheet({ file, kind, onCancel, onDone }: { file: File
           <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 320, padding: '0 28px', textAlign: 'center' }}>
             <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{blind ? 'Getting your video ready' : 'Opening your video'}</p>
             <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 14, lineHeight: 1.5, color: T.text2 }}>
-              {!blind ? 'One moment…' : src !== url ? 'Loading the preview…' : server?.stage === 'prep' ? 'Almost there…' : `Uploading${server ? ` ${Math.round(server.progress * 100)}%` : '…'}`}
+              {!blind ? 'One moment…' : src !== url ? 'Loading the preview…' : server?.stage === 'prep' ? 'Almost there…' : server ? progressLabel(server.progress, file.size) : 'Uploading…'}
             </p>
             {blind && <div style={{ height: 6, marginTop: 16, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${server?.stage === 'prep' || src !== url ? 100 : Math.round((server?.progress ?? 0) * 100)}%`, background: GRAD.mint, transition: 'width 250ms linear', animation: server?.stage === 'prep' || src !== url ? 'akPulse 1.2s ease-in-out infinite' : undefined }} />

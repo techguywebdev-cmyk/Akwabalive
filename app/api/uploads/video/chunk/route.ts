@@ -18,5 +18,6 @@ export async function POST(req: Request) {
   const buf = Buffer.from(await req.arrayBuffer());
   if (!buf.length || buf.length > 1024 * 1024 + 1024) return NextResponse.json({ error: 'bad size' }, { status: 400 });
   const put = await r2Put(`${key}.parts/${n}`, buf, 'application/octet-stream');
+  if (put.ok) console.log('upload piece', key, n, buf.length); else console.error('upload piece store failed', key, n, put.status, (await put.text()).slice(0, 200));
   return put.ok ? NextResponse.json({ ok: true }) : NextResponse.json({ error: 'store failed' }, { status: 502 });
 }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Check, Plus, Trash2, Upload, Video, X } from 'lucide-react';
-import { uploadClip, uploadsOn, checkFile, withTrim, MAX_SECONDS, type Trim, type Frame } from '@/lib/videoUpload';
+import { progressLabel, uploadClip, uploadsOn, checkFile, withTrim, MAX_SECONDS, type Trim, type Frame } from '@/lib/videoUpload';
 import TrimSheet from '@/components/media/TrimSheet';
 import TrimmedVideo from '@/components/media/TrimmedVideo';
 import Nav from '@/components/layout/Nav';
@@ -39,7 +39,7 @@ export default function PostMomentPage() {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; text: string; id?: string } | null>(null);
   // An uploaded clip, for when there's no YouTube or X link
-  const [clip, setClip] = useState<{ name: string; progress: number; videoUrl?: string; posterUrl?: string | null; preview?: string; error?: string } | null>(null);
+  const [clip, setClip] = useState<{ name: string; size?: number; progress: number; videoUrl?: string; posterUrl?: string | null; preview?: string; error?: string } | null>(null);
   const pick = useRef<HTMLInputElement>(null);
 
   // Picking a video opens the trim screen first; the upload starts once they've chosen the part
@@ -55,7 +55,7 @@ export default function PostMomentPage() {
   async function startUpload(file: File, trim: Trim | null, key: string | null, frame: Frame | null) {
     setTrimming(null);
     const preview = withTrim(URL.createObjectURL(file), trim);
-    setClip({ name: file.name, progress: 0, preview });
+    setClip({ name: file.name, size: file.size, progress: 0, preview });
     try {
       const r = await uploadClip(supabase, file, 'moment', (p) => setClip((c) => (c ? { ...c, progress: p } : c)), trim, key, frame);
       setClip((c) => (c ? { ...c, progress: 1, videoUrl: r.videoUrl, posterUrl: r.posterUrl } : c));
@@ -181,7 +181,7 @@ export default function PostMomentPage() {
                 )}
               </div>
               <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 13, color: clip.error ? '#FCA5A5' : clip.videoUrl ? T.mintText : T.text3 }}>
-                {clip.error ?? (clip.videoUrl ? 'Ready' : clip.progress >= 1 ? 'Preparing your clip… this can take a minute' : `Uploading… ${Math.round(clip.progress * 100)}%`)}
+                {clip.error ?? (clip.videoUrl ? 'Ready' : clip.progress >= 1 ? 'Preparing your clip… this can take a minute' : progressLabel(clip.progress, clip.size ?? 0))}
               </p>
             </div>
           )}
