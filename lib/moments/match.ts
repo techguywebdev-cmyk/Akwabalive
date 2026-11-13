@@ -1,7 +1,7 @@
 import type { Moment } from '@/components/moments/types';
 
 /** Fields every Moments query on event pages selects */
-export const MOMENT_FIELDS = 'id, title, event_name, event_slug, youtube_id, description, year, is_featured, view_count, channel_name, official, category, performers';
+export const MOMENT_FIELDS = 'id, title, event_name, event_slug, youtube_id, description, year, is_featured, view_count, channel_name, official, category, performers, source, source_url, thumbnail_url';
 
 /**
  * The word that names an event series ("Afrochella 2025 Accra" → "afrochella"), so this
@@ -47,3 +47,6 @@ export function momentsForEvent(event: { slug: string; title: string }, all: Mom
 }
 
 export const ytThumb = (id: string, size: 'mq' | 'hq' = 'mq') => `https://i.ytimg.com/vi/${id}/${size}default.jpg`;
+/** A moment's picture: its still for uploaded clips, YouTube's for the rest */
+export const momentThumb = (m: { youtube_id: string; source?: string | null; thumbnail_url?: string | null }, size: 'mq' | 'hq' | 'hq720' = 'mq') =>
+  m.source === 'upload' ? m.thumbnail_url ?? '' : size === 'hq720' ? `https://i.ytimg.com/vi/${m.youtube_id}/hq720.jpg` : ytThumb(m.youtube_id, size);

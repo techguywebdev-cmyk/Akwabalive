@@ -30,7 +30,7 @@ export function useMenuPeek(open: boolean): MenuPeek | null {
       db.from('events').select('image_url').eq('status', 'published').eq('is_hot', true).gte('date', today).lte('date', '2027-01-05').not('image_url', 'is', null).order('date').limit(3),
       db.from('events').select('id', { count: 'exact', head: true }).eq('status', 'published').eq('date', today),
       db.from('events').select('id', { count: 'exact', head: true }).eq('status', 'published').gte('date', today).lte('date', week),
-      db.from('moments').select('youtube_id').eq('status', 'live').not('youtube_id', 'is', null).order('created_at', { ascending: false }).limit(1),
+      db.from('moments').select('youtube_id').eq('status', 'live').eq('source', 'youtube').not('youtube_id', 'is', null).order('created_at', { ascending: false }).limit(1),
       db.from('artist_profiles').select('slug', { count: 'exact', head: true }),
       db.from('events').select('image_url').eq('status', 'published').gte('date', today).not('image_url', 'is', null).order('date').order('is_hot', { ascending: false }).limit(1),
       db.from('calendars').select('id', { count: 'exact', head: true }).eq('is_public', true),

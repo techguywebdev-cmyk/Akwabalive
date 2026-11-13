@@ -16,6 +16,7 @@ import { hypeTags } from '@/lib/events/hype';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments, useLineupMoments } from '@/components/moments/EventMoments';
+import { momentThumb } from '@/lib/moments/match';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import { useEventComments } from '@/hooks/useEventComments';
 import CommentsSheet from '@/components/moments/CommentsSheet';
@@ -110,7 +111,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const paragraphs  = description.split('\n\n');
 
   const ytId = event.promoVideoUrl ? extractYoutubeId(event.promoVideoUrl) : null;
-  const isMp4 = !!event.promoVideoUrl && /\.(mp4|webm)(\?|$)/i.test(event.promoVideoUrl);
+  const isMp4 = !!event.promoVideoUrl && /\.(mp4|mov|webm)(\?|$)/i.test(event.promoVideoUrl);
 
   useEffect(() => {
     const onUnmute = () => setWantSound(true);
@@ -430,7 +431,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             <h2 style={eyebrowMint}>{daysAway != null && daysAway < 0 ? 'Relive the night' : 'Relive the last edition'}</h2>
             <Link href={momentHref(moments[0].id)} style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '16 / 9', marginTop: 4, padding: 0, border: 'none', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', background: '#000', boxShadow: `0 20px 60px rgba(${r}, ${g}, ${b}, 0.25)` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`https://i.ytimg.com/vi/${moments[0].youtube_id}/hq720.jpg`} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={momentThumb(moments[0], 'hq720')} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
               <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%)' }} />
               <span style={{ position: 'absolute', left: '50%', top: '42%', transform: 'translate(-50%, -50%)', width: 64, height: 64, borderRadius: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.92)', color: '#050606' }}>
                 <Play size={26} fill="#050606" style={{ marginLeft: 3 }} />
@@ -445,7 +446,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                 {moments.slice(1, 8).map((m, i) => (
                   <Link key={m.id} href={momentHref(m.id)} aria-label={`Play ${m.title}`} style={{ position: 'relative', display: 'block', textDecoration: 'none', width: 128, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, border: 'none', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`https://i.ytimg.com/vi/${m.youtube_id}/mqdefault.jpg`} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <img src={momentThumb(m)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     <span style={{ position: 'absolute', left: 8, bottom: 8, width: 24, height: 24, borderRadius: 12, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.white }}><Play size={11} fill={T.white} /></span>
                   </Link>
                 ))}
@@ -567,7 +568,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
             <h2 style={eyebrowMint}>See the line-up live</h2>
             <Link href={momentHref(more.moments[0].id)} style={{ position: 'relative', display: 'block', width: '100%', aspectRatio: '16 / 9', marginTop: 4, padding: 0, border: 'none', borderRadius: 20, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`https://i.ytimg.com/vi/${more.moments[0].youtube_id}/hq720.jpg`} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={momentThumb(more.moments[0], 'hq720')} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
               <span aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%)' }} />
               <span style={{ position: 'absolute', left: '50%', top: '42%', transform: 'translate(-50%, -50%)', width: 60, height: 60, borderRadius: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.92)', color: '#050606' }}>
                 <Play size={24} fill="#050606" style={{ marginLeft: 3 }} />
@@ -582,7 +583,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
                 {more.moments.slice(1).map((m, i) => (
                   <Link key={m.id} href={momentHref(m.id)} aria-label={`Play ${m.title}`} style={{ position: 'relative', display: 'block', textDecoration: 'none', width: 128, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, border: 'none', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', background: '#000' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`https://i.ytimg.com/vi/${m.youtube_id}/mqdefault.jpg`} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <img src={momentThumb(m)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     <span style={{ position: 'absolute', left: 8, bottom: 8, width: 24, height: 24, borderRadius: 12, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.white }}><Play size={11} fill={T.white} /></span>
                   </Link>
                 ))}

@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Check, Plus, Trash2, Video } from 'lucide-react';
+import { Check, Plus, Trash2, Upload, Video, X } from 'lucide-react';
+import { uploadClip, uploadsOn, MAX_SECONDS, MAX_MB } from '@/lib/videoUpload';
 import Nav from '@/components/layout/Nav';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/AuthProvider';
@@ -12,14 +13,14 @@ import { parseDay, shortDay } from '@/lib/dates';
 import { T, FONT, GROUND } from '@/lib/thiscene';
 
 type PastEvent = { id: string; title: string; date: string; slug: string };
-type Mine = { id: string; title: string; event_name: string; year: number | null; youtube_id: string; source: string | null };
+type Mine = { id: string; title: string; event_name: string; year: number | null; youtube_id: string; source: string | null; thumbnail_url?: string | null };
 
 const field: React.CSSProperties = {
   display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 8, height: 48, padding: '0 14px', borderRadius: 14,
   background: 'rgba(255,255,255,0.06)', border: 'none', color: T.white, fontFamily: FONT.sans, fontSize: 15, outline: 'none',
 };
 const label: React.CSSProperties = { display: 'block', marginTop: 18, fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text2 };
-const thumb = (m: Mine) => (m.source === 'x' ? null : `https://i.ytimg.com/vi/${m.youtube_id}/mqdefault.jpg`);
+const thumb = (m: Mine) => (m.source === 'x' ? null : m.source === 'upload' ? m.thumbnail_url ?? null : `https://i.ytimg.com/vi/${m.youtube_id}/mqdefault.jpg`);
 
 /**
  * Organisers post moments from their shows: a YouTube or X link, tied to one of their past events
@@ -35,6 +36,22 @@ export default function PostMomentPage() {
   const [form, setForm] = useState({ url: '', event_name: '', year: String(new Date().getFullYear()), title: '', description: '' });
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; text: string; id?: string } | null>(null);
+  // An uploaded clip, for when there's no YouTube or X link
+  const [clip, setClip] = useState<{ name: string; progress: number; videoUrl?: string; posterUrl?: string | null; preview?: string; error?: string } | null>(null);
+  const pick = useRef<HTMLInputElement>(null);
+
+  async function chooseClip(file: File | undefined) {
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    setClip({ name: file.name, progress: 0, preview });
+    try {
+      const r = await uploadClip(supabase, file, 'moment', (p) => setClip((c) => (c ? { ...c, progress: p } : c)));
+      setClip((c) => (c ? { ...c, progress: 1, videoUrl: r.videoUrl, posterUrl: r.posterUrl } : c));
+    } catch (e) {
+      setClip((c) => (c ? { ...c, error: (e as Error).message } : c));
+    }
+  }
+  const dropClip = () => { if (clip?.preview) URL.revokeObjectURL(clip.preview); setClip(null); if (pick.current) pick.current.value = ''; };
 
   const token = useCallback(async () => (await supabase.auth.getSession()).data.session?.access_token, [supabase]);
 
@@ -60,13 +77,14 @@ export default function PostMomentPage() {
     setBusy(true); setNote(null);
     const res = await fetch('/api/organizer/moments', {
       method: 'POST', headers: { Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, event_id: eventId === 'other' ? null : eventId }),
+      body: JSON.stringify({ ...form, event_id: eventId === 'other' ? null : eventId, ...(clip?.videoUrl ? { url: '', video_url: clip.videoUrl, poster_url: clip.posterUrl ?? null } : {}) }),
     });
     const j = await res.json().catch(() => ({}));
     setBusy(false);
     if (!res.ok) { setNote({ ok: false, text: j.error ?? 'Couldn’t post it. Try again.' }); return; }
     setNote({ ok: true, text: 'Posted — it’s live in Moments.', id: j.id });
     setForm((f) => ({ ...f, url: '', title: '', description: '' }));
+    dropClip();
     load();
   }
 
@@ -94,7 +112,8 @@ export default function PostMomentPage() {
   }
 
   const other = eventId === 'other';
-  const ready = form.url.trim() && (!other || form.event_name.trim());
+  const uploading = !!clip && !clip.videoUrl && !clip.error;
+  const ready = (clip?.videoUrl || (!clip && form.url.trim())) && (!other || form.event_name.trim());
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND }}>
@@ -122,9 +141,36 @@ export default function PostMomentPage() {
               </label>
             </div>
           )}
-          <label style={label}>Video link
-            <input value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} placeholder="YouTube or X link" inputMode="url" style={field} />
-          </label>
+          {!clip && (
+            <label style={label}>Video link
+              <input value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} placeholder="YouTube or X link" inputMode="url" style={field} />
+            </label>
+          )}
+          {/* No link? Upload the clip itself */}
+          <input ref={pick} type="file" accept="video/mp4,video/quicktime,video/webm" hidden onChange={(e) => chooseClip(e.target.files?.[0])} />
+          {!clip ? (
+            uploadsOn && !form.url.trim() && (
+              <button type="button" onClick={() => pick.current?.click()} style={{ marginTop: 10, width: '100%', height: 48, borderRadius: 14, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: T.text, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <Upload size={16} /> No link? Upload a clip <span style={{ color: T.text3, fontWeight: 500 }}>(up to {MAX_SECONDS}s, {MAX_MB} MB)</span>
+              </button>
+            )
+          ) : (
+            <div style={{ marginTop: 18 }}>
+              <span style={{ ...label, marginTop: 0 }}>Your clip</span>
+              <div style={{ position: 'relative', marginTop: 8, borderRadius: 14, overflow: 'hidden', background: '#000' }}>
+                {clip.preview && <video src={clip.preview} muted playsInline controls={!!clip.videoUrl} style={{ display: 'block', width: '100%', maxHeight: 320, objectFit: 'contain' }} />}
+                <button type="button" aria-label="Remove clip" onClick={dropClip} style={{ position: 'absolute', top: 8, right: 8, width: 34, height: 34, borderRadius: 17, border: 'none', cursor: 'pointer', background: 'rgba(0,0,0,0.6)', color: T.white, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
+                {uploading && (
+                  <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 4, background: 'rgba(255,255,255,0.15)' }}>
+                    <span style={{ display: 'block', height: '100%', width: `${Math.round(clip.progress * 100)}%`, background: T.mint, transition: 'width 200ms linear' }} />
+                  </span>
+                )}
+              </div>
+              <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 13, color: clip.error ? '#FCA5A5' : clip.videoUrl ? T.mintText : T.text3 }}>
+                {clip.error ?? (clip.videoUrl ? 'Uploaded' : `Uploading… ${Math.round(clip.progress * 100)}%`)}
+              </p>
+            </div>
+          )}
           <label style={label}>Title <span style={{ color: T.text3, fontWeight: 500 }}>(optional)</span>
             <input value={form.title} maxLength={140} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. The opening — 40,000 lights up" style={field} />
           </label>
@@ -132,7 +178,7 @@ export default function PostMomentPage() {
             <textarea value={form.description} maxLength={300} rows={3} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               placeholder="Who performed, what happened, how it felt" style={{ ...field, height: 'auto', padding: '12px 14px', resize: 'vertical', lineHeight: 1.45 }} />
           </label>
-          <button type="button" onClick={post} disabled={!ready || busy} style={{ ...BTN.primary, width: '100%', marginTop: 20, height: 50, opacity: ready ? 1 : 0.5 }}>
+          <button type="button" onClick={post} disabled={!ready || busy || uploading} style={{ ...BTN.primary, width: '100%', marginTop: 20, height: 50, opacity: ready ? 1 : 0.5 }}>
             {busy ? 'Posting…' : 'Post to Moments'}
           </button>
           {note && (

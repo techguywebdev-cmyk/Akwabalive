@@ -29,7 +29,7 @@ export default function Warmup() {
       // Data first: the Moments feed and its first pictures, and the shows coming up
       idle(() => {
         prefetchMoments().then((rows) => {
-          (rows ?? []).slice(0, 4).forEach((m) => { const img = new Image(); img.src = `https://i.ytimg.com/vi/${m.youtube_id}/hqdefault.jpg`; });
+          (rows ?? []).slice(0, 4).forEach((m) => { const img = new Image(); const src = m.source === 'upload' ? m.thumbnail_url : `https://i.ytimg.com/vi/${m.youtube_id}/hqdefault.jpg`; if (src) img.src = src; });
         });
         prefetchUpcoming();
       }, 1200),

@@ -12,7 +12,9 @@ import FriendsStrip from '@/components/social/FriendsStrip';
 import { useEventMoments } from '@/components/moments/EventMoments';
 import type { Moment } from '@/components/moments/types';
 import { extractYoutubeId } from '@/lib/events/rank';
-import { ytThumb } from '@/lib/moments/match';
+import { momentThumb } from '@/lib/moments/match';
+import { isClipUrl } from '@/lib/videoUpload';
+import ClipPlayer from '@/components/moments/ClipPlayer';
 import { hiRes } from '@/lib/events/image';
 import CustomPlayer from '@/components/moments/CustomPlayer';
 import { TicketsSheet, ticketsLabel } from '@/components/events/EventActions';
@@ -108,12 +110,14 @@ function EventCard({
   const [autoDone, setAutoDone] = useState(false);
   useEffect(() => { if (!active) { setWatching(false); setAutoDone(false); } }, [active]);
   const pastMoments = useEventMoments(event, near);
-  // No past clips yet: play the event's own promo video (the YouTube link the organiser or we added)
-  const promoId = event.promoVideoUrl ? extractYoutubeId(event.promoVideoUrl) : null;
+  // No past clips yet: play the event's own promo video (a YouTube link, or a clip uploaded to TsaCoal)
+  const promoClip = isClipUrl(event.promoVideoUrl) ? event.promoVideoUrl! : null;
+  const promoId = promoClip ? `up-promo-${event.slug}` : event.promoVideoUrl ? extractYoutubeId(event.promoVideoUrl) : null;
   const moments = useMemo<Moment[]>(() => pastMoments.length || !promoId ? pastMoments : [{
     id: `promo-${event.slug}`, title: event.title, event_name: event.title, event_slug: event.slug,
     youtube_id: promoId, description: null, year: null, is_featured: false,
-  }], [pastMoments, promoId, event.slug, event.title]);
+    ...(promoClip ? { source: 'upload', source_url: promoClip, thumbnail_url: event.image ?? null } : {}),
+  }], [pastMoments, promoId, promoClip, event.slug, event.title, event.image]);
   const isPromo = !pastMoments.length && moments.length > 0;
   // Comments: the clip's own thread (the same one as on the Moments page); the event chat when it has no clips.
   // Loaded for the card on screen only.
@@ -220,12 +224,18 @@ function EventCard({
               {/* The flyer dissolves into the card's ground before the video, so the two never butt together */}
               <span style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(9,16,12,0) 45%, rgba(9,16,12,0.7) 78%, #09100C 100%)' }} />
             </div>
-          ) : <Glow src={ytThumb(moments[clip].youtube_id, 'hq')} />}
+          ) : <Glow src={momentThumb(moments[clip], 'hq')} />}
           {/* The Moments player: our player, mint progress line, a dot per clip; the next clip follows on */}
           <div style={wide ? { position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', borderRadius: 20, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.55)' } : { position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 1, minHeight: 0, background: '#000', borderRadius: 16, overflow: 'hidden' }}>
-            <CustomPlayer key={moments[clip].youtube_id} youtubeId={moments[clip].youtube_id} title={moments[clip].title} fit="contain" active={active && watching}
-              onTimeUpdate={(cur, len) => setProg(len ? Math.min(100, (cur / len) * 100) : 0)}
-              onEnded={() => { if (clip < moments.length - 1) { setClip(clip + 1); setProg(0); } else setWatching(false); }} />
+            {moments[clip].source === 'upload' && moments[clip].source_url ? (
+              <ClipPlayer key={moments[clip].youtube_id} src={moments[clip].source_url!} poster={moments[clip].thumbnail_url} title={moments[clip].title} fit="contain" active={active && watching}
+                onTimeUpdate={(cur, len) => setProg(len ? Math.min(100, (cur / len) * 100) : 0)}
+                onEnded={() => { if (clip < moments.length - 1) { setClip(clip + 1); setProg(0); } else setWatching(false); }} />
+            ) : (
+              <CustomPlayer key={moments[clip].youtube_id} youtubeId={moments[clip].youtube_id} title={moments[clip].title} fit="contain" active={active && watching}
+                onTimeUpdate={(cur, len) => setProg(len ? Math.min(100, (cur / len) * 100) : 0)}
+                onEnded={() => { if (clip < moments.length - 1) { setClip(clip + 1); setProg(0); } else setWatching(false); }} />
+            )}
             {moments.length > 1 && (
               <span style={{ position: 'absolute', left: '50%', bottom: 10, transform: 'translateX(-50%)', zIndex: 9, display: 'flex', gap: 5, pointerEvents: 'none' }}>
                 {moments.map((c, k) => <span key={c.id} style={{ width: k === clip ? 16 : 6, height: 6, borderRadius: 3, background: k === clip ? T.white : 'rgba(255,255,255,0.45)', transition: 'width 250ms ease' }} />)}
@@ -244,7 +254,7 @@ function EventCard({
                 {moments.map((m, k) => (
                   <button key={m.id} type="button" onClick={() => { setClip(k); setProg(0); }} aria-label={`Play ${m.title}`} aria-current={k === clip} style={{ position: 'relative', width: 64, aspectRatio: '16 / 9', flexShrink: 0, padding: 0, borderRadius: 8, overflow: 'hidden', cursor: 'pointer', background: '#000', border: 'none', outline: k === clip ? `2px solid ${T.mint}` : '1px solid rgba(255,255,255,0.12)', outlineOffset: k === clip ? 1 : 0, opacity: k === clip ? 1 : 0.7 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ytThumb(m.youtube_id)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <img src={momentThumb(m)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                   </button>
                 ))}
               </div>

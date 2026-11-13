@@ -8,7 +8,7 @@ export async function fetchMoments(limit = 200): Promise<Moment[]> {
   if (!url || !key) return [];
   try {
     const supabase = createClient(url, key, { global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) } });
-    const { data } = await supabase.from('moments').select('*').eq('status', 'live').eq('source', 'youtube').neq('available', false)
+    const { data } = await supabase.from('moments').select('*').eq('status', 'live').in('source', ['youtube', 'upload']).neq('available', false)
       .order('is_featured', { ascending: false }).order('year', { ascending: false }).limit(limit);
     return (data ?? []) as Moment[];
   } catch {

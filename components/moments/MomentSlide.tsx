@@ -9,6 +9,7 @@ import { useFollow } from '@/components/follow/useFollow';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/supabase/types';
+import ClipPlayer from './ClipPlayer';
 import CustomPlayer, { type CustomPlayerHandle } from '@/components/moments/CustomPlayer';
 import CommentsSheet from '@/components/moments/CommentsSheet';
 import ShareCardSheet, { useWarmShareCard } from '@/components/events/ShareCardSheet';
@@ -155,8 +156,9 @@ const MomentSlide = forwardRef<SlideHandle, {
   const fresh = justHappened(night);
   const canGift = Boolean(next?.tiers?.some((x) => x.price > 0 && x.quantity - x.sold > 0)) && !next?.ticketUrl;
   const isX = clip.source === 'x';
+  const isUp = clip.source === 'upload';
   const tweetId = isX ? clip.source_url?.match(/status\/(\d+)/)?.[1] ?? null : null;
-  const colour = useVideoColour(isX ? undefined : clip.youtube_id, mounted);
+  const colour = useVideoColour(isX || isUp ? undefined : clip.youtube_id, mounted);
 
   // Share opens the designed card (the still, the night, the next edition), ready in the background
   const [shareOpen, setShareOpen] = useState(false);
@@ -215,6 +217,16 @@ const MomentSlide = forwardRef<SlideHandle, {
               <iframe key={tweetId} title={clip.title} src={`https://platform.twitter.com/embed/Tweet.html?id=${tweetId}&theme=dark&dnt=true&hideThread=true&lang=en`}
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0, background: '#000' }} allow="autoplay; encrypted-media; fullscreen" />
             ) : <XTile />
+          ) : isUp ? (
+            mounted && clip.source_url ? (
+              <ClipPlayer key={clip.youtube_id} ref={playerRef} src={clip.source_url} poster={clip.thumbnail_url} title={clip.title} active={active}
+                onMuteChange={active ? onMuteChange : undefined}
+                onEnded={() => { if (ci < clips.length - 1) goClip(ci + 1); else onEnded(); }}
+                onTimeUpdate={(a, b) => { if (!active) return; setT(a); setDur(b); }} />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              clip.thumbnail_url ? <img src={clip.thumbnail_url} alt="" loading="lazy" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} /> : null
+            )
           ) : mounted ? (
             <CustomPlayer key={clip.youtube_id} ref={playerRef} youtubeId={clip.youtube_id} title={clip.title} fit="contain" hideMuteButton active={active}
               onMuteChange={active ? onMuteChange : undefined}
@@ -247,7 +259,7 @@ const MomentSlide = forwardRef<SlideHandle, {
                 border: 'none', outline: i === ci ? `2px solid ${T.mint}` : '1px solid rgba(255,255,255,0.12)', outlineOffset: i === ci ? 1 : 0, opacity: i === ci ? 1 : 0.7,
               }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {c.source === 'x' ? <XTile small /> : mounted && <img src={thumb(c.youtube_id)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+                {c.source === 'x' ? <XTile small /> : mounted && <img src={c.source === 'upload' ? c.thumbnail_url ?? '' : thumb(c.youtube_id)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
               </button>
             ))}
           </div>
@@ -285,7 +297,7 @@ const MomentSlide = forwardRef<SlideHandle, {
                   <BadgeCheck size={14} color={T.mint} />From the organiser{clip.channel_name ? ` · ${clip.channel_name}` : ''}
                 </Link>
               ) : clip.channel_name && (
-                <a href={isX ? clip.source_url ?? '#' : clip.channel_url ?? `https://www.youtube.com/watch?v=${clip.youtube_id}`} target="_blank" rel="noopener noreferrer"
+                <a href={isX ? clip.source_url ?? '#' : isUp ? clip.channel_url ?? '#' : clip.channel_url ?? `https://www.youtube.com/watch?v=${clip.youtube_id}`} target="_blank" rel="noopener noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 7, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 13, fontWeight: 600, color: T.text2 }}>
                   {clip.official ? <BadgeCheck size={14} color={T.mint} /> : null}{clip.official ? clip.channel_name : `via ${clip.channel_name}`}{isX ? ' on X' : ''}
                 </a>
@@ -407,7 +419,7 @@ const MomentSlide = forwardRef<SlideHandle, {
 
       {shareOpen && (
         <ShareCardSheet kind="moment" slug={clip.id} title={clip.title} intro="Share this moment" extra={next ? `&next=${next.slug}` : ''}
-          image={clip.youtube_id ? `https://i.ytimg.com/vi/${clip.youtube_id}/hqdefault.jpg` : null} onClose={() => setShareOpen(false)} />
+          image={isUp ? clip.thumbnail_url ?? null : clip.youtube_id ? `https://i.ytimg.com/vi/${clip.youtube_id}/hqdefault.jpg` : null} onClose={() => setShareOpen(false)} />
       )}
       {showComments && (
         <CommentsSheet moment={clip} comments={comments} user={user} profile={profile} currentSeconds={t}
