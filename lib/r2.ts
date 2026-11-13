@@ -60,8 +60,9 @@ export async function finishMultipart(key: string, uploadId: string, parts: numb
   const list = await client().fetch(`${objectUrl(key)}?uploadId=${encodeURIComponent(uploadId)}&max-parts=1000`);
   const xml = await list.text();
   if (!list.ok) throw new Error(`list parts failed: ${list.status} ${xml.slice(0, 200)}`);
-  const got = Array.from(xml.matchAll(/<Part>[\s\S]*?<PartNumber>(\d+)<\/PartNumber>[\s\S]*?<ETag>([^<]+)<\/ETag>[\s\S]*?<\/Part>/g)).map((m) => ({ n: Number(m[1]), etag: m[2] }));
-  if (got.length < parts) throw new Error(`missing pieces: ${got.length}/${parts}`);
+  // Each <Part> holds its number and ETag in any order
+  const got = Array.from(xml.matchAll(/<Part>([\s\S]*?)<\/Part>/g)).map((m) => ({ n: Number(m[1].match(/<PartNumber>(\d+)<\/PartNumber>/)?.[1]), etag: m[1].match(/<ETag>([^<]+)<\/ETag>/)?.[1] ?? '' })).filter((p) => p.n && p.etag);
+  if (got.length < parts) throw new Error(`missing pieces: ${got.length}/${parts} ${xml.slice(0, 400)}`);
   const body = `<CompleteMultipartUpload>${got.sort((a, b) => a.n - b.n).map((p) => `<Part><PartNumber>${p.n}</PartNumber><ETag>${p.etag}</ETag></Part>`).join('')}</CompleteMultipartUpload>`;
   const done = await client().fetch(`${objectUrl(key)}?uploadId=${encodeURIComponent(uploadId)}`, { method: 'POST', body, headers: { 'Content-Type': 'application/xml' } });
   const out = await done.text();
