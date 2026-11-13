@@ -95,7 +95,25 @@ const authed = async (supabase: SupabaseClient) => {
   return { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' };
 };
 
-/** Step 1: the original file goes straight to storage, with progress. Returns its key. */
+/** Sends one piece; resolves when stored. Reports bytes sent so far for that piece. */
+function sendPart(url: string, blob: Blob, onBytes: (n: number) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest();
+    x.open('PUT', url);
+    x.timeout = 120000;
+    x.upload.onprogress = (e) => onBytes(e.loaded);
+    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error(`status ${x.status}`)));
+    x.onerror = () => reject(new Error('network'));
+    x.ontimeout = () => reject(new Error('timeout'));
+    x.send(blob);
+  });
+}
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Step 1: the original file goes straight to storage in 5 MB pieces. Each piece retries on its own
+ * (a dropped connection on mobile data only costs that piece), with overall progress. Returns the file's key.
+ */
 export async function uploadRaw(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void): Promise<string> {
   const problem = checkFile(file);
   if (problem) throw new Error(problem);
@@ -104,17 +122,32 @@ export async function uploadRaw(supabase: SupabaseClient, file: File, kind: 'mom
   const res = await fetch('/api/uploads/video', { method: 'POST', headers, body: JSON.stringify({ type, size: file.size, kind: kind === 'promo' ? 'promo' : 'moments' }) });
   const j = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(j.error ?? 'Couldn’t start the upload');
-  await new Promise<void>((resolve, reject) => {
-    const x = new XMLHttpRequest();
-    x.open('PUT', j.uploadUrl);
-    x.setRequestHeader('Content-Type', type);
-    x.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(e.loaded / e.total); };
-    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error('The upload didn’t go through. Try again.')));
-    x.onerror = () => reject(new Error('The upload didn’t go through. Check your connection and try again.'));
-    x.send(file);
-  });
+  const { key, uploadId, partSize, urls } = j as { key: string; uploadId: string; partSize: number; urls: string[] };
+
+  let done = 0;
+  for (let i = 0; i < urls.length; i++) {
+    const piece = file.slice(i * partSize, Math.min(file.size, (i + 1) * partSize));
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await sendPart(urls[i], piece, (n) => onProgress?.(Math.min(0.99, (done + n) / file.size)));
+        break;
+      } catch {
+        if (attempt >= 6) throw new Error('The upload keeps dropping. Check your connection, or try on Wi-Fi.');
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+          // Offline: wait for the connection to come back (up to a minute) before trying the piece again
+          await new Promise<void>((r) => { const t = setTimeout(r, 60000); window.addEventListener('online', () => { clearTimeout(t); r(); }, { once: true }); });
+        } else await wait(1500 * attempt);
+      }
+    }
+    done += piece.size;
+    onProgress?.(Math.min(0.99, done / file.size));
+  }
+
+  const fin = await fetch('/api/uploads/video', { method: 'PUT', headers: await authed(supabase), body: JSON.stringify({ key, uploadId, parts: urls.length }) });
+  const f = await fin.json().catch(() => ({}));
+  if (!fin.ok) throw new Error(f.error ?? 'The upload didn’t finish. Try again.');
   onProgress?.(1);
-  return j.key as string;
+  return key;
 }
 
 /** For phones that can't show the original: a small copy from the server that every browser plays */

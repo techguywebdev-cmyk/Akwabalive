@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { presignPut, r2Put, r2Delete, r2Ready, r2PublicBase } from '@/lib/r2';
+import { presignPut, r2Put, r2Delete, r2Ready, r2PublicBase, startMultipart, presignPart, finishMultipart } from '@/lib/r2';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,5 +24,15 @@ export async function GET() {
     const browserPut = await fetch(url, { method: 'PUT', body: 'x', headers: { 'Content-Type': 'video/mp4', Origin: 'https://tsacoal.com' } });
     out.signedPut = { status: browserPut.status, allowOrigin: browserPut.headers.get('access-control-allow-origin'), body: browserPut.ok ? '' : (await browserPut.text()).slice(0, 300) };
   } catch (e) { out.preflight = { error: String(e) }; }
+  // The piece-by-piece path, end to end: start, send one piece with its signed link, join, read back, delete
+  try {
+    const mk = `check/${Date.now()}-m.mp4`;
+    const id = await startMultipart(mk, 'video/mp4');
+    const put = await fetch(await presignPart(mk, id, 1), { method: 'PUT', body: 'piece', headers: { Origin: 'https://tsacoal.com' } });
+    await finishMultipart(mk, id, 1);
+    const back = await fetch(`${r2PublicBase()}/${mk}`, { cache: 'no-store' });
+    out.multipart = { partStatus: put.status, joined: true, publicRead: back.status, content: (await back.text()).slice(0, 20) };
+    await r2Delete(mk);
+  } catch (e) { out.multipart = { error: String(e).slice(0, 300) }; }
   return NextResponse.json(out);
 }

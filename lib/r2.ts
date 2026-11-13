@@ -31,3 +31,39 @@ export async function presignPut(key: string, contentType: string): Promise<stri
   const signed = await client.sign(new Request(url, { method: 'PUT', headers: { 'Content-Type': contentType } }), { aws: { signQuery: true } });
   return signed.url;
 }
+
+/* ── Uploading big files in pieces (multipart), so a dropped connection only costs one piece ── */
+
+export const PART_MB = 5;
+
+/** Starts a piece-by-piece upload; returns its id */
+export async function startMultipart(key: string, contentType: string): Promise<string> {
+  const r = await client().fetch(`${objectUrl(key)}?uploads`, { method: 'POST', headers: { 'Content-Type': contentType } });
+  const xml = await r.text();
+  const id = xml.match(/<UploadId>([^<]+)<\/UploadId>/)?.[1];
+  if (!r.ok || !id) throw new Error(`multipart start failed: ${r.status} ${xml.slice(0, 200)}`);
+  return id;
+}
+
+/** A link the browser can PUT one piece to (valid for 2 hours) */
+export async function presignPart(key: string, uploadId: string, part: number): Promise<string> {
+  const url = new URL(objectUrl(key));
+  url.searchParams.set('partNumber', String(part));
+  url.searchParams.set('uploadId', uploadId);
+  url.searchParams.set('X-Amz-Expires', '7200');
+  const signed = await client().sign(new Request(url, { method: 'PUT' }), { aws: { signQuery: true } });
+  return signed.url;
+}
+
+/** Joins the pieces into one file. The pieces' ids are read back from storage, so the browser never needs them. */
+export async function finishMultipart(key: string, uploadId: string, parts: number): Promise<void> {
+  const list = await client().fetch(`${objectUrl(key)}?uploadId=${encodeURIComponent(uploadId)}&max-parts=1000`);
+  const xml = await list.text();
+  if (!list.ok) throw new Error(`list parts failed: ${list.status} ${xml.slice(0, 200)}`);
+  const got = Array.from(xml.matchAll(/<Part>[\s\S]*?<PartNumber>(\d+)<\/PartNumber>[\s\S]*?<ETag>([^<]+)<\/ETag>[\s\S]*?<\/Part>/g)).map((m) => ({ n: Number(m[1]), etag: m[2] }));
+  if (got.length < parts) throw new Error(`missing pieces: ${got.length}/${parts}`);
+  const body = `<CompleteMultipartUpload>${got.sort((a, b) => a.n - b.n).map((p) => `<Part><PartNumber>${p.n}</PartNumber><ETag>${p.etag}</ETag></Part>`).join('')}</CompleteMultipartUpload>`;
+  const done = await client().fetch(`${objectUrl(key)}?uploadId=${encodeURIComponent(uploadId)}`, { method: 'POST', body, headers: { 'Content-Type': 'application/xml' } });
+  const out = await done.text();
+  if (!done.ok || /<Error>/.test(out)) throw new Error(`multipart finish failed: ${done.status} ${out.slice(0, 200)}`);
+}
