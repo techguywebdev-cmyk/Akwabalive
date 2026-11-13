@@ -84,7 +84,7 @@ export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'mo
     const still = await poster(video);
     URL.revokeObjectURL(url);
     if (still) {
-      const path = `video-posters/${session.user.id}/${Date.now().toString(36)}.jpg`;
+      const path = `events/posters/${session.user.id}-${Date.now().toString(36)}.jpg`;
       const { error } = await supabase.storage.from('event-images').upload(path, still, { contentType: 'image/jpeg', cacheControl: '31536000' });
       if (!error) posterUrl = supabase.storage.from('event-images').getPublicUrl(path).data.publicUrl;
     }

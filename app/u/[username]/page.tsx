@@ -134,6 +134,8 @@ function EditSheet({ profile, onClose, onSaved }: { profile: Profile; onClose: (
   const supabase = useMemo(() => createClient(), []);
   const [name, setName] = useState(profile.full_name ?? '');
   const [bio, setBio] = useState(profile.bio ?? '');
+  // How people reach you; shown on your event pages
+  const [links, setLinks] = useState({ instagram: profile.instagram ?? '', whatsapp: profile.whatsapp ?? '', website: profile.website ?? '' });
   const [isPublic, setIsPublic] = useState(profile.is_public);
   const [avatar, setAvatar] = useState(profile.avatar_url);
   const [uploading, setUploading] = useState(false);
@@ -155,11 +157,12 @@ function EditSheet({ profile, onClose, onSaved }: { profile: Profile; onClose: (
 
   async function save() {
     setSaving(true); setErr('');
-    const patch = { full_name: name.trim() || null, bio: bio.trim() || null, is_public: isPublic, avatar_url: avatar };
-    const { data, error } = await supabase.from('profiles').update(patch).eq('id', profile.id).select('id, username, full_name, avatar_url, bio, is_public, created_at').single();
+    const patch = { full_name: name.trim() || null, bio: bio.trim() || null, is_public: isPublic, avatar_url: avatar,
+      instagram: links.instagram.trim().replace(/^@/, '').slice(0, 60) || null, whatsapp: links.whatsapp.trim().slice(0, 30) || null, website: links.website.trim().slice(0, 200) || null };
+    const { data, error } = await supabase.from('profiles').update(patch).eq('id', profile.id).select('id, username, full_name, avatar_url, bio, is_public, created_at, instagram, whatsapp, website').single();
     setSaving(false);
     if (error) { setErr('Could not save. Try again.'); return; }
-    onSaved(data as Profile);
+    onSaved(data as unknown as Profile);
   }
 
   return (
@@ -188,6 +191,15 @@ function EditSheet({ profile, onClose, onSaved }: { profile: Profile; onClose: (
       <label style={label} htmlFor="pf-bio">Bio</label>
       <textarea id="pf-bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={160} rows={3} placeholder="What you’re into, where you’ll be…" style={{ ...field, resize: 'none', lineHeight: 1.45 }} />
       <p style={{ margin: '6px 0 0', textAlign: 'right', fontFamily: FONT.sans, fontSize: 12, color: T.text3 }}>{bio.length}/160</p>
+
+      {/* Shown on your event pages, so people can reach you */}
+      <label style={label} htmlFor="pf-wa">WhatsApp</label>
+      <input id="pf-wa" value={links.whatsapp} onChange={(e) => setLinks((l) => ({ ...l, whatsapp: e.target.value }))} inputMode="tel" placeholder="e.g. 024 400 0000" style={field} />
+      <label style={label} htmlFor="pf-ig">Instagram</label>
+      <input id="pf-ig" value={links.instagram} onChange={(e) => setLinks((l) => ({ ...l, instagram: e.target.value }))} autoCapitalize="none" placeholder="@yourhandle" style={field} />
+      <label style={label} htmlFor="pf-web">Website</label>
+      <input id="pf-web" value={links.website} onChange={(e) => setLinks((l) => ({ ...l, website: e.target.value }))} inputMode="url" autoCapitalize="none" placeholder="yoursite.com" style={field} />
+      <p style={{ margin: '6px 0 0', fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>Optional. Shown on your event pages so people can reach you.</p>
 
       <button type="button" role="switch" aria-checked={isPublic} onClick={() => setIsPublic((v) => !v)}
         style={{ width: '100%', marginTop: 14, display: 'flex', alignItems: 'center', gap: 14, padding: '4px 0', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left' }}>
@@ -288,7 +300,7 @@ export default function UserProfilePage() {
   const hidden = !!profile && !profile.is_public && !own;
 
   const load = useCallback(async () => {
-    const { data: prof } = await supabase.from('profiles').select('id, username, full_name, avatar_url, bio, is_public, created_at').eq('username', username).maybeSingle();
+    const { data: prof } = await supabase.from('profiles').select('id, username, full_name, avatar_url, bio, is_public, created_at, instagram, whatsapp, website').eq('username', username).maybeSingle();
     if (!prof) { setMissing(true); return; }
     const p = prof as Profile;
     setProfile(p);

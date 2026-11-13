@@ -83,6 +83,12 @@ export interface GhanaEvent {
   organizerUsername?: string | null;
   organizerName?: string | null;
   organizerAvatar?: string | null;
+  /** The organiser's page settings (colour, gallery, directions, FAQs) */
+  page?: import('@/lib/events/page').EventPage | null;
+  /** Short link: tsacoal.com/e/<shortCode> */
+  shortCode?: string | null;
+  /** The database id (for the organiser's edit link) */
+  dbId?: string | null;
   /** The organiser's one special line, shown as a tag ("Surprise guests") */
   highlight?: string | null;
   /** Words read off the flyer (contacts, dress code…) */

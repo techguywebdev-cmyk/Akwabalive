@@ -1,5 +1,8 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import { pageFaqs } from '@/lib/events/page';
+import { eventInfo } from '@/lib/events/contacts';
+import type { OrganiserInfo } from '@/components/events/EventPageSections';
 import Footer from '@/components/layout/Footer';
 import EventDetailClient from '@/components/events/EventDetailClient';
 import { events as staticEvents } from '@/lib/data/events';
@@ -81,25 +84,28 @@ export default async function EventPage({ params }: { params: { slug: string } }
   // Shared mapper — includes promoVideoUrl, isFeatured, listingType, etc.
   let event = supabaseToGhanaEvent(dbEvent);
 
-  // Attach organizer public profile when available
+  // The organiser: their profile, contacts and their other shows (for the organiser block and past editions)
+  let organiser: OrganiserInfo | null = null;
   if (dbEvent.organizer_id && dbEvent.organizer_id !== process.env.INGEST_ORGANIZER_ID) {
     try {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       if (url && key) {
         const sb = createClient(url, key, { global: { fetch: (i, o) => fetch(i, { ...o, next: { revalidate: FRESH } }) } });
-        const { data: org } = await sb
-          .from('profiles')
-          .select('id, username, full_name, avatar_url')
-          .eq('id', dbEvent.organizer_id)
-          .maybeSingle();
+        const [{ data: org }, { data: theirs }] = await Promise.all([
+          sb.from('profiles').select('id, username, full_name, avatar_url, bio, instagram, whatsapp, website').eq('id', dbEvent.organizer_id).maybeSingle(),
+          sb.from('events').select('slug, title, date, image_url, venue, city').eq('organizer_id', dbEvent.organizer_id).eq('status', 'published').neq('slug', dbEvent.slug).order('date', { ascending: false }).limit(40),
+        ]);
         if (org) {
-          event = {
-            ...event,
-            organizerId: org.id,
-            organizerUsername: org.username,
-            organizerName: org.full_name,
-            organizerAvatar: org.avatar_url,
+          event = { ...event, organizerId: org.id, organizerUsername: org.username, organizerName: org.full_name, organizerAvatar: org.avatar_url };
+          const today = new Date().toISOString().slice(0, 10);
+          const shows = (theirs ?? []).map((x) => ({ slug: x.slug, title: x.title, date: String(x.date).slice(0, 10), image: x.image_url, venue: x.venue, city: x.city }));
+          organiser = {
+            id: org.id, username: org.username, name: org.full_name || org.username, avatar: org.avatar_url, bio: org.bio,
+            instagram: org.instagram, whatsapp: org.whatsapp, website: org.website,
+            upcoming: shows.filter((x) => x.date >= today).reverse().slice(0, 10),
+            past: shows.filter((x) => x.date < today).slice(0, 10),
+            hosted: shows.length + 1,
           };
         }
       }
@@ -110,12 +116,14 @@ export default async function EventPage({ params }: { params: { slug: string } }
 
   const seriesMomentId = await findSeriesMoment(event);
   const related: GhanaEvent[] = [];
+  const info = eventInfo(event.description, event.listingInfo, event.ticketSource, event.flyerText);
+  const faqs = event.page ? pageFaqs(event.page, { dressCode: info.dressCode, age: info.age }) : [];
   const performers = (event.artistSlugs ?? []).map((s) => getArtistBySlug(s)).filter(Boolean).map((a) => ({ name: a!.name, slug: a!.slug }));
 
   return (
     <div style={{ background: 'transparent', minHeight: '100vh' }}>
-      <JsonLd data={[eventJsonLd(event, { performers }), breadcrumbJsonLd([['Events', '/events'], [event.title, `/events/${event.slug}`]])]} />
-      <EventDetailClient event={event} related={related} seriesMomentId={seriesMomentId} />
+      <JsonLd data={[eventJsonLd(event, { performers }), breadcrumbJsonLd([['Events', '/events'], [event.title, `/events/${event.slug}`]]), ...(faqs.length ? [{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }] : [])]} />
+      <EventDetailClient event={event} related={related} seriesMomentId={seriesMomentId} organiser={organiser} />
       <Footer />
       <div aria-hidden style={{ height: 'calc(96px + env(safe-area-inset-bottom, 0px))' }} />
     </div>
