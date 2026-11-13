@@ -440,11 +440,11 @@ function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) 
     if (bad) { setUp({ progress: 0, error: bad }); return; }
     setUp(null); setTrimming(file);
   }
-  async function send(file: File, trim: Trim | null) {
+  async function send(file: File, trim: Trim | null, key: string | null) {
     setTrimming(null);
     setUp({ progress: 0 });
     try {
-      const r = await uploadClip(supabase, file, 'promo', (p) => setUp({ progress: p }), trim);
+      const r = await uploadClip(supabase, file, 'promo', (p) => setUp({ progress: p }), trim, key);
       onChange(r.videoUrl); setUp(null);
     } catch (e) { setUp({ progress: 0, error: (e as Error).message }); }
   }
@@ -453,7 +453,7 @@ function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) 
   return (
     <>
       <input ref={pick} type="file" accept="video/*" hidden onChange={(e) => choose(e.target.files?.[0])} />
-      {trimming && <TrimSheet file={trimming} onCancel={() => setTrimming(null)} onDone={(t) => send(trimming, t)} />}
+      {trimming && <TrimSheet file={trimming} kind="promo" onCancel={() => setTrimming(null)} onDone={(t, k) => send(trimming, t, k)} />}
       {!clip && (
         <Field label="Promo video (optional)" hint={`A YouTube link to your trailer or last year’s highlights${uploadsOn ? `, or upload a landscape clip (trimmed to ${MAX_SECONDS}s)` : ''}. It plays at the top of your event page.`}>
           <input type="url" inputMode="url" value={value} onChange={(e) => onChange(e.target.value)} placeholder="https://youtu.be/…" style={field} disabled={!!up && !up.error} />

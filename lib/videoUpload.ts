@@ -87,22 +87,21 @@ export function checkFile(file: File): string | null {
  * Uploads a clip to TsaCoal's video storage, with a still (from where it starts playing) for thumbnails.
  * `trim` is the part that plays (at most a minute). Reports progress (0–1).
  */
-export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void, trim?: Trim | null, onStage?: (s: 'uploading' | 'preparing') => void): Promise<{ videoUrl: string; posterUrl: string | null }> {
-  const problem = checkFile(file);
-  if (problem) throw new Error(problem);
-  if (trim && trim.end - trim.start > MAX_SECONDS + 0.5) throw new Error(`Trim it to ${MAX_SECONDS} seconds or less`);
+const authed = async (supabase: SupabaseClient) => {
   const session = (await supabase.auth.getSession()).data.session;
   if (!session) throw new Error('Sign in to upload');
-  const type = file.type || 'video/mp4';
+  return { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' };
+};
 
-  const res = await fetch('/api/uploads/video', {
-    method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type, size: file.size, kind: kind === 'promo' ? 'promo' : 'moments' }),
-  });
+/** Step 1: the original file goes straight to storage, with progress. Returns its key. */
+export async function uploadRaw(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void): Promise<string> {
+  const problem = checkFile(file);
+  if (problem) throw new Error(problem);
+  const headers = await authed(supabase);
+  const type = file.type || 'video/mp4';
+  const res = await fetch('/api/uploads/video', { method: 'POST', headers, body: JSON.stringify({ type, size: file.size, kind: kind === 'promo' ? 'promo' : 'moments' }) });
   const j = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(j.error ?? 'Couldn’t start the upload');
-
-  // The file goes straight to storage, with progress
   await new Promise<void>((resolve, reject) => {
     const x = new XMLHttpRequest();
     x.open('PUT', j.uploadUrl);
@@ -112,17 +111,38 @@ export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'mo
     x.onerror = () => reject(new Error('The upload didn’t go through. Check your connection and try again.'));
     x.send(file);
   });
-
-  // The server turns it into a clip every browser plays (any phone format), cuts the chosen part and makes the still
   onProgress?.(1);
-  onStage?.('preparing');
-  const made = await fetch('/api/uploads/video/process', {
-    method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key: j.key, start: trim?.start ?? 0, end: trim && Number.isFinite(trim.end) ? trim.end : null }),
+  return j.key as string;
+}
+
+/** For phones that can't show the original: a small copy from the server that every browser plays */
+export async function makePreview(supabase: SupabaseClient, key: string): Promise<{ previewUrl: string; seconds: number }> {
+  const res = await fetch('/api/uploads/video/process', { method: 'POST', headers: await authed(supabase), body: JSON.stringify({ key, mode: 'preview' }) });
+  const r = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(r.error ?? 'We couldn’t open that video. Try another one.');
+  return r;
+}
+
+/** Last step: the server cuts the chosen part into a clip every browser plays, with a still */
+export async function finishClip(supabase: SupabaseClient, key: string, trim?: Trim | null): Promise<{ videoUrl: string; posterUrl: string | null }> {
+  if (trim && trim.end - trim.start > MAX_SECONDS + 0.5) throw new Error(`Trim it to ${MAX_SECONDS} seconds or less`);
+  const res = await fetch('/api/uploads/video/process', {
+    method: 'POST', headers: await authed(supabase),
+    body: JSON.stringify({ key, start: trim?.start ?? 0, end: trim && Number.isFinite(trim.end) ? trim.end : null }),
   });
-  const r = await made.json().catch(() => ({}));
-  if (!made.ok) throw new Error(r.error ?? 'We couldn’t prepare that clip. Try again.');
+  const r = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(r.error ?? 'We couldn’t prepare that clip. Try again.');
   return { videoUrl: r.videoUrl, posterUrl: r.posterUrl ?? null };
+}
+
+/**
+ * Upload a clip. `key` is set when the file is already up (the trim screen uploaded it to make a preview).
+ * Progress goes 0–1 for the upload; then the server prepares the clip.
+ */
+export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void, trim?: Trim | null, key?: string | null): Promise<{ videoUrl: string; posterUrl: string | null }> {
+  const k = key ?? await uploadRaw(supabase, file, kind, onProgress);
+  onProgress?.(1);
+  return finishClip(supabase, k, trim);
 }
 
 /** True for a link to a video file (an uploaded clip) rather than YouTube */

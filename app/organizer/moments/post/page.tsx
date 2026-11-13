@@ -52,12 +52,12 @@ export default function PostMomentPage() {
     setPickErr(bad ?? '');
     if (!bad) setTrimming(file);
   }
-  async function startUpload(file: File, trim: Trim | null) {
+  async function startUpload(file: File, trim: Trim | null, key: string | null) {
     setTrimming(null);
     const preview = withTrim(URL.createObjectURL(file), trim);
     setClip({ name: file.name, progress: 0, preview });
     try {
-      const r = await uploadClip(supabase, file, 'moment', (p) => setClip((c) => (c ? { ...c, progress: p } : c)), trim);
+      const r = await uploadClip(supabase, file, 'moment', (p) => setClip((c) => (c ? { ...c, progress: p } : c)), trim, key);
       setClip((c) => (c ? { ...c, progress: 1, videoUrl: r.videoUrl, posterUrl: r.posterUrl } : c));
     } catch (e) {
       setClip((c) => (c ? { ...c, error: (e as Error).message } : c));
@@ -160,7 +160,7 @@ export default function PostMomentPage() {
           )}
           {/* No link? Upload the clip itself */}
           <input ref={pick} type="file" accept="video/*" hidden onChange={(e) => chooseClip(e.target.files?.[0])} />
-          {trimming && <TrimSheet file={trimming} onCancel={() => setTrimming(null)} onDone={(t) => startUpload(trimming, t)} />}
+          {trimming && <TrimSheet file={trimming} kind="moment" onCancel={() => setTrimming(null)} onDone={(t, k) => startUpload(trimming, t, k)} />}
           {pickErr && !clip && <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 13, color: '#FCA5A5' }}>{pickErr}</p>}
           {!clip ? (
             uploadsOn && !form.url.trim() && (
@@ -172,7 +172,7 @@ export default function PostMomentPage() {
             <div style={{ marginTop: 18 }}>
               <span style={{ ...label, marginTop: 0 }}>Your clip</span>
               <div style={{ position: 'relative', marginTop: 8, borderRadius: 14, overflow: 'hidden', background: '#000' }}>
-                {clip.preview && <TrimmedVideo src={clip.preview} muted playsInline controls={!!clip.videoUrl} style={{ display: 'block', width: '100%', maxHeight: 320, objectFit: 'contain' }} />}
+                {(clip.videoUrl || clip.preview) && <TrimmedVideo src={clip.videoUrl ?? clip.preview!} poster={clip.posterUrl ?? undefined} muted playsInline controls={!!clip.videoUrl} style={{ display: 'block', width: '100%', maxHeight: 320, objectFit: 'contain' }} />}
                 <button type="button" aria-label="Remove clip" onClick={dropClip} style={{ position: 'absolute', top: 8, right: 8, width: 34, height: 34, borderRadius: 17, border: 'none', cursor: 'pointer', background: 'rgba(0,0,0,0.6)', color: T.white, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
                 {uploading && (
                   <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 4, background: 'rgba(255,255,255,0.15)' }}>
