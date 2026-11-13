@@ -40,7 +40,7 @@ export async function GET() {
     };
     await finishMultipart(mk, id, 1);
     const back = await fetch(`${r2PublicBase()}/${mk}`, { cache: 'no-store' });
-    out.multipart = { partStatus: put.status, joined: true, publicRead: back.status, content: (await back.text()).slice(0, 20) };
+    out.multipart = { ...(out.multipart as object), joined: true, publicRead: back.status, content: (await back.text()).slice(0, 20) };
     await r2Delete(mk);
   } catch (e) { out.multipart = { ...(out.multipart as object), error: String(e).slice(0, 600) }; }
   return NextResponse.json(out);
