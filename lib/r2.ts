@@ -20,7 +20,17 @@ const objectUrl = (key: string) => `https://${process.env.R2_ACCOUNT_ID}.r2.clou
 
 /** Server side: read, write and delete one object in the bucket */
 export const r2Get = (key: string) => client().fetch(objectUrl(key));
-export const r2Put = (key: string, body: BodyInit, type: string) => client().fetch(objectUrl(key), { method: 'PUT', body, headers: { 'Content-Type': type, 'Cache-Control': 'public, max-age=31536000, immutable' } });
+/**
+ * Saves one object. The link is signed first and the bytes are then sent in one plain request with their
+ * length: R2 refuses streamed bodies without a Content-Length (411), which is what a signed Request sends.
+ */
+export async function r2Put(key: string, body: string | Uint8Array, type: string): Promise<Response> {
+  const url = new URL(objectUrl(key));
+  url.searchParams.set('X-Amz-Expires', '600');
+  const signed = await client().sign(new Request(url, { method: 'PUT' }), { aws: { signQuery: true } });
+  const bytes = typeof body === 'string' ? new TextEncoder().encode(body) : body;
+  return fetch(signed.url, { method: 'PUT', body: bytes as BodyInit, headers: { 'Content-Type': type, 'Content-Length': String(bytes.byteLength), 'Cache-Control': 'public, max-age=31536000, immutable' } });
+}
 export const r2Delete = (key: string) => client().fetch(objectUrl(key), { method: 'DELETE' });
 
 /** A short-lived link the browser can PUT one file to, straight into the bucket */
