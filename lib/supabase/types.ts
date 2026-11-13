@@ -7,6 +7,10 @@ export interface Profile {
   phone: string | null;
   is_public: boolean;
   created_at: string;
+  /** How people reach them, shown on their event pages */
+  instagram?: string | null;
+  whatsapp?: string | null;
+  website?: string | null;
 }
 
 export interface DreamEvent {

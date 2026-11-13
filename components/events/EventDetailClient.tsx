@@ -40,6 +40,8 @@ import StatTip from '@/components/events/StatTip';
 import AddToCalendar from '@/components/calendars/AddToCalendar';
 import { eventShareText } from '@/lib/shareText';
 import ShareCardSheet, { useWarmShareCard } from '@/components/events/ShareCardSheet';
+import { OrganiserBlock, GallerySection, VenueSection, FaqSection, OwnerBar, type OrganiserInfo } from '@/components/events/EventPageSections';
+import { hexToRgb, onAccent, pageFaqs } from '@/lib/events/page';
 
 export type { CheckoutTier } from '@/lib/events/tiers';
 
@@ -58,11 +60,14 @@ function getDescription(event: GhanaEvent): string {
   return descs[event.category] ?? descs.festival;
 }
 
-export default function EventDetailClient({ event, related, seriesMomentId }: { event: GhanaEvent; related: GhanaEvent[]; seriesMomentId?: string | null }) {
+export default function EventDetailClient({ event, related, seriesMomentId, organiser = null }: { event: GhanaEvent; related: GhanaEvent[]; seriesMomentId?: string | null; organiser?: OrganiserInfo | null }) {
+  // The organiser's own page settings: their colour leads the page when they've picked one
+  const page = event.page ?? {};
+  const brand = page.accent ?? null;
   const { user, profile } = useAuth();
   const supabase = createClient();
 
-  const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
+  const [rgb, setRgb] = useState<RGB>(brand ? hexToRgb(brand) : categoryAccent(event.category));
   const [wash, setWash] = useState<RGB>([14, 17, 16]);
   const [counts, setCounts] = useState<EventCounts | null>(null);
   // Count this view, then show the real numbers once they're worth showing
@@ -89,9 +94,9 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
 
   useEffect(() => {
     let live = true;
-    eventColours(event.image, event.category).then((c) => { if (live) { setRgb(c.accent ?? NEUTRAL_ACCENT); setWash(c.wash); } });
+    eventColours(event.image, event.category).then((c) => { if (live) { setRgb(brand ? hexToRgb(brand) : c.accent ?? NEUTRAL_ACCENT); setWash(c.wash); } });
     return () => { live = false; };
-  }, [event.image, event.category]);
+  }, [event.image, event.category, brand]);
 
   const tiers       = getTiers(event);
   const description = getDescription(event);
@@ -229,7 +234,11 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   function share() { setSharingIntro(undefined); setSharing(true); }
 
   const eyebrow: CSSProperties = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 6px' };
-  const eyebrowMint: CSSProperties = { ...eyebrow, color: T.mintText };
+  // Headings and the main button take the organiser's colour when there is one
+  const ink = brand ?? T.mintText;
+  const inkOn = brand ? onAccent(brand) : T.onMint;
+  const eyebrowMint: CSSProperties = { ...eyebrow, color: ink };
+  const faqs = pageFaqs(page, { dressCode: null, age: null });
   const info = eventInfo(event.description, event.listingInfo, event.ticketSource, event.flyerText);
   // Nothing announced yet: the button just says Tickets
   const noTickets = noTicketsYet(event);
@@ -245,7 +254,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
   const pillBtn = (on: boolean): CSSProperties => ({ ...roundBtn(on), width: 'auto', padding: '0 16px', gap: 7, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700 });
   const primary: CSSProperties = {
     height: 52, padding: '0 28px', borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-    color: T.onMint, background: GRAD.mint, border: 'none', boxShadow: '0 8px 24px rgba(123,227,168,0.22)',
+    color: inkOn, background: brand ?? GRAD.mint, border: 'none', boxShadow: `0 8px 24px ${brand ? `${brand}38` : 'rgba(123,227,168,0.22)'}`,
     fontFamily: FONT.display, fontSize: 15, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', whiteSpace: 'nowrap',
   };
 
@@ -329,6 +338,8 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         </div>
         {calOpen && <AddToCalendar eventSlug={event.slug} eventTitle={event.title} onClose={() => setCalOpen(false)} />}
         {sharing && <ShareCardSheet slug={event.slug} title={event.title} image={event.image} intro={sharingIntro} text={eventShareText(event, isGoing)} onClose={() => setSharing(false)} />}
+
+        {organiser && <OwnerBar event={event} organiserId={organiser.id} accent={ink} onAccent={inkOn} />}
 
         <FriendsStrip slug={event.slug} variant="full" />
 
@@ -462,6 +473,11 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           ))}
         </section>
 
+        {/* The organiser's page: photos and earlier shows, how to get there, the questions people ask */}
+        <GallerySection photos={page.gallery ?? []} past={organiser?.past ?? []} accent={ink} title={event.title} />
+        {event.venue && !/\b(tba|tbc)\b/i.test(event.venue) && <VenueSection event={event} page={page} accent={ink} />}
+        <FaqSection faqs={faqs} accent={ink} />
+
         <PartOfSeries event={event} />
 
         {/* The chat: questions and plans before the night, memories after */}
@@ -529,7 +545,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
           )}
         </section>
 
-        {event.organizerUsername && (
+        {organiser ? <OrganiserBlock org={organiser} accent={ink} onAccent={inkOn} /> : event.organizerUsername && (
           <section style={{ marginTop: 34 }}>
             <h2 style={eyebrow}>Presented by</h2>
             <Link href={`/organizer/${event.organizerUsername}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', textDecoration: 'none', color: T.white }}>
@@ -549,7 +565,7 @@ export default function EventDetailClient({ event, related, seriesMomentId }: { 
         )}
 
         {/* No clips from this event: say so plainly */}
-        {!moments.length && (
+        {!moments.length && !page.gallery?.length && !organiser?.past.length && (
           <section style={{ marginTop: 36 }}>
             <h2 style={eyebrowMint}>Moments</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 4, padding: '16px 16px', borderRadius: 20, background: T.surface, border: 'none' }}>

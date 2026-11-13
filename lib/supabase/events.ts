@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { GhanaEvent } from '@/lib/types';
+import { cleanPage } from '@/lib/events/page';
 
 /**
  * Server reads always go to the database: without no-store, Next/Vercel keep the first
@@ -38,6 +39,8 @@ export interface SupabaseEvent {
   flyer_text?: string | null;
   listing_info?: string | null;
   promo_video_url?: string | null;
+  page?: unknown;
+  short_code?: string | null;
   lat?: number | null;
   lng?: number | null;
   area?: string | null;
@@ -120,6 +123,9 @@ export function supabaseToGhanaEvent(raw: SupabaseEvent): GhanaEvent {
     isFeatured: featured,
     featuredOrder: ev.featured_order ?? 100,
     promoVideoUrl: ev.promo_video_url ?? null,
+    page: ev.page ? cleanPage(ev.page) : null,
+    shortCode: ev.short_code ?? null,
+    dbId: ev.id,
     createdAt: ev.created_at ?? null,
     artistSlugs: Array.isArray(ev.artist_slugs) ? ev.artist_slugs : undefined,
     lineup: Array.isArray(ev.lineup) ? ev.lineup : undefined,

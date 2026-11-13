@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ImagePlus, Link2, Plus, Trash2, X, Ticket, ExternalLink, Loader2, Upload } from 'lucide-react';
 import { uploadClip, uploadsOn, isClipUrl, MAX_SECONDS, MAX_MB } from '@/lib/videoUpload';
+import PageSettings from '@/components/organizer/PageSettings';
+import { cleanPage, cleanCode, codeOk, type EventPage } from '@/lib/events/page';
 import { createClient } from '@/lib/supabase/client';
 import { majorArtists } from '@/lib/data/artists';
 import { extractYoutubeId } from '@/lib/events/rank';
@@ -40,6 +42,10 @@ export type EventDraft = {
   listing: 'hosted' | 'listed'; ticketUrl: string; ticketSource: string;
   lineup: LineupValue;
   tiers: TierDraft[];
+  /** The organiser's page: colour, photos, directions, FAQs */
+  page?: EventPage;
+  /** Short link code: tsacoal.com/e/<code> */
+  shortCode?: string;
 };
 
 const HIGHLIGHT_IDEAS = ['Surprise guests', 'Album launch', 'First time in Ghana', 'Live band', 'Last show of the year', 'All night long', 'Early bird on sale', '18+ only'];
@@ -197,6 +203,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
       if (d.listing === 'listed' && !/^https?:\/\//.test(d.ticketUrl.trim())) p.push('the ticket link');
     }
     if ((d.promoVideo ?? '').trim() && !promoOk((d.promoVideo ?? '').trim())) p.push('a YouTube link or an uploaded clip for the promo video');
+    if (d.shortCode && !codeOk(cleanCode(d.shortCode))) p.push('a link of at least 3 letters or numbers');
     if (publish) {
       if (d.listing === 'hosted') {
         const real = d.tiers.filter((t) => t.name.trim());
@@ -221,6 +228,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
         image_url: d.image.trim() || null, status: target, promo_video_url: (d.promoVideo ?? '').trim() || null,
         listing_type: d.listing, ticket_url: d.listing === 'listed' ? d.ticketUrl.trim() : null, ticket_source: d.listing === 'listed' ? (d.ticketSource.trim() || hostOf(d.ticketUrl)) : null,
         artist_slugs: bill.artist_slugs, lineup: bill.lineup,
+        page: cleanPage(d.page ?? {}), short_code: cleanCode(d.shortCode ?? '') || null,
       };
 
       let id = d.id;
@@ -258,7 +266,8 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
       const { data: fresh } = await supabase.from('ticket_tiers').select('id, name, price, quantity, sold, description').eq('event_id', id);
       if (fresh) set('tiers', fresh.sort((a: any, b: any) => a.price - b.price).map((t: any) => ({ id: t.id, name: t.name, price: String(t.price), quantity: String(t.quantity), description: t.description ?? '', sold: t.sold ?? 0 })));
     } catch (e: any) {
-      setError(e?.message || 'Could not save. Please try again.');
+      const msg = String(e?.message ?? '');
+      setError(/short_code/.test(msg) ? `tsacoal.com/e/${d.shortCode} is taken. Try another link.` : msg || 'Could not save. Please try again.');
     } finally {
       setBusy('');
     }
@@ -388,6 +397,10 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
             ))}
             <button type="button" onClick={addTier} style={{ height: 50, borderRadius: 16, border: '1.5px dashed rgba(255,255,255,0.18)', background: 'transparent', color: T.white, fontFamily: FONT.sans, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Plus size={18} /> Add ticket type</button>
           </div>
+        </Section>
+
+        <Section title="Your page" note="Make this event page your website: your link, your colour, photos, directions and answers. All optional.">
+          <PageSettings page={d.page ?? {}} onPage={(p) => set('page', p)} code={d.shortCode ?? ''} onCode={(c) => set('shortCode', c)} slugHint={cleanCode(d.title) || 'your-show'} />
         </Section>
       </div>
 
