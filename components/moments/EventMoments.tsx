@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Icon } from '@/components/ui/Icon';
 import type { Moment } from '@/components/moments/types';
-import { MOMENT_FIELDS, momentsForEvent, ytThumb } from '@/lib/moments/match';
+import { MOMENT_FIELDS, momentsForEvent, momentThumb } from '@/lib/moments/match';
 import { T, FONT, EASE } from '@/lib/thiscene';
 
 /* ── Data: every moment, loaded once per visit and shared ─────────────── */
@@ -17,7 +17,7 @@ export function loadAll(): Promise<Moment[]> {
   // Shared across the visit, refreshed after a few minutes so newly added clips show without a full reload
   if (!all || Date.now() - loadedAt > 3 * 60 * 1000) {
     loadedAt = Date.now();
-    all = Promise.resolve(createClient().from('moments').select(MOMENT_FIELDS).eq('status', 'live').eq('source', 'youtube').neq('available', false).order('year', { ascending: false }).limit(500))
+    all = Promise.resolve(createClient().from('moments').select(MOMENT_FIELDS).eq('status', 'live').in('source', ['youtube', 'upload']).neq('available', false).order('year', { ascending: false }).limit(500))
       .then(({ data }) => (data ?? []) as Moment[])
       .catch(() => []);
   }
@@ -78,7 +78,7 @@ export function MomentsPill({ list, slug, onOpen }: { list: Moment[]; slug: stri
     >
       <span style={{ position: 'relative', width: 60, height: 36, borderRadius: 999, overflow: 'hidden', flexShrink: 0, background: '#000' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={ytThumb(list[0].youtube_id)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
+        <img src={momentThumb(list[0])} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.85 }} />
         <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="play" size={16} filled color={T.white} />
         </span>
@@ -101,7 +101,7 @@ export function MomentsRail({ list, onOpen }: { list: Moment[]; onOpen: (i: numb
           <button key={m.id} type="button" onClick={() => onOpen(i)} aria-label={`Play ${m.title}`} style={{ flexShrink: 0, width: 220, padding: 0, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', color: T.white, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span style={{ position: 'relative', display: 'block', aspectRatio: '16 / 9', borderRadius: 16, overflow: 'hidden', background: '#000' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={ytThumb(m.youtube_id, 'hq')} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={momentThumb(m, 'hq')} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5))' }}>
                 <span style={{ width: 44, height: 44, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}><Icon name="play" size={20} filled /></span>
               </span>
@@ -156,14 +156,16 @@ export function MomentsViewer({ list, start = 0, eventTitle, onClose }: { list: 
 
       <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0 8px' }}>
         <div style={{ width: '100%', maxWidth: 960, aspectRatio: '16 / 9', maxHeight: '100%', background: '#000' }}>
-          <iframe
+          {m.source === 'upload' && m.source_url ? (
+            <video key={m.youtube_id} src={m.source_url} poster={m.thumbnail_url ?? undefined} title={m.title} autoPlay controls playsInline style={{ width: '100%', height: '100%', display: 'block', background: '#000' }} />
+          ) : <iframe
             key={m.youtube_id}
             title={m.title}
             src={`https://www.youtube.com/embed/${m.youtube_id}?autoplay=1&playsinline=1&rel=0&modestbranding=1`}
             allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
             style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-          />
+          />}
         </div>
       </div>
 
@@ -174,7 +176,7 @@ export function MomentsViewer({ list, start = 0, eventTitle, onClose }: { list: 
               <button key={x.id} type="button" onClick={() => setI(n)} aria-label={`Play ${x.title}`} aria-current={n === i} style={{ flexShrink: 0, width: 132, padding: 0, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', color: T.white }}>
                 <span style={{ display: 'block', aspectRatio: '16 / 9', borderRadius: 12, overflow: 'hidden', outline: n === i ? `2px solid ${T.mint}` : '1px solid rgba(255,255,255,0.1)', outlineOffset: n === i ? 2 : 0 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={ytThumb(x.youtube_id)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: n === i ? 1 : 0.7 }} />
+                  <img src={momentThumb(x)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: n === i ? 1 : 0.7 }} />
                 </span>
                 <span style={{ display: 'block', marginTop: 6, fontFamily: FONT.sans, fontSize: 12, fontWeight: 500, color: n === i ? T.white : T.text2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.year ? `${x.year} · ` : ''}{x.title}</span>
               </button>

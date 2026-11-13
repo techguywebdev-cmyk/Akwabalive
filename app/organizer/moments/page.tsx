@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/supabase/AuthProvider';
 import { BTN } from '@/components/events/CardParts';
 import { T, FONT, GROUND, GRAD } from '@/lib/thiscene';
 
-type Row = {
+type Row = { source?: string | null; thumbnail_url?: string | null;
   id: string; title: string; event_name: string; youtube_id: string; year: number | null; description: string | null;
   channel_name: string | null; official: boolean | null; status: string; available: boolean; found_by: string | null;
 };
@@ -34,7 +34,7 @@ export default function MomentsReviewPage() {
 
   const load = useCallback(async () => {
     const { data } = await supabase.from('moments')
-      .select('id, title, event_name, youtube_id, year, description, channel_name, official, status, available, found_by')
+      .select('id, title, event_name, youtube_id, year, description, channel_name, official, status, available, found_by, source, thumbnail_url')
       .in('status', ['pending', 'live']).order('published_at', { ascending: false, nullsFirst: false });
     setRows((data ?? []) as Row[]);
   }, [supabase]);
@@ -134,7 +134,7 @@ export default function MomentsReviewPage() {
             <article key={r.id} style={{ borderRadius: 20, overflow: 'hidden', background: 'rgba(255,255,255,0.04)', border: 'none' }}>
               <a href={`https://www.youtube.com/watch?v=${r.youtube_id}`} target="_blank" rel="noopener noreferrer" style={{ position: 'relative', display: 'block', aspectRatio: '16 / 9', background: '#000' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={thumb(r.youtube_id)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                <img src={r.source === 'upload' ? r.thumbnail_url ?? '' : thumb(r.youtube_id)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                   onError={(e) => { const i = e.currentTarget; if (i.src.includes('hq720')) i.src = i.src.replace('hq720', 'hqdefault'); }} />
                 <span style={{ position: 'absolute', top: 10, right: 10, padding: '5px 10px', borderRadius: 999, background: 'rgba(0,0,0,0.6)', display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: FONT.sans, fontSize: 12, color: T.white }}>
                   Watch <ExternalLink size={12} />

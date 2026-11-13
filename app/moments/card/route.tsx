@@ -35,8 +35,9 @@ export async function GET(req: Request) {
   const m = rows?.[0];
   if (!m) return new Response('Not found', { status: 404 });
   const next = evs?.[0] && evs[0].date >= new Date().toISOString().slice(0, 10) ? evs[0] : null;
-  const tall = m.youtube_id ? await vertical(m.youtube_id) : false;
-  const still = m.youtube_id ? `https://i.ytimg.com/vi/${m.youtube_id}/${tall ? 'oar2' : 'maxresdefault'}.jpg` : m.thumbnail_url;
+  const yt = m.source === 'upload' || m.source === 'x' ? null : m.youtube_id;
+  const tall = yt ? await vertical(yt) : false;
+  const still = yt ? `https://i.ytimg.com/vi/${yt}/${tall ? 'oar2' : 'maxresdefault'}.jpg` : m.thumbnail_url;
   // The night's name as the headline, and a short line under it: who was on and when (never the long video title)
   const title = m.event_name || clean(m.title) || m.title;
   const acts = (m.performers ?? []).map((x) => getArtistBySlug(x)?.name).filter(Boolean).slice(0, 2) as string[];

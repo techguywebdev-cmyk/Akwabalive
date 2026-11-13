@@ -4,7 +4,8 @@ import { readFlyer, type FlyerRead } from '@/lib/watch/readFlyer';
 import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ImagePlus, Link2, Plus, Trash2, X, Ticket, ExternalLink, Loader2 } from 'lucide-react';
+import { ArrowLeft, ImagePlus, Link2, Plus, Trash2, X, Ticket, ExternalLink, Loader2, Upload } from 'lucide-react';
+import { uploadClip, uploadsOn, isClipUrl, MAX_SECONDS, MAX_MB } from '@/lib/videoUpload';
 import { createClient } from '@/lib/supabase/client';
 import { majorArtists } from '@/lib/data/artists';
 import { extractYoutubeId } from '@/lib/events/rank';
@@ -50,7 +51,7 @@ export const emptyDraft = (): EventDraft => ({
   tiers: [{ name: 'Regular', price: '', quantity: '200', description: '', sold: 0 }],
 });
 
-const promoOk = (u: string) => !!extractYoutubeId(u) || /^https:\/\/\S+\.(mp4|webm)(\?\S*)?$/i.test(u);
+const promoOk = (u: string) => !!extractYoutubeId(u) || /^https:\/\/\S+\.(mp4|mov|webm)(\?\S*)?$/i.test(u);
 
 /** "20:00" → "8:00 PM" */
 export function to12h(hhmm: string) {
@@ -195,7 +196,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
       if (!d.category) p.push('a category');
       if (d.listing === 'listed' && !/^https?:\/\//.test(d.ticketUrl.trim())) p.push('the ticket link');
     }
-    if ((d.promoVideo ?? '').trim() && !promoOk((d.promoVideo ?? '').trim())) p.push('a YouTube link for the promo video');
+    if ((d.promoVideo ?? '').trim() && !promoOk((d.promoVideo ?? '').trim())) p.push('a YouTube link or an uploaded clip for the promo video');
     if (publish) {
       if (d.listing === 'hosted') {
         const real = d.tiers.filter((t) => t.name.trim());
@@ -299,22 +300,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
           })()}
 
           {/* A promo video plays on the event page; the flyer stays as the cover */}
-          <Field label="Promo video (optional)" hint="A YouTube link to your trailer or last year’s highlights. It plays at the top of your event page.">
-            <input type="url" inputMode="url" value={d.promoVideo ?? ''} onChange={(e) => set('promoVideo', e.target.value)} placeholder="https://youtu.be/…" style={field} />
-          </Field>
-          {(() => {
-            const yt = d.promoVideo ? extractYoutubeId(d.promoVideo.trim()) : null;
-            if (!yt) return d.promoVideo?.trim() && !promoOk(d.promoVideo.trim())
-              ? <p style={{ margin: '-4px 2px 0', fontFamily: FONT.sans, fontSize: 13, color: '#FF8A7A' }}>That doesn’t look like a YouTube link.</p> : null;
-            return (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: -2 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`https://i.ytimg.com/vi/${yt}/mqdefault.jpg`} alt="" style={{ width: 112, aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 10, display: 'block' }} />
-                <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.mintText, fontWeight: 600 }}>Video added</span>
-                <button type="button" onClick={() => set('promoVideo', '')} aria-label="Remove promo video" style={{ marginLeft: 'auto', width: 34, height: 34, borderRadius: 17, border: 'none', background: 'rgba(255,255,255,0.06)', color: T.text2, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={16} /></button>
-              </div>
-            );
-          })()}
+          <PromoVideo value={d.promoVideo ?? ''} onChange={(v) => set('promoVideo', v)} />
         </Section>
 
         <Section title="About the event">
@@ -418,5 +404,70 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
         </div>
       </div>
     </main>
+  );
+}
+
+/** The promo video: a YouTube link, or a short clip uploaded straight to TsaCoal */
+function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const supabase = useMemo(() => createClient(), []);
+  const pick = useRef<HTMLInputElement>(null);
+  const [up, setUp] = useState<{ progress: number; error?: string } | null>(null);
+  const v = value.trim();
+  const yt = v ? extractYoutubeId(v) : null;
+  const clip = isClipUrl(v) ? v : null;
+
+  async function choose(file?: File) {
+    if (!file) return;
+    setUp({ progress: 0 });
+    try {
+      const r = await uploadClip(supabase, file, 'promo', (p) => setUp({ progress: p }));
+      onChange(r.videoUrl); setUp(null);
+    } catch (e) { setUp({ progress: 0, error: (e as Error).message }); }
+    if (pick.current) pick.current.value = '';
+  }
+  const remove = <button type="button" onClick={() => { onChange(''); setUp(null); }} aria-label="Remove promo video" style={{ marginLeft: 'auto', width: 34, height: 34, borderRadius: 17, border: 'none', background: 'rgba(255,255,255,0.06)', color: T.text2, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={16} /></button>;
+
+  return (
+    <>
+      <input ref={pick} type="file" accept="video/mp4,video/quicktime,video/webm" hidden onChange={(e) => choose(e.target.files?.[0])} />
+      {!clip && (
+        <Field label="Promo video (optional)" hint={`A YouTube link to your trailer or last year’s highlights${uploadsOn ? `, or upload a clip (up to ${MAX_SECONDS}s, ${MAX_MB} MB)` : ''}. It plays at the top of your event page.`}>
+          <input type="url" inputMode="url" value={value} onChange={(e) => onChange(e.target.value)} placeholder="https://youtu.be/…" style={field} disabled={!!up && !up.error} />
+        </Field>
+      )}
+      {clip ? (
+        <div>
+          <span style={labelCss}>Promo video</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <video src={clip} muted playsInline preload="metadata" style={{ width: 112, aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 10, display: 'block', background: '#000' }} />
+            <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.mintText, fontWeight: 600 }}>Clip uploaded</span>
+            {remove}
+          </div>
+        </div>
+      ) : yt ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: -2 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`https://i.ytimg.com/vi/${yt}/mqdefault.jpg`} alt="" style={{ width: 112, aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: 10, display: 'block' }} />
+          <span style={{ fontFamily: FONT.sans, fontSize: 13.5, color: T.mintText, fontWeight: 600 }}>Video added</span>
+          {remove}
+        </div>
+      ) : v && !promoOk(v) ? (
+        <p style={{ margin: '-4px 2px 0', fontFamily: FONT.sans, fontSize: 13, color: '#FF8A7A' }}>That doesn’t look like a YouTube link.</p>
+      ) : !v && (
+        up && !up.error ? (
+          <div style={{ marginTop: -2 }}>
+            <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${Math.round(up.progress * 100)}%`, background: T.mint, transition: 'width 200ms linear' }} /></div>
+            <p style={{ margin: '6px 2px 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Uploading… {Math.round(up.progress * 100)}%</p>
+          </div>
+        ) : uploadsOn && (
+          <div style={{ marginTop: -2 }}>
+            <button type="button" onClick={() => pick.current?.click()} style={{ width: '100%', height: 46, borderRadius: 14, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: T.text, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Upload size={16} /> No link? Upload a clip
+            </button>
+            {up?.error && <p style={{ margin: '6px 2px 0', fontFamily: FONT.sans, fontSize: 13, color: '#FF8A7A' }}>{up.error}</p>}
+          </div>
+        )
+      )}
+    </>
   );
 }

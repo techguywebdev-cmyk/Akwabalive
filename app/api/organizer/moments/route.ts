@@ -29,7 +29,7 @@ async function organiser(req: Request): Promise<{ db: SupabaseClient; id: string
 export async function GET(req: Request) {
   const o = await organiser(req);
   if (!o) return NextResponse.json({ error: 'Only organisers can post moments' }, { status: 403 });
-  const { data } = await o.db.from('moments').select('id, title, event_name, year, youtube_id, source, created_at')
+  const { data } = await o.db.from('moments').select('id, title, event_name, year, youtube_id, source, thumbnail_url, created_at')
     .eq('posted_by', o.id).eq('status', 'live').order('created_at', { ascending: false }).limit(50);
   return NextResponse.json({ moments: data ?? [] });
 }
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     year = ev.date ? Number(String(ev.date).slice(0, 4)) : year;
   }
   const r = await addMomentFromLink(o.db, {
-    url: String(body.url ?? ''), event_name: eventName, year, title: body.title || null, description: body.description || null, event_slug: slug,
+    url: String(body.url ?? ''), upload: body.video_url ? { videoUrl: String(body.video_url), posterUrl: body.poster_url ? String(body.poster_url) : null } : null, event_name: eventName, year, title: body.title || null, description: body.description || null, event_slug: slug,
     postedBy: { id: o.id, name: o.name, profileUrl: o.username ? `/organizer/${o.username}` : null },
   });
   return r.error ? NextResponse.json({ error: r.error }, { status: r.status ?? 400 }) : NextResponse.json({ ok: true, id: r.id });

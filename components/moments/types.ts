@@ -12,9 +12,11 @@ export interface Moment {
   category?: string | null;
   /** Confirmed performers (artist slugs), biggest first; null until checked */
   performers?: string[] | null;
-  /** 'youtube' (default) or 'x' — a video posted on X, played with X's own embed */
+  /** 'youtube' (default), 'x' (a post on X, played with X's embed) or 'upload' (a clip uploaded to TsaCoal) */
   source?: string | null;
-  /** The original post (for X moments) */
+  /** Still for uploaded clips */
+  thumbnail_url?: string | null;
+  /** The original post (for X moments), or the clip's file (uploads) */
   source_url?: string | null;
   /** Posted by the event's organiser (their account id) */
   posted_by?: string | null;

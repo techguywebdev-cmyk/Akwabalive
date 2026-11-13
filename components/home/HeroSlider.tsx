@@ -127,7 +127,7 @@ export default function HeroSlider({ initialSlides }: { initialSlides?: HeroSlid
 
   const slide = slides[cur] || FALLBACK[0];
   const ytId = slide.promoVideoUrl ? extractYoutubeId(slide.promoVideoUrl) : null;
-  const isMp4 = !!slide.promoVideoUrl && /\.(mp4|webm)(\?|$)/i.test(slide.promoVideoUrl);
+  const isMp4 = !!slide.promoVideoUrl && /\.(mp4|mov|webm)(\?|$)/i.test(slide.promoVideoUrl);
   const hasPromo = !!(ytId || isMp4);
 
   const clearTimers = () => {
