@@ -10,6 +10,7 @@ import SearchSheet from '@/components/search/SearchSheet';
 import { useUnreadCount } from '@/hooks/useNotifications';
 import { useMenuPeek } from '@/hooks/useMenuPeek';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useIsOrganiser } from '@/hooks/useIsOrganiser';
 import { useArtistPhotos } from '@/hooks/useArtistPhotos';
 
 /** Main sections. On phones they live in the bottom tab bar; on desktop, in the header. */
@@ -96,6 +97,8 @@ export default function Nav({
   const { user, profile, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const isAdmin = useIsAdmin();
+  // Only people who put on events see the organiser dashboard; everyone else gets "List an event" below
+  const isOrganiser = useIsOrganiser();
   const [searching, setSearching] = useState(false);
   const unread = useUnreadCount();
   const peek = useMenuPeek(menuOpen);
@@ -436,7 +439,7 @@ export default function Nav({
                   { label: 'My tickets', href: '/account/tickets', icon: 'ticket' },
                   { label: 'Saved events', href: profile?.username ? `/u/${profile.username}?tab=saved` : '/auth?pick=1', icon: 'bookmark' },
                   { label: 'Find friends', href: '/people', icon: 'friends' },
-                  { label: 'Organizer dashboard', href: '/organizer/dashboard', icon: 'dashboard' },
+                  ...(isOrganiser || isAdmin ? [{ label: 'Organizer dashboard', href: '/organizer/dashboard', icon: 'dashboard' as IconName }] : []),
                   ...(isAdmin ? [{ label: 'Stats', href: '/admin/stats', icon: 'dashboard' }] : []),
                 ] as { label: string; href: string; icon: IconName; count?: number }[]).map((l) => (
                   <Link key={l.label} href={l.href} onClick={() => setMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 14, minHeight: 48, textDecoration: 'none', fontFamily: FONT.sans, fontSize: 15.5, fontWeight: 500, color: active === l.label ? T.mint : 'rgba(255,255,255,0.86)' }}>
