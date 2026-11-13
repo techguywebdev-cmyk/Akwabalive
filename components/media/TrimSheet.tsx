@@ -35,6 +35,8 @@ export default function TrimSheet({ file, onCancel, onDone }: { file: File; onCa
     const el = v.current;
     if (!el) return;
     if (!Number.isFinite(el.duration)) { el.currentTime = 1e9; return; } // some recordings only say how long they are after a seek
+    // Clips play in a wide (16:9) frame on the event cards, so only landscape videos work
+    if (el.videoHeight > el.videoWidth) { setError('This video is upright. Clips play wide on TsaCoal, so use a landscape video: turn your phone sideways when you record.'); return; }
     const d = el.duration;
     setDur(d);
     setRange({ start: 0, end: Math.min(d, MAX_SECONDS) });
@@ -100,7 +102,7 @@ export default function TrimSheet({ file, onCancel, onDone }: { file: File; onCa
         <button type="button" aria-label="Cancel" onClick={onCancel} style={{ width: 42, height: 42, borderRadius: 21, border: 'none', background: 'rgba(255,255,255,0.08)', color: T.white, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={20} /></button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>Trim your clip</p>
-          <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Up to {MAX_SECONDS} seconds plays</p>
+          <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Landscape · up to {MAX_SECONDS} seconds plays</p>
         </div>
       </div>
 

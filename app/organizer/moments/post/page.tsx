@@ -165,7 +165,7 @@ export default function PostMomentPage() {
           {!clip ? (
             uploadsOn && !form.url.trim() && (
               <button type="button" onClick={() => pick.current?.click()} style={{ marginTop: 10, width: '100%', height: 48, borderRadius: 14, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: T.text, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <Upload size={16} /> No link? Upload a clip <span style={{ color: T.text3, fontWeight: 500 }}>(trim to {MAX_SECONDS}s)</span>
+                <Upload size={16} /> No link? Upload a clip <span style={{ color: T.text3, fontWeight: 500 }}>(landscape, up to {MAX_SECONDS}s)</span>
               </button>
             )
           ) : (
