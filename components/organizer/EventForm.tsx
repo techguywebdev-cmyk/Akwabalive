@@ -5,7 +5,7 @@ import { useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'r
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ImagePlus, Link2, Plus, Trash2, X, Ticket, ExternalLink, Loader2, Upload } from 'lucide-react';
-import { uploadClip, uploadsOn, isClipUrl, checkFile, MAX_SECONDS, type Trim } from '@/lib/videoUpload';
+import { uploadClip, uploadsOn, isClipUrl, checkFile, MAX_SECONDS, type Trim, type Frame } from '@/lib/videoUpload';
 import TrimSheet from '@/components/media/TrimSheet';
 import TrimmedVideo from '@/components/media/TrimmedVideo';
 import PageSettings from '@/components/organizer/PageSettings';
@@ -440,11 +440,11 @@ function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) 
     if (bad) { setUp({ progress: 0, error: bad }); return; }
     setUp(null); setTrimming(file);
   }
-  async function send(file: File, trim: Trim | null, key: string | null) {
+  async function send(file: File, trim: Trim | null, key: string | null, frame: Frame | null) {
     setTrimming(null);
     setUp({ progress: 0 });
     try {
-      const r = await uploadClip(supabase, file, 'promo', (p) => setUp({ progress: p }), trim, key);
+      const r = await uploadClip(supabase, file, 'promo', (p) => setUp({ progress: p }), trim, key, frame);
       onChange(r.videoUrl); setUp(null);
     } catch (e) { setUp({ progress: 0, error: (e as Error).message }); }
   }
@@ -453,9 +453,9 @@ function PromoVideo({ value, onChange }: { value: string; onChange: (v: string) 
   return (
     <>
       <input ref={pick} type="file" accept="video/*" hidden onChange={(e) => choose(e.target.files?.[0])} />
-      {trimming && <TrimSheet file={trimming} kind="promo" onCancel={() => setTrimming(null)} onDone={(t, k) => send(trimming, t, k)} />}
+      {trimming && <TrimSheet file={trimming} kind="promo" onCancel={() => setTrimming(null)} onDone={(t, k, f) => send(trimming, t, k, f)} />}
       {!clip && (
-        <Field label="Promo video (optional)" hint={`A YouTube link to your trailer or last year’s highlights${uploadsOn ? `, or upload a landscape clip (trimmed to ${MAX_SECONDS}s)` : ''}. It plays at the top of your event page.`}>
+        <Field label="Promo video (optional)" hint={`A YouTube link to your trailer or last year’s highlights${uploadsOn ? `, or upload a clip (up to ${MAX_SECONDS}s plays)` : ''}. It plays at the top of your event page.`}>
           <input type="url" inputMode="url" value={value} onChange={(e) => onChange(e.target.value)} placeholder="https://youtu.be/…" style={field} disabled={!!up && !up.error} />
         </Field>
       )}

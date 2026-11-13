@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Check, Plus, Trash2, Upload, Video, X } from 'lucide-react';
-import { uploadClip, uploadsOn, checkFile, withTrim, MAX_SECONDS, type Trim } from '@/lib/videoUpload';
+import { uploadClip, uploadsOn, checkFile, withTrim, MAX_SECONDS, type Trim, type Frame } from '@/lib/videoUpload';
 import TrimSheet from '@/components/media/TrimSheet';
 import TrimmedVideo from '@/components/media/TrimmedVideo';
 import Nav from '@/components/layout/Nav';
@@ -52,12 +52,12 @@ export default function PostMomentPage() {
     setPickErr(bad ?? '');
     if (!bad) setTrimming(file);
   }
-  async function startUpload(file: File, trim: Trim | null, key: string | null) {
+  async function startUpload(file: File, trim: Trim | null, key: string | null, frame: Frame | null) {
     setTrimming(null);
     const preview = withTrim(URL.createObjectURL(file), trim);
     setClip({ name: file.name, progress: 0, preview });
     try {
-      const r = await uploadClip(supabase, file, 'moment', (p) => setClip((c) => (c ? { ...c, progress: p } : c)), trim, key);
+      const r = await uploadClip(supabase, file, 'moment', (p) => setClip((c) => (c ? { ...c, progress: p } : c)), trim, key, frame);
       setClip((c) => (c ? { ...c, progress: 1, videoUrl: r.videoUrl, posterUrl: r.posterUrl } : c));
     } catch (e) {
       setClip((c) => (c ? { ...c, error: (e as Error).message } : c));
@@ -160,12 +160,12 @@ export default function PostMomentPage() {
           )}
           {/* No link? Upload the clip itself */}
           <input ref={pick} type="file" accept="video/*" hidden onChange={(e) => chooseClip(e.target.files?.[0])} />
-          {trimming && <TrimSheet file={trimming} kind="moment" onCancel={() => setTrimming(null)} onDone={(t, k) => startUpload(trimming, t, k)} />}
+          {trimming && <TrimSheet file={trimming} kind="moment" onCancel={() => setTrimming(null)} onDone={(t, k, f) => startUpload(trimming, t, k, f)} />}
           {pickErr && !clip && <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 13, color: '#FCA5A5' }}>{pickErr}</p>}
           {!clip ? (
             uploadsOn && !form.url.trim() && (
               <button type="button" onClick={() => pick.current?.click()} style={{ marginTop: 10, width: '100%', height: 48, borderRadius: 14, border: '1px dashed rgba(255,255,255,0.18)', background: 'transparent', color: T.text, fontFamily: FONT.sans, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <Upload size={16} /> No link? Upload a clip <span style={{ color: T.text3, fontWeight: 500 }}>(landscape, up to {MAX_SECONDS}s)</span>
+                <Upload size={16} /> No link? Upload a clip <span style={{ color: T.text3, fontWeight: 500 }}>(up to {MAX_SECONDS}s)</span>
               </button>
             )
           ) : (

@@ -65,7 +65,6 @@ export async function POST(req: Request) {
 
     const info = describe((await ff(['-i', src])).log);
     if (!info.w || !info.h) return NextResponse.json({ error: 'That file isn’t a video we can use. Try another one.' }, { status: 400 });
-    if (info.h > info.w) return NextResponse.json({ error: 'This video is upright. Clips play wide on TsaCoal, so use a landscape video: turn your phone sideways when you record.' }, { status: 400 });
     const base = key.replace(/\.[a-z0-9]+$/, '');
 
     // Preview: a small copy (360p, no sound, first 10 minutes) for phones that can't show the original,
@@ -84,10 +83,19 @@ export async function POST(req: Request) {
     const from = info.seconds && start >= info.seconds - 0.5 ? 0 : start;
     const len = Math.max(1, Math.min(VIDEO_MAX_SECONDS, wanted || VIDEO_MAX_SECONDS, info.seconds ? info.seconds - from : VIDEO_MAX_SECONDS));
 
+    // Upright videos fill the wide frame the way they chose: whole with blurred sides (default), or a wide slice
+    const fr = body.frame && typeof body.frame === 'object' ? body.frame as { mode?: string; y?: number } : null;
+    const y = Math.min(1, Math.max(0, Number(fr?.y ?? 0.5) || 0));
+    const upright = info.h > info.w;
+    const picture = !upright
+      ? ['-vf', "scale='min(1280,iw)':-2:flags=fast_bilinear,format=yuv420p"]
+      : fr?.mode === 'crop'
+        ? ['-vf', `crop=iw:trunc(iw*9/32)*2:0:trunc((ih-iw*9/16)*${y.toFixed(3)}),scale=1280:720:flags=fast_bilinear,format=yuv420p`]
+        : ['-filter_complex', '[0:v:0]split[a][b];[a]scale=1280:720:force_original_aspect_ratio=increase:flags=fast_bilinear,crop=1280:720,boxblur=20:2,eq=brightness=-0.08[bg];[b]scale=-2:720:flags=fast_bilinear[fg];[bg][fg]overlay=(W-w)/2:0,format=yuv420p[v]', '-map', '[v]'];
     const enc = await ff([
       '-y', '-ss', String(from), '-i', src, '-t', String(len),
-      '-map', '0:v:0', '-map', '0:a:0?',
-      '-vf', "scale='min(1280,iw)':-2:flags=fast_bilinear,format=yuv420p",
+      ...(picture.includes('-filter_complex') ? [] : ['-map', '0:v:0']), '-map', '0:a:0?',
+      ...picture,
       '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26', '-profile:v', 'high', '-r', '30',
       '-c:a', 'aac', '-b:a', '128k', '-ac', '2', '-movflags', '+faststart', '-threads', '0', out,
     ]);

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom';
 import { Pause, Play, X } from 'lucide-react';
 import { T, FONT, GRAD } from '@/lib/thiscene';
-import { MAX_SECONDS, uploadRaw, makePreview, type Trim } from '@/lib/videoUpload';
+import { MAX_SECONDS, uploadRaw, makePreview, type Trim, type Frame } from '@/lib/videoUpload';
 import { createClient } from '@/lib/supabase/client';
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
@@ -14,9 +14,10 @@ const MIN = 1;
  * Pick the part of a video that plays (up to a minute): drag either end, or slide the whole window.
  * The video previews the part on a loop. When the phone can't play the file itself, it's uploaded straight
  * away and the server sends back a small copy to preview instead, so there's always something to see.
- * `onDone` gets the chosen part, and the upload's key when the file is already up.
+ * Upright videos aren't turned away: they choose Fit (whole, blurred sides) or Crop (drag to pick a wide slice).
+ * `onDone` gets the chosen part, the upload's key when the file is already up, and the framing for upright videos.
  */
-export default function TrimSheet({ file, kind, onCancel, onDone }: { file: File; kind: 'moment' | 'promo'; onCancel: () => void; onDone: (trim: Trim | null, key: string | null) => void }) {
+export default function TrimSheet({ file, kind, onCancel, onDone }: { file: File; kind: 'moment' | 'promo'; onCancel: () => void; onDone: (trim: Trim | null, key: string | null, frame: Frame | null) => void }) {
   const url = useMemo(() => URL.createObjectURL(file), [file]);
   useEffect(() => () => URL.revokeObjectURL(url), [url]);
   const [src, setSrc] = useState(url);
@@ -47,6 +48,23 @@ export default function TrimSheet({ file, kind, onCancel, onDone }: { file: File
   }, [blind, file, kind, error]);
   const showing = (frame && !blind) || (src !== url && frame);
   const drag = useRef<{ what: 'start' | 'end' | 'move'; x0: number; r0: Trim } | null>(null);
+  // Upright video: how it fills the wide frame
+  const [upright, setUpright] = useState(false);
+  const [fr, setFr] = useState<Frame>({ mode: 'fit', y: 0.5 });
+  const bg = useRef<HTMLVideoElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const pan = useRef<{ y0: number; f0: number; moved: boolean } | null>(null);
+  const panDown = (e: React.PointerEvent) => { if (!upright || fr.mode !== 'crop') return; (e.currentTarget as Element).setPointerCapture?.(e.pointerId); pan.current = { y0: e.clientY, f0: fr.y, moved: false }; };
+  const panMove = (e: React.PointerEvent) => {
+    const p = pan.current, el = v.current, st = stage.current;
+    if (!p || !el || !st) return;
+    const spare = el.getBoundingClientRect().height - st.getBoundingClientRect().height;
+    if (spare <= 0) return;
+    const dy = e.clientY - p.y0;
+    if (Math.abs(dy) > 4) p.moved = true;
+    setFr((f) => ({ ...f, y: Math.min(1, Math.max(0, p.f0 - dy / spare)) }));
+  };
+  const panUp = () => { const p = pan.current; pan.current = null; if (p && !p.moved) toggle(); };
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -58,8 +76,8 @@ export default function TrimSheet({ file, kind, onCancel, onDone }: { file: File
     const el = v.current;
     if (!el) return;
     if (!Number.isFinite(el.duration)) { el.currentTime = 1e9; return; } // some recordings only say how long they are after a seek
-    // Clips play in a wide (16:9) frame on the event cards, so only landscape videos work
-    if (el.videoWidth && el.videoHeight > el.videoWidth) { setError('This video is upright. Clips play wide on TsaCoal, so use a landscape video: turn your phone sideways when you record.'); return; }
+    // Clips play in a wide (16:9) frame; upright videos get to choose how they fill it
+    setUpright(!!el.videoWidth && el.videoHeight > el.videoWidth);
     const d = el.duration;
     setDur(d);
     setRange({ start: 0, end: Math.min(d, MAX_SECONDS) });
@@ -71,6 +89,8 @@ export default function TrimSheet({ file, kind, onCancel, onDone }: { file: File
     const el = v.current;
     if (!el || !dur) return;
     setNow(el.currentTime);
+    const b = bg.current;
+    if (b && Math.abs(b.currentTime - el.currentTime) > 0.3) b.currentTime = el.currentTime;
     if (!el.paused && el.currentTime >= range.end - 0.05) el.currentTime = range.start;
   };
 
@@ -125,17 +145,33 @@ export default function TrimSheet({ file, kind, onCancel, onDone }: { file: File
         <button type="button" aria-label="Cancel" onClick={onCancel} style={{ width: 42, height: 42, borderRadius: 21, border: 'none', background: 'rgba(255,255,255,0.08)', color: T.white, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={20} /></button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ margin: 0, fontFamily: FONT.display, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>Trim your clip</p>
-          <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Landscape · up to {MAX_SECONDS} seconds plays</p>
+          <p style={{ margin: '2px 0 0', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>Up to {MAX_SECONDS} seconds plays</p>
         </div>
       </div>
 
-      <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }} onClick={toggle}>
+      <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }} onClick={upright ? undefined : toggle}>
+        {/* Upright videos are shown in the wide frame they'll play in: whole with blurred sides, or a slice to drag */}
+        <div ref={stage} onPointerDown={panDown} onPointerMove={panMove} onPointerUp={panUp} onPointerCancel={() => { pan.current = null; }} onClick={upright && fr.mode === 'fit' ? toggle : undefined}
+          style={upright && showing && !error
+            ? { position: 'relative', width: '100%', aspectRatio: '16 / 9', overflow: 'hidden', background: '#000', touchAction: fr.mode === 'crop' ? 'none' : undefined, cursor: fr.mode === 'crop' ? 'grab' : 'pointer' }
+            : { display: 'contents' }}>
+        {upright && fr.mode === 'fit' && showing && !error && (
+          <video ref={bg} src={src} muted playsInline preload="auto" aria-hidden style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(22px) brightness(0.6)', transform: 'scale(1.15)' }} />
+        )}
         <video ref={v} src={src} playsInline muted={false} preload="auto" onLoadedMetadata={loaded} onDurationChange={() => { if (!dur && v.current && Number.isFinite(v.current.duration)) loaded(); }}
-          onLoadedData={() => { if (v.current?.videoWidth) setFrame(true); }} onTimeUpdate={onTime} onPause={() => setPlaying(false)} onPlay={() => setPlaying(true)}
+          onLoadedData={() => { if (v.current?.videoWidth) setFrame(true); }} onTimeUpdate={onTime} onPause={() => { setPlaying(false); bg.current?.pause(); }} onPlay={() => { setPlaying(true); bg.current?.play().catch(() => {}); }}
           onError={() => (src === url ? setBlind(true) : setError('We couldn’t open that video. Try another one.'))}
-          style={{ maxWidth: '100%', maxHeight: '100%', display: error || !showing ? 'none' : 'block' }} />
+          style={upright && !error && showing
+            ? fr.mode === 'fit'
+              ? { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }
+              : { position: 'absolute', left: 0, width: '100%', height: 'auto', top: `${fr.y * 100}%`, transform: `translateY(-${fr.y * 100}%)` }
+            : { maxWidth: '100%', maxHeight: '100%', display: error || !showing ? 'none' : 'block' }} />
+        {upright && fr.mode === 'crop' && showing && !error && (
+          <span aria-hidden style={{ position: 'absolute', left: '50%', bottom: 10, transform: 'translateX(-50%)', padding: '5px 10px', borderRadius: 999, background: 'rgba(0,0,0,0.55)', fontFamily: FONT.sans, fontSize: 12, fontWeight: 600, color: T.white, pointerEvents: 'none', whiteSpace: 'nowrap' }}>Drag up or down</span>
+        )}
+        </div>
         {!error && showing && dur > 0 && !playing && (
-          <span aria-hidden style={{ position: 'absolute', width: 64, height: 64, borderRadius: 32, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.white }}><Play size={26} fill={T.white} style={{ marginLeft: 3 }} /></span>
+          <span aria-hidden style={{ position: 'absolute', pointerEvents: 'none', width: 64, height: 64, borderRadius: 32, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.white }}><Play size={26} fill={T.white} style={{ marginLeft: 3 }} /></span>
         )}
         {error && <p style={{ margin: 0, padding: '0 28px', textAlign: 'center', fontFamily: FONT.sans, fontSize: 15, lineHeight: 1.55, color: '#FCA5A5' }}>{error}</p>}
         {!error && showing && !dur && <p style={{ position: 'absolute', margin: 0, fontFamily: FONT.sans, fontSize: 14, color: T.text3 }}>Opening your video…</p>}
@@ -156,6 +192,17 @@ export default function TrimSheet({ file, kind, onCancel, onDone }: { file: File
       <div style={{ padding: '18px 20px calc(18px + env(safe-area-inset-bottom, 0px))' }}>
         {!error && showing && dur > 0 && (
           <>
+            {upright && (
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ margin: '0 0 8px', textAlign: 'center', fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>Upright video: choose how it fills the wide frame</p>
+                <div role="radiogroup" aria-label="Framing" style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
+                  {([['fit', 'Fit, blurred sides'], ['crop', 'Crop to wide']] as const).map(([m, l]) => (
+                    <button key={m} type="button" role="radio" aria-checked={fr.mode === m} onClick={() => setFr((f) => ({ ...f, mode: m }))}
+                      style={{ flex: 1, height: 38, borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700, background: fr.mode === m ? T.white : 'transparent', color: fr.mode === m ? T.onMint : T.text2 }}>{l}</button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
               <span>{fmt(range.start)}</span>
               <span style={{ fontWeight: 700, color: T.white }}>{whole ? `Whole clip · ${fmt(len)}` : `${fmt(len)} selected`}</span>
@@ -179,7 +226,7 @@ export default function TrimSheet({ file, kind, onCancel, onDone }: { file: File
             style={{ width: 52, height: 52, borderRadius: 26, border: 'none', flexShrink: 0, background: 'rgba(255,255,255,0.08)', color: T.white, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: error || !dur ? 0.4 : 1 }}>
             {playing ? <Pause size={20} /> : <Play size={20} style={{ marginLeft: 2 }} />}
           </button>}
-          <button type="button" disabled={!!error || !dur || !showing} onClick={() => { v.current?.pause(); onDone(whole ? null : range, key.current); }}
+          <button type="button" disabled={!!error || !dur || !showing} onClick={() => { v.current?.pause(); onDone(whole ? null : range, key.current, upright ? fr : null); }}
             style={{ flex: 1, height: 52, borderRadius: 999, border: 'none', background: GRAD.mint, color: T.onMint, fontFamily: FONT.display, fontSize: 15.5, fontWeight: 700, cursor: 'pointer', opacity: error || !dur || !showing ? 0.4 : 1 }}>
             {error ? 'Can’t use this video' : whole ? 'Use clip' : 'Use this part'}
           </button>
