@@ -66,6 +66,21 @@ export async function POST(req: Request) {
     const info = describe((await ff(['-i', src])).log);
     if (!info.w || !info.h) return NextResponse.json({ error: 'That file isn’t a video we can use. Try another one.' }, { status: 400 });
     if (info.h > info.w) return NextResponse.json({ error: 'This video is upright. Clips play wide on TsaCoal, so use a landscape video: turn your phone sideways when you record.' }, { status: 400 });
+    const base = key.replace(/\.[a-z0-9]+$/, '');
+
+    // Preview: a small copy (360p, no sound, first 10 minutes) for phones that can't show the original,
+    // so the trim screen always has something to play. The original stays for the final cut.
+    if (body.mode === 'preview') {
+      const prev = path.join(dir, 'prev.mp4');
+      const enc = await ff(['-y', '-i', src, '-t', '600', '-map', '0:v:0', '-an',
+        '-vf', 'scale=-2:360:flags=fast_bilinear,format=yuv420p', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '32', '-r', '20',
+        '-movflags', '+faststart', '-threads', '0', prev]);
+      if (enc.code !== 0) { console.error('preview encode failed', enc.log.slice(-1500)); return NextResponse.json({ error: 'We couldn’t open that video. Try another one.' }, { status: 422 }); }
+      const put = await r2Put(`${base}-p.mp4`, await readFile(prev), 'video/mp4');
+      if (!put.ok) return NextResponse.json({ error: 'Something went wrong. Try again.' }, { status: 502 });
+      return NextResponse.json({ previewUrl: `${r2PublicBase()}/${base}-p.mp4`, seconds: Math.min(info.seconds, 600) });
+    }
+
     const from = info.seconds && start >= info.seconds - 0.5 ? 0 : start;
     const len = Math.max(1, Math.min(VIDEO_MAX_SECONDS, wanted || VIDEO_MAX_SECONDS, info.seconds ? info.seconds - from : VIDEO_MAX_SECONDS));
 
@@ -79,7 +94,6 @@ export async function POST(req: Request) {
     if (enc.code !== 0) { console.error('clip encode failed', enc.log.slice(-1500)); return NextResponse.json({ error: 'We couldn’t convert that video. Try another one.' }, { status: 422 }); }
     await ff(['-y', '-ss', String(Math.min(1, len / 3)), '-i', out, '-frames:v', '1', '-q:v', '4', still]);
 
-    const base = key.replace(/\.[a-z0-9]+$/, '');
     const clipKey = `${base}-c.mp4`, stillKey = `${base}-c.jpg`;
     const put = await r2Put(clipKey, await readFile(out), 'video/mp4');
     if (!put.ok) return NextResponse.json({ error: 'Saving the clip failed. Try again.' }, { status: 502 });
@@ -88,7 +102,8 @@ export async function POST(req: Request) {
       const p = await r2Put(stillKey, await readFile(still), 'image/jpeg');
       if (p.ok) posterUrl = `${r2PublicBase()}/${stillKey}`;
     }
-    await r2Delete(key).catch(() => null); // the original isn't needed any more
+    // The original and any preview aren't needed any more
+    await Promise.all([r2Delete(key), r2Delete(`${base}-p.mp4`)]).catch(() => null);
     return NextResponse.json({ videoUrl: `${r2PublicBase()}/${clipKey}`, posterUrl, seconds: Math.round(len) });
   } catch (e) {
     console.error('clip process error', e);
