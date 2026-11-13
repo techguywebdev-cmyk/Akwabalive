@@ -95,16 +95,21 @@ const authed = async (supabase: SupabaseClient) => {
   return { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' };
 };
 
-/** Sends one piece; resolves when stored. Reports bytes sent so far for that piece. */
+/**
+ * Sends one piece; resolves when stored. No fixed time limit (slow mobile data is fine): it only gives up
+ * when nothing has moved for a minute. Reports bytes sent so far for that piece.
+ */
 function sendPart(url: string, blob: Blob, onBytes: (n: number) => void): Promise<void> {
   return new Promise((resolve, reject) => {
     const x = new XMLHttpRequest();
+    let last = Date.now();
+    const watch = setInterval(() => { if (Date.now() - last > 60000) { x.abort(); clearInterval(watch); reject(new Error('stalled')); } }, 5000);
+    const end = (fn: () => void) => { clearInterval(watch); fn(); };
     x.open('PUT', url);
-    x.timeout = 120000;
-    x.upload.onprogress = (e) => onBytes(e.loaded);
-    x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error(`status ${x.status}`)));
-    x.onerror = () => reject(new Error('network'));
-    x.ontimeout = () => reject(new Error('timeout'));
+    x.upload.onprogress = (e) => { last = Date.now(); onBytes(e.loaded); };
+    x.onload = () => end(() => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error(`status ${x.status}`))));
+    x.onerror = () => end(() => reject(new Error('network')));
+    x.onabort = () => end(() => reject(new Error('stalled')));
     x.send(blob);
   });
 }
@@ -131,12 +136,13 @@ export async function uploadRaw(supabase: SupabaseClient, file: File, kind: 'mom
       try {
         await sendPart(urls[i], piece, (n) => onProgress?.(Math.min(0.99, (done + n) / file.size)));
         break;
-      } catch {
-        if (attempt >= 6) throw new Error('The upload keeps dropping. Check your connection, or try on Wi-Fi.');
+      } catch (e) {
+        // Say which piece and why, so a failure can be told apart (network, stalled, refused)
+        if (attempt >= 10) throw new Error(`The upload keeps dropping (piece ${i + 1} of ${urls.length}: ${(e as Error).message}). Check your connection, or try on Wi-Fi.`);
         if (typeof navigator !== 'undefined' && navigator.onLine === false) {
           // Offline: wait for the connection to come back (up to a minute) before trying the piece again
           await new Promise<void>((r) => { const t = setTimeout(r, 60000); window.addEventListener('online', () => { clearTimeout(t); r(); }, { once: true }); });
-        } else await wait(1500 * attempt);
+        } else await wait(Math.min(10000, 1500 * attempt));
       }
     }
     done += piece.size;
