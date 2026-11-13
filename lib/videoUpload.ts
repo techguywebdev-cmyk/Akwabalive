@@ -87,7 +87,7 @@ export function checkFile(file: File): string | null {
  * Uploads a clip to TsaCoal's video storage, with a still (from where it starts playing) for thumbnails.
  * `trim` is the part that plays (at most a minute). Reports progress (0–1).
  */
-export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void, trim?: Trim | null): Promise<{ videoUrl: string; posterUrl: string | null }> {
+export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'moment' | 'promo', onProgress?: (p: number) => void, trim?: Trim | null, onStage?: (s: 'uploading' | 'preparing') => void): Promise<{ videoUrl: string; posterUrl: string | null }> {
   const problem = checkFile(file);
   if (problem) throw new Error(problem);
   if (trim && trim.end - trim.start > MAX_SECONDS + 0.5) throw new Error(`Trim it to ${MAX_SECONDS} seconds or less`);
@@ -113,20 +113,16 @@ export async function uploadClip(supabase: SupabaseClient, file: File, kind: 'mo
     x.send(file);
   });
 
-  // The still goes with the images (a missing still never blocks the clip)
-  let posterUrl: string | null = null;
-  try {
-    const { video, done } = await openVideo(file);
-    const still = await poster(video, trim?.start);
-    done();
-    if (still) {
-      const path = `events/posters/${session.user.id}-${Date.now().toString(36)}.jpg`;
-      const { error } = await supabase.storage.from('event-images').upload(path, still, { contentType: 'image/jpeg', cacheControl: '31536000' });
-      if (!error) posterUrl = supabase.storage.from('event-images').getPublicUrl(path).data.publicUrl;
-    }
-  } catch { /* fine */ }
-
-  return { videoUrl: withTrim(j.publicUrl, trim), posterUrl };
+  // The server turns it into a clip every browser plays (any phone format), cuts the chosen part and makes the still
+  onProgress?.(1);
+  onStage?.('preparing');
+  const made = await fetch('/api/uploads/video/process', {
+    method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: j.key, start: trim?.start ?? 0, end: trim && Number.isFinite(trim.end) ? trim.end : null }),
+  });
+  const r = await made.json().catch(() => ({}));
+  if (!made.ok) throw new Error(r.error ?? 'We couldn’t prepare that clip. Try again.');
+  return { videoUrl: r.videoUrl, posterUrl: r.posterUrl ?? null };
 }
 
 /** True for a link to a video file (an uploaded clip) rather than YouTube */

@@ -181,7 +181,7 @@ export default function PostMomentPage() {
                 )}
               </div>
               <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 13, color: clip.error ? '#FCA5A5' : clip.videoUrl ? T.mintText : T.text3 }}>
-                {clip.error ?? (clip.videoUrl ? 'Uploaded' : `Uploading… ${Math.round(clip.progress * 100)}%`)}
+                {clip.error ?? (clip.videoUrl ? 'Ready' : clip.progress >= 1 ? 'Preparing your clip… this can take a minute' : `Uploading… ${Math.round(clip.progress * 100)}%`)}
               </p>
             </div>
           )}
