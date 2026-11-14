@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "TsaCoal",
-    "slug": "tsacoal",
+    "slug": "tsacoal-",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -77,8 +77,6 @@
         "projectId": "dda687d7-60b2-4c50-a587-ddd0fc8bdda9"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    }
+    "owner": "techguywebdev"
   }
 }
