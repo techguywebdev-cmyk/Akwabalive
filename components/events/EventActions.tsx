@@ -107,7 +107,7 @@ export function TicketsSheet({
   const free = tiers.length > 0 && tiers.every((t) => t.price === 0);
   const noTickets = !past && noTicketsYet(event);
   const dial = ticketDial(event);
-  const dialFirst = !!dial && !past && (listed || !event.tiers?.length);
+  const dialFirst = !!dial && !past && (isListedEvent(event) || !event.tiers?.length);
   const alert = useTicketAlert(event.slug, noTickets);
 
   const cta = { flex: 1, height: 52, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: FONT.display, fontSize: 15, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', color: T.onMint, background: GRAD.mint, border: 'none' } as const;
