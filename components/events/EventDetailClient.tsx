@@ -232,7 +232,7 @@ export default function EventDetailClient({ event, related, seriesMomentId, orga
   // Share opens the card sheet: a designed picture of the show (with your name) and a personal link
   const [sharing, setSharing] = useState(false);
   const [sharingIntro, setSharingIntro] = useState<string | undefined>(undefined);
-  useWarmShareCard('event', event.slug);
+  useWarmShareCard('event', event.slug, true, '', event.image);
   function share() { setSharingIntro(undefined); setSharing(true); }
 
   const eyebrow: CSSProperties = { fontFamily: FONT.display, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', margin: '0 0 6px' };

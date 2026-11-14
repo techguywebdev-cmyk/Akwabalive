@@ -6,10 +6,11 @@ import { Check, Download, Link2, Share2, X } from 'lucide-react';
 import { useAuth } from '@/lib/supabase/AuthProvider';
 import { T, FONT, GRAD } from '@/lib/thiscene';
 import { artistShareText, momentShareText } from '@/lib/shareText';
+import { eventColours, toHex } from '@/lib/events/accent';
 
 type Kind = 'event' | 'artist' | 'moment';
 /** Bump when the card design changes, so phones and the CDN fetch the new card instead of a cached one */
-const CARD_V = '8';
+const CARD_V = '9';
 /** Event cards come in three designs. One is picked at random per show each time the site is opened, so the
  *  card made ahead of time and the one in the share sheet match, and feeds don't fill with a single look. */
 const designs = new Map<string, number>();
@@ -18,11 +19,24 @@ function design(slug: string): number {
   if (!d) { d = 1 + Math.floor(Math.random() * 3); designs.set(slug, d); }
   return d;
 }
+/** The flyer's main colour per show (hex without #), for the date on the full-bleed design. '' when unknown. */
+const tints = new Map<string, Promise<string>>();
+const tintNow = new Map<string, string>();
+function tintOf(slug: string, image?: string | null): Promise<string> {
+  let p = tints.get(slug);
+  if (!p) {
+    const timeout = new Promise<string>((r) => setTimeout(() => r(''), 2500));
+    const found = image ? eventColours(image).then((c) => (c.accent ? toHex(c.accent).slice(1) : '')).catch(() => '') : Promise.resolve('');
+    p = Promise.race([found, timeout]).then((h) => { tintNow.set(slug, h); return h; });
+    tints.set(slug, p);
+  }
+  return p;
+}
 /** For a moment, slug is the clip id and extra carries the next edition (&next=slug) */
 const cardUrl = (kind: Kind, slug: string, u: string | null, size: 'post' | 'story', extra = '') =>
   kind === 'moment'
     ? `/moments/card?id=${encodeURIComponent(slug)}&format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}${extra}&v=${CARD_V}`
-    : `${kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}${kind === 'event' ? `&t=${design(slug)}` : ''}&v=${CARD_V}`;
+    : `${kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}${kind === 'event' ? `&t=${design(slug)}${design(slug) === 2 && tintNow.get(slug) ? `&c=${tintNow.get(slug)}` : ''}` : ''}&v=${CARD_V}`;
 const pageOf = (kind: Kind, slug: string) => kind === 'moment' ? `/moments?id=${encodeURIComponent(slug)}` : kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`;
 
 /** Cards fetched ahead of time, so the sheet opens with the picture ready and sharing is instant */
@@ -38,14 +52,17 @@ function warm(url: string): Promise<Blob> {
 }
 
 /** Make the post-size card in the background while someone looks at a show or artist */
-export function useWarmShareCard(kind: Kind, slug: string, enabled = true, extra = '') {
+export function useWarmShareCard(kind: Kind, slug: string, enabled = true, extra = '', image?: string | null) {
   const { profile, loading } = useAuth();
   const u = profile?.username ?? null;
   useEffect(() => {
     if (!enabled || loading) return;
-    const t = setTimeout(() => { warm(cardUrl(kind, slug, u, 'post', extra)).catch(() => {}); }, 400);
-    return () => clearTimeout(t);
-  }, [kind, slug, u, enabled, loading, extra]);
+    let live = true;
+    const t = setTimeout(() => {
+      (kind === 'event' ? tintOf(slug, image) : Promise.resolve('')).then(() => { if (live) warm(cardUrl(kind, slug, u, 'post', extra)).catch(() => {}); });
+    }, 400);
+    return () => { live = false; clearTimeout(t); };
+  }, [kind, slug, u, enabled, loading, extra, image]);
 }
 
 /**
@@ -58,7 +75,10 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
   const u = profile?.username ?? null;
   // Post size (4:5) shows whole on X, Instagram and WhatsApp; story size fills a phone screen
   const [size, setSize] = useState<'post' | 'story'>('post');
-  const card = cardUrl(kind, slug, u, size, extra);
+  // Wait for the flyer colour (quick, and cached) so the picture matches the one made ahead of time
+  const [tinted, setTinted] = useState(kind !== 'event' || tintNow.has(slug));
+  useEffect(() => { if (kind === 'event') tintOf(slug, image).then(() => setTinted(true)); }, [kind, slug, image]);
+  const card = tinted ? cardUrl(kind, slug, u, size, extra) : '';
   const [preview, setPreview] = useState<string | null>(null);
   const [link, setLink] = useState(base);
   const [loaded, setLoaded] = useState(false);
@@ -71,6 +91,7 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
   useEffect(() => {
     let live = true, obj: string | null = null;
     setLoaded(false); setPreview(null);
+    if (!card) return;
     warm(card).then((b) => { if (!live) return; obj = URL.createObjectURL(b); setPreview(obj); }).catch(() => { if (live) setPreview(card); });
     warm(cardUrl(kind, slug, u, size === 'post' ? 'story' : 'post', extra)).catch(() => {});
     return () => { live = false; if (obj) URL.revokeObjectURL(obj); };
@@ -82,7 +103,8 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
   }, []);
 
   const file = async () => {
-    const blob = await warm(card);
+    if (!card) await tintOf(slug, image);
+    const blob = await warm(card || cardUrl(kind, slug, u, size, extra));
     return new File([blob], `${kind === 'moment' ? 'tsacoal-moment' : slug}-${size}.png`, { type: 'image/png' });
   };
 
