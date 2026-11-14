@@ -81,7 +81,7 @@ export default function ArtistPageClient({ artist, events, moments = [], photo: 
 
   // Share opens the card sheet: the artist and their next shows as a picture, plus a personal link
   const [sharing, setSharing] = useState(false);
-  useWarmShareCard('artist', artist.slug);
+  useWarmShareCard('artist', artist.slug, true, '', photo?.url);
   function share() { setSharing(true); }
 
 

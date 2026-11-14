@@ -79,7 +79,7 @@ export function PersonPill({ p, line, tail, scale = 1 }: { p: Person; line: stri
 }
 
 /** A quiet "going" mark: their photo, a dashed seat with a + beside it, and a short caption. */
-export function GoingMark({ p, scale = 1, ring = MINT }: { p: Person; scale?: number; ring?: string }) {
+export function GoingMark({ p, scale = 1, ring = MINT, label }: { p: Person; scale?: number; ring?: string; label?: string }) {
   const s = (n: number) => Math.round(n * scale);
   const name = firstName(p);
   const d = s(64);
@@ -92,9 +92,18 @@ export function GoingMark({ p, scale = 1, ring = MINT }: { p: Person; scale?: nu
           : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: d, height: d, borderRadius: 999, background: '#16211C', border: `${s(3)}px solid ${ring}`, color: '#fff', fontSize: s(30) }}>{name.charAt(0)}</div>}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: d, height: d, marginLeft: -s(16), borderRadius: 999, background: 'rgba(0,0,0,0.35)', border: `${s(3)}px dashed rgba(255,255,255,0.7)`, color: '#fff', fontSize: s(38), lineHeight: 1 }}>+</div>
       </div>
-      <div style={{ display: 'flex', fontSize: s(24), letterSpacing: s(3), color: 'rgba(255,255,255,0.85)' }}>{`${name.toUpperCase()}’S GOING`}</div>
+      <div style={{ display: 'flex', fontSize: s(24), letterSpacing: s(3), color: 'rgba(255,255,255,0.85)' }}>{label ?? `${name.toUpperCase()}’S GOING`}</div>
     </div>
   );
 }
 
-export const fontFile =(rel: string) => fetch(new URL(rel, import.meta.url)).then((r) => r.arrayBuffer()).catch(() => null);
+export const fontFile = (rel: string) => fetch(new URL(rel, import.meta.url)).then((r) => r.arrayBuffer()).catch(() => null);
+
+/** A colour from the phone (?c=rrggbb), lifted so it reads on a dark card; the fallback when missing */
+export function liftTint(c: string | null, fallback = '#FFE04A') {
+  if (!c || !/^[0-9a-f]{6}$/i.test(c)) return fallback;
+  let [r, g, b] = [0, 2, 4].map((i) => parseInt(c.slice(i, i + 2), 16));
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  if (lum < 0.55) { const m = (0.55 - lum) / (1 - lum); [r, g, b] = [r, g, b].map((v) => Math.round(v + (255 - v) * m)); }
+  return `rgb(${r},${g},${b})`;
+}
