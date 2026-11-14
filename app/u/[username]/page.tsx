@@ -279,6 +279,7 @@ export default function UserProfilePage() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [missing, setMissing] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [counts, setCounts] = useState({ followers: 0, following: 0 });
   const [isFollowing, setIsFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
@@ -300,8 +301,18 @@ export default function UserProfilePage() {
   const hidden = !!profile && !profile.is_public && !own;
 
   const load = useCallback(async () => {
-    const { data: prof } = await supabase.from('profiles').select('id, username, full_name, avatar_url, bio, is_public, created_at, instagram, whatsapp, website').eq('username', username).maybeSingle();
+    // A dropped request on a slow connection isn't "no such person": try again a few times before saying so
+    const name = decodeURIComponent(username).replace(/^@/, '').toLowerCase();
+    let prof: unknown = null, failed = false;
+    for (let i = 0; i < 4; i++) {
+      const { data, error } = await supabase.from('profiles').select('id, username, full_name, avatar_url, bio, is_public, created_at, instagram, whatsapp, website').ilike('username', name.replace(/[%_\\]/g, '\\$&')).maybeSingle();
+      if (!error) { prof = data; failed = false; break; }
+      failed = true;
+      await new Promise((r) => setTimeout(r, 600 * (i + 1)));
+    }
+    if (failed) { setLoadFailed(true); return; }
     if (!prof) { setMissing(true); return; }
+    setLoadFailed(false);
     const p = prof as Profile;
     setProfile(p);
     const isOwn = user?.id === p.id;
@@ -382,10 +393,21 @@ export default function UserProfilePage() {
 
   const page: React.CSSProperties = { minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' };
 
+  if (loadFailed) return (
+    <div style={page}>
+      <Nav back="/" tabs />
+      <div style={{ paddingTop: 56, textAlign: 'center' }}>
+        <Empty icon={<X size={24} />} title="Couldn’t load this profile" body="Your connection dropped for a moment. Give it another go." />
+        <button type="button" onClick={() => { setLoadFailed(false); load(); }} style={{ ...BTN.secondary, height: 44, fontSize: 14, border: 'none', cursor: 'pointer' }}>Try again</button>
+      </div>
+    </div>
+  );
   if (missing) return (
     <div style={page}>
       <Nav back="/" tabs />
-      <Empty icon={<X size={24} />} title="No one here" body={`There’s no TsaCoal profile called @${username}.`} cta={{ href: '/', label: 'Browse events' }} />
+      <div style={{ paddingTop: 56 }}>
+        <Empty icon={<X size={24} />} title="No one here" body={`There’s no TsaCoal profile called @${username}.`} cta={{ href: '/', label: 'Browse events' }} />
+      </div>
     </div>
   );
 
