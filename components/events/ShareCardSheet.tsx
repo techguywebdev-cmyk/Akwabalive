@@ -10,7 +10,7 @@ import { eventColours, toHex } from '@/lib/events/accent';
 
 type Kind = 'event' | 'artist' | 'moment';
 /** Bump when the card design changes, so phones and the CDN fetch the new card instead of a cached one */
-const CARD_V = '9';
+const CARD_V = '10';
 /** Event cards come in three designs. One is picked at random per show each time the site is opened, so the
  *  card made ahead of time and the one in the share sheet match, and feeds don't fill with a single look. */
 const designs = new Map<string, number>();
@@ -36,7 +36,7 @@ function tintOf(slug: string, image?: string | null): Promise<string> {
 const cardUrl = (kind: Kind, slug: string, u: string | null, size: 'post' | 'story', extra = '') =>
   kind === 'moment'
     ? `/moments/card?id=${encodeURIComponent(slug)}&format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}${extra}&v=${CARD_V}`
-    : `${kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}${kind === 'event' ? `&t=${design(slug)}${design(slug) === 2 && tintNow.get(slug) ? `&c=${tintNow.get(slug)}` : ''}` : ''}&v=${CARD_V}`;
+    : `${kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}&t=${design(slug)}${design(slug) === 2 && tintNow.get(slug) ? `&c=${tintNow.get(slug)}` : ''}&v=${CARD_V}`;
 const pageOf = (kind: Kind, slug: string) => kind === 'moment' ? `/moments?id=${encodeURIComponent(slug)}` : kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`;
 
 /** Cards fetched ahead of time, so the sheet opens with the picture ready and sharing is instant */
@@ -59,7 +59,7 @@ export function useWarmShareCard(kind: Kind, slug: string, enabled = true, extra
     if (!enabled || loading) return;
     let live = true;
     const t = setTimeout(() => {
-      (kind === 'event' ? tintOf(slug, image) : Promise.resolve('')).then(() => { if (live) warm(cardUrl(kind, slug, u, 'post', extra)).catch(() => {}); });
+      (kind !== 'moment' ? tintOf(slug, image) : Promise.resolve('')).then(() => { if (live) warm(cardUrl(kind, slug, u, 'post', extra)).catch(() => {}); });
     }, 400);
     return () => { live = false; clearTimeout(t); };
   }, [kind, slug, u, enabled, loading, extra, image]);
@@ -76,8 +76,8 @@ export default function ShareCardSheet({ slug, title, onClose, kind = 'event', i
   // Post size (4:5) shows whole on X, Instagram and WhatsApp; story size fills a phone screen
   const [size, setSize] = useState<'post' | 'story'>('post');
   // Wait for the flyer colour (quick, and cached) so the picture matches the one made ahead of time
-  const [tinted, setTinted] = useState(kind !== 'event' || tintNow.has(slug));
-  useEffect(() => { if (kind === 'event') tintOf(slug, image).then(() => setTinted(true)); }, [kind, slug, image]);
+  const [tinted, setTinted] = useState(kind === 'moment' || tintNow.has(slug));
+  useEffect(() => { if (kind !== 'moment') tintOf(slug, image).then(() => setTinted(true)); }, [kind, slug, image]);
   const card = tinted ? cardUrl(kind, slug, u, size, extra) : '';
   const [preview, setPreview] = useState<string | null>(null);
   const [link, setLink] = useState(base);
