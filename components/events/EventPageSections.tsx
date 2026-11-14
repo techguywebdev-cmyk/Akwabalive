@@ -10,6 +10,7 @@ import { eventCounts, compact } from '@/lib/events/track';
 import { hiRes } from '@/lib/events/image';
 import { cityLabel } from '@/lib/utils';
 import { parseDay, shortDay } from '@/lib/dates';
+import { setMinutes, niceSetTime, type EventSet } from '@/lib/events/page';
 import type { GhanaEvent } from '@/lib/types';
 import type { EventFaq, EventPage } from '@/lib/events/page';
 
@@ -297,3 +298,50 @@ export function OwnerBar({ event, organiserId, accent, onAccent }: { event: Ghan
   );
 }
 
+
+/* ── Set times: who's on when, with "On now" and "Up next" while it's happening ── */
+
+export function SetTimes({ sets, date, ink, heading, slugFor }: {
+  sets: EventSet[]; date: string; ink: string; heading: CSSProperties; slugFor: (name: string) => string | null;
+}) {
+  // The clock only runs on the day itself, after the page has loaded (so the server and phone agree)
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      setNow(today === date.slice(0, 10) ? d.getHours() * 60 + d.getMinutes() : null);
+    };
+    tick();
+    const id = setInterval(tick, 60000);
+    return () => clearInterval(id);
+  }, [date]);
+  const mins = sets.map((s) => setMinutes(s.time));
+  // On now: the latest set that has started (sets run about an hour unless the next one starts sooner)
+  let live = -1;
+  if (now != null) mins.forEach((m, i) => { if (m != null && m <= now && now < (mins[i + 1] ?? m + 75)) live = i; });
+  const next = now == null ? -1 : mins.findIndex((m) => m != null && m > now);
+
+  return (
+    <section style={{ marginTop: 28 }}>
+      <h2 style={heading}>Set times</h2>
+      <ol style={{ listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {sets.map((s, i) => {
+          const slug = slugFor(s.name);
+          const on = i === live, up = i === next && live !== next;
+          const done = now != null && live >= 0 ? i < live : now != null && next > 0 ? i < next : false;
+          const name = <span style={{ fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>{s.name}</span>;
+          return (
+            <li key={`${s.name}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 14px', borderRadius: 16, opacity: done ? 0.45 : 1,
+              background: on ? `color-mix(in srgb, ${ink} 16%, transparent)` : 'rgba(255,255,255,0.05)', boxShadow: on ? `inset 0 0 0 1.5px ${ink}` : 'none' }}>
+              <span style={{ width: 74, flexShrink: 0, fontFamily: FONT.sans, fontSize: 14, fontWeight: 700, color: ink }}>{niceSetTime(s.time)}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>{slug ? <Link href={`/artists/${slug}`} style={{ textDecoration: 'none' }}>{name}</Link> : name}</span>
+              {on && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: FONT.sans, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', color: ink }}><span className="ak-pulse" style={{ width: 7, height: 7, borderRadius: 4, background: ink }} />ON NOW</span>}
+              {up && <span style={{ fontFamily: FONT.sans, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', color: T.text2 }}>UP NEXT</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}

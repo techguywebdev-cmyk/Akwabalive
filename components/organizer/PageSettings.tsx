@@ -4,7 +4,7 @@ import { useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Check, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { T, FONT } from '@/lib/thiscene';
-import { PAGE_ACCENTS, GALLERY_MAX, FAQ_MAX, onAccent, type EventPage } from '@/lib/events/page';
+import { PAGE_ACCENTS, GALLERY_MAX, FAQ_MAX, SETS_MAX, onAccent, setMinutes, type EventPage } from '@/lib/events/page';
 
 const field: CSSProperties = {
   display: 'block', width: '100%', boxSizing: 'border-box', height: 50, padding: '0 16px', borderRadius: 16,
@@ -29,6 +29,9 @@ export default function PageSettings({ page, onPage, code, onCode, slugHint }: {
   const set = <K extends keyof EventPage>(k: K, v: EventPage[K]) => onPage({ ...page, [k]: v });
   const gallery = page.gallery ?? [];
   const faqs = page.faqs ?? [];
+  const sets = page.sets ?? [];
+  // Set times are kept as 24h "21:00"; older ones typed as "9:00 PM" still show in the picker
+  const hhmm = (t: string) => { const n = setMinutes(t); return n == null ? '' : `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`; };
 
   async function addPhotos(files: FileList | null) {
     if (!files?.length) return;
@@ -109,6 +112,28 @@ export default function PageSettings({ page, onPage, code, onCode, slugHint }: {
           )}
         </div>
         <span style={hint}>{err || 'Crowd shots and stage photos from past editions or the venue. The first one shows biggest.'}</span>
+      </div>
+
+      {/* Set times */}
+      <div>
+        <span style={label}>Set times <span style={{ color: T.text3 }}>(optional)</span></span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {sets.map((x, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input type="time" value={hhmm(x.time)} onChange={(e) => set('sets', sets.map((y, j) => (j === i ? { ...y, time: e.target.value } : y)))} aria-label="Start time" style={{ ...field, width: 128, flexShrink: 0, colorScheme: 'dark' }} />
+              <input value={x.name} onChange={(e) => set('sets', sets.map((y, j) => (j === i ? { ...y, name: e.target.value } : y)))} maxLength={80} placeholder="Who’s on, e.g. Kwesi Arthur" style={{ ...field, flex: 1, minWidth: 0 }} />
+              <button type="button" aria-label="Remove set" onClick={() => set('sets', sets.filter((_, j) => j !== i))}
+                style={{ width: 40, height: 40, borderRadius: 20, border: 'none', background: 'rgba(255,255,255,0.06)', color: T.text2, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}><Trash2 size={16} /></button>
+            </div>
+          ))}
+          {sets.length < SETS_MAX && (
+            <button type="button" onClick={() => set('sets', [...sets, { name: '', time: '' }])}
+              style={{ height: 46, borderRadius: 16, border: '1.5px dashed rgba(255,255,255,0.18)', background: 'transparent', color: T.white, fontFamily: FONT.sans, fontSize: 14.5, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Plus size={17} /> Add a set
+            </button>
+          )}
+        </div>
+        <span style={hint}>Who’s on when, in running order. On the day your page shows who’s on now and who’s up next.</span>
       </div>
 
       {/* Getting there */}
