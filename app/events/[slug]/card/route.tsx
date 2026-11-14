@@ -117,10 +117,10 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   }
 
   // Post (1080×1350, shows whole on X, Instagram and WhatsApp) and story (1080×1920).
-  // Five poster designs (?t=1…5), picked at random when someone shares, so feeds don't fill with one look.
+  // Three designs (?t=1 Poster, 2 Full bleed, 3 Neon), picked at random when someone shares.
   const story = format === 'story';
   const W = 1080, H = story ? 1920 : 1350;
-  const t = Math.min(5, Math.max(1, Number(q.get('t')) || 1));
+  const t = Math.min(3, Math.max(1, Number(q.get('t')) || 1));
   const k = story ? 1.2 : 1;
   const when = [day, num, month].join(' ');
 
@@ -194,111 +194,70 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
 
   let body: JSX.Element;
   let ground: JSX.Element = <Backdrop src={flyer} w={W} h={H} />;
-  // A wash of one colour over the blurred flyer gives each design its own light
-  const lit = (g: string) => (
-    <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: H }}>
-      <Backdrop src={flyer} w={W} h={H} strength={0.7} />
-      <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: H, background: g }} />
-    </div>
-  );
-  const chipRow = (bg: string, ink: string, center = false) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: center ? 'center' : 'flex-start', gap: 22, marginTop: story ? 34 : 22 }}>
-      <div style={{ display: 'flex', padding: story ? '17px 32px' : '14px 28px', borderRadius: 999, background: bg, fontSize: story ? 29 : 25, color: ink }}>{dial ? `Dial ${dial}` : film ? 'Showtimes on TsaCoal' : 'Tickets on TsaCoal'}</div>
-      <div style={{ display: 'flex', fontSize: story ? 26 : 22, letterSpacing: 2, color: 'rgba(255,255,255,0.72)' }}>tsacoal.com</div>
-    </div>
-  );
-  const headerOr = (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <div style={{ display: 'flex', fontSize: story ? 42 : 36, letterSpacing: -1.5, color: '#fff' }}>TsaCoal</div>
-      {going ?? <div style={{ display: 'flex', fontSize: story ? 24 : 21, letterSpacing: 4, color: 'rgba(255,255,255,0.65)' }}>{liveIn}</div>}
-    </div>
-  );
-
   if (t === 2) {
-    // Pass: the flyer as a gold event pass on a lanyard, with a tear-off stub for the date
-    const GOLD = 'linear-gradient(135deg, #FFE9A8 0%, #F5C451 45%, #C98A1B 100%)', fw = story ? 640 : 470;
-    ground = lit('linear-gradient(170deg, rgba(245,196,81,0.34) 0%, rgba(20,14,4,0.55) 46%, rgba(201,138,27,0.3) 100%)');
-    const top = story ? 150 : 104; // where the pass starts
+    // Full bleed: the flyer is the whole card, bright and uncovered at the top, with the date and place
+    // in one row along the bottom (calendar | pin), like a finished festival poster
+    const fh = Math.round(W * 1.25); // the flyer at full width
+    const INK = '4,18,11';
+    ground = (
+      <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: H, background: `rgb(${INK})` }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {flyer && <img src={flyer} alt="" width={W} height={H} style={{ position: 'absolute', top: 0, left: 0, width: W, height: H, objectFit: 'cover', opacity: 0.4 }} />}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {flyer && <img src={flyer} alt="" width={W} height={fh} style={{ position: 'absolute', top: 0, left: 0, width: W, height: fh, objectFit: 'contain' }} />}
+        <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: 190, background: `linear-gradient(180deg, rgba(${INK},0.82) 0%, rgba(${INK},0) 100%)` }} />
+        <div style={{ display: 'flex', position: 'absolute', left: 0, bottom: 0, width: W, height: story ? H - fh + 240 : 470, background: `linear-gradient(180deg, rgba(${INK},0) 0%, rgba(${INK},0.9) ${story ? 30 : 38}%, rgba(${INK},0.98) 100%)` }} />
+      </div>
+    );
+    const cal = (sz: number) => (
+      <svg width={sz} height={sz} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="5" width="18" height="16" rx="3" /><path d="M3 10h18M8 3v4M16 3v4" /><path d="M8 14h2M14 14h2M8 17.5h2" />
+      </svg>
+    );
+    const pin = (sz: number) => (
+      <svg width={sz} height={sz} viewBox="0 0 24 24" fill="#fff">
+        <path fillRule="evenodd" d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z" />
+      </svg>
+    );
     body = (
       <div style={COL}>
-        <div style={{ display: 'flex', position: 'absolute', top: story ? -78 : -56, left: CW / 2 - 40, width: 80, height: top + (story ? 78 : 56) + 46, background: 'linear-gradient(90deg, #7A5410 0%, #E0B04A 50%, #7A5410 100%)' }} />
-        {headerOr}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: top - (story ? 42 : 36) }}>
-          <div style={{ display: 'flex', padding: 6, borderRadius: 46, background: GOLD, boxShadow: '0 50px 100px rgba(0,0,0,0.65)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 18px 0', borderRadius: 40, background: '#14100A' }}>
-              <div style={{ display: 'flex', width: 120, height: 24, margin: '18px 0', borderRadius: 12, background: '#050403', border: '2px solid rgba(245,196,81,0.5)' }} />
-              {plain(fw, 22)}
-              <div style={{ display: 'flex', alignItems: 'center', width: fw, padding: `${18 * k}px 4px ${20 * k}px` }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 130 * k }}>
-                  <div style={{ display: 'flex', fontSize: 20 * k, letterSpacing: 5, ...gText(GOLD) }}>{month}</div>
-                  <div style={{ display: 'flex', fontSize: 70 * k, letterSpacing: -3, lineHeight: 1, color: '#fff' }}>{num}</div>
-                  <div style={{ display: 'flex', fontSize: 18 * k, letterSpacing: 4, color: 'rgba(255,255,255,0.5)' }}>{day}</div>
-                </div>
-                <div style={{ display: 'flex', width: 0, height: 96 * k, borderLeft: '3px dashed rgba(245,196,81,0.4)', margin: `0 ${20 * k}px` }} />
-                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <div style={{ display: 'flex', fontSize: 18 * k, letterSpacing: 6, ...gText(GOLD) }}>ADMIT ONE</div>
-                  <div style={{ display: 'flex', marginTop: 6, fontSize: 25 * k, lineHeight: 1.2, color: '#fff' }}>{[time, place].filter(Boolean).join(' · ') || liveIn}</div>
-                </div>
-              </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', fontSize: story ? 44 : 38, letterSpacing: -1.5, color: '#fff' }}>TsaCoal</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: story ? 24 : 21, letterSpacing: 4, color: '#fff' }}>{liveIn}<div style={{ display: 'flex', width: 4, height: 30, borderRadius: 2, background: G_MINT }} /></div>
+        </div>
+        {spacer}
+        {/* A brush-stroke banner, tilted: who's going, or the nudge */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: story ? 40 : 26 }}>
+          <div style={{ display: 'flex', alignItems: 'center', padding: `${12 * k}px ${44 * k}px`, borderRadius: '18px 44px 22px 40px', background: 'linear-gradient(100deg, #1F9D55 0%, #3FCB7C 45%, #7BE3A8 100%)', transform: 'rotate(-3deg)', boxShadow: '0 16px 36px rgba(0,0,0,0.45)', fontSize: 34 * k, letterSpacing: 1, color: '#fff' }}>
+            {p ? `${firstName(p)}’s going. Come through!` : film ? 'Now showing. Don’t miss it!' : 'Don’t miss this one!'}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 * k }}>
+            {cal(74 * k)}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ display: 'flex', fontSize: 30 * k, letterSpacing: 3, color: '#fff' }}>{day}</div>
+              <div style={{ display: 'flex', fontSize: 84 * k, letterSpacing: -3, lineHeight: 0.95, color: '#FFE04A' }}>{num}</div>
+              <div style={{ display: 'flex', fontSize: 30 * k, letterSpacing: 3, color: '#fff' }}>{month}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', width: 4, height: 130 * k, margin: `0 ${40 * k}px`, borderRadius: 2, background: 'rgba(255,255,255,0.85)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 * k, maxWidth: 520 * k }}>
+            {pin(64 * k)}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', fontSize: 36 * k, letterSpacing: -0.6, lineHeight: 1.12, color: '#fff', maxWidth: 420 * k }}>{place || cityName || 'Ghana'}</div>
+              {time && <div style={{ display: 'flex', marginTop: 6, fontSize: 26 * k, color: 'rgba(255,255,255,0.75)' }}>{time}</div>}
             </div>
           </div>
         </div>
-        {spacer}
-        <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center', fontSize: fit(story ? 78 : 60), letterSpacing: -3, lineHeight: 1, ...gText('linear-gradient(180deg, #FFFFFF 0%, #FFF1C9 55%, #F5C451 100%)') }}>{e.title}</div>
-        {chipRow(GOLD, '#1C1303', true)}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22, marginTop: story ? 44 : 26 }}>
+          <div style={{ display: 'flex', fontSize: story ? 34 : 28, letterSpacing: -1, color: '#fff' }}>TsaCoal</div>
+          <div style={{ display: 'flex', width: 3, height: 34, borderRadius: 2, background: 'rgba(255,255,255,0.7)' }} />
+          <div style={{ display: 'flex', fontSize: story ? 28 : 24, color: 'rgba(255,255,255,0.9)' }}>{dial ? `Tickets: dial ${dial}` : 'tsacoal.com'}</div>
+        </div>
       </div>
     );
   } else if (t === 3) {
-    // Tape: two strips of event tape crossing behind the flyer, coral light
-    const C = 'linear-gradient(90deg, #FFB199 0%, #FF7A59 50%, #F0552F 100%)', fw = story ? 720 : 610, fh = Math.round(fw * 1.25);
-    ground = lit('linear-gradient(165deg, rgba(255,122,89,0.4) 0%, rgba(30,10,4,0.55) 48%, rgba(255,177,153,0.22) 100%)');
-    const run = (txt: string) => Array.from({ length: 5 }, () => txt).join('   /   ');
-    const tape = (y: number, rot: number, bg: string, ink: string, txt: string) => (
-      <div style={{ display: 'flex', alignItems: 'center', position: 'absolute', top: y, left: -220, width: W + 440, height: 76 * k, transform: `rotate(${rot}deg)`, background: bg, boxShadow: '0 18px 40px rgba(0,0,0,0.45)', fontSize: 32 * k, letterSpacing: 5, color: ink, whiteSpace: 'nowrap', overflow: 'hidden' }}>
-        <div style={{ display: 'flex', marginLeft: 40 }}>{run(txt)}</div>
-      </div>
-    );
-    body = (
-      <div style={COL}>
-        {headerOr}
-        <div style={{ display: 'flex', position: 'relative', justifyContent: 'center', height: fh, marginTop: story ? 90 : 44 }}>
-          {tape(fh * 0.22, 6, '#150806', '#FF9A7D', `${liveIn}   /   DON’T MISS THIS ONE`)}
-          {tape(fh * 0.66, -7, C, '#1A0A05', [dateLine, time].filter(Boolean).join('   /   '))}
-          {plain(fw, 28, -3)}
-        </div>
-        {spacer}
-        <div style={{ display: 'flex', fontSize: fit(story ? 84 : 68), letterSpacing: -3.2, lineHeight: 0.98, ...gText('linear-gradient(180deg, #FFFFFF 0%, #FFE3DA 60%, #FF9A7D 100%)') }}>{e.title}</div>
-        {place ? <div style={{ display: 'flex', marginTop: 12, fontSize: story ? 31 : 27, color: 'rgba(255,255,255,0.75)' }}>{place}</div> : null}
-        {chipRow(C, '#1A0A05')}
-      </div>
-    );
-  } else if (t === 4) {
-    // Record: a vinyl sliding out from behind the flyer, the date on its label, blue light
-    const B = 'linear-gradient(135deg, #BDF3FF 0%, #5AC8FA 50%, #2D7BFF 100%)', fw = story ? 640 : 560, fh = Math.round(fw * 1.25), d = Math.round(fh * 0.96);
-    ground = lit('linear-gradient(160deg, rgba(45,123,255,0.42) 0%, rgba(4,10,26,0.55) 46%, rgba(90,200,250,0.26) 100%)');
-    const ring = (pct: number, o: number) => <div style={{ display: 'flex', position: 'absolute', top: d * (1 - pct) / 2, left: d * (1 - pct) / 2, width: d * pct, height: d * pct, borderRadius: 9999, border: `2px solid rgba(255,255,255,${o})` }} />;
-    const lab = Math.round(d * 0.36);
-    body = (
-      <div style={COL}>
-        {headerOr}
-        <div style={{ display: 'flex', position: 'relative', height: fh, marginTop: story ? 96 : 46 }}>
-          <div style={{ display: 'flex', position: 'absolute', top: (fh - d) / 2, left: fw + 130 - d / 2, width: d, height: d, borderRadius: 9999, background: 'radial-gradient(circle, #1B2230 0%, #07090E 62%, #111722 100%)', boxShadow: '0 40px 80px rgba(0,0,0,0.6)' }}>
-            {ring(0.94, 0.14)}{ring(0.82, 0.07)}{ring(0.7, 0.1)}{ring(0.58, 0.06)}{ring(0.47, 0.1)}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: (d - lab) / 2, left: (d - lab) / 2, width: lab, height: lab, borderRadius: 9999, background: B }}>
-              <div style={{ display: 'flex', fontSize: lab * 0.13, letterSpacing: 4, color: '#04122B' }}>{day}</div>
-              <div style={{ display: 'flex', fontSize: lab * 0.42, letterSpacing: -3, lineHeight: 0.95, color: '#04122B' }}>{num}</div>
-              <div style={{ display: 'flex', fontSize: lab * 0.13, letterSpacing: 4, color: '#04122B' }}>{month}</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0 }}>{plain(fw, 26, -2)}</div>
-        </div>
-        {spacer}
-        <div style={{ display: 'flex', fontSize: fit(story ? 84 : 68), letterSpacing: -3.2, lineHeight: 0.98, ...gText('linear-gradient(180deg, #FFFFFF 0%, #DDF6FF 58%, #7CD4FF 100%)') }}>{e.title}</div>
-        <div style={{ display: 'flex', marginTop: 12, fontSize: story ? 31 : 27, color: 'rgba(255,255,255,0.75)' }}>{[time, place].filter(Boolean).join(' · ')}</div>
-        {chipRow(B, '#04122B')}
-      </div>
-    );
-  } else if (t === 5) {
     // Neon: violet and pink light, the date in three tiles, the flyer in a glowing frame, everything centred
     const N = 'linear-gradient(135deg, #FF7AB8 0%, #B58CFF 100%)', fw = story ? 700 : 540;
     ground = (
