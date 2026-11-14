@@ -1,3 +1,4 @@
+import { SAME_AS } from '@/lib/social';
 import type { GhanaEvent, Artist } from '@/lib/types';
 import type { EventSeries } from '@/lib/data/series';
 import { SITE_URL } from '@/lib/og';
@@ -31,7 +32,7 @@ export function siteJsonLd() {
   return [
     {
       '@context': 'https://schema.org', '@type': 'Organization', '@id': `${SITE_URL}/#org`, name: 'TsaCoal', url: SITE_URL,
-      logo: `${SITE_URL}/icon`, email: 'hello@tsacoal.com', areaServed: { '@type': 'Country', name: 'Ghana' },
+      logo: `${SITE_URL}/icon`, email: 'hello@tsacoal.com', sameAs: SAME_AS, areaServed: { '@type': 'Country', name: 'Ghana' },
       description: 'TsaCoal lists every event in Ghana in one place: concerts, festivals, parties and shows in Accra, Kumasi and beyond, with tickets, line-ups and clips from past nights.',
     },
     {
