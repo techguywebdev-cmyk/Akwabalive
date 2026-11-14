@@ -10,7 +10,7 @@ import { eventColours, toHex } from '@/lib/events/accent';
 
 type Kind = 'event' | 'artist' | 'moment';
 /** Bump when the card design changes, so phones and the CDN fetch the new card instead of a cached one */
-const CARD_V = '11';
+const CARD_V = '12';
 /** Event cards come in three designs. One is picked at random per show each time the site is opened, so the
  *  card made ahead of time and the one in the share sheet match, and feeds don't fill with a single look. */
 const designs = new Map<string, number>();

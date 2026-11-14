@@ -194,30 +194,27 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
       </div>
     );
   } else {
-    // Poster: the artist as a tilted photo print, a round mint sticker with how many shows are coming
-    const FW = story ? 640 : 420, FH = Math.round(FW * 1.15);
+    // Spotlight: the artist's photo large across the top with their name on it, the shows underneath.
+    // The photo takes whatever room the shows leave, so the card is always full.
+    const n = Math.max(1, list.length);
+    const rowH = 116 * k, gap = story ? 14 : 10;
+    const inner = H - (story ? 142 : 108);
+    const PH = Math.round(inner - (story ? 50 : 44) - (story ? 34 : 26) - (n * rowH + (n - 1) * gap) - (story ? 16 : 12) - (story ? 64 : 46));
+    const PW = W - (story ? 144 : 128);
     body = (
       <div style={COL}>
         {top}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 60 : 30 }}>
-          <div style={{ display: 'flex', position: 'relative', width: FW, height: FH, transform: 'rotate(-3deg)' }}>
-            {pic(FW, FH, 26, { boxShadow: '0 40px 80px rgba(0,0,0,0.6)', border: '10px solid #F3FBF6' })}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: story ? -60 : -130, bottom: story ? -40 : -10, width: story ? 210 : 176, height: story ? 210 : 176, borderRadius: 999, background: G_MINT, transform: 'rotate(10deg)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', border: '6px solid rgba(255,255,255,0.35)' }}>
-              {list.length ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', fontSize: story ? 84 : 70, letterSpacing: -4, lineHeight: 0.95, color: ON_MINT }}>{list.length}</div>
-                  <div style={{ display: 'flex', fontSize: story ? 24 : 20, letterSpacing: 3, color: ON_MINT }}>{list.length === 1 ? 'SHOW' : 'SHOWS'}</div>
-                  <div style={{ display: 'flex', fontSize: story ? 24 : 20, letterSpacing: 3, color: ON_MINT }}>COMING</div>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: story ? 28 : 23, letterSpacing: 3, color: ON_MINT }}><div style={{ display: 'flex' }}>FOLLOW</div><div style={{ display: 'flex' }}>ON</div><div style={{ display: 'flex' }}>TSACOAL</div></div>
-              )}
+        <div style={{ display: 'flex', position: 'relative', width: PW, height: PH, marginTop: story ? 34 : 26, borderRadius: 36, overflow: 'hidden', background: '#111815', boxShadow: '0 30px 70px rgba(0,0,0,0.55)' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {photo && <img src={sized(photo, 1080)} alt="" width={PW} height={PH} style={{ position: 'absolute', top: 0, left: 0, width: PW, height: PH, objectFit: 'cover', objectPosition: '50% 20%' }} />}
+          <div style={{ display: 'flex', position: 'absolute', left: 0, bottom: 0, width: PW, height: Math.round(PH * 0.5), background: 'linear-gradient(180deg, rgba(4,10,7,0) 0%, rgba(4,10,7,0.75) 60%, rgba(4,10,7,0.92) 100%)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', left: story ? 44 : 36, right: story ? 44 : 36, bottom: story ? 40 : 30 }}>
+            <div style={{ display: 'flex' }}>
+              <div style={{ display: 'flex', padding: `${8 * k}px ${18 * k}px`, borderRadius: 999, background: G_MINT, fontSize: 19 * k, letterSpacing: 4, color: ON_MINT }}>{genre}</div>
             </div>
+            <div style={{ display: 'flex', marginTop: 14, fontSize: nameSize(story ? 150 : 128), letterSpacing: -6, lineHeight: 0.92, ...gText(G_TEXT) }}>{artist.name}</div>
           </div>
         </div>
-        {spacer}
-        <div style={{ display: 'flex', fontSize: story ? 26 : 21, letterSpacing: 6, ...gText(G_MINT) }}>{genre}</div>
-        <div style={{ display: 'flex', marginTop: 4, fontSize: nameSize(story ? 132 : 108), letterSpacing: -6, lineHeight: 0.92, ...gText(G_TEXT) }}>{artist.name}</div>
         {rows({ chip: G_MINT, chipBorder: '0px solid transparent', num: ON_MINT, month: ON_MINT, panel: G_TICKET })}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 30 : 18, fontSize: story ? 26 : 22, color: 'rgba(255,255,255,0.55)' }}>{link}</div>
       </div>
