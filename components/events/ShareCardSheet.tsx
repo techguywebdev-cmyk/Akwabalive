@@ -9,12 +9,20 @@ import { artistShareText, momentShareText } from '@/lib/shareText';
 
 type Kind = 'event' | 'artist' | 'moment';
 /** Bump when the card design changes, so phones and the CDN fetch the new card instead of a cached one */
-const CARD_V = '4';
+const CARD_V = '5';
+/** Event cards come in five designs. One is picked at random per show each time the site is opened, so the
+ *  card made ahead of time and the one in the share sheet match, and feeds don't fill with a single look. */
+const designs = new Map<string, number>();
+function design(slug: string): number {
+  let d = designs.get(slug);
+  if (!d) { d = 1 + Math.floor(Math.random() * 5); designs.set(slug, d); }
+  return d;
+}
 /** For a moment, slug is the clip id and extra carries the next edition (&next=slug) */
 const cardUrl = (kind: Kind, slug: string, u: string | null, size: 'post' | 'story', extra = '') =>
   kind === 'moment'
     ? `/moments/card?id=${encodeURIComponent(slug)}&format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}${extra}&v=${CARD_V}`
-    : `${kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}&v=${CARD_V}`;
+    : `${kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`}/card?format=${size}${u ? `&u=${encodeURIComponent(u)}` : ''}${kind === 'event' ? `&t=${design(slug)}` : ''}&v=${CARD_V}`;
 const pageOf = (kind: Kind, slug: string) => kind === 'moment' ? `/moments?id=${encodeURIComponent(slug)}` : kind === 'artist' ? `/artists/${slug}` : `/events/${slug}`;
 
 /** Cards fetched ahead of time, so the sheet opens with the picture ready and sharing is instant */

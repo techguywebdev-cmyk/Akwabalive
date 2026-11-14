@@ -1,6 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { ticketDial } from '@/lib/events/dial';
 import { cityLabel } from '@/lib/utils';
+import { isFilm } from '@/lib/events/kind';
 import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, ON_MINT, G_MINT, G_TEXT, G_TICKET, gText, setOrigin } from '@/lib/shareCard';
 
 export const runtime = 'edge';
@@ -45,6 +46,9 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   // Where the show is (Live in Accra, Live in London), not a blanket "Ghana"
   const liveIn = `LIVE IN ${(cityName ?? 'Ghana').toUpperCase()}`;
   const dial = ticketDial({ ticketSource: e.ticket_source ?? undefined, description: e.description ?? '', listingInfo: e.listing_info as Parameters<typeof ticketDial>[0]['listingInfo'], flyerText: e.flyer_text ?? undefined });
+  // A film has showtimes and a cast, not a line-up
+  const film = isFilm({ title: e.title, venue: e.venue, description: e.description, flyerText: e.flyer_text });
+  const cta = dial ? `Tickets: dial ${dial}` : film ? 'Tickets & showtimes on TsaCoal' : 'Tickets & line-up on TsaCoal';
   const flyer = e.image_url ? sized(e.image_url, og ? 750 : format === 'story' ? 1080 : 828) : null;
   const fit = (base: number) => (e.title.length > 34 ? base * 0.7 : e.title.length > 22 ? base * 0.84 : base);
   const ff = font ? 'Inter Tight' : undefined;
@@ -79,7 +83,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: `${18 * s}px ${36 * s}px`, background: G_MINT }}>
-        <div style={{ display: 'flex', fontSize: 26 * s, color: '#03130B' }}>{dial ? `Tickets: dial ${dial}` : 'Tickets & line-up on TsaCoal'}</div>
+        <div style={{ display: 'flex', fontSize: 26 * s, color: '#03130B' }}>{cta}</div>
         <div style={{ display: 'flex', fontSize: 26 * s, letterSpacing: -0.5 * s, color: '#03130B' }}>tsacoal.com</div>
       </div>
     </div>
@@ -112,63 +116,168 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
     );
   }
 
-  // Post (1080×1350, shows whole on X, Instagram and WhatsApp) and story (1080×1920): a poster.
-  // The flyer whole and tilted, a mint date sticker slapped on its corner, the name in the brand gradient beneath.
+  // Post (1080×1350, shows whole on X, Instagram and WhatsApp) and story (1080×1920).
+  // Five poster designs (?t=1…5), picked at random when someone shares, so feeds don't fill with one look.
   const story = format === 'story';
   const W = 1080, H = story ? 1920 : 1350;
-  const FW = story ? 720 : 600, FH = Math.round(FW * 1.25);
-  const sticker = (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: story ? 24 : -178, bottom: story ? -196 : -8, width: story ? 220 : 200, height: story ? 220 : 200, borderRadius: 999, background: G_MINT, transform: 'rotate(10deg)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', border: '6px solid rgba(255,255,255,0.35)' }}>
-      <div style={{ display: 'flex', fontSize: story ? 30 : 26, letterSpacing: 4, color: ON_MINT }}>{day}</div>
-      <div style={{ display: 'flex', fontSize: story ? 94 : 84, letterSpacing: -5, lineHeight: 0.95, color: ON_MINT }}>{num}</div>
-      <div style={{ display: 'flex', fontSize: story ? 30 : 26, letterSpacing: 4, color: ON_MINT }}>{month}</div>
+  const t = Math.min(5, Math.max(1, Number(q.get('t')) || 1));
+  const k = story ? 1.2 : 1;
+  const when = [day, num, month].join(' ');
+
+  const header = (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', fontSize: story ? 42 : 36, letterSpacing: -1.5, color: '#fff' }}>TsaCoal</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: story ? 24 : 21, letterSpacing: 4, color: 'rgba(255,255,255,0.65)' }}>
+        <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, background: G_MINT }} />{liveIn}
+      </div>
     </div>
   );
+  // The flyer, whole (never cropped): its own blur fills any spare space inside the frame
+  const flyerBox = (w: number, rot = 0, dim = 1) => {
+    const h = Math.round(w * 1.25);
+    return (
+      <div style={{ display: 'flex', position: 'relative', width: w, height: h, borderRadius: 30, overflow: 'hidden', background: '#111815', boxShadow: '0 50px 90px rgba(0,0,0,0.7)', border: '6px solid rgba(255,255,255,0.1)', transform: `rotate(${rot}deg)`, opacity: dim }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {flyer && <img src={flyer} alt="" width={w} height={h} style={{ position: 'absolute', top: 0, left: 0, width: w, height: h, objectFit: 'cover', opacity: 0.35 }} />}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {flyer && dim === 1 && <img src={flyer} alt="" width={w} height={h} style={{ position: 'absolute', top: 0, left: 0, width: w, height: h, objectFit: 'contain' }} />}
+      </div>
+    );
+  };
+  const title = (size: number, center = false) => (
+    <div style={{ display: 'flex', justifyContent: center ? 'center' : 'flex-start', textAlign: center ? 'center' : 'left', fontSize: fit(size), letterSpacing: -3.5, lineHeight: 0.98, ...gText(G_TEXT) }}>{e.title}</div>
+  );
+  const where = (center = false, withDate = false) => {
+    const line = [withDate ? when : null, time, place].filter(Boolean).join(' · ');
+    return line ? <div style={{ display: 'flex', justifyContent: center ? 'center' : 'flex-start', textAlign: center ? 'center' : 'left', marginTop: 14, fontSize: story ? 32 : 27, color: 'rgba(255,255,255,0.7)' }}>{line}</div> : null;
+  };
+  const who = (center = false) => (faces.length > 0 || acts) ? (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: center ? 'center' : 'flex-start', gap: 16, marginTop: story ? 26 : 18 }}>
+      {faces.length > 0 && (
+        <div style={{ display: 'flex' }}>
+          {faces.map((f, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={f} src={f} alt="" width={story ? 66 : 54} height={story ? 66 : 54} style={{ width: story ? 66 : 54, height: story ? 66 : 54, borderRadius: 999, objectFit: 'cover', marginLeft: i ? -18 : 0, border: '3px solid #0A110D' }} />
+          ))}
+        </div>
+      )}
+      {acts && <div style={{ display: 'flex', fontSize: story ? 30 : 25, color: '#fff' }}>{acts}</div>}
+    </div>
+  ) : null;
+  const pill = (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: story ? 40 : 26, padding: story ? '22px 34px' : '17px 28px', borderRadius: 999, background: G_MINT }}>
+      <div style={{ display: 'flex', fontSize: story ? 30 : 25, color: ON_MINT }}>{cta}</div>
+      <div style={{ display: 'flex', fontSize: story ? 28 : 24, color: ON_MINT }}>tsacoal.com</div>
+    </div>
+  );
+  const spacer = <div style={{ display: 'flex', flex: 1 }} />;
+  const hello = <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 44 : 28 }}>{greeting(story ? 1 : 0.86)}</div>;
+
+  // Satori lays a fragment's children out in a row, so each design is its own column
+  const COL = { display: 'flex', flexDirection: 'column', flex: 1, width: '100%' } as const;
+  let body: JSX.Element;
+  if (t === 2) {
+    // Ticket: the flyer straight, the details on a ticket stub beneath
+    body = (
+      <div style={COL}>
+        {header}{hello}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 56 : 30 }}>{flyerBox(story ? 760 : 560)}</div>
+        {spacer}
+        {ticket(story ? 1.12 : 1)}
+      </div>
+    );
+  } else if (t === 3) {
+    // Big date: the day in huge numerals beside the flyer
+    body = (
+      <div style={COL}>
+        {header}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: story ? 110 : 44 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', width: 380 }}>
+            <div style={{ display: 'flex', fontSize: 44 * k, letterSpacing: 10, ...gText(G_MINT) }}>{day}</div>
+            <div style={{ display: 'flex', fontSize: (String(num).length > 1 ? 290 : 340) * k, letterSpacing: -16, lineHeight: 0.86, color: '#fff' }}>{num}</div>
+            <div style={{ display: 'flex', fontSize: 78 * k, letterSpacing: 6, lineHeight: 1, ...gText(G_MINT) }}>{month}</div>
+            {time && <div style={{ display: 'flex', marginTop: 22, fontSize: 30 * k, color: 'rgba(255,255,255,0.7)' }}>{time}</div>}
+          </div>
+          <div style={{ display: 'flex' }}>{flyerBox(story ? 560 : 520, 3)}</div>
+        </div>
+        {spacer}
+        {p && <div style={{ display: 'flex', marginBottom: 22 }}>{greeting(story ? 0.9 : 0.78)}</div>}
+        {title(story ? 84 : 70)}
+        {place ? <div style={{ display: 'flex', marginTop: 14, fontSize: story ? 32 : 27, color: 'rgba(255,255,255,0.7)' }}>{place}</div> : null}
+        {who()}{pill}
+      </div>
+    );
+  } else if (t === 4) {
+    // Stack: the name up top, the flyer on a fanned stack
+    const fw = story ? 700 : 520, fh = Math.round(fw * 1.25);
+    body = (
+      <div style={COL}>
+        {header}
+        <div style={{ display: 'flex', flexDirection: 'column', marginTop: story ? 70 : 34 }}>
+          {title(story ? 92 : 76)}
+          {where(false, true)}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 90 : 46 }}>
+          <div style={{ display: 'flex', position: 'relative', width: fw, height: fh }}>
+            <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0 }}>{flyerBox(fw, -9, 0.55)}</div>
+            <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0 }}>{flyerBox(fw, 7, 0.75)}</div>
+            <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0 }}>{flyerBox(fw, -1.5)}</div>
+          </div>
+        </div>
+        {spacer}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex' }}>{who()}</div>
+          {p ? <div style={{ display: 'flex' }}>{greeting(0.7)}</div> : null}
+        </div>
+        {pill}
+      </div>
+    );
+  } else if (t === 5) {
+    // Ribbon: everything centred, a mint date ribbon tucked under the flyer
+    const fw = story ? 760 : 580;
+    body = (
+      <div style={COL}>
+        {header}{hello}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: story ? 56 : 30 }}>
+          {flyerBox(fw)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: -16, padding: `${16 * k}px ${40 * k}px`, borderRadius: 18, background: G_MINT, transform: 'rotate(-3deg)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', fontSize: 40 * k, letterSpacing: 5, color: ON_MINT }}>
+            {when}{time ? <div style={{ display: 'flex', fontSize: 28 * k, letterSpacing: 2, opacity: 0.75 }}>{time}</div> : null}
+          </div>
+        </div>
+        {spacer}
+        {title(story ? 80 : 64, true)}
+        {place ? <div style={{ display: 'flex', justifyContent: 'center', marginTop: 14, fontSize: story ? 32 : 27, color: 'rgba(255,255,255,0.7)' }}>{place}</div> : null}
+        {who(true)}{pill}
+      </div>
+    );
+  } else {
+    // Poster: the flyer tilted, a round date sticker on its corner
+    const FW = story ? 720 : 600, FH = Math.round(FW * 1.25);
+    body = (
+      <div style={COL}>
+        {header}{hello}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 50 : 34 }}>
+          <div style={{ display: 'flex', position: 'relative', width: FW, height: FH, transform: 'rotate(-3deg)' }}>
+            {flyerBox(FW)}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', right: story ? 24 : -178, bottom: story ? -196 : -8, width: story ? 220 : 200, height: story ? 220 : 200, borderRadius: 999, background: G_MINT, transform: 'rotate(10deg)', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', border: '6px solid rgba(255,255,255,0.35)' }}>
+              <div style={{ display: 'flex', fontSize: story ? 30 : 26, letterSpacing: 4, color: ON_MINT }}>{day}</div>
+              <div style={{ display: 'flex', fontSize: story ? 94 : 84, letterSpacing: -5, lineHeight: 0.95, color: ON_MINT }}>{num}</div>
+              <div style={{ display: 'flex', fontSize: story ? 30 : 26, letterSpacing: 4, color: ON_MINT }}>{month}</div>
+            </div>
+          </div>
+        </div>
+        {spacer}
+        {title(story ? 84 : 70)}{where()}{who()}{pill}
+      </div>
+    );
+  }
+
   return new ImageResponse(
     (
       <div style={{ position: 'relative', width: W, height: H, display: 'flex', fontFamily: ff }}>
         <Backdrop src={flyer} w={W} h={H} />
         <div style={{ display: 'flex', flexDirection: 'column', position: 'absolute', top: 0, left: 0, width: W, height: H, padding: story ? '78px 72px 64px' : '56px 64px 52px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', fontSize: story ? 42 : 36, letterSpacing: -1.5, color: '#fff' }}>TsaCoal</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: story ? 24 : 21, letterSpacing: 4, color: 'rgba(255,255,255,0.65)' }}>
-              <div style={{ display: 'flex', width: 12, height: 12, borderRadius: 4, background: G_MINT }} />{liveIn}
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 44 : 28 }}>{greeting(story ? 1 : 0.86)}</div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 50 : 34 }}>
-            <div style={{ display: 'flex', position: 'relative', width: FW, height: FH, transform: 'rotate(-3deg)' }}>
-              <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: FW, height: FH, borderRadius: 30, overflow: 'hidden', background: '#111815', boxShadow: '0 50px 90px rgba(0,0,0,0.7)', border: '6px solid rgba(255,255,255,0.1)' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {flyer && <img src={flyer} alt="" width={FW} height={FH} style={{ position: 'absolute', top: 0, left: 0, width: FW, height: FH, objectFit: 'cover', opacity: 0.35 }} />}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {flyer && <img src={flyer} alt="" width={FW} height={FH} style={{ position: 'absolute', top: 0, left: 0, width: FW, height: FH, objectFit: 'contain' }} />}
-              </div>
-              {sticker}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flex: 1 }} />
-          <div style={{ display: 'flex', fontSize: fit(story ? 84 : 70), letterSpacing: -3.5, lineHeight: 0.98, ...gText(G_TEXT) }}>{e.title}</div>
-          {(time || place) && <div style={{ display: 'flex', marginTop: 14, fontSize: story ? 32 : 27, color: 'rgba(255,255,255,0.7)' }}>{[time, place].filter(Boolean).join(' · ')}</div>}
-          {(faces.length > 0 || acts) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: story ? 26 : 18 }}>
-              {faces.length > 0 && (
-                <div style={{ display: 'flex' }}>
-                  {faces.map((f, i) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img key={f} src={f} alt="" width={story ? 66 : 54} height={story ? 66 : 54} style={{ width: story ? 66 : 54, height: story ? 66 : 54, borderRadius: 999, objectFit: 'cover', marginLeft: i ? -18 : 0, border: '3px solid #0A110D' }} />
-                  ))}
-                </div>
-              )}
-              {acts && <div style={{ display: 'flex', fontSize: story ? 30 : 25, color: '#fff' }}>{acts}</div>}
-            </div>
-          )}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: story ? 40 : 26, padding: story ? '22px 34px' : '17px 28px', borderRadius: 999, background: G_MINT }}>
-            <div style={{ display: 'flex', fontSize: story ? 30 : 25, color: ON_MINT }}>{dial ? `Tickets: dial ${dial}` : 'Tickets & line-up on TsaCoal'}</div>
-            <div style={{ display: 'flex', fontSize: story ? 28 : 24, color: ON_MINT }}>tsacoal.com</div>
-          </div>
+          {body}
         </div>
       </div>
     ),

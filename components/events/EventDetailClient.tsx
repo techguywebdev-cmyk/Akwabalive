@@ -43,6 +43,7 @@ import { eventShareText } from '@/lib/shareText';
 import ShareCardSheet, { useWarmShareCard } from '@/components/events/ShareCardSheet';
 import { OrganiserBlock, GallerySection, VenueSection, FaqSection, OwnerBar, type OrganiserInfo } from '@/components/events/EventPageSections';
 import { hexToRgb, onAccent, pageFaqs } from '@/lib/events/page';
+import { isFilm } from '@/lib/events/kind';
 
 export type { CheckoutTier } from '@/lib/events/tiers';
 
@@ -419,7 +420,7 @@ export default function EventDetailClient({ event, related, seriesMomentId, orga
 
         {acts.length > 0 && (
           <section style={{ marginTop: 28 }}>
-            <h2 style={eyebrowMint}>Line-up</h2>
+            <h2 style={eyebrowMint}>{isFilm(event) ? 'Cast' : 'Line-up'}</h2>
             <div className="no-scrollbar" style={{ display: 'flex', gap: 16, overflowX: 'auto', margin: '8px -20px 0', padding: '4px 20px 4px' }}>
               {acts.map(({ name, artist }, i) => {
                 const face = (
