@@ -5,6 +5,8 @@ import Nav from '@/components/layout/Nav';
 import Footer from '@/components/layout/Footer';
 import { loadAllEvents } from '@/lib/data/allEvents';
 import { GUIDES, guideBySlug, days, type Day } from '@/lib/guides';
+import { lookFor } from '@/lib/guideLooks';
+import { Hero, Row } from '@/components/guides/GuideParts';
 import { shareMeta } from '@/lib/og';
 import { JsonLd, eventJsonLd, eventListJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 import { ticketDial } from '@/lib/events/dial';
@@ -42,27 +44,6 @@ export async function generateMetadata({ params }: { params: { guide: string } }
   return shareMeta({ title: g.title, description: `${g.about}${when}${lead}`.slice(0, 300), image: list.find((e) => e.image)?.image ?? null, path: `/${g.slug}` });
 }
 
-function Row({ e }: { e: GhanaEvent }) {
-  const dial = ticketDial(e);
-  const price = e.priceUnknown ? null : e.price === 0 ? 'Free' : `From GH₵${e.price.toLocaleString()}`;
-  return (
-    <li style={{ listStyle: 'none' }}>
-      <Link href={`/events/${e.slug}`} style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${T.hairline}`, textDecoration: 'none' }}>
-        <span style={{ flexShrink: 0, width: 64, height: 80, borderRadius: 12, overflow: 'hidden', background: '#0B1510' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {e.image && <img src={e.image} alt={`${e.title} flyer`} loading="lazy" width={64} height={80} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />}
-        </span>
-        <span style={{ minWidth: 0, flex: 1 }}>
-          <span style={{ display: 'block', fontFamily: FONT.display, fontSize: 11.5, fontWeight: 800, letterSpacing: '0.12em', color: T.mintText }}>{short(e.date).toUpperCase()}{known(e.time) ? ` · ${e.time}` : ''}</span>
-          <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.display, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.2, color: T.white }}>{e.title}</span>
-          <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 13.5, color: T.text2 }}>{[known(e.venue), city(e.city)].filter(Boolean).join(', ')}</span>
-          {(dial || price) && <span style={{ display: 'block', marginTop: 2, fontFamily: FONT.sans, fontSize: 12.5, color: T.text3 }}>{[price, dial ? `Tickets: dial ${dial}` : null].filter(Boolean).join(' · ')}</span>}
-        </span>
-      </Link>
-    </li>
-  );
-}
-
 function faqsFor(slug: string, list: GhanaEvent[], d: Day, extra: { q: string; a: string }[]) {
   const top = list.slice(0, 4).map((e) => `${e.title} (${short(e.date)}${known(e.venue) ? `, ${e.venue}` : ''})`).join('; ');
   const dialEx = list.map((e) => ({ e, c: ticketDial(e) })).find((x) => x.c);
@@ -84,6 +65,11 @@ export default async function GuidePage({ params }: { params: { guide: string } 
   const faqs = faqsFor(g.slug, list, d, g.faqs?.(list, d) ?? []);
   const range = g.slug === 'events-in-ghana-today' ? long(d.today) : g.slug === 'events-in-ghana-this-weekend' ? `${long(d.weekendFrom)} to ${long(d.weekendTo)}` : null;
   const shown = list.slice(0, 60);
+  const look = lookFor(g.slug);
+  // The venues these shows are at, busiest first
+  const tally = new Map<string, number>();
+  shown.forEach((e) => { const v = known(e.venue); if (v) tally.set(v, (tally.get(v) ?? 0) + 1); });
+  const venues = Array.from(tally.entries()).sort((x, y) => y[1] - x[1]).slice(0, 8);
 
   return (
     <div style={{ minHeight: '100svh', background: GROUND, backgroundAttachment: 'fixed' }}>
@@ -98,14 +84,35 @@ export default async function GuidePage({ params }: { params: { guide: string } 
         <nav aria-label="Breadcrumb" style={{ fontFamily: FONT.sans, fontSize: 13, color: T.text3 }}>
           <Link href="/" style={{ color: T.text3, textDecoration: 'none' }}>TsaCoal</Link> <span aria-hidden>›</span> {g.h1}
         </nav>
-        <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 'clamp(34px, 8.5vw, 52px)', fontWeight: 800, letterSpacing: '-0.045em', lineHeight: 1.02, background: GRAD.text, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', paddingBottom: '0.06em', textWrap: 'balance' }}>{g.h1}</h1>
-        {range && <p style={{ margin: '8px 0 0', fontFamily: FONT.display, fontSize: 13, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.mintText }}>{range}</p>}
-        <p style={{ margin: '14px 0 0', fontFamily: FONT.sans, fontSize: 16, lineHeight: 1.55, color: T.text2 }}>
+        <Hero h1={g.h1} look={look} range={range} count={list.length} nextUp={list[0] ? short(list[0].date) : null}
+          flyers={(list.length ? shown : next).filter((e) => e.image).slice(0, 3).map((e) => ({ src: e.image!, title: e.title }))} />
+
+        <h2 style={{ margin: '34px 0 0', fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>{list.length ? 'What’s on' : 'Coming up across Ghana'}</h2>
+        <p style={{ margin: '8px 0 0', fontFamily: FONT.sans, fontSize: 15.5, lineHeight: 1.55, color: T.text2 }}>
           {g.intro} {list.length ? `${list.length} ${list.length === 1 ? 'show is' : 'shows are'} listed right now, soonest first, with times, venues and how to get tickets.` : 'Nothing is listed for this right now; here’s what’s coming up next across Ghana.'}
         </p>
+        <ul style={{ margin: '16px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>{(list.length ? shown : next).map((e) => <Row key={e.slug} e={e} accent={look.accent} />)}</ul>
+        {list.length > shown.length && <p style={{ marginTop: 14, fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}><Link href="/events" style={{ color: look.accent }}>See all {list.length} on TsaCoal</Link></p>}
 
-        <ul style={{ margin: '22px 0 0', padding: 0 }}>{(list.length ? shown : next).map((e) => <Row key={e.slug} e={e} />)}</ul>
-        {list.length > shown.length && <p style={{ marginTop: 14, fontFamily: FONT.sans, fontSize: 14, color: T.text2 }}><Link href="/events" style={{ color: T.mintText }}>See all {list.length} on TsaCoal</Link></p>}
+        {venues.length > 1 && (
+          <section style={{ marginTop: 36 }}>
+            <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', color: T.white }}>Where it happens</h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+              {venues.map(([v, n]) => <span key={v} style={{ padding: '9px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.05)', fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, color: T.text }}>{v}{n > 1 ? <span style={{ color: T.text3 }}> · {n}</span> : null}</span>)}
+            </div>
+          </section>
+        )}
+
+        {look.about && (
+          <section style={{ marginTop: 36, padding: 'clamp(20px, 4vw, 28px)', borderRadius: 26, background: `linear-gradient(160deg, ${look.accent}1F 0%, rgba(255,255,255,0.035) 60%)` }}>
+            <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>{look.about.title}</h2>
+            <p style={{ margin: '10px 0 0', fontFamily: FONT.sans, fontSize: 15.5, lineHeight: 1.6, color: 'rgba(255,255,255,0.8)' }}>{look.about.text}</p>
+            <p style={{ margin: '18px 0 0', fontFamily: FONT.display, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: look.accent }}>Known for</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+              {look.about.knownFor.map((k) => <span key={k} style={{ padding: '8px 13px', borderRadius: 999, background: 'rgba(255,255,255,0.07)', fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, color: T.white }}>{k}</span>)}
+            </div>
+          </section>
+        )}
 
         <section style={{ marginTop: 44 }}>
           <h2 style={{ margin: 0, fontFamily: FONT.display, fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', color: T.white }}>Questions people ask</h2>
@@ -123,7 +130,7 @@ export default async function GuidePage({ params }: { params: { guide: string } 
             {GUIDES.filter((x) => x.slug !== g.slug).map((x) => (
               <Link key={x.slug} href={`/${x.slug}`} style={{ padding: '9px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.06)', fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 600, color: T.text, textDecoration: 'none' }}>{x.h1}</Link>
             ))}
-            <Link href="/december" style={{ padding: '9px 14px', borderRadius: 999, background: 'rgba(123,227,168,0.12)', fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700, color: T.mintText, textDecoration: 'none' }}>Detty December 2026</Link>
+            <Link href="/december" style={{ padding: '9px 14px', borderRadius: 999, background: `${look.accent}1F`, fontFamily: FONT.sans, fontSize: 13.5, fontWeight: 700, color: look.accent, textDecoration: 'none' }}>Detty December 2026</Link>
           </div>
         </section>
       </main>
