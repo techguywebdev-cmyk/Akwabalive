@@ -11,6 +11,6 @@ export function shareMeta({ title, description, image, path, square }: { title: 
     description,
     alternates: { canonical: path },
     openGraph: { type: 'website', siteName: 'TsaCoal', title, description, url: path, images },
-    twitter: { card: image && square ? 'summary' : 'summary_large_image', title, description, images: [images[0].url] },
+    twitter: { site: '@tsacoal', creator: '@tsacoal', card: image && square ? 'summary' : 'summary_large_image', title, description, images: [images[0].url] },
   };
 }

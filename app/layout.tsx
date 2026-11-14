@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
   openGraph: { type: 'website', siteName: 'TsaCoal', title: 'TsaCoal | Ghana, after dark', description: 'Every concert, rave, pool party and gospel night in one place. Find the show, save it, bring your people.' },
-  twitter: { card: 'summary_large_image', title: 'TsaCoal | Ghana, after dark', description: 'Every concert, rave, pool party and gospel night in one place. Find the show, save it, bring your people.' },
+  twitter: { site: '@tsacoal', creator: '@tsacoal', card: 'summary_large_image', title: 'TsaCoal | Ghana, after dark', description: 'Every concert, rave, pool party and gospel night in one place. Find the show, save it, bring your people.' },
 };
 
 export const viewport = {
