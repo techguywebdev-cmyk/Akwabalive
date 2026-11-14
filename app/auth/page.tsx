@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, type CSSProperties, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/lib/supabase/AuthProvider';
 import FlyerWall from '@/components/ui/FlyerWall';
 import { createClient } from '@/lib/supabase/client';
 import Wordmark from '@/components/brand/Wordmark';
@@ -57,6 +58,13 @@ function AuthForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+
+  // Already signed in (for example, sent here by an old link): carry straight on instead of showing the form
+  const { user: already, loading: checking } = useAuth();
+  useEffect(() => {
+    const external = q.get('via') === 'google' || q.get('via') === 'link' || q.get('pick') === '1';
+    if (!checking && already && !external && mode === 'signin' && q.get('mode') !== 'reset' && !busy) router.replace(next);
+  }, [checking, already]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Coming back from the "reset password" email
   useEffect(() => {
