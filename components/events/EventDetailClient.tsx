@@ -620,7 +620,7 @@ export default function EventDetailClient({ event, related, seriesMomentId, orga
           </span>}
           {daysAway != null && daysAway < 0 ? (
             <span style={{ ...primary, background: 'rgba(255,255,255,0.05)', border: 'none', color: T.text2, cursor: 'default', boxShadow: 'none' }}>Event has ended</span>
-          ) : dial && (listed || !event.tiers?.length) ? (
+          ) : dial && (isListedEvent(event) || !event.tiers?.length) ? (
             // A short code leads: dialling (MoMo) is how most people buy; the website is the small button beside it
             <>
               <a href={dialHref(dial)} style={{ ...primary, minWidth: 200 }}><Phone size={17} /> Dial {dial}</a>

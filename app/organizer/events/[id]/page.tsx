@@ -32,7 +32,8 @@ export default function EditEventPage({ params }: { params: { id: string } }) {
         image: e.image_url ?? '',
         promoVideo: e.promo_video_url ?? '',
         page: cleanPage(e.page), shortCode: e.short_code ?? '',
-        listing: e.listing_type === 'listed' ? 'listed' : 'hosted', ticketUrl: e.ticket_url ?? '', ticketSource: e.ticket_source ?? '',
+        listing: e.listing_type === 'listed' ? 'listed' : 'hosted', ticketUrl: e.ticket_url ?? '', ticketSource: /^dial\b/i.test(e.ticket_source ?? '') ? '' : e.ticket_source ?? '',
+        dial: (String(e.ticket_source ?? '').match(/\*\s?\d{2,4}(?:\s?\*\s?\d{1,6})*\s?#/)?.[0] ?? '').replace(/\s+/g, ''),
         lineup: { enabled: slugs.length > 0 || extras.length > 0, artistSlugs: slugs, extraNames: extras.join(', ') },
         tiers: [...(e.ticket_tiers ?? [])].sort((a: any, b: any) => a.price - b.price).map((t: any) => ({ id: t.id, name: t.name, price: String(t.price), quantity: String(t.quantity), description: t.description ?? '', sold: t.sold ?? 0 })),
       });

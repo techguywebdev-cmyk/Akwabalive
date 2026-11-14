@@ -42,6 +42,8 @@ export type EventDraft = {
   /** YouTube link (or an .mp4) that plays on the event page instead of the still flyer */
   promoVideo?: string;
   listing: 'hosted' | 'listed'; ticketUrl: string; ticketSource: string;
+  /** The short code people dial to buy with MoMo, e.g. *713*33*107# */
+  dial?: string;
   lineup: LineupValue;
   tiers: TierDraft[];
   /** The organiser's page: colour, photos, directions, FAQs */
@@ -54,11 +56,13 @@ const HIGHLIGHT_IDEAS = ['Surprise guests', 'Album launch', 'First time in Ghana
 
 export const emptyDraft = (): EventDraft => ({
   status: 'draft', title: '', description: '', category: '', highlight: '', city: 'accra', venue: '', area: '',
-  date: '', start: '20:00', end: '', image: '', listing: 'hosted', ticketUrl: '', ticketSource: '',
+  date: '', start: '20:00', end: '', image: '', listing: 'listed', ticketUrl: '', ticketSource: '', dial: '',
   lineup: { enabled: false, artistSlugs: [], extraNames: '' },
   tiers: [{ name: 'Regular', price: '', quantity: '200', description: '', sold: 0 }],
 });
 
+/** A USSD short code: *713*33*107# */
+const DIAL_OK = /^\*\d{2,4}(\*\d{1,6})*#$/;
 const promoOk = (u: string) => !!extractYoutubeId(u) || /^https:\/\/\S+\.(mp4|mov|webm|3gp)(\?\S*)?(#t=[\d.,]+)?$/i.test(u);
 
 /** "20:00" → "8:00 PM" */
@@ -202,7 +206,12 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
       if (!d.date) p.push('the date');
       if (!d.venue.trim()) p.push('the venue');
       if (!d.category) p.push('a category');
-      if (d.listing === 'listed' && !/^https?:\/\//.test(d.ticketUrl.trim())) p.push('the ticket link');
+      if (d.listing === 'listed') {
+        const code = (d.dial ?? '').replace(/\s+/g, ''), link = d.ticketUrl.trim();
+        if (!code && !link) p.push('a dial code or a ticket link');
+        if (code && !DIAL_OK.test(code)) p.push('a dial code like *713*33*107#');
+        if (link && !/^https?:\/\//.test(link)) p.push('a ticket link starting with https://');
+      }
     }
     if ((d.promoVideo ?? '').trim() && !promoOk((d.promoVideo ?? '').trim())) p.push('a YouTube link or an uploaded clip for the promo video');
     if (d.shortCode && !codeOk(cleanCode(d.shortCode))) p.push('a link of at least 3 letters or numbers');
@@ -228,7 +237,9 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
         city: d.city, region: REGIONS[d.city] ?? d.city, venue: d.venue.trim() || 'Venue to be announced', area: d.area.trim() || null,
         date: d.date || null, date_label: d.date ? dayLabel(d.date) : null, time: d.start ? to12h(d.start) : 'Time TBA', end_time: d.end ? to12h(d.end) : null,
         image_url: d.image.trim() || null, status: target, promo_video_url: (d.promoVideo ?? '').trim() || null,
-        listing_type: d.listing, ticket_url: d.listing === 'listed' ? d.ticketUrl.trim() : null, ticket_source: d.listing === 'listed' ? (d.ticketSource.trim() || hostOf(d.ticketUrl)) : null,
+        listing_type: d.listing, ticket_url: d.listing === 'listed' ? d.ticketUrl.trim() || null : null,
+        // A dial code is saved as "Dial *713*33*107#": the event page turns it into the main Dial button
+        ticket_source: d.listing === 'listed' ? ((d.dial ?? '').replace(/\s+/g, '') ? `Dial ${(d.dial ?? '').replace(/\s+/g, '')}` : d.ticketSource.trim() || (d.ticketUrl.trim() ? hostOf(d.ticketUrl) : null)) : null,
         artist_slugs: bill.artist_slugs, lineup: bill.lineup,
         page: cleanPage(d.page ?? {}), short_code: cleanCode(d.shortCode ?? '') || null,
       };
@@ -363,7 +374,7 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
 
         <Section title="Tickets">
           <div role="radiogroup" aria-label="How tickets are sold" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {([['hosted', 'Sell on TsaCoal', 'MoMo & card, QR tickets, door scanning'], ['listed', 'Sold elsewhere', 'Link to another ticket site']] as const).map(([v, t, n]) => {
+            {([['listed', 'Dial code or link', 'Your MoMo short code or a ticket site'], ['hosted', 'Reserve on TsaCoal', 'Free entry and reservations. Payments coming soon']] as const).map(([v, t, n]) => {
               const on = d.listing === v;
               return (
                 <button key={v} type="button" role="radio" aria-checked={on} onClick={() => set('listing', v)} style={{ textAlign: 'left', padding: 14, borderRadius: 18, cursor: 'pointer', background: on ? 'rgba(123,227,168,0.12)' : 'rgba(255,255,255,0.04)', border: 'none', color: T.white, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -377,8 +388,12 @@ export default function EventForm({ initial, userId, mode }: { initial: EventDra
 
           {d.listing === 'listed' && (
             <>
-              <Field label="Ticket link"><input type="url" inputMode="url" value={d.ticketUrl} onChange={(e) => set('ticketUrl', e.target.value)} placeholder="https://egotickets.com/events/…" style={field} /></Field>
-              <Field label="Ticket site name (optional)"><input value={d.ticketSource} onChange={(e) => set('ticketSource', e.target.value)} placeholder="e.g. Egotickets" style={field} /></Field>
+              <Field label="Dial code" hint="The short code people dial to pay with MoMo. It becomes the main button on your event page.">
+                <input inputMode="tel" value={d.dial ?? ''} onChange={(e) => set('dial', e.target.value.replace(/[^0-9*#]/g, '').slice(0, 24))} placeholder="*713*33*107#" autoCapitalize="none" autoCorrect="off" style={field} />
+              </Field>
+              {(d.dial ?? '') && !DIAL_OK.test(d.dial ?? '') && <p style={{ margin: '-6px 2px 0', fontFamily: FONT.sans, fontSize: 13, color: '#FF8A7A' }}>Start with * and end with #, like *713*33*107#</p>}
+              <Field label="Ticket link (optional)"><input type="url" inputMode="url" value={d.ticketUrl} onChange={(e) => set('ticketUrl', e.target.value)} placeholder="https://egotickets.com/events/…" style={field} /></Field>
+              {!(d.dial ?? '') && <Field label="Ticket site name (optional)"><input value={d.ticketSource} onChange={(e) => set('ticketSource', e.target.value)} placeholder="e.g. Egotickets" style={field} /></Field>}
             </>
           )}
 
