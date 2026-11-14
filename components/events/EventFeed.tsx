@@ -99,7 +99,7 @@ function EventCard({
   const { event, dist } = item;
   const [rgb, setRgb] = useState<RGB>(categoryAccent(event.category));
   // While this card is on screen, make its share picture in the background so Share opens instantly
-  useWarmShareCard('event', event.slug, active);
+  useWarmShareCard('event', event.slug, active, '', event.image);
   const [more, setMore] = useState(false);
   // Watching a past edition's clips right on the card, in place of the flyer
   const [watching, setWatching] = useState(false);

@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { ticketDial } from '@/lib/events/dial';
 import { cityLabel } from '@/lib/utils';
 import { isFilm } from '@/lib/events/kind';
-import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, firstName, MINT, MINT_TEXT, ON_MINT, G_MINT, G_TEXT, G_TICKET, gText, setOrigin } from '@/lib/shareCard';
+import { rest, person as getPerson, cleanUser, sized, dayParts, Backdrop, PersonPill, GoingMark, firstName, MINT, MINT_TEXT, ON_MINT, G_MINT, G_TEXT, G_TICKET, gText, setOrigin } from '@/lib/shareCard';
 
 export const runtime = 'edge';
 
@@ -121,6 +121,15 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
   const story = format === 'story';
   const W = 1080, H = story ? 1920 : 1350;
   const t = Math.min(3, Math.max(1, Number(q.get('t')) || 1));
+  // The flyer's main colour (worked out on the phone), lifted so it reads on a dark card
+  const tint = (() => {
+    const c = q.get('c');
+    if (!c || !/^[0-9a-f]{6}$/i.test(c)) return '#FFE04A';
+    let [r, g, b] = [0, 2, 4].map((i) => parseInt(c.slice(i, i + 2), 16));
+    const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    if (lum < 0.55) { const m = (0.55 - lum) / (1 - lum); [r, g, b] = [r, g, b].map((v) => Math.round(v + (255 - v) * m)); }
+    return `rgb(${r},${g},${b})`;
+  })();
   const k = story ? 1.2 : 1;
   const when = [day, num, month].join(' ');
 
@@ -189,7 +198,6 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
       </div>
     );
   };
-  const going = p ? <div style={{ display: 'flex' }}>{greeting(story ? 0.9 : 0.76)}</div> : null;
   const CW = W - (story ? 144 : 128); // content width
 
   let body: JSX.Element;
@@ -237,7 +245,7 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
             {cal(74 * k)}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ display: 'flex', fontSize: 30 * k, letterSpacing: 3, color: '#fff' }}>{day}</div>
-              <div style={{ display: 'flex', fontSize: 84 * k, letterSpacing: -3, lineHeight: 0.95, color: '#FFE04A' }}>{num}</div>
+              <div style={{ display: 'flex', fontSize: 84 * k, letterSpacing: -3, lineHeight: 0.95, color: tint }}>{num}</div>
               <div style={{ display: 'flex', fontSize: 30 * k, letterSpacing: 3, color: '#fff' }}>{month}</div>
             </div>
           </div>
@@ -271,7 +279,12 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
     );
     body = (
       <div style={COL}>
-        {header}
+        {p ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', fontSize: story ? 42 : 36, letterSpacing: -1.5, color: '#fff' }}>TsaCoal</div>
+            <GoingMark p={p} scale={story ? 1.1 : 0.95} ring="#FF9BCB" />
+          </div>
+        ) : header}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: story ? 70 : 34 }}>{tile(day)}{tile(num, true)}{tile(month)}</div>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: story ? 60 : 30 }}>
           <div style={{ display: 'flex', padding: 9, borderRadius: 40, background: N, boxShadow: '0 0 90px rgba(181,140,255,0.45)' }}>{plain(fw, 32)}</div>
@@ -280,7 +293,6 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
         <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center', fontSize: fit(story ? 78 : 62), letterSpacing: -3, lineHeight: 1, ...gText('linear-gradient(180deg, #FFFFFF 0%, #FFD6EA 60%, #D9C2FF 100%)') }}>{e.title}</div>
         <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center', marginTop: 12, fontSize: story ? 30 : 26, color: 'rgba(255,255,255,0.72)' }}>{[time, place].filter(Boolean).join(' · ')}</div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 22, marginTop: story ? 34 : 22 }}>
-          {going}
           <div style={{ display: 'flex', padding: story ? '16px 30px' : '13px 26px', borderRadius: 999, background: '#fff', fontSize: story ? 28 : 24, color: '#1B0B2E' }}>{ticketLine}</div>
           {dial ? <div style={{ display: 'flex', fontSize: story ? 26 : 22, letterSpacing: 2, color: 'rgba(255,255,255,0.7)' }}>tsacoal.com</div> : null}
         </div>
