@@ -194,85 +194,108 @@ export async function GET(req: Request, { params }: { params: { slug: string } }
 
   let body: JSX.Element;
   let ground: JSX.Element = <Backdrop src={flyer} w={W} h={H} />;
+  // A wash of one colour over the blurred flyer gives each design its own light
+  const lit = (g: string) => (
+    <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: H }}>
+      <Backdrop src={flyer} w={W} h={H} strength={0.7} />
+      <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: H, background: g }} />
+    </div>
+  );
+  const chipRow = (bg: string, ink: string, center = false) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: center ? 'center' : 'flex-start', gap: 22, marginTop: story ? 34 : 22 }}>
+      <div style={{ display: 'flex', padding: story ? '17px 32px' : '14px 28px', borderRadius: 999, background: bg, fontSize: story ? 29 : 25, color: ink }}>{dial ? `Dial ${dial}` : film ? 'Showtimes on TsaCoal' : 'Tickets on TsaCoal'}</div>
+      <div style={{ display: 'flex', fontSize: story ? 26 : 22, letterSpacing: 2, color: 'rgba(255,255,255,0.72)' }}>tsacoal.com</div>
+    </div>
+  );
+  const headerOr = (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', fontSize: story ? 42 : 36, letterSpacing: -1.5, color: '#fff' }}>TsaCoal</div>
+      {going ?? <div style={{ display: 'flex', fontSize: story ? 24 : 21, letterSpacing: 4, color: 'rgba(255,255,255,0.65)' }}>{liveIn}</div>}
+    </div>
+  );
+
   if (t === 2) {
-    // Gallery: a plain dark wall, the flyer hung large, a small caption like a label beside a painting
-    ground = <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0, width: W, height: H, background: 'linear-gradient(180deg, #0C100E 0%, #050706 100%)' }} />;
-    const fw = story ? 936 : 800;
+    // Pass: the flyer as a gold event pass on a lanyard, with a tear-off stub for the date
+    const GOLD = 'linear-gradient(135deg, #FFE9A8 0%, #F5C451 45%, #C98A1B 100%)', fw = story ? 640 : 470;
+    ground = lit('linear-gradient(170deg, rgba(245,196,81,0.34) 0%, rgba(20,14,4,0.55) 46%, rgba(201,138,27,0.3) 100%)');
+    const top = story ? 150 : 104; // where the pass starts
     body = (
       <div style={COL}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', fontSize: story ? 38 : 32, letterSpacing: -1.2, color: '#fff' }}>TsaCoal</div>
-          {going ?? <div style={{ display: 'flex', fontSize: story ? 24 : 21, letterSpacing: 4, color: 'rgba(255,255,255,0.5)' }}>{liveIn}</div>}
+        <div style={{ display: 'flex', position: 'absolute', top: story ? -78 : -56, left: CW / 2 - 40, width: 80, height: top + (story ? 78 : 56) + 46, background: 'linear-gradient(90deg, #7A5410 0%, #E0B04A 50%, #7A5410 100%)' }} />
+        {headerOr}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: top - (story ? 42 : 36) }}>
+          <div style={{ display: 'flex', padding: 6, borderRadius: 46, background: GOLD, boxShadow: '0 50px 100px rgba(0,0,0,0.65)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 18px 0', borderRadius: 40, background: '#14100A' }}>
+              <div style={{ display: 'flex', width: 120, height: 24, margin: '18px 0', borderRadius: 12, background: '#050403', border: '2px solid rgba(245,196,81,0.5)' }} />
+              {plain(fw, 22)}
+              <div style={{ display: 'flex', alignItems: 'center', width: fw, padding: `${18 * k}px 4px ${20 * k}px` }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 130 * k }}>
+                  <div style={{ display: 'flex', fontSize: 20 * k, letterSpacing: 5, ...gText(GOLD) }}>{month}</div>
+                  <div style={{ display: 'flex', fontSize: 70 * k, letterSpacing: -3, lineHeight: 1, color: '#fff' }}>{num}</div>
+                  <div style={{ display: 'flex', fontSize: 18 * k, letterSpacing: 4, color: 'rgba(255,255,255,0.5)' }}>{day}</div>
+                </div>
+                <div style={{ display: 'flex', width: 0, height: 96 * k, borderLeft: '3px dashed rgba(245,196,81,0.4)', margin: `0 ${20 * k}px` }} />
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  <div style={{ display: 'flex', fontSize: 18 * k, letterSpacing: 6, ...gText(GOLD) }}>ADMIT ONE</div>
+                  <div style={{ display: 'flex', marginTop: 6, fontSize: 25 * k, lineHeight: 1.2, color: '#fff' }}>{[time, place].filter(Boolean).join(' · ') || liveIn}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         {spacer}
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', padding: 3, background: 'rgba(255,255,255,0.55)', borderRadius: 10 }}>{plain(fw, 8)}</div>
-        </div>
-        {spacer}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 40 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', maxWidth: CW - 330 }}>
-            <div style={{ display: 'flex', fontSize: fit(story ? 50 : 44), letterSpacing: -1.6, lineHeight: 1.04, color: '#fff' }}>{e.title}</div>
-            <div style={{ display: 'flex', marginTop: 10, fontSize: story ? 27 : 24, lineHeight: 1.3, color: 'rgba(255,255,255,0.55)' }}>{[dateLine, time, place].filter(Boolean).join(' · ')}</div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-            <div style={{ display: 'flex', fontSize: 19, letterSpacing: 5, color: 'rgba(255,255,255,0.45)' }}>TICKETS</div>
-            <div style={{ display: 'flex', marginTop: 6, fontSize: story ? 36 : 32, letterSpacing: -0.5, color: MINT_TEXT }}>{ticketLine}</div>
-          </div>
-        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center', fontSize: fit(story ? 78 : 60), letterSpacing: -3, lineHeight: 1, ...gText('linear-gradient(180deg, #FFFFFF 0%, #FFF1C9 55%, #F5C451 100%)') }}>{e.title}</div>
+        {chipRow(GOLD, '#1C1303', true)}
       </div>
     );
   } else if (t === 3) {
-    // Colour block: a coral slab carrying the date in black, the flyer leaning over its edge
-    const C = '#FF7A59', bw = story ? 440 : 400, bh = story ? 900 : 700, fw = story ? 580 : 520;
+    // Tape: two strips of event tape crossing behind the flyer, coral light
+    const C = 'linear-gradient(90deg, #FFB199 0%, #FF7A59 50%, #F0552F 100%)', fw = story ? 720 : 610, fh = Math.round(fw * 1.25);
+    ground = lit('linear-gradient(165deg, rgba(255,122,89,0.4) 0%, rgba(30,10,4,0.55) 48%, rgba(255,177,153,0.22) 100%)');
+    const run = (txt: string) => Array.from({ length: 5 }, () => txt).join('   /   ');
+    const tape = (y: number, rot: number, bg: string, ink: string, txt: string) => (
+      <div style={{ display: 'flex', alignItems: 'center', position: 'absolute', top: y, left: -220, width: W + 440, height: 76 * k, transform: `rotate(${rot}deg)`, background: bg, boxShadow: '0 18px 40px rgba(0,0,0,0.45)', fontSize: 32 * k, letterSpacing: 5, color: ink, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', marginLeft: 40 }}>{run(txt)}</div>
+      </div>
+    );
     body = (
       <div style={COL}>
-        {header}
-        <div style={{ display: 'flex', position: 'relative', height: bh, marginTop: story ? 70 : 36 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', width: bw, height: bh, padding: 34, borderRadius: 40, background: `linear-gradient(160deg, #FFB199 0%, ${C} 55%, #E9522E 100%)` }}>
-            <div style={{ display: 'flex', fontSize: 40 * k, letterSpacing: 8, color: '#1A0A05' }}>{day}</div>
-            <div style={{ display: 'flex', fontSize: (String(num).length > 1 ? 250 : 300) * k, letterSpacing: -14, lineHeight: 0.86, color: '#1A0A05' }}>{num}</div>
-            <div style={{ display: 'flex', fontSize: 82 * k, letterSpacing: 2, lineHeight: 1, color: '#1A0A05' }}>{month}</div>
-            {time && <div style={{ display: 'flex', marginTop: 14, fontSize: 30 * k, color: 'rgba(26,10,5,0.7)' }}>{time}</div>}
-          </div>
-          <div style={{ display: 'flex', position: 'absolute', right: 0, top: story ? 120 : 26 }}>{plain(fw, 26, 4)}</div>
+        {headerOr}
+        <div style={{ display: 'flex', position: 'relative', justifyContent: 'center', height: fh, marginTop: story ? 90 : 44 }}>
+          {tape(fh * 0.22, 6, '#150806', '#FF9A7D', `${liveIn}   /   DON’T MISS THIS ONE`)}
+          {tape(fh * 0.66, -7, C, '#1A0A05', [dateLine, time].filter(Boolean).join('   /   '))}
+          {plain(fw, 28, -3)}
         </div>
         {spacer}
-        {going && <div style={{ display: 'flex', marginBottom: 18 }}>{going}</div>}
-        <div style={{ display: 'flex', fontSize: fit(story ? 82 : 68), letterSpacing: -3.2, lineHeight: 0.98, color: '#fff' }}>{e.title}</div>
-        {place ? <div style={{ display: 'flex', marginTop: 12, fontSize: story ? 31 : 27, color: 'rgba(255,255,255,0.7)' }}>{place}</div> : null}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: story ? 36 : 24, padding: story ? '22px 30px' : '17px 26px', borderRadius: 18, border: `3px solid ${C}` }}>
-          <div style={{ display: 'flex', fontSize: story ? 30 : 26, letterSpacing: 2, color: C }}>{(dial ? `Dial ${dial}` : film ? 'Showtimes on TsaCoal' : 'Tickets on TsaCoal').toUpperCase()}</div>
-          <div style={{ display: 'flex', fontSize: story ? 26 : 22, letterSpacing: 3, color: 'rgba(255,255,255,0.6)' }}>TSACOAL.COM</div>
-        </div>
+        <div style={{ display: 'flex', fontSize: fit(story ? 84 : 68), letterSpacing: -3.2, lineHeight: 0.98, ...gText('linear-gradient(180deg, #FFFFFF 0%, #FFE3DA 60%, #FF9A7D 100%)') }}>{e.title}</div>
+        {place ? <div style={{ display: 'flex', marginTop: 12, fontSize: story ? 31 : 27, color: 'rgba(255,255,255,0.75)' }}>{place}</div> : null}
+        {chipRow(C, '#1A0A05')}
       </div>
     );
   } else if (t === 4) {
-    // Editorial: the name set huge in capitals, the facts as a labelled list, the flyer leaning in from the right
-    const G = '#F5C451', fw = story ? 560 : 480;
-    const fact = (label: string, value: string | null) => value ? (
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: story ? 30 : 22 }}>
-        <div style={{ display: 'flex', fontSize: 19 * k, letterSpacing: 6, color: G }}>{label}</div>
-        <div style={{ display: 'flex', marginTop: 4, fontSize: 31 * k, lineHeight: 1.18, color: '#fff' }}>{value}</div>
-      </div>
-    ) : null;
+    // Record: a vinyl sliding out from behind the flyer, the date on its label, blue light
+    const B = 'linear-gradient(135deg, #BDF3FF 0%, #5AC8FA 50%, #2D7BFF 100%)', fw = story ? 640 : 560, fh = Math.round(fw * 1.25), d = Math.round(fh * 0.96);
+    ground = lit('linear-gradient(160deg, rgba(45,123,255,0.42) 0%, rgba(4,10,26,0.55) 46%, rgba(90,200,250,0.26) 100%)');
+    const ring = (pct: number, o: number) => <div style={{ display: 'flex', position: 'absolute', top: d * (1 - pct) / 2, left: d * (1 - pct) / 2, width: d * pct, height: d * pct, borderRadius: 9999, border: `2px solid rgba(255,255,255,${o})` }} />;
+    const lab = Math.round(d * 0.36);
     body = (
       <div style={COL}>
-        <div style={{ display: 'flex', fontSize: fit(story ? 118 : 100), letterSpacing: -4.5, lineHeight: 0.92, color: '#fff', textTransform: 'uppercase' }}>{e.title}</div>
-        <div style={{ display: 'flex', width: 140, height: 6, marginTop: story ? 34 : 24, borderRadius: 3, background: G }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: story ? 40 : 14 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', width: CW - fw - 40 }}>
-            {fact('WHEN', [dateLine, time].filter(Boolean).join(' · '))}
-            {fact('WHERE', place || null)}
-            {fact(film ? 'CAST' : 'WITH', acts)}
-            {fact('TICKETS', ticketLine)}
+        {headerOr}
+        <div style={{ display: 'flex', position: 'relative', height: fh, marginTop: story ? 96 : 46 }}>
+          <div style={{ display: 'flex', position: 'absolute', top: (fh - d) / 2, left: fw + 130 - d / 2, width: d, height: d, borderRadius: 9999, background: 'radial-gradient(circle, #1B2230 0%, #07090E 62%, #111722 100%)', boxShadow: '0 40px 80px rgba(0,0,0,0.6)' }}>
+            {ring(0.94, 0.14)}{ring(0.82, 0.07)}{ring(0.7, 0.1)}{ring(0.58, 0.06)}{ring(0.47, 0.1)}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'absolute', top: (d - lab) / 2, left: (d - lab) / 2, width: lab, height: lab, borderRadius: 9999, background: B }}>
+              <div style={{ display: 'flex', fontSize: lab * 0.13, letterSpacing: 4, color: '#04122B' }}>{day}</div>
+              <div style={{ display: 'flex', fontSize: lab * 0.42, letterSpacing: -3, lineHeight: 0.95, color: '#04122B' }}>{num}</div>
+              <div style={{ display: 'flex', fontSize: lab * 0.13, letterSpacing: 4, color: '#04122B' }}>{month}</div>
+            </div>
           </div>
-          <div style={{ display: 'flex', marginTop: story ? 40 : 30 }}>{plain(fw, 22, -3)}</div>
+          <div style={{ display: 'flex', position: 'absolute', top: 0, left: 0 }}>{plain(fw, 26, -2)}</div>
         </div>
         {spacer}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', fontSize: story ? 40 : 34, letterSpacing: -1.4, color: '#fff' }}>TsaCoal</div>
-          {going ?? <div style={{ display: 'flex', fontSize: story ? 24 : 21, letterSpacing: 4, color: 'rgba(255,255,255,0.55)' }}>{liveIn}</div>}
-        </div>
+        <div style={{ display: 'flex', fontSize: fit(story ? 84 : 68), letterSpacing: -3.2, lineHeight: 0.98, ...gText('linear-gradient(180deg, #FFFFFF 0%, #DDF6FF 58%, #7CD4FF 100%)') }}>{e.title}</div>
+        <div style={{ display: 'flex', marginTop: 12, fontSize: story ? 31 : 27, color: 'rgba(255,255,255,0.75)' }}>{[time, place].filter(Boolean).join(' · ')}</div>
+        {chipRow(B, '#04122B')}
       </div>
     );
   } else if (t === 5) {
