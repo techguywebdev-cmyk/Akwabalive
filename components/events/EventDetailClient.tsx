@@ -41,7 +41,7 @@ import StatTip from '@/components/events/StatTip';
 import AddToCalendar from '@/components/calendars/AddToCalendar';
 import { eventShareText } from '@/lib/shareText';
 import ShareCardSheet, { useWarmShareCard } from '@/components/events/ShareCardSheet';
-import { OrganiserBlock, GallerySection, VenueSection, FaqSection, OwnerBar, type OrganiserInfo } from '@/components/events/EventPageSections';
+import { OrganiserBlock, GallerySection, VenueSection, FaqSection, OwnerBar, SetTimes, type OrganiserInfo } from '@/components/events/EventPageSections';
 import { hexToRgb, onAccent, pageFaqs } from '@/lib/events/page';
 import { isFilm } from '@/lib/events/kind';
 
@@ -437,6 +437,8 @@ export default function EventDetailClient({ event, related, seriesMomentId, orga
             </div>
           </section>
         )}
+
+        {!!page.sets?.length && <SetTimes sets={page.sets} date={event.date} ink={ink} heading={eyebrowMint} slugFor={(n) => artistForName(n)?.slug ?? null} />}
 
         {/* Relive the last edition: one big moment, the rest underneath */}
         {moments.length > 0 && (
